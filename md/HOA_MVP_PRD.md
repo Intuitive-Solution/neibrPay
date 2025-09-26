@@ -70,7 +70,7 @@ The MVP will deliver core financial management, communication, document storage,
 - OpenAPI/Swagger  
 
 ### Database
-- Supabase (Postgres): users, tenants, memberships, invoices, payments, expenses, vendors, documents, announcements.  
+- Mysql: users, tenants, memberships, invoices, payments, expenses, vendors, documents, announcements.  
 
 ## Repo Layout
 neibrpay/
@@ -92,7 +92,7 @@ neibrpay/
 
 
 ### Infrastructure
-- Render(backend) , Netlify (frontend)  
+- Railway.app(backend) , Netlify (frontend)  
 - GitHub Actions CI/CD, Sentry, CloudWatch  
 
 ---
