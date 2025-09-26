@@ -56,7 +56,7 @@ The MVP will deliver core financial management, communication, document storage,
 ## 5. Tech Stack & Planned Libraries
 
 ### Frontend (Vue 3)
-- Vue 3 + Vite, Vuetify, Pinia, Vue Router, Axios  
+- Vue 3 + Vite, Shadcn/Vue, TanStack Query, Pinia, Vue Router, Axios  
 - PDF viewing: pdf.js (vue-pdf/pdfjs-dist)  
 - Firebase SDK (auth + push)  
 
@@ -70,7 +70,7 @@ The MVP will deliver core financial management, communication, document storage,
 - OpenAPI/Swagger  
 
 ### Database
-- Mysql: users, tenants, memberships, invoices, payments, expenses, vendors, documents, announcements.  
+- MySQL: users, tenants, memberships, invoices, payments, expenses, vendors, documents, announcements.  
 
 ## Repo Layout
 neibrpay/
@@ -79,7 +79,7 @@ neibrpay/
 │  ├─ owner-web/          # Vue 3 (owner portal)
 │  └─ mobile/             # (future) Capacitor/Ionic or RN/Flutter; can start as placeholder
 ├─ packages/
-│  ├─ ui/                 # shared Vue components, theming, tokens (Vuetify or Tailwind tokens)
+│  ├─ ui/                 # shared Vue components, theming, tokens (Shadcn/Vue + Tailwind CSS)
 │  ├─ api-client/         # typed SDK: axios wrapper, endpoints, interceptors, DTOs
 │  ├─ models/             # zod/yup schemas, TS types, currency & date helpers
 │  └─ config/             # eslint, prettier, tsconfig, commitlint, Git hooks
@@ -98,8 +98,8 @@ neibrpay/
 ---
 
 ## 6. Architecture
-- Multi-tenant SaaS (row-level Postgres tenant IDs).  
-- Auth: Firebase for identity, Laravel for verification & mapping to Postgres users.  
+- Multi-tenant SaaS (row-level MySQL tenant IDs).  
+- Auth: Firebase for identity, Laravel for verification & mapping to MySQL users.  
 - API-first backend with Laravel REST.  
 
 ---
@@ -115,7 +115,7 @@ neibrpay/
 ## 8. Security
 - Enforce email_verified = true.  
 - MFA for board admins.  
-- RBAC in Postgres, tenant isolation on all queries.  
+- RBAC in MySQL, tenant isolation on all queries.  
 - Audit logs for sensitive actions.  
 
 ---
