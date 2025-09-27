@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <header class="bg-purple-600 text-white p-4">
+    <header class="text-white p-4" style="background-color: #412b77">
       <h1 class="text-2xl font-bold">NeibrPay - HOA Manager Dashboard</h1>
     </header>
     <main class="container mx-auto p-4">

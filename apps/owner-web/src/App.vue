@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <header class="bg-green-600 text-white p-4">
+    <header class="text-white p-4" style="background-color: #2ee9b6">
       <h1 class="text-2xl font-bold">NeibrPay - Owner Portal</h1>
     </header>
     <main class="container mx-auto p-4">

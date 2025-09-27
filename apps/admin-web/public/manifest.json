@@ -1,0 +1,26 @@
+{
+  "name": "NeibrPay - HOA Manager Dashboard",
+  "short_name": "NeibrPay Admin",
+  "description": "Comprehensive HOA Management Dashboard for Board Members and Property Managers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#412b77",
+  "theme_color": "#412b77",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "32x32",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
