@@ -200,3 +200,7 @@ docker-compose*.yml
 # Temporary files
 tmp/
 temp/
+
+# Vite build artifacts
+*.timestamp-*.mjs
+vite.config.ts.timestamp-*
