@@ -1,3 +1,9 @@
+[phases.install]
+cmds = [
+  "mkdir -p bootstrap/cache storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs",
+  "chmod -R 775 bootstrap/cache storage"
+]
+
 [phases.build]
 cmds = [
   "php artisan key:generate --force",
