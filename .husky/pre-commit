@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Add NVM Node.js path to ensure npx is available
+export PATH="$HOME/.nvm/versions/node/v20.19.3/bin:$PATH"
+
+# Run lint-staged using the full path to npx
+"$HOME/.nvm/versions/node/v20.19.3/bin/npx" lint-staged
