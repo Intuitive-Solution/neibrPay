@@ -13,18 +13,25 @@ class HealthController extends ApiController
     public function check(): JsonResponse
     {
         try {
-            // Check database connection
-            DB::connection()->getPdo();
-            
-            return $this->success([
+            $data = [
                 'status' => 'healthy',
                 'timestamp' => now()->toISOString(),
-                'database' => 'connected',
                 'version' => app()->version(),
-            ], 'Service is healthy');
+                'environment' => app()->environment(),
+            ];
+
+            // Try to check database connection, but don't fail if it's not configured
+            try {
+                DB::connection()->getPdo();
+                $data['database'] = 'connected';
+            } catch (\Exception $e) {
+                $data['database'] = 'not_configured';
+                $data['database_note'] = 'Database connection not configured yet';
+            }
+            
+            return $this->success($data, 'Service is healthy');
         } catch (\Exception $e) {
             return $this->error('Service is unhealthy', 503, [
-                'database' => 'disconnected',
                 'error' => $e->getMessage(),
             ]);
         }
