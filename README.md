@@ -287,6 +287,10 @@ FIREBASE_PROJECT_ID=...
 - Write **type-safe** code with TypeScript
 - Include **error handling** and loading states
 
+## Laravel Health check.
+
+http://localhost:8000/api/health
+
 ## 📄 License
 
 Private - All rights reserved
