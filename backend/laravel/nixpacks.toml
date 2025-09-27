@@ -7,7 +7,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "cp .env.example .env",
+  "cp  railway.env.example .env",
   "php artisan key:generate --force",
   "php artisan config:cache",
   "php artisan route:cache",
