@@ -1,12 +1,12 @@
 [phases.install]
 cmds = [
-  "mkdir -p bootstrap/cache storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs",
-  "chmod -R 775 bootstrap/cache storage",
   "composer install --no-dev --optimize-autoloader"
 ]
 
 [phases.build]
 cmds = [
+  "mkdir -p bootstrap/cache storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs",
+  "chmod -R 777 bootstrap storage",
   "cp railway.env.example .env || cp .env.example .env",
   "php artisan key:generate --force"
 ]

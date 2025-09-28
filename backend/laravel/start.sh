@@ -39,6 +39,11 @@ else
     echo "Laravel artisan FAILED"
 fi
 
+echo "=== FIXING PERMISSIONS ==="
+mkdir -p bootstrap/cache storage/app storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
+chmod -R 777 bootstrap storage
+echo "Permissions fixed"
+
 echo "=== STARTING SERVER ==="
 echo "Starting PHP server on 0.0.0.0:${PORT:-8080}"
 exec php -S 0.0.0.0:${PORT:-8080} -t public
