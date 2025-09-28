@@ -7,6 +7,9 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "cp  railway.env.example .env",
+  "cp railway.env.example .env || cp .env.example .env",
   "php artisan key:generate --force"
 ]
+
+[start]
+cmd = "./start.sh"
