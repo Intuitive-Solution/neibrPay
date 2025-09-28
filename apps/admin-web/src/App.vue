@@ -1,12 +1,21 @@
 <template>
   <div id="app">
-    <!-- Header only shown when not on login page -->
-    <header v-if="$route.name !== 'Login'" class="text-white p-4 bg-primary">
+    <!-- Header only shown when not on login or signup page -->
+    <header
+      v-if="$route.name !== 'Login' && $route.name !== 'Signup'"
+      class="text-white p-4 bg-primary"
+    >
       <h1 class="text-2xl font-bold">NeibrPay - HOA Manager Dashboard</h1>
     </header>
 
     <!-- Main content with conditional styling -->
-    <main :class="$route.name === 'Login' ? '' : 'container mx-auto p-4'">
+    <main
+      :class="
+        $route.name === 'Login' || $route.name === 'Signup'
+          ? ''
+          : 'container mx-auto p-4'
+      "
+    >
       <router-view />
     </main>
   </div>

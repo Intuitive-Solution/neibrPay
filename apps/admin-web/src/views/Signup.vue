@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen flex">
-    <!-- Left Section - Login Form -->
+    <!-- Left Section - Signup Form -->
     <div
       class="flex-1 flex flex-col justify-center px-8 py-12 sm:px-12 lg:px-16 xl:px-20 bg-white"
     >
@@ -22,14 +22,34 @@
 
         <!-- Welcome Message -->
         <div class="mb-8">
-          <h2 class="text-heading-2 text-text-primary mb-2">Welcome back!</h2>
+          <h2 class="text-heading-2 text-text-primary mb-2">
+            Create your account
+          </h2>
           <p class="text-body text-text-secondary">
-            Sign in to your HOA management dashboard
+            Join NeibrPay to manage your HOA community
           </p>
         </div>
 
-        <!-- Login Form -->
-        <form @submit.prevent="handleLogin" class="space-y-6">
+        <!-- Signup Form -->
+        <form @submit.prevent="handleSignup" class="space-y-6">
+          <!-- Community Name Input -->
+          <div>
+            <label
+              for="communityName"
+              class="block text-sm font-medium text-text-primary mb-2"
+            >
+              Community Name
+            </label>
+            <input
+              id="communityName"
+              v-model="form.communityName"
+              type="text"
+              required
+              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+              placeholder="Enter your community name"
+            />
+          </div>
+
           <!-- Email Input -->
           <div>
             <label
@@ -49,69 +69,45 @@
             />
           </div>
 
-          <!-- Password Input -->
+          <!-- Full Name Input -->
           <div>
             <label
-              for="password"
+              for="fullName"
               class="block text-sm font-medium text-text-primary mb-2"
             >
-              Password
+              Full Name
             </label>
-            <div class="relative">
-              <input
-                id="password"
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'"
-                autocomplete="current-password"
-                required
-                class="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                @click="showPassword = !showPassword"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center"
-                :aria-label="showPassword ? 'Hide password' : 'Show password'"
-              >
-                <svg
-                  v-if="showPassword"
-                  class="h-5 w-5 text-text-secondary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                  />
-                </svg>
-                <svg
-                  v-else
-                  class="h-5 w-5 text-text-secondary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
-              </button>
-            </div>
+            <input
+              id="fullName"
+              v-model="form.fullName"
+              type="text"
+              autocomplete="name"
+              required
+              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+              placeholder="Enter your full name"
+            />
           </div>
 
-          <!-- Sign In Button -->
+          <!-- Phone Number Input -->
+          <div>
+            <label
+              for="phoneNumber"
+              class="block text-sm font-medium text-text-primary mb-2"
+            >
+              Phone Number
+            </label>
+            <input
+              id="phoneNumber"
+              v-model="form.phoneNumber"
+              type="tel"
+              autocomplete="tel"
+              required
+              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+              placeholder="Enter your phone number"
+            />
+          </div>
+
+          <!-- Create Account Button -->
           <button
             type="submit"
             :disabled="isLoading"
@@ -138,9 +134,9 @@
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              Signing in...
+              Creating account...
             </span>
-            <span v-else>Sign In</span>
+            <span v-else>Create Account</span>
           </button>
         </form>
 
@@ -161,7 +157,7 @@
           <!-- Google Login -->
           <button
             type="button"
-            @click="handleGoogleLogin"
+            @click="handleGoogleSignup"
             class="w-full flex justify-center items-center px-4 py-3 border border-neutral-300 rounded-lg shadow-sm bg-white text-sm font-medium text-text-primary hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
           >
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -182,35 +178,27 @@
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Login with Google
+            Sign up with Google
           </button>
         </div>
 
         <!-- Account Links -->
         <div class="mt-6 text-center space-y-2">
           <p class="text-small text-text-secondary">
-            Don't have an account?
+            Already have an account?
             <router-link
-              to="/signup"
+              to="/login"
               class="font-medium text-primary hover:text-primary-600 transition-colors duration-200"
             >
-              Sign Up
+              Sign In
             </router-link>
-          </p>
-          <p class="text-small">
-            <a
-              href="#"
-              class="font-medium text-primary hover:text-primary-600 transition-colors duration-200"
-            >
-              Forgot password?
-            </a>
           </p>
         </div>
 
         <!-- Legal Text -->
         <div class="mt-8 text-center">
           <p class="text-xs text-text-secondary">
-            By clicking "Sign In" you agree to the
+            By clicking "Create Account" you agree to the
             <a
               href="#"
               class="underline hover:text-text-primary transition-colors duration-200"
@@ -363,12 +351,10 @@
 
         <!-- Professional Text -->
         <div class="space-y-4">
-          <h3 class="text-heading-3 text-text-primary">
-            Streamline Your HOA Management
-          </h3>
+          <h3 class="text-heading-3 text-text-primary">Join Your Community</h3>
           <p class="text-body text-text-secondary">
-            Professional tools for invoice management, financial tracking, and
-            community communication.
+            Start managing your HOA with professional tools for invoice
+            management, financial tracking, and community communication.
           </p>
         </div>
       </div>
@@ -384,16 +370,17 @@ const router = useRouter();
 
 // Form state
 const form = reactive({
+  communityName: '',
   email: '',
-  password: '',
+  fullName: '',
+  phoneNumber: '',
 });
 
 // UI state
-const showPassword = ref(false);
 const isLoading = ref(false);
 
 // Form handlers
-const handleLogin = async () => {
+const handleSignup = async () => {
   isLoading.value = true;
 
   try {
@@ -403,15 +390,15 @@ const handleLogin = async () => {
     // For demo purposes, redirect to dashboard
     router.push('/');
   } catch (error) {
-    console.error('Login failed:', error);
+    console.error('Signup failed:', error);
   } finally {
     isLoading.value = false;
   }
 };
 
-const handleGoogleLogin = () => {
-  // Implement Google OAuth
-  console.log('Google login clicked');
+const handleGoogleSignup = () => {
+  // Implement Google OAuth for signup
+  console.log('Google signup clicked');
 };
 </script>
 
