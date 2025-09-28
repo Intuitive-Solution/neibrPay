@@ -7,7 +7,17 @@
       <div class="mx-auto w-full max-w-sm lg:w-96">
         <!-- Logo -->
         <div class="mb-8">
-          <h1 class="text-2xl font-bold text-primary">NeibrPay</h1>
+          <div class="flex items-center space-x-3">
+            <img
+              src="/owner-logo.png"
+              alt="NeibrPay Logo"
+              class="h-10 w-10 object-contain"
+            />
+            <h1 class="text-2xl font-bold">
+              <span class="text-primary">Neibr</span>
+              <span style="color: #2ee9b6">Pay</span>
+            </h1>
+          </div>
         </div>
 
         <!-- Welcome Message -->
