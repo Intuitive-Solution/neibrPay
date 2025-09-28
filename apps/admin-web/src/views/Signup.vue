@@ -282,11 +282,11 @@
       class="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center bg-gradient-to-br from-primary-50 to-neutral-50"
     >
       <div class="max-w-md text-center">
-        <!-- Professional Dashboard Illustration -->
+        <!-- Budget Pie Chart Illustration -->
         <div class="relative mb-8">
-          <!-- Main Dashboard Card -->
+          <!-- Main Chart Container -->
           <div class="w-64 h-48 mx-auto relative">
-            <!-- Dashboard Background -->
+            <!-- Chart Background -->
             <div
               class="absolute inset-0 bg-white rounded-xl shadow-xl border border-neutral-200"
             >
@@ -303,53 +303,65 @@
 
               <!-- Content Area -->
               <div class="absolute top-8 left-0 right-0 bottom-0 p-4">
-                <!-- Chart Bars -->
-                <div class="flex items-end justify-center space-x-2 mb-4">
-                  <div
-                    class="w-4 bg-primary-300 rounded-t"
-                    style="height: 20px"
-                  ></div>
-                  <div
-                    class="w-4 bg-primary-400 rounded-t"
-                    style="height: 30px"
-                  ></div>
-                  <div
-                    class="w-4 bg-primary-500 rounded-t"
-                    style="height: 25px"
-                  ></div>
-                  <div
-                    class="w-4 bg-primary-600 rounded-t"
-                    style="height: 35px"
-                  ></div>
-                  <div
-                    class="w-4 bg-accent-400 rounded-t"
-                    style="height: 28px"
-                  ></div>
+                <!-- Pie Chart -->
+                <div class="flex items-center justify-center mb-4">
+                  <div class="relative w-20 h-20">
+                    <!-- Pie Chart Slices -->
+                    <div
+                      class="absolute inset-0 rounded-full border-8 border-primary-300"
+                    ></div>
+                    <div
+                      class="absolute inset-0 rounded-full border-8 border-accent-400"
+                      style="
+                        clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 50%);
+                      "
+                    ></div>
+                    <div
+                      class="absolute inset-0 rounded-full border-8 border-success"
+                      style="
+                        clip-path: polygon(
+                          50% 50%,
+                          100% 50%,
+                          100% 100%,
+                          50% 100%
+                        );
+                      "
+                    ></div>
+                    <div
+                      class="absolute inset-0 rounded-full border-8 border-warning"
+                      style="
+                        clip-path: polygon(50% 50%, 50% 100%, 0% 100%, 0% 50%);
+                      "
+                    ></div>
+                    <div
+                      class="absolute inset-0 rounded-full border-8 border-primary-600"
+                      style="clip-path: polygon(50% 50%, 0% 50%, 0% 0%, 50% 0%)"
+                    ></div>
+
+                    <!-- Center Circle -->
+                    <div
+                      class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full border-2 border-neutral-200 flex items-center justify-center"
+                    >
+                      <span class="text-xs font-bold text-text-primary">$</span>
+                    </div>
+                  </div>
                 </div>
 
-                <!-- Invoice Cards -->
+                <!-- Budget Legend -->
                 <div class="space-y-2">
-                  <div
-                    class="flex items-center justify-between p-2 bg-neutral-50 rounded"
-                  >
+                  <div class="flex items-center justify-between text-xs">
                     <div class="flex items-center space-x-2">
-                      <div class="w-2 h-2 bg-success rounded-full"></div>
-                      <span class="text-xs text-text-secondary"
-                        >Invoice #001</span
-                      >
+                      <div class="w-3 h-3 bg-primary-300 rounded-full"></div>
+                      <span class="text-text-secondary">Maintenance</span>
                     </div>
-                    <span class="text-xs font-medium text-success">$1,250</span>
+                    <span class="font-medium text-text-primary">35%</span>
                   </div>
-                  <div
-                    class="flex items-center justify-between p-2 bg-neutral-50 rounded"
-                  >
+                  <div class="flex items-center justify-between text-xs">
                     <div class="flex items-center space-x-2">
-                      <div class="w-2 h-2 bg-warning rounded-full"></div>
-                      <span class="text-xs text-text-secondary"
-                        >Invoice #002</span
-                      >
+                      <div class="w-3 h-3 bg-accent-400 rounded-full"></div>
+                      <span class="text-text-secondary">Utilities</span>
                     </div>
-                    <span class="text-xs font-medium text-warning">$850</span>
+                    <span class="font-medium text-text-primary">25%</span>
                   </div>
                 </div>
               </div>
@@ -369,7 +381,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
             </div>
@@ -387,7 +399,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
                 />
               </svg>
             </div>
