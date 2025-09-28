@@ -147,7 +147,7 @@
         </div>
 
         <!-- Social Login Buttons -->
-        <div class="mt-6 space-y-3">
+        <div class="mt-6">
           <!-- Google Login -->
           <button
             type="button"
@@ -173,28 +173,6 @@
               />
             </svg>
             Login with Google
-          </button>
-
-          <!-- SSO Login -->
-          <button
-            type="button"
-            @click="handleSSOLogin"
-            class="w-full flex justify-center items-center px-4 py-3 border border-neutral-300 rounded-lg shadow-sm bg-white text-sm font-medium text-text-primary hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
-          >
-            <svg
-              class="w-5 h-5 mr-3 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
-            </svg>
-            Sign in with SSO
           </button>
         </div>
 
@@ -424,11 +402,6 @@ const handleLogin = async () => {
 const handleGoogleLogin = () => {
   // Implement Google OAuth
   console.log('Google login clicked');
-};
-
-const handleSSOLogin = () => {
-  // Implement SSO
-  console.log('SSO login clicked');
 };
 </script>
 
