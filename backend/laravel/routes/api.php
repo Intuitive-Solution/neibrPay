@@ -17,3 +17,12 @@ Route::get('/status', function () {
         'service' => 'Laravel API'
     ]);
 });
+
+Route::get('/test', function () {
+    return response()->json([
+        'message' => 'Hello from Laravel API',
+        'php_version' => PHP_VERSION,
+        'laravel_version' => app()->version(),
+        'environment' => app()->environment()
+    ]);
+});
