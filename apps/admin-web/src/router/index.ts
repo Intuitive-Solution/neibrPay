@@ -4,6 +4,11 @@ import Login from '../views/Login.vue';
 import Signup from '../views/Signup.vue';
 import TermsOfService from '../views/TermsOfService.vue';
 import PrivacyNotice from '../views/PrivacyNotice.vue';
+import Invoices from '../views/Invoices.vue';
+import People from '../views/People.vue';
+import Payments from '../views/Payments.vue';
+import Vendors from '../views/Vendors.vue';
+import Settings from '../views/Settings.vue';
 import { setupAuthGuards } from './guards';
 
 const router = createRouter({
@@ -30,6 +35,36 @@ const router = createRouter({
     {
       path: '/dashboard',
       redirect: '/',
+    },
+    {
+      path: '/invoices',
+      name: 'Invoices',
+      component: Invoices,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/people',
+      name: 'People',
+      component: People,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/payments',
+      name: 'Payments',
+      component: Payments,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/vendors',
+      name: 'Vendors',
+      component: Vendors,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: Settings,
+      meta: { requiresAuth: true },
     },
     {
       path: '/terms-of-service',
