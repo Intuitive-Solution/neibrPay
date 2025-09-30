@@ -116,11 +116,16 @@
               </label>
               <input
                 id="phoneNumber"
-                v-model="form.phoneNumber"
+                v-model="formattedPhoneNumber"
+                @input="handlePhoneInput"
                 type="tel"
+                maxlength="14"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                placeholder="Enter your phone number"
+                placeholder="555-555-5555"
               />
+              <p class="mt-1 text-sm text-gray-500">
+                Optional: Enter a valid US phone number (10 digits).
+              </p>
             </div>
           </div>
 
@@ -171,7 +176,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
+import {
+  reactive,
+  watch,
+  ref,
+  withDefaults,
+  defineProps,
+  defineEmits,
+} from 'vue';
 
 interface Props {
   isOpen: boolean;
@@ -197,6 +209,37 @@ const form = reactive({
 const errors = reactive({
   communityName: '',
 });
+
+// Phone number formatting
+const formattedPhoneNumber = ref('');
+
+// Format phone number as user types
+const formatPhoneNumber = (value: string): string => {
+  // Remove all non-numeric characters
+  const phoneNumber = value.replace(/\D/g, '');
+
+  // Limit to 10 digits
+  const limitedPhoneNumber = phoneNumber.substring(0, 10);
+
+  // Format as XXX-XXX-XXXX
+  if (limitedPhoneNumber.length >= 6) {
+    return `${limitedPhoneNumber.substring(0, 3)}-${limitedPhoneNumber.substring(3, 6)}-${limitedPhoneNumber.substring(6)}`;
+  } else if (limitedPhoneNumber.length >= 3) {
+    return `${limitedPhoneNumber.substring(0, 3)}-${limitedPhoneNumber.substring(3)}`;
+  } else {
+    return limitedPhoneNumber;
+  }
+};
+
+// Handle phone input changes
+const handlePhoneInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const formatted = formatPhoneNumber(target.value);
+  formattedPhoneNumber.value = formatted;
+
+  // Store the raw phone number (digits only) in the form
+  form.phoneNumber = formatted.replace(/\D/g, '');
+};
 
 const validateForm = () => {
   errors.communityName = '';
@@ -232,7 +275,7 @@ const handleClose = () => {
 // Reset form when modal opens
 watch(
   () => props.isOpen,
-  isOpen => {
+  (isOpen: boolean) => {
     if (isOpen) {
       form.communityName = '';
       form.phoneNumber = '';

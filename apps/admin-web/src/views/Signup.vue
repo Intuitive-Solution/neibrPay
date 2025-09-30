@@ -148,13 +148,18 @@
             </label>
             <input
               id="phoneNumber"
-              v-model="form.phoneNumber"
+              v-model="formattedPhoneNumber"
+              @input="handlePhoneInput"
               type="tel"
               autocomplete="tel"
               required
+              maxlength="14"
               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-              placeholder="Enter your phone number"
+              placeholder="555-555-5555"
             />
+            <p class="mt-2 text-sm text-gray-600">
+              Please enter a valid US phone number (10 digits).
+            </p>
           </div>
 
           <!-- Password Input -->
@@ -520,6 +525,77 @@ const showPassword = ref(false);
 const showCommunityModal = ref(false);
 const errorMessage = ref('');
 
+// Phone number formatting
+const formattedPhoneNumber = ref('');
+
+// Format phone number as user types
+const formatPhoneNumber = (value: string): string => {
+  // Remove all non-numeric characters
+  const phoneNumber = value.replace(/\D/g, '');
+
+  // Limit to 10 digits
+  const limitedPhoneNumber = phoneNumber.substring(0, 10);
+
+  // Format as XXX-XXX-XXXX
+  if (limitedPhoneNumber.length >= 6) {
+    return `${limitedPhoneNumber.substring(0, 3)}-${limitedPhoneNumber.substring(3, 6)}-${limitedPhoneNumber.substring(6)}`;
+  } else if (limitedPhoneNumber.length >= 3) {
+    return `${limitedPhoneNumber.substring(0, 3)}-${limitedPhoneNumber.substring(3)}`;
+  } else {
+    return limitedPhoneNumber;
+  }
+};
+
+// Handle phone input changes
+const handlePhoneInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const formatted = formatPhoneNumber(target.value);
+  formattedPhoneNumber.value = formatted;
+
+  // Store the raw phone number (digits only) in the form
+  form.phoneNumber = formatted.replace(/\D/g, '');
+};
+
+// Validate US phone number
+const isValidUSPhoneNumber = (phoneNumber: string): boolean => {
+  // Remove all non-numeric characters
+  const digits = phoneNumber.replace(/\D/g, '');
+
+  // Check if it's exactly 10 digits
+  if (digits.length !== 10) {
+    return false;
+  }
+
+  // Check if it starts with a valid area code (2-9)
+  const areaCode = digits.substring(0, 3);
+  const firstDigit = areaCode[0];
+  const secondDigit = areaCode[1];
+  const thirdDigit = areaCode[2];
+
+  // Area code cannot start with 0 or 1
+  if (firstDigit === '0' || firstDigit === '1') {
+    return false;
+  }
+
+  // Second digit of area code cannot be 0 or 1
+  if (secondDigit === '0' || secondDigit === '1') {
+    return false;
+  }
+
+  // Third digit of area code cannot be 0 or 1
+  if (thirdDigit === '0' || thirdDigit === '1') {
+    return false;
+  }
+
+  // Exchange code (next 3 digits) cannot start with 0 or 1
+  const exchangeCode = digits.substring(3, 6);
+  if (exchangeCode[0] === '0' || exchangeCode[0] === '1') {
+    return false;
+  }
+
+  return true;
+};
+
 // Form handlers
 const handleSignup = async () => {
   try {
@@ -543,6 +619,11 @@ const handleSignup = async () => {
 
     if (!form.phoneNumber.trim()) {
       errorMessage.value = 'Phone number is required';
+      return;
+    }
+
+    if (!isValidUSPhoneNumber(form.phoneNumber)) {
+      errorMessage.value = 'Please enter a valid US phone number (10 digits)';
       return;
     }
 
