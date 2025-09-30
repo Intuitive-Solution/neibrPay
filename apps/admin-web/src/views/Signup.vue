@@ -223,8 +223,103 @@
               </button>
             </div>
             <p class="mt-2 text-sm text-gray-600">
-              Password must be at least 6 characters long.
+              Password must be at least 8 characters with uppercase, lowercase,
+              number, and special character.
             </p>
+
+            <!-- Password Requirements Checklist -->
+            <div class="mt-3 space-y-1">
+              <div class="flex items-center text-xs">
+                <div
+                  :class="[
+                    'w-2 h-2 rounded-full mr-2',
+                    passwordRequirements.hasMinLength
+                      ? 'bg-green-500'
+                      : 'bg-gray-300',
+                  ]"
+                ></div>
+                <span
+                  :class="[
+                    passwordRequirements.hasMinLength
+                      ? 'text-green-700'
+                      : 'text-gray-500',
+                  ]"
+                  >At least 8 characters</span
+                >
+              </div>
+              <div class="flex items-center text-xs">
+                <div
+                  :class="[
+                    'w-2 h-2 rounded-full mr-2',
+                    passwordRequirements.hasUppercase
+                      ? 'bg-green-500'
+                      : 'bg-gray-300',
+                  ]"
+                ></div>
+                <span
+                  :class="[
+                    passwordRequirements.hasUppercase
+                      ? 'text-green-700'
+                      : 'text-gray-500',
+                  ]"
+                  >One uppercase letter</span
+                >
+              </div>
+              <div class="flex items-center text-xs">
+                <div
+                  :class="[
+                    'w-2 h-2 rounded-full mr-2',
+                    passwordRequirements.hasLowercase
+                      ? 'bg-green-500'
+                      : 'bg-gray-300',
+                  ]"
+                ></div>
+                <span
+                  :class="[
+                    passwordRequirements.hasLowercase
+                      ? 'text-green-700'
+                      : 'text-gray-500',
+                  ]"
+                  >One lowercase letter</span
+                >
+              </div>
+              <div class="flex items-center text-xs">
+                <div
+                  :class="[
+                    'w-2 h-2 rounded-full mr-2',
+                    passwordRequirements.hasNumber
+                      ? 'bg-green-500'
+                      : 'bg-gray-300',
+                  ]"
+                ></div>
+                <span
+                  :class="[
+                    passwordRequirements.hasNumber
+                      ? 'text-green-700'
+                      : 'text-gray-500',
+                  ]"
+                  >One number</span
+                >
+              </div>
+              <div class="flex items-center text-xs">
+                <div
+                  :class="[
+                    'w-2 h-2 rounded-full mr-2',
+                    passwordRequirements.hasSpecialChar
+                      ? 'bg-green-500'
+                      : 'bg-gray-300',
+                  ]"
+                ></div>
+                <span
+                  :class="[
+                    passwordRequirements.hasSpecialChar
+                      ? 'text-green-700'
+                      : 'text-gray-500',
+                  ]"
+                  >One special character</span
+                >
+              </div>
+            </div>
           </div>
 
           <!-- Create Account Button -->
@@ -503,7 +598,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import CommunityNameModal from '../components/CommunityNameModal.vue';
@@ -596,6 +691,62 @@ const isValidUSPhoneNumber = (phoneNumber: string): boolean => {
   return true;
 };
 
+// Validate password strength
+const isValidPassword = (
+  password: string
+): { isValid: boolean; message: string } => {
+  // Check minimum length
+  if (password.length < 8) {
+    return {
+      isValid: false,
+      message: 'Password must be at least 8 characters long',
+    };
+  }
+
+  // Check for uppercase letter
+  if (!/[A-Z]/.test(password)) {
+    return {
+      isValid: false,
+      message: 'Password must contain at least one uppercase letter',
+    };
+  }
+
+  // Check for lowercase letter
+  if (!/[a-z]/.test(password)) {
+    return {
+      isValid: false,
+      message: 'Password must contain at least one lowercase letter',
+    };
+  }
+
+  // Check for number
+  if (!/[0-9]/.test(password)) {
+    return {
+      isValid: false,
+      message: 'Password must contain at least one number',
+    };
+  }
+
+  // Check for special character
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return {
+      isValid: false,
+      message: 'Password must contain at least one special character',
+    };
+  }
+
+  return { isValid: true, message: '' };
+};
+
+// Computed properties for password validation indicators
+const passwordRequirements = computed(() => ({
+  hasMinLength: form.password.length >= 8,
+  hasUppercase: /[A-Z]/.test(form.password),
+  hasLowercase: /[a-z]/.test(form.password),
+  hasNumber: /[0-9]/.test(form.password),
+  hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password),
+}));
+
 // Form handlers
 const handleSignup = async () => {
   try {
@@ -632,8 +783,9 @@ const handleSignup = async () => {
       return;
     }
 
-    if (form.password.length < 6) {
-      errorMessage.value = 'Password must be at least 6 characters';
+    const passwordValidation = isValidPassword(form.password);
+    if (!passwordValidation.isValid) {
+      errorMessage.value = passwordValidation.message;
       return;
     }
 
