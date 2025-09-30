@@ -3,7 +3,7 @@
     <!-- Sidebar -->
     <div class="w-64 bg-white shadow-lg flex flex-col">
       <!-- Community Header -->
-      <div class="p-6 border-b border-gray-200">
+      <div class="p-6">
         <div class="flex items-center space-x-3">
           <img
             src="/owner-logo.png"
@@ -263,9 +263,12 @@
     </div>
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div
+      class="flex-1 flex flex-col overflow-hidden"
+      style="background-color: #f3f8fd"
+    >
       <!-- Top Header -->
-      <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+      <header class="px-6 py-4">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-2xl font-semibold text-gray-900">
@@ -301,7 +304,7 @@
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 overflow-auto bg-gray-50 p-6">
+      <main class="flex-1 overflow-auto p-6" style="background-color: #f3f8fd">
         <slot />
       </main>
     </div>

@@ -3,77 +3,12 @@
     <!-- Header with user info and logout -->
     <div class="flex justify-between items-center mb-6">
       <div>
-        <h2 class="text-2xl font-semibold text-gray-900">Dashboard</h2>
         <p class="text-gray-600 mt-1">
           Welcome back, {{ authStore.userDisplayName }}!
         </p>
         <p class="text-sm text-gray-500" v-if="authStore.tenantName">
           {{ authStore.tenantName }}
         </p>
-      </div>
-
-      <!-- User menu with logout -->
-      <div class="flex items-center space-x-4">
-        <!-- User avatar and info -->
-        <div class="flex items-center space-x-3">
-          <div
-            class="w-10 h-10 bg-primary rounded-full flex items-center justify-center"
-          >
-            <span class="text-white font-medium text-sm">
-              {{ authStore.userDisplayName.charAt(0).toUpperCase() }}
-            </span>
-          </div>
-          <div class="hidden sm:block">
-            <p class="text-sm font-medium text-gray-900">
-              {{ authStore.userDisplayName }}
-            </p>
-            <p class="text-xs text-gray-500">{{ authStore.user?.email }}</p>
-          </div>
-        </div>
-
-        <!-- Logout button -->
-        <button
-          @click="handleLogout"
-          :disabled="authStore.isLoading"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-        >
-          <svg
-            v-if="authStore.isLoading"
-            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <svg
-            v-else
-            class="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-            />
-          </svg>
-          {{ authStore.isLoading ? 'Signing out...' : 'Sign Out' }}
-        </button>
       </div>
     </div>
 
