@@ -57,13 +57,38 @@
 
         <!-- Signup Form -->
         <form @submit.prevent="handleSignup" class="space-y-6">
+          <!-- Required Fields Note -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg
+                  class="h-5 w-5 text-blue-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-blue-800">
+                  <strong>All fields are required.</strong> Please fill out all
+                  information to create your HOA management account.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- Community Name Input -->
           <div>
             <label
               for="communityName"
               class="block text-sm font-medium text-text-primary mb-2"
             >
-              Community Name
+              Community Name <span class="text-red-500">*</span>
             </label>
             <input
               id="communityName"
@@ -81,7 +106,7 @@
               for="email"
               class="block text-sm font-medium text-text-primary mb-2"
             >
-              Email
+              Email <span class="text-red-500">*</span>
             </label>
             <input
               id="email"
@@ -100,7 +125,7 @@
               for="fullName"
               class="block text-sm font-medium text-text-primary mb-2"
             >
-              Full Name
+              Full Name <span class="text-red-500">*</span>
             </label>
             <input
               id="fullName"
@@ -119,7 +144,7 @@
               for="phoneNumber"
               class="block text-sm font-medium text-text-primary mb-2"
             >
-              Phone Number
+              Phone Number <span class="text-red-500">*</span>
             </label>
             <input
               id="phoneNumber"
@@ -138,7 +163,7 @@
               for="password"
               class="block text-sm font-medium text-text-primary mb-2"
             >
-              Password
+              Password <span class="text-red-500">*</span>
             </label>
             <div class="relative">
               <input
@@ -192,6 +217,9 @@
                 </svg>
               </button>
             </div>
+            <p class="mt-2 text-sm text-gray-600">
+              Password must be at least 6 characters long.
+            </p>
           </div>
 
           <!-- Create Account Button -->
@@ -510,6 +538,11 @@ const handleSignup = async () => {
 
     if (!form.fullName.trim()) {
       errorMessage.value = 'Full name is required';
+      return;
+    }
+
+    if (!form.phoneNumber.trim()) {
+      errorMessage.value = 'Phone number is required';
       return;
     }
 

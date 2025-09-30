@@ -87,7 +87,7 @@
                 for="communityName"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                Community Name *
+                Community Name <span class="text-red-500">*</span>
               </label>
               <input
                 id="communityName"
