@@ -60,23 +60,122 @@
     <!-- Main content with conditional styling -->
     <main
       :class="
-        $route.name === 'Login' || $route.name === 'Signup'
+        $route.name === 'Login' ||
+        $route.name === 'Signup' ||
+        $route.name === 'TermsOfService' ||
+        $route.name === 'PrivacyNotice'
           ? ''
           : 'container mx-auto p-4'
       "
     >
       <router-view />
     </main>
+
+    <!-- Footer with legal links (only on main pages) -->
+    <footer
+      v-if="
+        $route.name !== 'Login' &&
+        $route.name !== 'Signup' &&
+        $route.name !== 'TermsOfService' &&
+        $route.name !== 'PrivacyNotice'
+      "
+      class="bg-gray-800 text-white py-8 mt-12"
+    >
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Company Info -->
+          <div>
+            <h3 class="text-lg font-semibold mb-4">NeibrPay</h3>
+            <p class="text-gray-300 text-sm">
+              Comprehensive HOA management platform for modern communities.
+            </p>
+          </div>
+
+          <!-- Quick Links -->
+          <div>
+            <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+            <ul class="space-y-2">
+              <li>
+                <router-link
+                  to="/"
+                  class="text-gray-300 hover:text-white text-sm transition-colors"
+                >
+                  Dashboard
+                </router-link>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-300 hover:text-white text-sm transition-colors"
+                >
+                  Support
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-300 hover:text-white text-sm transition-colors"
+                >
+                  Documentation
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Legal -->
+          <div>
+            <h3 class="text-lg font-semibold mb-4">Legal</h3>
+            <ul class="space-y-2">
+              <li>
+                <router-link
+                  to="/terms-of-service"
+                  class="text-gray-300 hover:text-white text-sm transition-colors"
+                >
+                  Terms of Service
+                </router-link>
+              </li>
+              <li>
+                <router-link
+                  to="/privacy-notice"
+                  class="text-gray-300 hover:text-white text-sm transition-colors"
+                >
+                  Privacy Notice
+                </router-link>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="text-gray-300 hover:text-white text-sm transition-colors"
+                >
+                  Cookie Policy
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+          <p class="text-gray-400 text-sm">
+            © {{ currentYear }} NeibrPay. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from './stores/auth';
 
 const $route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+
+// Current year for copyright
+const currentYear = computed(() => new Date().getFullYear());
 
 // Handle quick logout from header
 const handleQuickLogout = async () => {

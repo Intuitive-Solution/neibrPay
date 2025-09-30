@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../views/Dashboard.vue';
 import Login from '../views/Login.vue';
 import Signup from '../views/Signup.vue';
+import TermsOfService from '../views/TermsOfService.vue';
+import PrivacyNotice from '../views/PrivacyNotice.vue';
 import { setupAuthGuards } from './guards';
 
 const router = createRouter({
@@ -28,6 +30,18 @@ const router = createRouter({
     {
       path: '/dashboard',
       redirect: '/',
+    },
+    {
+      path: '/terms-of-service',
+      name: 'TermsOfService',
+      component: TermsOfService,
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/privacy-notice',
+      name: 'PrivacyNotice',
+      component: PrivacyNotice,
+      meta: { requiresAuth: false },
     },
     {
       path: '/:pathMatch(.*)*',

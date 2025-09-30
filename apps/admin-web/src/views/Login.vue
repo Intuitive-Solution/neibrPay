@@ -237,13 +237,13 @@
           <p class="text-xs text-text-secondary">
             By clicking "Sign In" you agree to the
             <a
-              href="#"
+              href="/terms-of-service"
               class="underline hover:text-text-primary transition-colors duration-200"
               >Terms of Service</a
             >
             and acknowledge the
             <a
-              href="#"
+              href="/privacy-notice"
               class="underline hover:text-text-primary transition-colors duration-200"
               >Privacy Notice</a
             >.
