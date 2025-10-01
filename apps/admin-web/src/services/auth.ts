@@ -120,16 +120,21 @@ class AuthService {
   }
 
   /**
-   * Sign up with Google
+   * Sign up with Google using popup (primary method)
    */
   async signupWithGoogle(data: GoogleSignupData): Promise<AuthResponse> {
     try {
+      console.log('Starting Google signup process...');
+
       // Sign in with Google popup
       const googleResult = await signInWithPopup(auth, googleProvider);
       const user = googleResult.user;
 
+      console.log('Google signup successful:', user.email);
+
       // Get ID token
       const idToken = await user.getIdToken();
+      console.log('ID token obtained');
 
       // Create tenant and user in backend
       const response = await fetch(`${this.baseURL}/auth/google-signup`, {
@@ -147,14 +152,18 @@ class AuthService {
         }),
       });
 
+      console.log('Backend response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Backend error:', errorData);
         throw new Error(
           errorData.message || 'Failed to create account with Google'
         );
       }
 
       const responseData = await response.json();
+      console.log('Backend signup successful');
 
       return {
         user: this.mapFirebaseUser(user),
@@ -163,6 +172,28 @@ class AuthService {
       };
     } catch (error) {
       console.error('Google signup error:', error);
+
+      // Handle specific Firebase auth errors
+      if (error instanceof Error) {
+        if (error.message.includes('popup-closed-by-user')) {
+          throw new Error('Google sign-in was cancelled. Please try again.');
+        } else if (error.message.includes('popup-blocked')) {
+          throw new Error(
+            'Popup was blocked by your browser. Please allow popups and try again.'
+          );
+        } else if (error.message.includes('network-request-failed')) {
+          throw new Error(
+            'Network error. Please check your internet connection and try again.'
+          );
+        } else if (error.message.includes('auth/popup-closed-by-user')) {
+          throw new Error('Google sign-in was cancelled. Please try again.');
+        } else if (error.message.includes('auth/popup-blocked')) {
+          throw new Error(
+            'Popup was blocked by your browser. Please allow popups and try again.'
+          );
+        }
+      }
+
       throw this.handleAuthError(error as AuthError);
     }
   }

@@ -1,17 +1,5 @@
 <template>
   <div class="dashboard">
-    <!-- Header with user info and logout -->
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <p class="text-gray-600 mt-1">
-          Welcome back, {{ authStore.userDisplayName }}!
-        </p>
-        <p class="text-sm text-gray-500" v-if="authStore.tenantName">
-          {{ authStore.tenantName }}
-        </p>
-      </div>
-    </div>
-
     <!-- Error message -->
     <div
       v-if="errorMessage"
