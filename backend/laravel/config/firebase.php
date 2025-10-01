@@ -13,6 +13,8 @@ return [
     'project_id' => env('FIREBASE_PROJECT_ID'),
     
     'credentials_path' => env('FIREBASE_CREDENTIALS', storage_path('app/firebase-credentials.json')),
+    'credentials_json' => env('FIREBASE_CREDENTIALS_JSON'),
+    'credentials_base64' => env('FIREBASE_CREDENTIALS_BASE64'),
     
     'database_url' => env('FIREBASE_DATABASE_URL'),
     

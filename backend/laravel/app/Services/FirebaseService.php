@@ -26,16 +26,36 @@ class FirebaseService
     private function initializeFirebase(): void
     {
         try {
+            $credentialsJson = config('firebase.credentials_json');
             $credentialsPath = config('firebase.credentials_path');
             
-            if (!file_exists($credentialsPath)) {
-                throw new Exception("Firebase credentials file not found at: {$credentialsPath}");
+            $factory = new Factory();
+            
+            // Use JSON credentials if available (Railway environment)
+            if ($credentialsJson) {
+                $credentials = json_decode($credentialsJson, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new Exception('Invalid JSON in FIREBASE_CREDENTIALS_JSON');
+                }
+                $factory = $factory->withServiceAccount($credentials);
+            } 
+            // Use Base64 encoded credentials if available (Railway environment)
+            elseif (config('firebase.credentials_base64')) {
+                $credentialsJson = base64_decode(config('firebase.credentials_base64'));
+                $credentials = json_decode($credentialsJson, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new Exception('Invalid JSON in FIREBASE_CREDENTIALS_BASE64');
+                }
+                $factory = $factory->withServiceAccount($credentials);
+            }
+            // Fallback to file path (local development)
+            elseif (file_exists($credentialsPath)) {
+                $factory = $factory->withServiceAccount($credentialsPath);
+            } else {
+                throw new Exception("Firebase credentials not found. Please set FIREBASE_CREDENTIALS_JSON, FIREBASE_CREDENTIALS_BASE64, or ensure file exists at: {$credentialsPath}");
             }
 
-            $factory = (new Factory)
-                ->withServiceAccount($credentialsPath)
-                ->withProjectId($this->projectId);
-
+            $factory = $factory->withProjectId($this->projectId);
             $this->auth = $factory->createAuth();
         } catch (Exception $e) {
             Log::error('Firebase initialization failed: ' . $e->getMessage());
