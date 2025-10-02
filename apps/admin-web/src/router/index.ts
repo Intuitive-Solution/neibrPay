@@ -8,6 +8,7 @@ import TermsOfService from '../views/TermsOfService.vue';
 import PrivacyNotice from '../views/PrivacyNotice.vue';
 import Invoices from '../views/Invoices.vue';
 import People from '../views/People.vue';
+import AddResident from '../views/AddResident.vue';
 import Payments from '../views/Payments.vue';
 import Vendors from '../views/Vendors.vue';
 import Settings from '../views/Settings.vue';
@@ -60,6 +61,18 @@ const router = createRouter({
       path: '/people',
       name: 'People',
       component: People,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/people/add',
+      name: 'AddResident',
+      component: AddResident,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/people/edit/:id',
+      name: 'EditResident',
+      component: AddResident,
       meta: { requiresAuth: true },
     },
     {

@@ -2,7 +2,10 @@
   <div class="space-y-6">
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white rounded-lg shadow p-6">
+      <button
+        @click="navigateToAddResident"
+        class="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer"
+      >
         <div class="flex items-center">
           <div class="p-3 bg-blue-100 rounded-lg">
             <svg
@@ -24,9 +27,12 @@
             <p class="text-sm text-gray-600">Register new resident</p>
           </div>
         </div>
-      </div>
+      </button>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <button
+        @click="scrollToResidents"
+        class="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer"
+      >
         <div class="flex items-center">
           <div class="p-3 bg-green-100 rounded-lg">
             <svg
@@ -50,7 +56,7 @@
             <p class="text-sm text-gray-600">Browse resident directory</p>
           </div>
         </div>
-      </div>
+      </button>
 
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
@@ -78,57 +84,34 @@
     </div>
 
     <!-- Resident Directory -->
-    <div class="bg-white rounded-lg shadow">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Resident Directory</h2>
-      </div>
-      <div class="p-6">
-        <div class="text-center py-12">
-          <svg
-            class="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-            />
-          </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">
-            No residents yet
-          </h3>
-          <p class="mt-1 text-sm text-gray-500">
-            Get started by adding your first resident.
-          </p>
-          <div class="mt-6">
-            <button
-              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
-              <svg
-                class="-ml-1 mr-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              Add Resident
-            </button>
-          </div>
-        </div>
-      </div>
+    <div ref="residentsSection">
+      <ResidentList
+        @add-resident="navigateToAddResident"
+        @edit-resident="navigateToEditResident"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// People page component
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import ResidentList from '../components/ResidentList.vue';
+import type { Resident } from '@neibrpay/models';
+
+const router = useRouter();
+const residentsSection = ref<HTMLElement>();
+
+// Navigation methods
+const navigateToAddResident = () => {
+  router.push('/people/add');
+};
+
+const navigateToEditResident = (resident: Resident) => {
+  router.push(`/people/edit/${resident.id}`);
+};
+
+const scrollToResidents = () => {
+  residentsSection.value?.scrollIntoView({ behavior: 'smooth' });
+};
 </script>

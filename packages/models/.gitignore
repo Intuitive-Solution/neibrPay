@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build artifacts in src/ (these are generated during development)
+src/*.js
+src/*.js.map
+src/*.d.ts
+src/*.d.ts.map
+
+# Keep dist/ folder as it's needed for other packages
+# dist/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

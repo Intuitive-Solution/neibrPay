@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,7 @@ Route::get('/test', function () {
     ]);
 });
 
+
 // Authentication routes
 Route::prefix('auth')->group(function () {
     // Signup routes (no authentication required)
@@ -36,6 +38,14 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
+});
+
+// Protected routes (require Firebase authentication)
+Route::middleware('firebase.auth')->group(function () {
+    // Resident management routes
+    Route::apiResource('residents', ResidentController::class);
+    Route::post('residents/{resident}/restore', [ResidentController::class, 'restore']);
+    Route::delete('residents/{resident}/force', [ResidentController::class, 'forceDelete']);
 });
 
 // Legacy route for backward compatibility
