@@ -169,6 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
               headers: {
                 Authorization: `Bearer ${idToken}`,
               },
+              signal: AbortSignal.timeout(10000), // 10 second timeout
             }
           );
 
