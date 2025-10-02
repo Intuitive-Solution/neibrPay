@@ -25,7 +25,11 @@ export function setupAuthGuards(router: Router) {
     const requiresAuth = to.matched.some(
       record => record.meta.requiresAuth !== false
     );
-    const isAuthRoute = to.name === 'Login' || to.name === 'Signup';
+    const isAuthRoute =
+      to.name === 'Login' ||
+      to.name === 'Signup' ||
+      to.name === 'ForgotPassword' ||
+      to.name === 'ResetPassword';
 
     if (requiresAuth && !authStore.isAuthenticated) {
       // Redirect to login if not authenticated

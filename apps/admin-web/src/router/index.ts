@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../views/Dashboard.vue';
 import Login from '../views/Login.vue';
 import Signup from '../views/Signup.vue';
+import ForgotPassword from '../views/ForgotPassword.vue';
+import ResetPassword from '../views/ResetPassword.vue';
 import TermsOfService from '../views/TermsOfService.vue';
 import PrivacyNotice from '../views/PrivacyNotice.vue';
 import Invoices from '../views/Invoices.vue';
@@ -24,6 +26,18 @@ const router = createRouter({
       path: '/signup',
       name: 'Signup',
       component: Signup,
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      component: ForgotPassword,
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/reset-password',
+      name: 'ResetPassword',
+      component: ResetPassword,
       meta: { requiresAuth: false },
     },
     {

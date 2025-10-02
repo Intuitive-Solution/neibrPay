@@ -4,6 +4,8 @@ import {
   signInWithPopup,
   signOut,
   sendEmailVerification,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
   User,
   UserCredential,
   AuthError,
@@ -362,6 +364,33 @@ class AuthService {
   }
 
   /**
+   * Send password reset email
+   */
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error('Password reset error:', error);
+      throw this.handleAuthError(error as AuthError);
+    }
+  }
+
+  /**
+   * Confirm password reset with action code and new password
+   */
+  async confirmPasswordReset(
+    actionCode: string,
+    newPassword: string
+  ): Promise<void> {
+    try {
+      await confirmPasswordReset(auth, actionCode, newPassword);
+    } catch (error) {
+      console.error('Password reset confirmation error:', error);
+      throw this.handleAuthError(error as AuthError);
+    }
+  }
+
+  /**
    * Handle Firebase Auth errors and convert to user-friendly messages
    */
   private handleAuthError(error: AuthError): Error {
@@ -463,6 +492,16 @@ class AuthService {
         return new Error('Keychain access error. Please try again.');
       case 'auth/internal-error':
         return new Error('An internal error occurred. Please try again later.');
+
+      // Password reset specific errors
+      case 'auth/invalid-action-code':
+        return new Error(
+          'The password reset link is invalid or has expired. Please request a new one.'
+        );
+      case 'auth/expired-action-code':
+        return new Error(
+          'The password reset link has expired. Please request a new one.'
+        );
 
       default:
         return new Error(

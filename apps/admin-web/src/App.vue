@@ -5,6 +5,8 @@
       v-if="
         $route.name !== 'Login' &&
         $route.name !== 'Signup' &&
+        $route.name !== 'ForgotPassword' &&
+        $route.name !== 'ResetPassword' &&
         $route.name !== 'TermsOfService' &&
         $route.name !== 'PrivacyNotice'
       "
