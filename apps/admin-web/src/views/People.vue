@@ -1,11 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Page Header -->
-    <div class="bg-white rounded-lg shadow p-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">People</h1>
-      <p class="text-gray-600">Manage residents and community members</p>
-    </div>
-
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div class="bg-white rounded-lg shadow p-6">
