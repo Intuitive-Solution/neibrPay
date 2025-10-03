@@ -371,7 +371,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import {
   useResidents,
   useDeleteResident,
@@ -403,7 +403,7 @@ const {
   isLoading,
   error,
   refetch,
-} = useResidents(includeDeleted);
+} = useResidents(includeDeleted.value);
 const deleteResidentMutation = useDeleteResident();
 const restoreResidentMutation = useRestoreResident();
 

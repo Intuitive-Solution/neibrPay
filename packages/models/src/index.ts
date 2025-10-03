@@ -2,4 +2,5 @@
 // This will contain zod schemas, TypeScript types, currency & date helpers
 
 export * from './resident';
+export * from './unit';
 export * from './validation';

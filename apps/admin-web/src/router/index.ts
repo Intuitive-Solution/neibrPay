@@ -9,6 +9,8 @@ import PrivacyNotice from '../views/PrivacyNotice.vue';
 import Invoices from '../views/Invoices.vue';
 import People from '../views/People.vue';
 import AddResident from '../views/AddResident.vue';
+import Units from '../views/Units.vue';
+import AddUnit from '../views/AddUnit.vue';
 import Payments from '../views/Payments.vue';
 import Vendors from '../views/Vendors.vue';
 import Settings from '../views/Settings.vue';
@@ -73,6 +75,24 @@ const router = createRouter({
       path: '/people/edit/:id',
       name: 'EditResident',
       component: AddResident,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/units',
+      name: 'Units',
+      component: Units,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/units/add',
+      name: 'AddUnit',
+      component: AddUnit,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/units/edit/:id',
+      name: 'EditUnit',
+      component: AddUnit,
       meta: { requiresAuth: true },
     },
     {

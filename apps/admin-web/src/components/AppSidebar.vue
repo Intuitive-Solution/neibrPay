@@ -176,6 +176,37 @@
 
           <li>
             <router-link
+              to="/units"
+              :class="[
+                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
+                $route.name === 'Units' ||
+                $route.name === 'AddUnit' ||
+                $route.name === 'EditUnit'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-700 hover:bg-gray-100',
+                isCollapsed ? 'justify-center px-2' : 'px-4',
+              ]"
+              :title="isCollapsed ? 'Units' : ''"
+            >
+              <svg
+                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+              <span v-if="!isCollapsed">Units</span>
+            </router-link>
+          </li>
+
+          <li>
+            <router-link
               to="/payments"
               :class="[
                 'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
@@ -368,10 +399,13 @@
 
           <!-- Search Bar or Back Button -->
           <div class="flex items-center space-x-4">
-            <!-- Back Button for Add/Edit Resident pages -->
+            <!-- Back Button for Add/Edit Resident and Unit pages -->
             <button
               v-if="
-                route.name === 'AddResident' || route.name === 'EditResident'
+                route.name === 'AddResident' ||
+                route.name === 'EditResident' ||
+                route.name === 'AddUnit' ||
+                route.name === 'EditUnit'
               "
               @click="goBack"
               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -470,6 +504,12 @@ const pageTitle = computed(() => {
       return 'Add New Resident';
     case 'EditResident':
       return 'Edit Resident';
+    case 'Units':
+      return 'Units';
+    case 'AddUnit':
+      return 'Add New Unit';
+    case 'EditUnit':
+      return 'Edit Unit';
     case 'Payments':
       return 'Payments';
     case 'Vendors':
@@ -493,6 +533,12 @@ const pageDescription = computed(() => {
       return 'Add a new resident to your community';
     case 'EditResident':
       return 'Update resident information';
+    case 'Units':
+      return 'Manage units and properties';
+    case 'AddUnit':
+      return 'Add a new unit to your community';
+    case 'EditUnit':
+      return 'Update unit information';
     case 'Payments':
       return 'Track payments and financial transactions';
     case 'Vendors':
@@ -517,7 +563,11 @@ const handleLogout = async () => {
 
 // Handle back navigation
 const goBack = () => {
-  router.push('/people');
+  if (route.name === 'AddResident' || route.name === 'EditResident') {
+    router.push('/people');
+  } else if (route.name === 'AddUnit' || route.name === 'EditUnit') {
+    router.push('/units');
+  }
 };
 </script>
 

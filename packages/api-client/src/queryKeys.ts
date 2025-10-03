@@ -9,6 +9,16 @@ export const residentKeys = {
   detail: (id: number) => [...residentKeys.details(), id] as const,
 } as const;
 
+export const unitKeys = {
+  all: ['units'] as const,
+  lists: () => [...unitKeys.all, 'list'] as const,
+  list: (filters: Record<string, any> = {}) =>
+    [...unitKeys.lists(), { filters }] as const,
+  details: () => [...unitKeys.all, 'detail'] as const,
+  detail: (id: number) => [...unitKeys.details(), id] as const,
+} as const;
+
 export const queryKeys = {
   residents: residentKeys,
+  units: unitKeys,
 } as const;

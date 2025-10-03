@@ -187,11 +187,7 @@ import {
   validateResidentForm,
   validateUpdateResidentForm,
 } from '@neibrpay/models';
-import type {
-  ResidentFormData,
-  ResidentFormErrors,
-  CreateResidentRequest,
-} from '@neibrpay/models';
+import type { ResidentFormData, ResidentFormErrors } from '@neibrpay/models';
 
 const route = useRoute();
 const router = useRouter();
@@ -292,12 +288,10 @@ const handleSubmit = async () => {
     if (isEditMode.value && residentId.value) {
       await updateResidentMutation.mutateAsync({
         id: residentId.value,
-        data: validation.data!,
+        data: validation.data as any,
       });
     } else {
-      await createResidentMutation.mutateAsync(
-        validation.data as CreateResidentRequest
-      );
+      await createResidentMutation.mutateAsync(validation.data as any);
     }
 
     // Success - redirect back to people page

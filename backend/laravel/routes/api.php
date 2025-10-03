@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ResidentController;
+use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,11 @@ Route::middleware('firebase.auth')->group(function () {
     Route::apiResource('residents', ResidentController::class);
     Route::post('residents/{resident}/restore', [ResidentController::class, 'restore']);
     Route::delete('residents/{resident}/force', [ResidentController::class, 'forceDelete']);
+    
+    // Unit management routes
+    Route::apiResource('units', UnitsController::class);
+    Route::post('units/{unit}/restore', [UnitsController::class, 'restore']);
+    Route::delete('units/{unit}/force', [UnitsController::class, 'forceDelete']);
 });
 
 // Legacy route for backward compatibility
