@@ -198,9 +198,6 @@
                     <div class="text-sm font-medium text-gray-900">
                       {{ resident.name }}
                     </div>
-                    <div class="text-sm text-gray-500">
-                      ID: {{ resident.id }}
-                    </div>
                   </div>
                 </div>
               </td>
@@ -406,7 +403,7 @@ const {
   isLoading,
   error,
   refetch,
-} = useResidents(includeDeleted.value);
+} = useResidents(includeDeleted);
 const deleteResidentMutation = useDeleteResident();
 const restoreResidentMutation = useRestoreResident();
 
@@ -463,8 +460,5 @@ const restoreResident = async () => {
   }
 };
 
-// Watch for includeDeleted changes to refetch data
-watch(includeDeleted, () => {
-  refetch();
-});
+// Query is now reactive to includeDeleted changes, no manual watch needed
 </script>

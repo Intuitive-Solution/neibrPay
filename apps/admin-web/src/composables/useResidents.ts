@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { residentsApi, residentKeys } from '@neibrpay/api-client';
+import { computed, type Ref } from 'vue';
 import type {
   Resident,
   CreateResidentRequest,
@@ -8,10 +9,16 @@ import type {
 } from '@neibrpay/models';
 
 // Query hooks
-export function useResidents(includeDeleted = false) {
+export function useResidents(includeDeleted: Ref<boolean> | boolean = false) {
+  const includeDeletedRef = computed(() =>
+    typeof includeDeleted === 'boolean' ? includeDeleted : includeDeleted.value
+  );
+
   return useQuery({
-    queryKey: residentKeys.list({ includeDeleted }),
-    queryFn: () => residentsApi.getResidents(includeDeleted),
+    queryKey: computed(() =>
+      residentKeys.list({ includeDeleted: includeDeletedRef.value })
+    ),
+    queryFn: () => residentsApi.getResidents(includeDeletedRef.value),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
