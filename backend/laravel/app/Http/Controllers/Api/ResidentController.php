@@ -28,8 +28,15 @@ class ResidentController extends Controller
         
         $residents = $query->orderBy('created_at', 'desc')->get();
         
+        // Transform phone_number to phone for frontend compatibility
+        $transformedResidents = $residents->map(function ($resident) {
+            $resident->phone = $resident->phone_number;
+            unset($resident->phone_number);
+            return $resident;
+        });
+
         return response()->json([
-            'data' => $residents,
+            'data' => $transformedResidents,
             'meta' => [
                 'total' => $residents->count(),
                 'include_deleted' => $includeDeleted,
@@ -55,6 +62,10 @@ class ResidentController extends Controller
         
         $resident->load('tenant');
         
+        // Transform phone_number to phone for frontend compatibility
+        $resident->phone = $resident->phone_number;
+        unset($resident->phone_number);
+        
         return response()->json([
             'data' => $resident,
             'message' => 'Resident created successfully'
@@ -73,6 +84,10 @@ class ResidentController extends Controller
             ->withTrashed()
             ->with('tenant')
             ->findOrFail($id);
+        
+        // Transform phone_number to phone for frontend compatibility
+        $resident->phone = $resident->phone_number;
+        unset($resident->phone_number);
         
         return response()->json(['data' => $resident]);
     }
@@ -95,6 +110,10 @@ class ResidentController extends Controller
         ]);
         
         $resident->load('tenant');
+        
+        // Transform phone_number to phone for frontend compatibility
+        $resident->phone = $resident->phone_number;
+        unset($resident->phone_number);
         
         return response()->json([
             'data' => $resident,
@@ -134,6 +153,10 @@ class ResidentController extends Controller
         
         $resident->restore();
         $resident->load('tenant');
+        
+        // Transform phone_number to phone for frontend compatibility
+        $resident->phone = $resident->phone_number;
+        unset($resident->phone_number);
         
         return response()->json([
             'data' => $resident,

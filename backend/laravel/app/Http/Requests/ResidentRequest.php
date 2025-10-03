@@ -40,7 +40,7 @@ class ResidentRequest extends FormRequest
             'phone' => [
                 'required',
                 'string',
-                'regex:/^\(\d{3}\) \d{3}-\d{4}$/',
+                'regex:/^(\(\d{3}\) \d{3}-\d{4}|\d{3}-\d{3}-\d{4})$/',
                 'max:14'
             ],
         ];
@@ -62,7 +62,7 @@ class ResidentRequest extends FormRequest
             'email.max' => 'The email address may not be greater than 255 characters.',
             
             'phone.required' => 'The phone number is required.',
-            'phone.regex' => 'Please enter a valid US phone number in the format (XXX) XXX-XXXX.',
+            'phone.regex' => 'Please enter a valid US phone number (10 digits).',
             'phone.max' => 'The phone number may not be greater than 14 characters.',
         ];
     }

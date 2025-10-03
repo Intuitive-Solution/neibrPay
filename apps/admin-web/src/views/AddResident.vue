@@ -1,149 +1,177 @@
 <template>
-  <div class="max-w-2xl mx-auto">
-    <div class="bg-white shadow rounded-lg">
-      <form @submit.prevent="handleSubmit" class="p-6 space-y-6">
-        <!-- Name Field -->
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700">
-            Full Name <span class="text-red-500">*</span>
-          </label>
-          <div class="mt-1">
-            <input
-              id="name"
-              v-model="form.name"
-              type="text"
-              required
-              class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.name,
-              }"
-              placeholder="Enter resident's full name"
-            />
-            <p v-if="errors.name" class="mt-1 text-sm text-red-600">
-              {{ errors.name }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Email Field -->
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">
-            Email Address <span class="text-red-500">*</span>
-          </label>
-          <div class="mt-1">
-            <input
-              id="email"
-              v-model="form.email"
-              type="email"
-              required
-              class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.email,
-              }"
-              placeholder="Enter email address"
-            />
-            <p v-if="errors.email" class="mt-1 text-sm text-red-600">
-              {{ errors.email }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Phone Field -->
-        <div>
-          <label for="phone" class="block text-sm font-medium text-gray-700">
-            Phone Number <span class="text-red-500">*</span>
-          </label>
-          <div class="mt-1">
-            <input
-              id="phone"
-              v-model="form.phone"
-              type="tel"
-              required
-              @input="formatPhone"
-              class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.phone,
-              }"
-              placeholder="(XXX) XXX-XXXX"
-              maxlength="14"
-            />
-            <p v-if="errors.phone" class="mt-1 text-sm text-red-600">
-              {{ errors.phone }}
-            </p>
-            <p class="mt-1 text-xs text-gray-500">Format: (XXX) XXX-XXXX</p>
-          </div>
-        </div>
-
-        <!-- General Error -->
-        <div v-if="errors.general" class="rounded-md bg-red-50 p-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg
-                class="h-5 w-5 text-red-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm text-red-800">{{ errors.general }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-          <button
-            type="button"
-            @click="goBack"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+  <div class="max-w-4xl">
+    <!-- Error Message -->
+    <div
+      v-if="errors.general"
+      class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg"
+    >
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-red-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
           >
-            Cancel
-          </button>
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-red-800">{{ errors.general }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form @submit.prevent="handleSubmit" class="space-y-6">
+      <!-- Name Field -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
+        <label
+          for="name"
+          class="block text-sm font-medium text-text-primary lg:pt-3"
+        >
+          Full Name <span class="text-red-500">*</span>
+        </label>
+        <div class="lg:col-span-2">
+          <input
+            id="name"
+            v-model="form.name"
+            type="text"
+            required
+            class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+            :class="{
+              'border-red-300 focus:ring-red-500 focus:border-red-500':
+                errors.name,
+            }"
+            placeholder="Enter resident's full name"
+          />
+          <p v-if="errors.name" class="mt-2 text-sm text-red-600">
+            {{ errors.name }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Email Field -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
+        <label
+          for="email"
+          class="block text-sm font-medium text-text-primary lg:pt-3"
+        >
+          Email Address <span class="text-red-500">*</span>
+        </label>
+        <div class="lg:col-span-2">
+          <input
+            id="email"
+            v-model="form.email"
+            type="email"
+            required
+            class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+            :class="{
+              'border-red-300 focus:ring-red-500 focus:border-red-500':
+                errors.email,
+            }"
+            placeholder="Enter email address"
+          />
+          <p v-if="errors.email" class="mt-2 text-sm text-red-600">
+            {{ errors.email }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Phone Field -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
+        <label
+          for="phone"
+          class="block text-sm font-medium text-text-primary lg:pt-3"
+        >
+          Phone Number <span class="text-red-500">*</span>
+        </label>
+        <div class="lg:col-span-2">
+          <input
+            id="phone"
+            v-model="form.phone"
+            type="tel"
+            required
+            @input="formatPhone"
+            class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+            :class="{
+              'border-red-300 focus:ring-red-500 focus:border-red-500':
+                errors.phone,
+            }"
+            placeholder="555-555-5555"
+            maxlength="14"
+          />
+          <p v-if="errors.phone" class="mt-2 text-sm text-red-600">
+            {{ errors.phone }}
+          </p>
+          <p class="mt-2 text-sm text-gray-600">
+            Please enter a valid US phone number (10 digits). Format:
+            XXX-XXX-XXXX
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+        <!-- Spacer for large screens to align with form fields -->
+        <div class="hidden lg:block"></div>
+
+        <!-- Buttons Container -->
+        <div class="lg:col-span-2 flex flex-col sm:flex-row gap-4">
+          <!-- Primary Button -->
           <button
             type="submit"
             :disabled="isSubmitting"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
-            <svg
-              v-if="isSubmitting"
-              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            {{
-              isSubmitting
-                ? 'Saving...'
-                : isEditMode
-                  ? 'Update Resident'
-                  : 'Add Resident'
-            }}
+            <span v-if="isSubmitting" class="flex items-center">
+              <svg
+                class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              {{
+                isSubmitting
+                  ? 'Saving...'
+                  : isEditMode
+                    ? 'Update Resident'
+                    : 'Add Resident'
+              }}
+            </span>
+            <span v-else>{{
+              isEditMode ? 'Update Resident' : 'Add Resident'
+            }}</span>
+          </button>
+
+          <!-- Cancel Button -->
+          <button
+            type="button"
+            @click="goBack"
+            class="flex-1 flex justify-center py-3 px-4 border border-neutral-300 rounded-lg shadow-sm bg-white text-sm font-medium text-text-primary hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+          >
+            Cancel
           </button>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
 </template>
 
@@ -156,7 +184,6 @@ import {
   useResident,
 } from '../composables/useResidents';
 import {
-  formatPhoneNumber,
   validateResidentForm,
   validateUpdateResidentForm,
 } from '@neibrpay/models';
@@ -219,10 +246,27 @@ watch(resident, newResident => {
   }
 });
 
-// Phone formatting
+// Phone formatting - match signup form format (XXX-XXX-XXXX)
 const formatPhone = (event: Event) => {
   const target = event.target as HTMLInputElement;
-  const formatted = formatPhoneNumber(target.value);
+  const value = target.value;
+
+  // Remove all non-numeric characters
+  const phoneNumber = value.replace(/\D/g, '');
+
+  // Limit to 10 digits
+  const limitedPhoneNumber = phoneNumber.substring(0, 10);
+
+  // Format as XXX-XXX-XXXX
+  let formatted = '';
+  if (limitedPhoneNumber.length >= 6) {
+    formatted = `${limitedPhoneNumber.substring(0, 3)}-${limitedPhoneNumber.substring(3, 6)}-${limitedPhoneNumber.substring(6)}`;
+  } else if (limitedPhoneNumber.length >= 3) {
+    formatted = `${limitedPhoneNumber.substring(0, 3)}-${limitedPhoneNumber.substring(3)}`;
+  } else {
+    formatted = limitedPhoneNumber;
+  }
+
   form.value.phone = formatted;
   target.value = formatted;
 };

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// US Phone number validation regex
-const US_PHONE_REGEX = /^\(\d{3}\) \d{3}-\d{4}$/;
+// US Phone number validation regex - accepts both (XXX) XXX-XXXX and XXX-XXX-XXXX formats
+const US_PHONE_REGEX = /^(\(\d{3}\) \d{3}-\d{4}|\d{3}-\d{3}-\d{4})$/;
 
 // Resident validation schemas
 export const createResidentSchema = z.object({
@@ -18,10 +18,7 @@ export const createResidentSchema = z.object({
     .trim(),
   phone: z
     .string()
-    .regex(
-      US_PHONE_REGEX,
-      'Please enter a valid US phone number in the format (XXX) XXX-XXXX'
-    )
+    .regex(US_PHONE_REGEX, 'Please enter a valid US phone number (10 digits)')
     .max(14, 'Phone number must not exceed 14 characters'),
 });
 
