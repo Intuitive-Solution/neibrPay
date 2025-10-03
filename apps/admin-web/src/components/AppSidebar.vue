@@ -366,9 +366,34 @@
             <p class="text-sm text-gray-600 mt-1">{{ pageDescription }}</p>
           </div>
 
-          <!-- Search Bar -->
+          <!-- Search Bar or Back Button -->
           <div class="flex items-center space-x-4">
-            <div class="relative">
+            <!-- Back Button for Add/Edit Resident pages -->
+            <button
+              v-if="
+                route.name === 'AddResident' || route.name === 'EditResident'
+              "
+              @click="goBack"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+              <svg
+                class="-ml-0.5 mr-2 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back
+            </button>
+
+            <!-- Search Bar for other pages -->
+            <div v-else class="relative">
               <input
                 type="text"
                 placeholder="Search..."
@@ -441,6 +466,10 @@ const pageTitle = computed(() => {
       return 'Invoices';
     case 'People':
       return 'People';
+    case 'AddResident':
+      return 'Add New Resident';
+    case 'EditResident':
+      return 'Edit Resident';
     case 'Payments':
       return 'Payments';
     case 'Vendors':
@@ -460,6 +489,10 @@ const pageDescription = computed(() => {
       return 'Manage community invoices and billing';
     case 'People':
       return 'Manage residents and community members';
+    case 'AddResident':
+      return 'Add a new resident to your community';
+    case 'EditResident':
+      return 'Update resident information';
     case 'Payments':
       return 'Track payments and financial transactions';
     case 'Vendors':
@@ -480,6 +513,11 @@ const handleLogout = async () => {
     console.error('Logout failed:', error);
     router.push('/login');
   }
+};
+
+// Handle back navigation
+const goBack = () => {
+  router.push('/people');
 };
 </script>
 
