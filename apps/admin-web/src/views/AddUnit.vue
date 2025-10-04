@@ -308,169 +308,182 @@
         </form>
       </div>
 
-      <!-- Tabs Navigation -->
-      <div class="border-b border-gray-200">
-        <nav class="-mb-px flex space-x-8">
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            @click="activeTab = tab.id"
-            :class="[
-              activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-              'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm',
-            ]"
-          >
-            {{ tab.name }}
-          </button>
-        </nav>
-      </div>
+      <!-- Tabs Section with Distinct Background -->
+      <div class="bg-gray-50 rounded-lg p-6">
+        <!-- Tabs Navigation -->
+        <div class="border-b border-gray-200 mb-6">
+          <nav class="-mb-px flex space-x-8">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              @click="activeTab = tab.id"
+              :class="[
+                activeTab === tab.id
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm',
+              ]"
+            >
+              {{ tab.name }}
+            </button>
+          </nav>
+        </div>
 
-      <!-- Tab Content -->
-      <div class="mt-6">
-        <!-- Owner Tab -->
-        <div v-if="activeTab === 'owner'" class="space-y-4">
-          <!-- Search Bar -->
-          <div class="flex items-center">
-            <!-- Search Box -->
-            <div class="relative">
-              <div
-                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              >
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        <!-- Tab Content -->
+        <div>
+          <!-- Owner Tab -->
+          <div v-if="activeTab === 'owner'" class="space-y-4">
+            <!-- Search Bar -->
+            <div class="flex items-center">
+              <!-- Search Box -->
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Search..."
+                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                />
+                <button
+                  v-if="searchQuery"
+                  @click="searchQuery = ''"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search..."
-                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-              />
-              <button
-                v-if="searchQuery"
-                @click="searchQuery = ''"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center"
-              >
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+            </div>
+
+            <!-- Owner Table -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-300">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Name
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Email
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="owner in filteredOwners" :key="owner.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      {{ owner.name }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ owner.email }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      <button class="text-primary hover:text-primary-600">
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <!-- Owner Table -->
-          <div class="bg-white shadow overflow-hidden sm:rounded-md">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Name
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Email
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="owner in filteredOwners" :key="owner.id">
-                  <td
-                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                  >
-                    {{ owner.name }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ owner.email }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button class="text-primary hover:text-primary-600">
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- Account History Tab -->
+          <div v-if="activeTab === 'account-history'" class="space-y-4">
+            <!-- Account History Table -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Description
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Remark
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="history in accountHistory" :key="history.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ history.date }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ history.description }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ history.remark }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-        <!-- Account History Tab -->
-        <div v-if="activeTab === 'account-history'" class="space-y-4">
-          <!-- Account History Table -->
-          <div class="bg-white shadow overflow-hidden sm:rounded-md">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Date
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Description
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Remark
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="history in accountHistory" :key="history.id">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {{ history.date }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ history.description }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ history.remark }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Document Tab -->
-        <div v-if="activeTab === 'document'" class="space-y-4">
-          <div class="bg-white shadow overflow-hidden sm:rounded-md">
-            <div class="px-6 py-4">
-              <p class="text-gray-500">
-                Document management functionality will be implemented here.
-              </p>
+          <!-- Document Tab -->
+          <div v-if="activeTab === 'document'" class="space-y-4">
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+              <div class="px-6 py-4">
+                <p class="text-gray-500">
+                  Document management functionality will be implemented here.
+                </p>
+              </div>
             </div>
           </div>
         </div>
