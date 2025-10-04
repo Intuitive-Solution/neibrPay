@@ -1,19 +1,5 @@
 <template>
   <div class="max-w-4xl">
-    <!-- Form Header -->
-    <div class="mb-8">
-      <h2 class="text-heading-2 text-text-primary mb-2">
-        {{ isEditMode ? 'Edit Unit' : 'Add New Unit' }}
-      </h2>
-      <p class="text-body text-text-secondary">
-        {{
-          isEditMode
-            ? 'Update unit information'
-            : 'Add a new unit to your community'
-        }}
-      </p>
-    </div>
-
     <!-- Error Message -->
     <div
       v-if="errors.general"
