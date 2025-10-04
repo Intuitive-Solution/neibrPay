@@ -1141,7 +1141,8 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCreateUnit, useUpdateUnit, useUnit } from '../composables/useUnits';
 import { useResidents } from '../composables/useResidents';
-import { unitsApi } from '@neibrpay/api-client';
+import { unitsApi, unitKeys } from '@neibrpay/api-client';
+import { useQueryClient } from '@tanstack/vue-query';
 import { US_STATES } from '@neibrpay/models';
 import type { UnitFormData, UnitFormErrors } from '@neibrpay/models';
 
@@ -1220,15 +1221,15 @@ const filteredOwners = computed(() => {
 
 const availablePeople = computed(() => {
   // Filter out people who are already owners
-  const ownerIds = owners.value.map(owner => owner.id);
+  const ownerIds = owners.value.map((owner: any) => owner.id);
   let filtered = allPeople.value.filter(
-    person => !ownerIds.includes(person.id)
+    (person: any) => !ownerIds.includes(person.id)
   );
 
   // Apply search filter
   if (modalSearchQuery.value) {
     filtered = filtered.filter(
-      person =>
+      (person: any) =>
         person.name
           .toLowerCase()
           .includes(modalSearchQuery.value.toLowerCase()) ||
@@ -1252,9 +1253,10 @@ const form = ref<UnitFormData>({
 });
 
 // Queries and mutations
+const queryClient = useQueryClient();
 const createUnitMutation = useCreateUnit();
 const updateUnitMutation = useUpdateUnit();
-const { data: existingUnit } = useUnit(unitId.value || 0);
+const { data: existingUnit, refetch: refetchUnit } = useUnit(unitId.value || 0);
 const { data: residents, isLoading: isLoadingResidents } = useResidents(false); // Get only active residents
 
 // Methods
@@ -1275,7 +1277,11 @@ const closeAddOwnerModal = () => {
   isAddingOwners.value = false;
 };
 
-const openRemoveOwnerModal = (owner: any) => {
+const openRemoveOwnerModal = (owner: {
+  id: number;
+  name: string;
+  email: string;
+}) => {
   ownerToRemove.value = owner;
   showRemoveOwnerModal.value = true;
 };
@@ -1300,7 +1306,7 @@ const addSelectedOwners = async () => {
   isAddingOwners.value = true;
 
   try {
-    const newOwners = allPeople.value.filter(person =>
+    const newOwners = allPeople.value.filter((person: any) =>
       selectedPeople.value.includes(person.id)
     );
 
@@ -1317,13 +1323,18 @@ const addSelectedOwners = async () => {
     // If we're in edit mode and have a unit ID, save to database immediately
     if (isEditMode.value && unitId.value) {
       try {
-        const ownerIds = newOwners.map(owner => owner.id);
+        const ownerIds = newOwners.map((owner: any) => owner.id);
         await unitsApi.addOwners(unitId.value, ownerIds);
+
+        // Invalidate unit query to refetch latest data
+        await queryClient.invalidateQueries({
+          queryKey: unitKeys.detail(unitId.value),
+        });
       } catch (error) {
         // Remove the owners from local state if API call failed
-        const newOwnerIds = newOwners.map(owner => owner.id);
+        const newOwnerIds = newOwners.map((owner: any) => owner.id);
         owners.value = owners.value.filter(
-          owner => !newOwnerIds.includes(owner.id)
+          (owner: any) => !newOwnerIds.includes(owner.id)
         );
         ownersUpdateTrigger.value++;
         // Show error message
@@ -1342,17 +1353,22 @@ const confirmRemoveOwner = async () => {
   if (!ownerToRemove.value) return;
 
   const ownerId = ownerToRemove.value.id;
-  const removedOwner = owners.value.find(owner => owner.id === ownerId);
+  const removedOwner = owners.value.find((owner: any) => owner.id === ownerId);
 
   if (removedOwner) {
     // Use array replacement to ensure reactivity
-    owners.value = owners.value.filter(owner => owner.id !== ownerId);
+    owners.value = owners.value.filter((owner: any) => owner.id !== ownerId);
     ownersUpdateTrigger.value++;
 
     // If we're in edit mode and have a unit ID, save to database immediately
     if (isEditMode.value && unitId.value) {
       try {
         await unitsApi.removeOwners(unitId.value, [ownerId]);
+
+        // Invalidate unit query to refetch latest data
+        await queryClient.invalidateQueries({
+          queryKey: unitKeys.detail(unitId.value),
+        });
       } catch (error) {
         // Add the owner back to local state if API call failed
         owners.value = [...owners.value, removedOwner];
@@ -1418,10 +1434,21 @@ const handleSubmit = async () => {
   }
 };
 
+// Watch for unitId changes to refetch data
+watch(
+  unitId,
+  async (newUnitId: number) => {
+    if (isEditMode.value && newUnitId) {
+      await refetchUnit();
+    }
+  },
+  { immediate: true }
+);
+
 // Watch for existing unit data changes
 watch(
   existingUnit,
-  newUnit => {
+  (newUnit: any) => {
     if (isEditMode.value && newUnit) {
       form.value = {
         title: newUnit.title,
@@ -1444,21 +1471,26 @@ watch(
 );
 
 // Load existing unit data for editing
-onMounted(() => {
-  if (isEditMode.value && existingUnit.value) {
-    form.value = {
-      title: existingUnit.value.title,
-      address: existingUnit.value.address,
-      city: existingUnit.value.city,
-      state: existingUnit.value.state,
-      zip_code: existingUnit.value.zip_code,
-      starting_balance: existingUnit.value.starting_balance,
-      balance_as_of_date: existingUnit.value.balance_as_of_date.split('T')[0],
-    };
+onMounted(async () => {
+  if (isEditMode.value && unitId.value) {
+    // Force refetch to get latest data from database
+    await refetchUnit();
 
-    // Load existing owners
-    if (existingUnit.value.owners) {
-      owners.value = existingUnit.value.owners;
+    if (existingUnit.value) {
+      form.value = {
+        title: existingUnit.value.title,
+        address: existingUnit.value.address,
+        city: existingUnit.value.city,
+        state: existingUnit.value.state,
+        zip_code: existingUnit.value.zip_code,
+        starting_balance: existingUnit.value.starting_balance,
+        balance_as_of_date: existingUnit.value.balance_as_of_date.split('T')[0],
+      };
+
+      // Load existing owners
+      if (existingUnit.value.owners) {
+        owners.value = existingUnit.value.owners;
+      }
     }
   }
 });

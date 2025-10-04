@@ -28,6 +28,8 @@ export function useUnit(id: number) {
     queryKey: unitKeys.detail(id),
     queryFn: () => unitsApi.getUnit(id),
     enabled: !!id,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 }
 
