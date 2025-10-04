@@ -384,6 +384,7 @@
               <!-- Add Button -->
               <button
                 type="button"
+                @click="openAddOwnerModal"
                 class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
                 <svg
@@ -440,8 +441,11 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
-                      <button class="text-primary hover:text-primary-600">
-                        Edit
+                      <button
+                        @click="removeOwner(owner.id)"
+                        class="text-red-600 hover:text-red-800"
+                      >
+                        Remove
                       </button>
                     </td>
                   </tr>
@@ -806,12 +810,218 @@
       </form>
     </div>
   </div>
+
+  <!-- Add Owner Modal -->
+  <div
+    v-if="showAddOwnerModal"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+  >
+    <div
+      class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white"
+    >
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Add Owners to Unit</h3>
+        <button
+          @click="closeAddOwnerModal"
+          class="text-gray-400 hover:text-gray-600"
+        >
+          <svg
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="mb-6">
+        <p class="text-sm text-gray-600 mb-4">
+          Select active residents to add as owners of this unit. You can select
+          multiple people.
+        </p>
+
+        <!-- Search Box -->
+        <div class="mb-4">
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <input
+              v-model="modalSearchQuery"
+              type="text"
+              placeholder="Search people..."
+              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+            />
+            <button
+              v-if="modalSearchQuery"
+              @click="modalSearchQuery = ''"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg
+                class="h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- People List -->
+        <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-md">
+          <!-- Loading State -->
+          <div v-if="isLoadingResidents" class="p-4 text-center text-gray-500">
+            <div class="flex items-center justify-center">
+              <svg
+                class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Loading people...
+            </div>
+          </div>
+
+          <!-- People List -->
+          <div
+            v-else
+            v-for="person in availablePeople"
+            :key="person.id"
+            @click="togglePersonSelection(person.id)"
+            :class="[
+              'flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50',
+              selectedPeople.includes(person.id)
+                ? 'bg-blue-50 border-blue-200'
+                : '',
+            ]"
+          >
+            <div class="flex items-center">
+              <input
+                type="checkbox"
+                :checked="selectedPeople.includes(person.id)"
+                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                @click.stop
+                @change="togglePersonSelection(person.id)"
+              />
+              <div class="ml-3">
+                <p class="text-sm font-medium text-gray-900">
+                  {{ person.name }}
+                </p>
+                <p class="text-sm text-gray-500">{{ person.email }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div
+            v-if="!isLoadingResidents && availablePeople.length === 0"
+            class="p-4 text-center text-gray-500"
+          >
+            <div v-if="modalSearchQuery">
+              No people found matching "{{ modalSearchQuery }}".
+            </div>
+            <div v-else>No available people to add as owners.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end space-x-3">
+        <button
+          @click="closeAddOwnerModal"
+          class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+        >
+          Cancel
+        </button>
+        <button
+          @click="addSelectedOwners"
+          :disabled="selectedPeople.length === 0 || isAddingOwners"
+          class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="isAddingOwners" class="flex items-center">
+            <svg
+              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Adding...
+          </span>
+          <span v-else>
+            Add {{ selectedPeople.length }} Owner{{
+              selectedPeople.length !== 1 ? 's' : ''
+            }}
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCreateUnit, useUpdateUnit, useUnit } from '../composables/useUnits';
+import { useResidents } from '../composables/useResidents';
+import { unitsApi } from '@neibrpay/api-client';
 import { US_STATES } from '@neibrpay/models';
 import type { UnitFormData, UnitFormErrors } from '@neibrpay/models';
 
@@ -831,6 +1041,10 @@ const isSubmitting = ref(false);
 const errors = ref<UnitFormErrors>({});
 const activeTab = ref('owner');
 const searchQuery = ref('');
+const showAddOwnerModal = ref(false);
+const selectedPeople = ref<number[]>([]);
+const modalSearchQuery = ref('');
+const isAddingOwners = ref(false);
 
 // Tabs configuration
 const tabs = [
@@ -839,12 +1053,13 @@ const tabs = [
   { id: 'document', name: 'Document' },
 ];
 
-// Mock data for demonstration
-const owners = ref([
-  { id: 1, name: 'John Doe', email: 'john.doe@example.com' },
-  { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com' },
-  { id: 3, name: 'Bob Johnson', email: 'bob.johnson@example.com' },
-]);
+// Owners list - will be populated from API or form data
+const owners = ref<any[]>([]);
+
+// Get people from API - residents data will be used as allPeople
+const allPeople = computed(() => {
+  return residents.value || [];
+});
 
 const accountHistory = ref([
   {
@@ -877,6 +1092,33 @@ const filteredOwners = computed(() => {
   );
 });
 
+const availablePeople = computed(() => {
+  // Filter out people who are already owners
+  const ownerIds = owners.value.map(owner => owner.id);
+  let filtered = allPeople.value.filter(
+    person => !ownerIds.includes(person.id)
+  );
+
+  // Apply search filter
+  if (modalSearchQuery.value) {
+    filtered = filtered.filter(
+      person =>
+        person.name
+          .toLowerCase()
+          .includes(modalSearchQuery.value.toLowerCase()) ||
+        person.email
+          .toLowerCase()
+          .includes(modalSearchQuery.value.toLowerCase())
+    );
+  }
+
+  console.log('Available people:', filtered);
+  console.log('Current owners:', owners.value);
+  console.log('Owner IDs:', ownerIds);
+
+  return filtered;
+});
+
 const form = ref<UnitFormData>({
   title: '',
   address: '',
@@ -891,10 +1133,97 @@ const form = ref<UnitFormData>({
 const createUnitMutation = useCreateUnit();
 const updateUnitMutation = useUpdateUnit();
 const { data: existingUnit } = useUnit(unitId.value || 0);
+const { data: residents, isLoading: isLoadingResidents } = useResidents(false); // Get only active residents
 
 // Methods
 const goBack = () => {
   router.push('/units');
+};
+
+const openAddOwnerModal = () => {
+  showAddOwnerModal.value = true;
+  selectedPeople.value = [];
+  modalSearchQuery.value = '';
+};
+
+const closeAddOwnerModal = () => {
+  showAddOwnerModal.value = false;
+  selectedPeople.value = [];
+  modalSearchQuery.value = '';
+  isAddingOwners.value = false;
+};
+
+const togglePersonSelection = (personId: number) => {
+  const index = selectedPeople.value.indexOf(personId);
+  if (index > -1) {
+    selectedPeople.value.splice(index, 1);
+  } else {
+    selectedPeople.value.push(personId);
+  }
+};
+
+const addSelectedOwners = async () => {
+  if (isAddingOwners.value) return; // Prevent multiple calls
+
+  isAddingOwners.value = true;
+
+  try {
+    const newOwners = allPeople.value.filter(person =>
+      selectedPeople.value.includes(person.id)
+    );
+
+    // Add new owners to the owners list
+    owners.value.push(...newOwners);
+    console.log('Added owners:', newOwners);
+    console.log('Current owners list:', owners.value);
+
+    // If we're in edit mode and have a unit ID, save to database immediately
+    if (isEditMode.value && unitId.value) {
+      try {
+        const ownerIds = newOwners.map(owner => owner.id);
+        await unitsApi.addOwners(unitId.value, ownerIds);
+      } catch (error) {
+        console.error('Error adding owners:', error);
+        // Remove the owners from local state if API call failed
+        newOwners.forEach(newOwner => {
+          const index = owners.value.findIndex(
+            owner => owner.id === newOwner.id
+          );
+          if (index > -1) {
+            owners.value.splice(index, 1);
+          }
+        });
+        // Show error message
+        errors.value.general = 'Failed to add owners. Please try again.';
+      }
+    }
+
+    // Close modal and reset selection
+    closeAddOwnerModal();
+  } finally {
+    isAddingOwners.value = false;
+  }
+};
+
+const removeOwner = async (ownerId: number) => {
+  const index = owners.value.findIndex(owner => owner.id === ownerId);
+  if (index > -1) {
+    const removedOwner = owners.value[index];
+    owners.value.splice(index, 1);
+
+    // If we're in edit mode and have a unit ID, save to database immediately
+    if (isEditMode.value && unitId.value) {
+      try {
+        await unitsApi.removeOwners(unitId.value, [ownerId]);
+      } catch (error) {
+        console.error('Error removing owner:', error);
+        // Add the owner back to local state if API call failed
+        owners.value.splice(index, 0, removedOwner);
+        // Show error message
+        errors.value.general = 'Failed to remove owner. Please try again.';
+      }
+    }
+  }
 };
 
 const formatZipCode = (event: Event) => {
@@ -913,13 +1242,25 @@ const handleSubmit = async () => {
   errors.value = {};
 
   try {
+    let currentUnitId: number;
+
     if (isEditMode.value && unitId.value) {
-      await updateUnitMutation.mutateAsync({
+      // Update existing unit
+      const updatedUnit = await updateUnitMutation.mutateAsync({
         id: unitId.value,
         data: form.value,
       });
+      currentUnitId = updatedUnit.id;
     } else {
-      await createUnitMutation.mutateAsync(form.value);
+      // Create new unit
+      const newUnit = await createUnitMutation.mutateAsync(form.value);
+      currentUnitId = newUnit.id;
+    }
+
+    // Save owner relationships
+    if (owners.value.length > 0) {
+      const ownerIds = owners.value.map(owner => owner.id);
+      await unitsApi.syncOwners(currentUnitId, ownerIds);
     }
 
     router.push('/units');
@@ -936,6 +1277,31 @@ const handleSubmit = async () => {
   }
 };
 
+// Watch for existing unit data changes
+watch(
+  existingUnit,
+  newUnit => {
+    if (isEditMode.value && newUnit) {
+      form.value = {
+        title: newUnit.title,
+        address: newUnit.address,
+        city: newUnit.city,
+        state: newUnit.state,
+        zip_code: newUnit.zip_code,
+        starting_balance: newUnit.starting_balance,
+        balance_as_of_date: newUnit.balance_as_of_date.split('T')[0],
+      };
+
+      // Load existing owners
+      if (newUnit.owners) {
+        owners.value = newUnit.owners;
+        console.log('Loaded existing owners:', newUnit.owners);
+      }
+    }
+  },
+  { immediate: true }
+);
+
 // Load existing unit data for editing
 onMounted(() => {
   if (isEditMode.value && existingUnit.value) {
@@ -948,6 +1314,11 @@ onMounted(() => {
       starting_balance: existingUnit.value.starting_balance,
       balance_as_of_date: existingUnit.value.balance_as_of_date.split('T')[0],
     };
+
+    // Load existing owners
+    if (existingUnit.value.owners) {
+      owners.value = existingUnit.value.owners;
+    }
   }
 });
 </script>

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Unit extends Model
@@ -45,6 +46,15 @@ class Unit extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Get the users (owners) that own this unit.
+     */
+    public function owners(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'unit_owners', 'unit_id', 'resident_id')
+            ->withTimestamps();
     }
 
     /**

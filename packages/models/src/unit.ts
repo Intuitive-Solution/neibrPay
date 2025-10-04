@@ -1,5 +1,7 @@
 // Unit data models and types
 
+import type { Resident } from './resident';
+
 export interface Unit {
   id: number;
   title: string;
@@ -19,6 +21,7 @@ export interface Unit {
     name: string;
     slug: string;
   };
+  owners?: Resident[];
 }
 
 export interface CreateUnitRequest {

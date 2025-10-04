@@ -78,6 +78,39 @@ export const unitsApi = {
   async forceDeleteUnit(id: number): Promise<void> {
     await apiClient.delete(`/units/${id}/force`);
   },
+
+  /**
+   * Add owners to a unit
+   */
+  async addOwners(id: number, ownerIds: number[]): Promise<Unit> {
+    const response: AxiosResponse<UnitResponse> = await apiClient.post(
+      `/units/${id}/owners`,
+      { owner_ids: ownerIds }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Remove owners from a unit
+   */
+  async removeOwners(id: number, ownerIds: number[]): Promise<Unit> {
+    const response: AxiosResponse<UnitResponse> = await apiClient.delete(
+      `/units/${id}/owners`,
+      { data: { owner_ids: ownerIds } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Sync owners for a unit (replace all owners)
+   */
+  async syncOwners(id: number, ownerIds: number[]): Promise<Unit> {
+    const response: AxiosResponse<UnitResponse> = await apiClient.put(
+      `/units/${id}/owners`,
+      { owner_ids: ownerIds }
+    );
+    return response.data.data;
+  },
 };
 
 export default unitsApi;

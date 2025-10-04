@@ -19,7 +19,7 @@ class UnitsController extends Controller
         $includeDeleted = $request->boolean('include_deleted', false);
         
         $query = Unit::forTenant($user->tenant_id)
-            ->with('tenant');
+            ->with(['tenant', 'owners']);
             
         if ($includeDeleted) {
             $query->withTrashed();
@@ -59,7 +59,7 @@ class UnitsController extends Controller
             'is_active' => true,
         ]);
 
-        $unit->load('tenant');
+        $unit->load(['tenant', 'owners']);
 
         return response()->json([
             'data' => $unit,
@@ -79,7 +79,7 @@ class UnitsController extends Controller
             return response()->json(['message' => 'Unit not found'], 404);
         }
 
-        $unit->load('tenant');
+        $unit->load(['tenant', 'owners']);
 
         return response()->json([
             'data' => $unit,
@@ -110,7 +110,7 @@ class UnitsController extends Controller
         ]);
 
         $unit->update($validated);
-        $unit->load('tenant');
+        $unit->load(['tenant', 'owners']);
 
         return response()->json([
             'data' => $unit,
@@ -158,7 +158,7 @@ class UnitsController extends Controller
         }
 
         $unit->restore();
-        $unit->load('tenant');
+        $unit->load(['tenant', 'owners']);
 
         return response()->json([
             'data' => $unit,
@@ -186,6 +186,110 @@ class UnitsController extends Controller
 
         return response()->json([
             'message' => 'Unit permanently deleted',
+        ]);
+    }
+
+    /**
+     * Add owners to a unit.
+     */
+    public function addOwners(Request $request, Unit $unit): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        // Ensure the unit belongs to the user's tenant
+        if ($unit->tenant_id !== $user->tenant_id) {
+            return response()->json(['message' => 'Unit not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'owner_ids' => 'required|array',
+            'owner_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        // Ensure all owners belong to the same tenant
+        $ownerIds = $validated['owner_ids'];
+        $validOwners = \App\Models\User::whereIn('id', $ownerIds)
+            ->where('tenant_id', $user->tenant_id)
+            ->pluck('id')
+            ->toArray();
+
+        if (count($validOwners) !== count($ownerIds)) {
+            return response()->json(['message' => 'Some owners do not belong to your tenant'], 400);
+        }
+
+        // Sync owners (this will add new ones and keep existing ones)
+        $unit->owners()->syncWithoutDetaching($validOwners);
+        $unit->load(['tenant', 'owners']);
+
+        return response()->json([
+            'data' => $unit,
+            'message' => 'Owners added successfully',
+        ]);
+    }
+
+    /**
+     * Remove owners from a unit.
+     */
+    public function removeOwners(Request $request, Unit $unit): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        // Ensure the unit belongs to the user's tenant
+        if ($unit->tenant_id !== $user->tenant_id) {
+            return response()->json(['message' => 'Unit not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'owner_ids' => 'required|array',
+            'owner_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $unit->owners()->detach($validated['owner_ids']);
+        $unit->load(['tenant', 'owners']);
+
+        return response()->json([
+            'data' => $unit,
+            'message' => 'Owners removed successfully',
+        ]);
+    }
+
+    /**
+     * Sync owners for a unit (replace all owners).
+     */
+    public function syncOwners(Request $request, Unit $unit): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        // Ensure the unit belongs to the user's tenant
+        if ($unit->tenant_id !== $user->tenant_id) {
+            return response()->json(['message' => 'Unit not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'owner_ids' => 'array',
+            'owner_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $ownerIds = $validated['owner_ids'] ?? [];
+        
+        // Ensure all owners belong to the same tenant
+        if (!empty($ownerIds)) {
+            $validOwners = \App\Models\User::whereIn('id', $ownerIds)
+                ->where('tenant_id', $user->tenant_id)
+                ->pluck('id')
+                ->toArray();
+
+            if (count($validOwners) !== count($ownerIds)) {
+                return response()->json(['message' => 'Some owners do not belong to your tenant'], 400);
+            }
+        }
+
+        $unit->owners()->sync($ownerIds);
+        $unit->load(['tenant', 'owners']);
+
+        return response()->json([
+            'data' => $unit,
+            'message' => 'Owners synced successfully',
         ]);
     }
 }

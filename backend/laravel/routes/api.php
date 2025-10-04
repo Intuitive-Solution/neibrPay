@@ -52,6 +52,11 @@ Route::middleware('firebase.auth')->group(function () {
     Route::apiResource('units', UnitsController::class);
     Route::post('units/{unit}/restore', [UnitsController::class, 'restore']);
     Route::delete('units/{unit}/force', [UnitsController::class, 'forceDelete']);
+    
+    // Unit owner management routes
+    Route::post('units/{unit}/owners', [UnitsController::class, 'addOwners']);
+    Route::delete('units/{unit}/owners', [UnitsController::class, 'removeOwners']);
+    Route::put('units/{unit}/owners', [UnitsController::class, 'syncOwners']);
 });
 
 // Legacy route for backward compatibility
