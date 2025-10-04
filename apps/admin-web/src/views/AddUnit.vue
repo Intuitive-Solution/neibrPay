@@ -309,7 +309,7 @@
       </div>
 
       <!-- Tabs Section with Distinct Background -->
-      <div class="bg-gray-50 rounded-lg p-6">
+      <div class="bg-white rounded-lg p-6">
         <!-- Tabs Navigation -->
         <div class="border-b border-gray-200 mb-6">
           <nav class="-mb-px flex space-x-8">
