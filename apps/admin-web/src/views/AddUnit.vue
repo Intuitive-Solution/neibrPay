@@ -445,7 +445,7 @@
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
                       <button
-                        @click="removeOwner(owner.id)"
+                        @click="openRemoveOwnerModal(owner)"
                         class="text-red-600 hover:text-red-800"
                       >
                         Remove
@@ -1046,6 +1046,94 @@
       </div>
     </div>
   </div>
+
+  <!-- Remove Owner Confirmation Modal -->
+  <div
+    v-if="showRemoveOwnerModal"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+  >
+    <div
+      class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/3 shadow-lg rounded-md bg-white"
+    >
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Remove Owner</h3>
+        <button
+          @click="closeRemoveOwnerModal"
+          class="text-gray-400 hover:text-gray-600"
+        >
+          <svg
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Content -->
+      <div class="mb-6">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <svg
+              class="h-8 w-8 text-red-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h4 class="text-sm font-medium text-gray-900">
+              Are you sure you want to remove this owner?
+            </h4>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <p class="text-sm text-gray-600 mb-2">
+            <strong>Owner:</strong> {{ ownerToRemove?.name }}
+          </p>
+          <p class="text-sm text-gray-600 mb-2">
+            <strong>Email:</strong> {{ ownerToRemove?.email }}
+          </p>
+          <p class="text-sm text-gray-500">
+            This will remove the ownership relationship between this person and
+            the unit. The person will no longer be associated with this unit.
+          </p>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end space-x-3">
+        <button
+          @click="closeRemoveOwnerModal"
+          class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+        >
+          Cancel
+        </button>
+        <button
+          @click="confirmRemoveOwner"
+          class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+        >
+          Remove Owner
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -1078,6 +1166,8 @@ const selectedPeople = ref<number[]>([]);
 const modalSearchQuery = ref('');
 const isAddingOwners = ref(false);
 const ownersUpdateTrigger = ref(0);
+const showRemoveOwnerModal = ref(false);
+const ownerToRemove = ref<any>(null);
 
 // Tabs configuration
 const tabs = [
@@ -1185,6 +1275,16 @@ const closeAddOwnerModal = () => {
   isAddingOwners.value = false;
 };
 
+const openRemoveOwnerModal = (owner: any) => {
+  ownerToRemove.value = owner;
+  showRemoveOwnerModal.value = true;
+};
+
+const closeRemoveOwnerModal = () => {
+  showRemoveOwnerModal.value = false;
+  ownerToRemove.value = null;
+};
+
 const togglePersonSelection = (personId: number) => {
   const index = selectedPeople.value.indexOf(personId);
   if (index > -1) {
@@ -1238,8 +1338,12 @@ const addSelectedOwners = async () => {
   }
 };
 
-const removeOwner = async (ownerId: number) => {
+const confirmRemoveOwner = async () => {
+  if (!ownerToRemove.value) return;
+
+  const ownerId = ownerToRemove.value.id;
   const removedOwner = owners.value.find(owner => owner.id === ownerId);
+
   if (removedOwner) {
     // Use array replacement to ensure reactivity
     owners.value = owners.value.filter(owner => owner.id !== ownerId);
@@ -1258,6 +1362,9 @@ const removeOwner = async (ownerId: number) => {
       }
     }
   }
+
+  // Close the confirmation modal
+  closeRemoveOwnerModal();
 };
 
 const formatZipCode = (event: Event) => {
