@@ -41,7 +41,7 @@
             v-model="form.title"
             type="text"
             required
-            class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
             :class="{
               'border-red-300 focus:ring-red-500 focus:border-red-500':
                 errors.title,
@@ -68,7 +68,7 @@
             v-model="form.address"
             type="text"
             required
-            class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
             :class="{
               'border-red-300 focus:ring-red-500 focus:border-red-500':
                 errors.address,
@@ -95,7 +95,7 @@
             v-model="form.city"
             type="text"
             required
-            class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
             :class="{
               'border-red-300 focus:ring-red-500 focus:border-red-500':
                 errors.city,
@@ -122,7 +122,7 @@
               id="state"
               v-model="form.state"
               required
-              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.state,
@@ -148,7 +148,7 @@
               type="text"
               required
               @input="formatZipCode"
-              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.zip_code,
@@ -186,7 +186,7 @@
               min="-999999.99"
               max="999999.99"
               required
-              class="w-full pl-7 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+              class="w-full pl-6 pr-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.starting_balance,
@@ -217,7 +217,7 @@
             v-model="form.balance_as_of_date"
             type="date"
             required
-            class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
             :class="{
               'border-red-300 focus:ring-red-500 focus:border-red-500':
                 errors.balance_as_of_date,
@@ -243,7 +243,7 @@
           <button
             type="submit"
             :disabled="isSubmitting"
-            class="flex-1 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            class="flex-1 flex justify-center py-2 px-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             <span v-if="isSubmitting" class="flex items-center">
               <svg
@@ -281,7 +281,7 @@
           <button
             type="button"
             @click="goBack"
-            class="flex-1 flex justify-center py-3 px-4 border border-neutral-300 rounded-lg shadow-sm bg-white text-sm font-medium text-text-primary hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+            class="flex-1 flex justify-center py-2 px-3 border border-neutral-300 rounded-lg shadow-sm bg-white text-sm font-medium text-text-primary hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
           >
             Cancel
           </button>
