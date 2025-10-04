@@ -406,7 +406,10 @@
 
             <!-- Owner Table -->
             <div class="bg-white shadow overflow-hidden sm:rounded-md">
-              <table class="min-w-full divide-y divide-gray-200">
+              <table
+                class="min-w-full divide-y divide-gray-200"
+                :key="`owners-table-${owners.length}`"
+              >
                 <thead class="bg-gray-300">
                   <tr>
                     <th
@@ -447,6 +450,35 @@
                       >
                         Remove
                       </button>
+                    </td>
+                  </tr>
+                  <!-- Empty State -->
+                  <tr v-if="filteredOwners.length === 0">
+                    <td
+                      colspan="3"
+                      class="px-6 py-8 text-center text-sm text-gray-500"
+                    >
+                      <div class="flex flex-col items-center">
+                        <svg
+                          class="h-12 w-12 text-gray-400 mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                          />
+                        </svg>
+                        <p class="text-gray-500">
+                          No owners assigned to this unit
+                        </p>
+                        <p class="text-gray-400 text-xs mt-1">
+                          Click "Add" to assign owners
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -1017,7 +1049,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCreateUnit, useUpdateUnit, useUnit } from '../composables/useUnits';
 import { useResidents } from '../composables/useResidents';
@@ -1045,6 +1077,7 @@ const showAddOwnerModal = ref(false);
 const selectedPeople = ref<number[]>([]);
 const modalSearchQuery = ref('');
 const isAddingOwners = ref(false);
+const ownersUpdateTrigger = ref(0);
 
 // Tabs configuration
 const tabs = [
@@ -1084,6 +1117,9 @@ const accountHistory = ref([
 
 // Computed
 const filteredOwners = computed(() => {
+  // Include ownersUpdateTrigger to force reactivity
+  ownersUpdateTrigger.value;
+
   if (!searchQuery.value) return owners.value;
   return owners.value.filter(
     owner =>
@@ -1111,10 +1147,6 @@ const availablePeople = computed(() => {
           .includes(modalSearchQuery.value.toLowerCase())
     );
   }
-
-  console.log('Available people:', filtered);
-  console.log('Current owners:', owners.value);
-  console.log('Owner IDs:', ownerIds);
 
   return filtered;
 });
@@ -1173,9 +1205,14 @@ const addSelectedOwners = async () => {
     );
 
     // Add new owners to the owners list
-    owners.value.push(...newOwners);
-    console.log('Added owners:', newOwners);
-    console.log('Current owners list:', owners.value);
+    // Use array replacement to ensure reactivity
+    owners.value = [...owners.value, ...newOwners];
+
+    // Trigger reactivity update
+    ownersUpdateTrigger.value++;
+
+    // Force DOM update
+    await nextTick();
 
     // If we're in edit mode and have a unit ID, save to database immediately
     if (isEditMode.value && unitId.value) {
@@ -1183,16 +1220,12 @@ const addSelectedOwners = async () => {
         const ownerIds = newOwners.map(owner => owner.id);
         await unitsApi.addOwners(unitId.value, ownerIds);
       } catch (error) {
-        console.error('Error adding owners:', error);
         // Remove the owners from local state if API call failed
-        newOwners.forEach(newOwner => {
-          const index = owners.value.findIndex(
-            owner => owner.id === newOwner.id
-          );
-          if (index > -1) {
-            owners.value.splice(index, 1);
-          }
-        });
+        const newOwnerIds = newOwners.map(owner => owner.id);
+        owners.value = owners.value.filter(
+          owner => !newOwnerIds.includes(owner.id)
+        );
+        ownersUpdateTrigger.value++;
         // Show error message
         errors.value.general = 'Failed to add owners. Please try again.';
       }
@@ -1206,19 +1239,20 @@ const addSelectedOwners = async () => {
 };
 
 const removeOwner = async (ownerId: number) => {
-  const index = owners.value.findIndex(owner => owner.id === ownerId);
-  if (index > -1) {
-    const removedOwner = owners.value[index];
-    owners.value.splice(index, 1);
+  const removedOwner = owners.value.find(owner => owner.id === ownerId);
+  if (removedOwner) {
+    // Use array replacement to ensure reactivity
+    owners.value = owners.value.filter(owner => owner.id !== ownerId);
+    ownersUpdateTrigger.value++;
 
     // If we're in edit mode and have a unit ID, save to database immediately
     if (isEditMode.value && unitId.value) {
       try {
         await unitsApi.removeOwners(unitId.value, [ownerId]);
       } catch (error) {
-        console.error('Error removing owner:', error);
         // Add the owner back to local state if API call failed
-        owners.value.splice(index, 0, removedOwner);
+        owners.value = [...owners.value, removedOwner];
+        ownersUpdateTrigger.value++;
         // Show error message
         errors.value.general = 'Failed to remove owner. Please try again.';
       }
@@ -1295,7 +1329,7 @@ watch(
       // Load existing owners
       if (newUnit.owners) {
         owners.value = newUnit.owners;
-        console.log('Loaded existing owners:', newUnit.owners);
+        ownersUpdateTrigger.value++;
       }
     }
   },
