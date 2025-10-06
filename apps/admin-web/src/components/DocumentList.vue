@@ -1,124 +1,183 @@
 <template>
   <div class="space-y-4">
-    <!-- Documents List -->
-    <div v-if="documents.length > 0" class="space-y-3">
+    <!-- Search Bar -->
+    <div class="relative">
       <div
-        v-for="document in documents"
-        :key="document.id"
-        class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
       >
-        <div class="flex items-center space-x-4">
-          <!-- File Icon -->
-          <div class="flex-shrink-0">
-            <div
-              :class="[
-                'w-10 h-10 rounded-lg flex items-center justify-center',
-                getFileIconClass(document.mime_type),
-              ]"
-            >
-              <svg
-                v-if="isImageFile(document.mime_type)"
-                class="w-6 h-6 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <svg
-                v-else-if="isPdfFile(document.mime_type)"
-                class="w-6 h-6 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <svg
-                v-else
-                class="w-6 h-6 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <!-- Document Info -->
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">
-              {{ document.file_name }}
-            </p>
-            <div class="flex items-center space-x-4 text-xs text-gray-500">
-              <span>{{ formatFileSize(document.file_size) }}</span>
-              <span>{{ formatDate(document.created_at) }}</span>
-              <span v-if="document.uploader">
-                by {{ document.uploader.name }}
-              </span>
-            </div>
-            <p
-              v-if="document.description"
-              class="text-xs text-gray-600 mt-1 truncate"
-            >
-              {{ document.description }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex items-center space-x-2">
-          <button
-            @click="downloadDocument(document)"
-            class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-            title="Download"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </button>
-          <button
-            @click="deleteDocument(document)"
-            :disabled="isDeleting"
-            class="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200 disabled:opacity-50"
-            title="Delete"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-          </button>
-        </div>
+        <svg
+          class="h-5 w-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
       </div>
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search documents..."
+        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+      />
+      <button
+        v-if="searchQuery"
+        @click="searchQuery = ''"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center"
+      >
+        <svg
+          class="h-5 w-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Documents Table -->
+    <div
+      v-if="filteredDocuments.length > 0"
+      class="bg-white shadow overflow-hidden sm:rounded-md"
+    >
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Name
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Upload Date
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Size
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Uploaded By
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Action
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr
+            v-for="document in filteredDocuments"
+            :key="document.id"
+            class="hover:bg-gray-50"
+          >
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <div
+                    :class="[
+                      'w-8 h-8 rounded flex items-center justify-center',
+                      getFileIconClass(document.mime_type),
+                    ]"
+                  >
+                    <svg
+                      v-if="isImageFile(document.mime_type)"
+                      class="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <svg
+                      v-else-if="isPdfFile(document.mime_type)"
+                      class="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <svg
+                      v-else
+                      class="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-gray-900">
+                    {{ document.file_name }}
+                  </div>
+                  <div
+                    v-if="document.description"
+                    class="text-sm text-gray-500"
+                  >
+                    {{ document.description }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ formatDate(document.created_at) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ formatFileSize(document.file_size) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ document.uploader?.name || 'Unknown' }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="downloadDocument(document)"
+                  class="text-green-600 hover:text-green-800 transition-colors duration-200"
+                  title="Download"
+                >
+                  Download
+                </button>
+                <button
+                  @click="deleteDocument(document)"
+                  :disabled="isDeleting"
+                  class="text-red-600 hover:text-red-800 transition-colors duration-200 disabled:opacity-50"
+                  title="Delete"
+                >
+                  Remove
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Empty State -->
@@ -254,7 +313,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { UnitDocument } from '@neibrpay/models';
 
 interface Props {
@@ -267,11 +326,27 @@ interface Emits {
   (e: 'delete', document: UnitDocument): void;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const showDeleteModal = ref(false);
 const documentToDelete = ref<UnitDocument | null>(null);
+const searchQuery = ref('');
+
+// Filter documents based on search query
+const filteredDocuments = computed(() => {
+  if (!searchQuery.value) {
+    return props.documents;
+  }
+
+  const query = searchQuery.value.toLowerCase();
+  return props.documents.filter(
+    (document: UnitDocument) =>
+      document.file_name.toLowerCase().includes(query) ||
+      document.description?.toLowerCase().includes(query) ||
+      document.uploader?.name.toLowerCase().includes(query)
+  );
+});
 
 const downloadDocument = (document: UnitDocument) => {
   emit('download', document);
