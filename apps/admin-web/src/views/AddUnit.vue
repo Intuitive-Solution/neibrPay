@@ -537,9 +537,6 @@
           <div v-if="activeTab === 'document'" class="space-y-6">
             <!-- Upload Section -->
             <div class="bg-white shadow rounded-lg p-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4">
-                Upload Documents
-              </h3>
               <DocumentUpload
                 :is-uploading="isUploadingDocument"
                 :upload-progress="uploadProgress"
