@@ -547,15 +547,6 @@
 
             <!-- Documents List -->
             <div class="bg-white shadow rounded-lg p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900">Documents</h3>
-                <div v-if="documents.length > 0" class="text-sm text-gray-500">
-                  {{ documents.length }} document{{
-                    documents.length !== 1 ? 's' : ''
-                  }}
-                </div>
-              </div>
-
               <div
                 v-if="isLoadingDocuments"
                 class="flex items-center justify-center py-8"
