@@ -172,6 +172,330 @@
         </div>
       </div>
     </form>
+
+    <!-- Tabs Section (only in edit mode) -->
+    <div v-if="isEditMode" class="mt-8">
+      <!-- Single White Container with Tabs and Content -->
+      <div class="bg-white rounded-lg shadow">
+        <!-- Tabs Navigation -->
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8 px-6 pt-4">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              @click="activeTab = tab.id"
+              :class="[
+                activeTab === tab.id
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm',
+              ]"
+            >
+              {{ tab.name }}
+            </button>
+          </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="p-6">
+          <!-- Units Tab -->
+          <div v-if="activeTab === 'units'" class="space-y-4">
+            <!-- Search Bar and Add Button -->
+            <div class="flex items-center justify-between">
+              <!-- Search Box -->
+              <div class="relative flex-1 max-w-md">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                  placeholder="Search..."
+                />
+              </div>
+
+              <!-- Add Button -->
+              <div class="ml-4">
+                <button
+                  type="button"
+                  class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                >
+                  <svg
+                    class="-ml-1 mr-2 h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    ></path>
+                  </svg>
+                  Add
+                </button>
+              </div>
+            </div>
+
+            <!-- Units Table -->
+            <div class="overflow-hidden sm:rounded-md">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-300">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Name
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Email
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="unit in filteredUnits" :key="unit.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      {{ unit.name }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ unit.email }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      <button
+                        @click="removeUnit(unit)"
+                        class="text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                  <!-- Empty State -->
+                  <tr v-if="filteredUnits.length === 0">
+                    <td
+                      colspan="3"
+                      class="px-6 py-8 text-center text-sm text-gray-500"
+                    >
+                      <div class="flex flex-col items-center">
+                        <svg
+                          class="h-12 w-12 text-gray-400 mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
+                        </svg>
+                        <p class="text-gray-500">
+                          No units assigned to this resident
+                        </p>
+                        <p class="text-gray-400 text-xs mt-1">
+                          Click "Add" to assign units
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Invoices Tab -->
+          <div v-if="activeTab === 'invoices'" class="space-y-4">
+            <!-- Invoices Table -->
+            <div class="overflow-hidden sm:rounded-md">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Description
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Amount
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="invoice in invoices" :key="invoice.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ invoice.date }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ invoice.description }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      ${{ invoice.amount }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      <span
+                        :class="[
+                          'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
+                          invoice.status === 'paid'
+                            ? 'bg-green-100 text-green-800'
+                            : invoice.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800',
+                        ]"
+                      >
+                        {{ invoice.status }}
+                      </span>
+                    </td>
+                  </tr>
+                  <!-- Empty State -->
+                  <tr v-if="invoices.length === 0">
+                    <td
+                      colspan="4"
+                      class="px-6 py-8 text-center text-sm text-gray-500"
+                    >
+                      <div class="flex flex-col items-center">
+                        <svg
+                          class="h-12 w-12 text-gray-400 mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        <p class="text-gray-500">No invoices found</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- History Tab -->
+          <div v-if="activeTab === 'history'" class="space-y-4">
+            <!-- History Table -->
+            <div class="overflow-hidden sm:rounded-md">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Description
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Remark
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="history in residentHistory" :key="history.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ history.date }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ history.description }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ history.remark }}
+                    </td>
+                  </tr>
+                  <!-- Empty State -->
+                  <tr v-if="residentHistory.length === 0">
+                    <td
+                      colspan="3"
+                      class="px-6 py-8 text-center text-sm text-gray-500"
+                    >
+                      <div class="flex flex-col items-center">
+                        <svg
+                          class="h-12 w-12 text-gray-400 mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <p class="text-gray-500">No history found</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -213,6 +537,81 @@ const errors = ref<ResidentFormErrors>({});
 // Loading states
 const isSubmitting = ref(false);
 
+// Tab state
+const activeTab = ref('units');
+const searchQuery = ref('');
+
+// Tabs configuration
+const tabs = [
+  { id: 'units', name: 'Units' },
+  { id: 'invoices', name: 'Invoices' },
+  { id: 'history', name: 'History' },
+];
+
+// Sample data for tabs (replace with actual API calls)
+const units = ref([
+  {
+    id: 1,
+    name: 'Unit 101',
+    email: 'unit101@example.com',
+  },
+  {
+    id: 2,
+    name: 'Unit 102',
+    email: 'unit102@example.com',
+  },
+]);
+
+const invoices = ref([
+  {
+    id: 1,
+    date: '2024-01-15',
+    description: 'Monthly HOA Fee',
+    amount: '150.00',
+    status: 'paid',
+  },
+  {
+    id: 2,
+    date: '2024-01-10',
+    description: 'Late Fee',
+    amount: '25.00',
+    status: 'pending',
+  },
+]);
+
+const residentHistory = ref([
+  {
+    id: 1,
+    date: '2024-01-15',
+    description: 'Account created',
+    remark: 'Initial setup',
+  },
+  {
+    id: 2,
+    date: '2024-01-10',
+    description: 'Profile updated',
+    remark: 'Phone number changed',
+  },
+]);
+
+// Computed properties
+const filteredUnits = computed(() => {
+  if (!searchQuery.value) return units.value;
+  return units.value.filter(
+    (unit: any) =>
+      unit.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      unit.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
+
+// Methods
+const removeUnit = (unit: any) => {
+  const index = units.value.findIndex((u: any) => u.id === unit.id);
+  if (index > -1) {
+    units.value.splice(index, 1);
+  }
+};
+
 // Queries and mutations
 const { data: resident, isLoading: isLoadingResident } = useResident(
   residentId.value!
@@ -232,7 +631,7 @@ onMounted(() => {
 });
 
 // Watch for resident data changes
-watch(resident, newResident => {
+watch(resident, (newResident: any) => {
   if (newResident && isEditMode.value) {
     form.value = {
       name: newResident.name,
