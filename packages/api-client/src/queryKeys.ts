@@ -16,6 +16,7 @@ export const unitKeys = {
     [...unitKeys.lists(), { filters }] as const,
   details: () => [...unitKeys.all, 'detail'] as const,
   detail: (id: number) => [...unitKeys.details(), id] as const,
+  documents: (id: number) => [...unitKeys.detail(id), 'documents'] as const,
 } as const;
 
 export const queryKeys = {

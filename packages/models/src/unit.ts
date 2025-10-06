@@ -22,6 +22,7 @@ export interface Unit {
     slug: string;
   };
   owners?: Resident[];
+  documents?: UnitDocument[];
 }
 
 export interface CreateUnitRequest {
@@ -54,6 +55,42 @@ export interface UnitsResponse {
 
 export interface UnitResponse {
   data: Unit;
+  message?: string;
+}
+
+// Unit Document types
+export interface UnitDocument {
+  id: number;
+  unit_id: number;
+  tenant_id: number;
+  file_name: string;
+  file_path: string;
+  file_hash: string;
+  file_size: number;
+  mime_type: string;
+  description?: string;
+  uploaded_by: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  uploader?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  file_url?: string;
+  file_size_human?: string;
+}
+
+export interface UnitDocumentsResponse {
+  data: UnitDocument[];
+  meta: {
+    total: number;
+  };
+}
+
+export interface UnitDocumentResponse {
+  data: UnitDocument;
   message?: string;
 }
 

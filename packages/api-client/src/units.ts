@@ -1,11 +1,14 @@
 import { AxiosResponse } from 'axios';
-import { apiClient } from './apiClient';
+import { apiClient, fileUploadClient } from './apiClient';
 import type {
   Unit,
   CreateUnitRequest,
   UpdateUnitRequest,
   UnitsResponse,
   UnitResponse,
+  UnitDocument,
+  UnitDocumentsResponse,
+  UnitDocumentResponse,
 } from '@neibrpay/models';
 
 // Unit API functions
@@ -110,6 +113,72 @@ export const unitsApi = {
       { owner_ids: ownerIds }
     );
     return response.data.data;
+  },
+
+  /**
+   * Get all documents for a unit
+   */
+  async getDocuments(id: number): Promise<UnitDocument[]> {
+    const response: AxiosResponse<UnitDocumentsResponse> = await apiClient.get(
+      `/units/${id}/documents`
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Upload a document to a unit
+   */
+  async uploadDocument(
+    id: number,
+    file: File,
+    description?: string
+  ): Promise<UnitDocument> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+
+    const response: AxiosResponse<UnitDocumentResponse> =
+      await fileUploadClient.post(`/units/${id}/documents`, formData);
+    return response.data.data;
+  },
+
+  /**
+   * Get a specific document
+   */
+  async getDocument(unitId: number, documentId: number): Promise<UnitDocument> {
+    const response: AxiosResponse<UnitDocumentResponse> = await apiClient.get(
+      `/units/${unitId}/documents/${documentId}`
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Download a document
+   */
+  async downloadDocument(unitId: number, documentId: number): Promise<Blob> {
+    const response = await apiClient.get(
+      `/units/${unitId}/documents/${documentId}/download`,
+      {
+        responseType: 'blob',
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Delete a document
+   */
+  async deleteDocument(unitId: number, documentId: number): Promise<void> {
+    await apiClient.delete(`/units/${unitId}/documents/${documentId}`);
+  },
+
+  /**
+   * Permanently delete a document
+   */
+  async forceDeleteDocument(unitId: number, documentId: number): Promise<void> {
+    await apiClient.delete(`/units/${unitId}/documents/${documentId}/force`);
   },
 };
 

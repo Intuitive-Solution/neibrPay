@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Unit extends Model
@@ -55,6 +56,14 @@ class Unit extends Model
     {
         return $this->belongsToMany(User::class, 'unit_owners', 'unit_id', 'resident_id')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the documents associated with this unit.
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(UnitDocument::class);
     }
 
     /**

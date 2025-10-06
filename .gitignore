@@ -204,3 +204,4 @@ temp/
 # Vite build artifacts
 *.timestamp-*.mjs
 vite.config.ts.timestamp-*
+/backend/laravel/storage/app/public

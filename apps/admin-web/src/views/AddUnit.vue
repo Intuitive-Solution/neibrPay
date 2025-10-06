@@ -534,13 +534,65 @@
           </div>
 
           <!-- Document Tab -->
-          <div v-if="activeTab === 'document'" class="space-y-4">
-            <div class="bg-white shadow overflow-hidden sm:rounded-md">
-              <div class="px-6 py-4">
-                <p class="text-gray-500">
-                  Document management functionality will be implemented here.
-                </p>
+          <div v-if="activeTab === 'document'" class="space-y-6">
+            <!-- Upload Section -->
+            <div class="bg-white shadow rounded-lg p-6">
+              <h3 class="text-lg font-medium text-gray-900 mb-4">
+                Upload Documents
+              </h3>
+              <DocumentUpload
+                :is-uploading="isUploadingDocument"
+                :upload-progress="uploadProgress"
+                :upload-error="uploadError?.message || null"
+                @upload="handleDocumentUpload"
+              />
+            </div>
+
+            <!-- Documents List -->
+            <div class="bg-white shadow rounded-lg p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Documents</h3>
+                <div v-if="documents.length > 0" class="text-sm text-gray-500">
+                  {{ documents.length }} document{{
+                    documents.length !== 1 ? 's' : ''
+                  }}
+                </div>
               </div>
+
+              <div
+                v-if="isLoadingDocuments"
+                class="flex items-center justify-center py-8"
+              >
+                <svg
+                  class="animate-spin h-8 w-8 text-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span class="ml-2 text-gray-600">Loading documents...</span>
+              </div>
+
+              <DocumentList
+                v-else
+                :documents="documents"
+                :is-deleting="isDeletingDocument"
+                @download="handleDocumentDownload"
+                @delete="handleDocumentDelete"
+              />
             </div>
           </div>
         </div>
@@ -1141,10 +1193,17 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCreateUnit, useUpdateUnit, useUnit } from '../composables/useUnits';
 import { useResidents } from '../composables/useResidents';
+import { useUnitDocuments } from '../composables/useUnitDocuments';
 import { unitsApi, unitKeys } from '@neibrpay/api-client';
 import { useQueryClient } from '@tanstack/vue-query';
 import { US_STATES } from '@neibrpay/models';
-import type { UnitFormData, UnitFormErrors } from '@neibrpay/models';
+import type {
+  UnitFormData,
+  UnitFormErrors,
+  UnitDocument,
+} from '@neibrpay/models';
+import DocumentUpload from '../components/DocumentUpload.vue';
+import DocumentList from '../components/DocumentList.vue';
 
 // Router
 const route = useRoute();
@@ -1169,6 +1228,9 @@ const isAddingOwners = ref(false);
 const ownersUpdateTrigger = ref(0);
 const showRemoveOwnerModal = ref(false);
 const ownerToRemove = ref<any>(null);
+
+// Document-related state
+const uploadProgress = ref(0);
 
 // Tabs configuration
 const tabs = [
@@ -1258,6 +1320,18 @@ const createUnitMutation = useCreateUnit();
 const updateUnitMutation = useUpdateUnit();
 const { data: existingUnit, refetch: refetchUnit } = useUnit(unitId.value || 0);
 const { data: residents, isLoading: isLoadingResidents } = useResidents(false); // Get only active residents
+
+// Document composable
+const {
+  documents,
+  isLoading: isLoadingDocuments,
+  uploadDocument,
+  isUploading: isUploadingDocument,
+  uploadError,
+  deleteDocument,
+  isDeleting: isDeletingDocument,
+  downloadDocument,
+} = useUnitDocuments(unitId.value || 0);
 
 // Methods
 const goBack = () => {
@@ -1434,10 +1508,43 @@ const handleSubmit = async () => {
   }
 };
 
+// Document methods
+const handleDocumentUpload = async (files: File[]) => {
+  if (!unitId.value) return;
+
+  for (const file of files) {
+    try {
+      await uploadDocument({ file });
+    } catch (error) {
+      console.error('Upload failed for:', file.name, error);
+    }
+  }
+};
+
+const handleDocumentDownload = async (document: UnitDocument) => {
+  if (!unitId.value) return;
+
+  try {
+    await downloadDocument(document.id, document.file_name);
+  } catch (error) {
+    console.error('Download failed:', error);
+  }
+};
+
+const handleDocumentDelete = async (document: UnitDocument) => {
+  if (!unitId.value) return;
+
+  try {
+    await deleteDocument(document.id);
+  } catch (error) {
+    console.error('Delete failed:', error);
+  }
+};
+
 // Watch for unitId changes to refetch data
 watch(
   unitId,
-  async (newUnitId: number) => {
+  async newUnitId => {
     if (isEditMode.value && newUnitId) {
       await refetchUnit();
     }

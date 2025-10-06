@@ -79,7 +79,7 @@ class UnitsController extends Controller
             return response()->json(['message' => 'Unit not found'], 404);
         }
 
-        $unit->load(['tenant', 'owners']);
+        $unit->load(['tenant', 'owners', 'documents.uploader']);
 
         return response()->json([
             'data' => $unit,
@@ -110,7 +110,7 @@ class UnitsController extends Controller
         ]);
 
         $unit->update($validated);
-        $unit->load(['tenant', 'owners']);
+        $unit->load(['tenant', 'owners', 'documents.uploader']);
 
         return response()->json([
             'data' => $unit,

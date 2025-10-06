@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\UnitsController;
+use App\Http\Controllers\Api\UnitDocumentController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,7 @@ Route::get('/test', function () {
         'environment' => app()->environment()
     ]);
 });
+
 
 
 // Authentication routes
@@ -57,6 +59,14 @@ Route::middleware('firebase.auth')->group(function () {
     Route::post('units/{unit}/owners', [UnitsController::class, 'addOwners']);
     Route::delete('units/{unit}/owners', [UnitsController::class, 'removeOwners']);
     Route::put('units/{unit}/owners', [UnitsController::class, 'syncOwners']);
+    
+    // Unit document management routes
+    Route::get('units/{unit}/documents', [UnitDocumentController::class, 'index']);
+    Route::post('units/{unit}/documents', [UnitDocumentController::class, 'store']);
+    Route::get('units/{unit}/documents/{document}', [UnitDocumentController::class, 'show']);
+    Route::get('units/{unit}/documents/{document}/download', [UnitDocumentController::class, 'download']);
+    Route::delete('units/{unit}/documents/{document}', [UnitDocumentController::class, 'destroy']);
+    Route::delete('units/{unit}/documents/{document}/force', [UnitDocumentController::class, 'forceDelete']);
 });
 
 // Legacy route for backward compatibility
