@@ -266,12 +266,17 @@
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      Name
+                      Title
                     </th>
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      Email
+                      Balance Amount
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Balance As Of Date
                     </th>
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -285,12 +290,17 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
                     >
-                      {{ unit.name }}
+                      {{ unit.title }}
                     </td>
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
-                      {{ unit.email }}
+                      ${{ unit.balance_amount }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ unit.balance_as_of_date }}
                     </td>
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
@@ -306,7 +316,7 @@
                   <!-- Empty State -->
                   <tr v-if="filteredUnits.length === 0">
                     <td
-                      colspan="3"
+                      colspan="4"
                       class="px-6 py-8 text-center text-sm text-gray-500"
                     >
                       <div class="flex flex-col items-center">
@@ -558,13 +568,15 @@ const tabs = [
 const units = ref([
   {
     id: 1,
-    name: 'Unit 101',
-    email: 'unit101@example.com',
+    title: 'Unit 101',
+    balance_amount: '3500.00',
+    balance_as_of_date: '04/10/2025',
   },
   {
     id: 2,
-    name: 'Unit 102',
-    email: 'unit102@example.com',
+    title: 'Unit 102',
+    balance_amount: '2800.50',
+    balance_as_of_date: '04/10/2025',
   },
 ]);
 
@@ -605,8 +617,9 @@ const filteredUnits = computed(() => {
   if (!searchQuery.value) return units.value;
   return units.value.filter(
     (unit: any) =>
-      unit.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      unit.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+      unit.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      unit.balance_amount.includes(searchQuery.value) ||
+      unit.balance_as_of_date.includes(searchQuery.value)
   );
 });
 
