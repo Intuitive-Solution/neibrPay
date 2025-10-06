@@ -260,7 +260,36 @@
 
             <!-- Units Table -->
             <div class="overflow-hidden sm:rounded-md">
-              <table class="min-w-full divide-y divide-gray-200">
+              <!-- Loading State -->
+              <div
+                v-if="isLoadingUnits"
+                class="flex items-center justify-center py-8"
+              >
+                <svg
+                  class="animate-spin h-8 w-8 text-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span class="ml-2 text-gray-600">Loading units...</span>
+              </div>
+
+              <!-- Table -->
+              <table v-else class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-300">
                   <tr>
                     <th
@@ -295,12 +324,14 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
-                      ${{ unit.balance_amount }}
+                      ${{ unit.starting_balance }}
                     </td>
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
-                      {{ unit.balance_as_of_date }}
+                      {{
+                        new Date(unit.balance_as_of_date).toLocaleDateString()
+                      }}
                     </td>
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
@@ -522,6 +553,7 @@ import {
   useCreateResident,
   useUpdateResident,
   useResident,
+  useResidentUnits,
 } from '../composables/useResidents';
 import {
   validateResidentForm,
@@ -564,21 +596,12 @@ const tabs = [
   { id: 'history', name: 'History' },
 ];
 
-// Sample data for tabs (replace with actual API calls)
-const units = ref([
-  {
-    id: 1,
-    title: 'Unit 101',
-    balance_amount: '3500.00',
-    balance_as_of_date: '04/10/2025',
-  },
-  {
-    id: 2,
-    title: 'Unit 102',
-    balance_amount: '2800.50',
-    balance_as_of_date: '04/10/2025',
-  },
-]);
+// Get units for the resident from API
+const {
+  data: units,
+  isLoading: isLoadingUnits,
+  refetch: refetchUnits,
+} = useResidentUnits(residentId.value!);
 
 const invoices = ref([
   {
@@ -614,21 +637,22 @@ const residentHistory = ref([
 
 // Computed properties
 const filteredUnits = computed(() => {
+  if (!units.value) return [];
   if (!searchQuery.value) return units.value;
   return units.value.filter(
     (unit: any) =>
       unit.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      unit.balance_amount.includes(searchQuery.value) ||
+      unit.starting_balance.toString().includes(searchQuery.value) ||
       unit.balance_as_of_date.includes(searchQuery.value)
   );
 });
 
 // Methods
 const removeUnit = (unit: any) => {
-  const index = units.value.findIndex((u: any) => u.id === unit.id);
-  if (index > -1) {
-    units.value.splice(index, 1);
-  }
+  // TODO: Implement API call to remove unit from resident
+  // This would require a new API endpoint like DELETE /residents/{id}/units/{unit_id}
+  console.log('Remove unit:', unit);
+  alert('Remove unit functionality not yet implemented');
 };
 
 // Queries and mutations
@@ -647,6 +671,11 @@ onMounted(() => {
       phone: resident.value.phone,
     };
   }
+
+  // Refetch units when component mounts in edit mode
+  if (isEditMode.value && residentId.value) {
+    refetchUnits();
+  }
 });
 
 // Watch for resident data changes
@@ -657,6 +686,20 @@ watch(resident, (newResident: any) => {
       email: newResident.email,
       phone: newResident.phone,
     };
+  }
+});
+
+// Watch for resident ID changes to refetch units
+watch(residentId, newId => {
+  if (newId && isEditMode.value) {
+    refetchUnits();
+  }
+});
+
+// Watch for tab changes to refetch units when switching to Units tab
+watch(activeTab, newTab => {
+  if (newTab === 'units' && isEditMode.value && residentId.value) {
+    refetchUnits();
   }
 });
 

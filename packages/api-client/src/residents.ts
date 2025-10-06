@@ -6,6 +6,8 @@ import type {
   UpdateResidentRequest,
   ResidentsResponse,
   ResidentResponse,
+  Unit,
+  UnitsResponse,
 } from '@neibrpay/models';
 
 // Resident API functions
@@ -29,6 +31,16 @@ export const residentsApi = {
   async getResident(id: number): Promise<Resident> {
     const response: AxiosResponse<ResidentResponse> = await apiClient.get(
       `/residents/${id}`
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get units owned by a specific resident
+   */
+  async getResidentUnits(id: number): Promise<Unit[]> {
+    const response: AxiosResponse<UnitsResponse> = await apiClient.get(
+      `/residents/${id}/units`
     );
     return response.data.data;
   },

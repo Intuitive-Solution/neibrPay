@@ -93,6 +93,31 @@ class ResidentController extends Controller
     }
 
     /**
+     * Get units owned by the specified resident.
+     */
+    public function units(Request $request, string $id): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        $resident = User::forTenant($user->tenant_id)
+            ->byRole('resident')
+            ->findOrFail($id);
+        
+        $units = $resident->ownedUnits()
+            ->with('tenant')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'data' => $units,
+            'meta' => [
+                'total' => $units->count(),
+                'resident_id' => $resident->id,
+            ]
+        ]);
+    }
+
+    /**
      * Update the specified resident.
      */
     public function update(ResidentRequest $request, string $id): JsonResponse

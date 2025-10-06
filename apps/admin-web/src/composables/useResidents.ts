@@ -6,6 +6,7 @@ import type {
   CreateResidentRequest,
   UpdateResidentRequest,
   ApiError,
+  Unit,
 } from '@neibrpay/models';
 
 // Query hooks
@@ -28,6 +29,16 @@ export function useResident(id: number) {
     queryKey: residentKeys.detail(id),
     queryFn: () => residentsApi.getResident(id),
     enabled: !!id,
+  });
+}
+
+export function useResidentUnits(id: number) {
+  return useQuery({
+    queryKey: ['residents', id, 'units'],
+    queryFn: () => residentsApi.getResidentUnits(id),
+    enabled: !!id,
+    staleTime: 30 * 1000, // 30 seconds - shorter stale time for more frequent updates
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 }
 
