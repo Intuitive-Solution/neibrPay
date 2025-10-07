@@ -289,10 +289,13 @@
               <select
                 id="remaining_cycles"
                 v-model="form.remaining_cycles"
+                :disabled="isOneTimeFrequency"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
                     errors.remaining_cycles,
+                  'opacity-50 cursor-not-allowed bg-gray-50':
+                    isOneTimeFrequency,
                 }"
               >
                 <option value="endless">Endless</option>
@@ -606,7 +609,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUnitsForInvoices } from '../composables/useUnits';
 import type { UnitWithResident } from '@neibrpay/models';
@@ -617,7 +620,7 @@ const router = useRouter();
 // Form data
 const form = ref({
   unit_ids: [] as number[], // Changed to support multiple units with proper typing
-  frequency: 'one-time',
+  frequency: 'monthly',
   start_date: '',
   remaining_cycles: 'endless',
   due_date: 'use_payment_terms',
@@ -680,6 +683,22 @@ const isAllSelected = computed(() => {
     form.value.unit_ids.includes(unit.id)
   );
 });
+
+const isOneTimeFrequency = computed(() => {
+  return form.value.frequency === 'one-time';
+});
+
+// Watchers
+watch(
+  () => form.value.frequency,
+  (newFrequency, oldFrequency) => {
+    if (newFrequency === 'one-time') {
+      form.value.remaining_cycles = '';
+    } else if (oldFrequency === 'one-time' && newFrequency !== 'one-time') {
+      form.value.remaining_cycles = 'endless';
+    }
+  }
+);
 
 // Methods
 const getUnitTitle = (unitId: number) => {
