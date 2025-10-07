@@ -399,13 +399,14 @@
 
           <!-- Search Bar or Back Button -->
           <div class="flex items-center space-x-4">
-            <!-- Back Button for Add/Edit Resident and Unit pages -->
+            <!-- Back Button for Add/Edit Resident, Unit, and Invoice pages -->
             <button
               v-if="
                 route.name === 'AddResident' ||
                 route.name === 'EditResident' ||
                 route.name === 'AddUnit' ||
-                route.name === 'EditUnit'
+                route.name === 'EditUnit' ||
+                route.name === 'AddInvoice'
               "
               @click="goBack"
               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -498,6 +499,8 @@ const pageTitle = computed(() => {
       return 'Dashboard';
     case 'Invoices':
       return 'Invoices';
+    case 'AddInvoice':
+      return 'Create Invoice';
     case 'People':
       return 'People';
     case 'AddResident':
@@ -527,6 +530,8 @@ const pageDescription = computed(() => {
       return 'Overview of your HOA community management';
     case 'Invoices':
       return 'Manage community invoices and billing';
+    case 'AddInvoice':
+      return 'Create a new invoice for your community';
     case 'People':
       return 'Manage residents and community members';
     case 'AddResident':

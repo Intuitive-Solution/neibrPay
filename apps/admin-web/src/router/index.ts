@@ -7,6 +7,7 @@ import ResetPassword from '../views/ResetPassword.vue';
 import TermsOfService from '../views/TermsOfService.vue';
 import PrivacyNotice from '../views/PrivacyNotice.vue';
 import Invoices from '../views/Invoices.vue';
+import AddInvoice from '../views/AddInvoice.vue';
 import People from '../views/People.vue';
 import AddResident from '../views/AddResident.vue';
 import Units from '../views/Units.vue';
@@ -57,6 +58,12 @@ const router = createRouter({
       path: '/invoices',
       name: 'Invoices',
       component: Invoices,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/invoices/create',
+      name: 'AddInvoice',
+      component: AddInvoice,
       meta: { requiresAuth: true },
     },
     {
