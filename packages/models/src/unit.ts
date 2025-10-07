@@ -25,6 +25,18 @@ export interface Unit {
   documents?: UnitDocument[];
 }
 
+export interface UnitWithResident {
+  id: number;
+  title: string;
+  resident_name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  starting_balance: number;
+  balance_as_of_date: string;
+}
+
 export interface CreateUnitRequest {
   title: string;
   address: string;
@@ -50,6 +62,13 @@ export interface UnitsResponse {
   meta: {
     total: number;
     include_deleted: boolean;
+  };
+}
+
+export interface UnitsWithResidentResponse {
+  data: UnitWithResident[];
+  meta: {
+    total: number;
   };
 }
 

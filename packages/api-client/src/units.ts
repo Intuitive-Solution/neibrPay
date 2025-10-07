@@ -2,9 +2,11 @@ import { AxiosResponse } from 'axios';
 import { apiClient, fileUploadClient } from './apiClient';
 import type {
   Unit,
+  UnitWithResident,
   CreateUnitRequest,
   UpdateUnitRequest,
   UnitsResponse,
+  UnitsWithResidentResponse,
   UnitResponse,
   UnitDocument,
   UnitDocumentsResponse,
@@ -29,10 +31,9 @@ export const unitsApi = {
   /**
    * Get units with resident information for invoice creation
    */
-  async getUnitsForInvoices(): Promise<Unit[]> {
-    const response: AxiosResponse<UnitsResponse> = await apiClient.get(
-      '/units/for-invoices'
-    );
+  async getUnitsForInvoices(): Promise<UnitWithResident[]> {
+    const response: AxiosResponse<UnitsWithResidentResponse> =
+      await apiClient.get('/units/for-invoices');
     return response.data.data;
   },
 

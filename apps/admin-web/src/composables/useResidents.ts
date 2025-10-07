@@ -6,7 +6,6 @@ import type {
   CreateResidentRequest,
   UpdateResidentRequest,
   ApiError,
-  Unit,
 } from '@neibrpay/models';
 
 // Query hooks

@@ -172,7 +172,6 @@
                       :checked="isAllSelected"
                       type="checkbox"
                       class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                      @click.stop
                     />
                     <span class="ml-2">Select all options</span>
                   </div>
@@ -612,13 +611,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUnitsForInvoices } from '../composables/useUnits';
+import type { UnitWithResident } from '@neibrpay/models';
 
 // Router
 const router = useRouter();
 
 // Form data
 const form = ref({
-  unit_ids: [], // Changed to support multiple units
+  unit_ids: [] as number[], // Changed to support multiple units with proper typing
   frequency: 'monthly',
   start_date: '',
   remaining_cycles: 'endless',
@@ -662,13 +662,13 @@ const highlightedIndex = ref(-1);
 const dropdownRef = ref<HTMLElement | null>(null);
 
 // Computed properties
-const filteredUnits = computed(() => {
+const filteredUnits = computed((): UnitWithResident[] => {
   if (!units.value) return [];
   if (!searchQuery.value) return units.value;
 
   const query = searchQuery.value.toLowerCase();
   return units.value.filter(
-    (unit: any) =>
+    (unit: UnitWithResident) =>
       unit.title.toLowerCase().includes(query) ||
       unit.resident_name.toLowerCase().includes(query) ||
       unit.address.toLowerCase().includes(query) ||
@@ -677,15 +677,15 @@ const filteredUnits = computed(() => {
 });
 
 const isAllSelected = computed(() => {
-  if (!units.value || units.value.length === 0) return false;
-  return units.value.every((unit: any) =>
+  if (!filteredUnits.value || filteredUnits.value.length === 0) return false;
+  return filteredUnits.value.every((unit: UnitWithResident) =>
     form.value.unit_ids.includes(unit.id)
   );
 });
 
 // Methods
 const getUnitTitle = (unitId: number) => {
-  const unit = units.value?.find((u: any) => u.id === unitId);
+  const unit = units.value?.find((u: UnitWithResident) => u.id === unitId);
   return unit ? unit.title : `Unit ${unitId}`;
 };
 
@@ -724,9 +724,22 @@ const closeDropdown = () => {
 
 const toggleSelectAll = () => {
   if (isAllSelected.value) {
-    form.value.unit_ids = [];
+    // If all visible units are selected, deselect all visible units
+    const filteredUnitIds = filteredUnits.value.map(
+      (unit: UnitWithResident) => unit.id
+    );
+    form.value.unit_ids = form.value.unit_ids.filter(
+      (id: number) => !filteredUnitIds.includes(id)
+    );
   } else {
-    form.value.unit_ids = units.value?.map((unit: any) => unit.id) || [];
+    // If not all visible units are selected, select all visible units
+    const filteredUnitIds = filteredUnits.value.map(
+      (unit: UnitWithResident) => unit.id
+    );
+    const newSelections = filteredUnitIds.filter(
+      (id: number) => !form.value.unit_ids.includes(id)
+    );
+    form.value.unit_ids = [...form.value.unit_ids, ...newSelections];
   }
 };
 
