@@ -27,37 +27,33 @@
 
     <!-- Three Column Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Column 1: Client -->
+      <!-- Column 1: Units -->
       <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-6">Client</h3>
+        <h3 class="text-lg font-medium text-gray-900 mb-6">Units</h3>
 
         <div class="space-y-4">
-          <!-- Client Selection -->
+          <!-- Unit Selection -->
           <div>
             <label
-              for="client"
+              for="unit"
               class="block text-sm font-medium text-gray-700 mb-2"
             >
-              Client <span class="text-red-500">*</span>
+              Unit <span class="text-red-500">*</span>
             </label>
             <div class="relative">
               <select
-                id="client"
-                v-model="form.client_id"
+                id="unit"
+                v-model="form.unit_id"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
-                    errors.client_id,
+                    errors.unit_id,
                 }"
               >
-                <option value="">Select a client</option>
-                <option
-                  v-for="client in clients"
-                  :key="client.id"
-                  :value="client.id"
-                >
-                  {{ client.name }}
+                <option value="">Select a unit</option>
+                <option v-for="unit in units" :key="unit.id" :value="unit.id">
+                  {{ unit.title }}
                 </option>
               </select>
               <div
@@ -78,8 +74,8 @@
                 </svg>
               </div>
             </div>
-            <p v-if="errors.client_id" class="mt-2 text-sm text-red-600">
-              {{ errors.client_id }}
+            <p v-if="errors.unit_id" class="mt-2 text-sm text-red-600">
+              {{ errors.unit_id }}
             </p>
           </div>
         </div>
@@ -477,7 +473,7 @@ const router = useRouter();
 
 // Form data
 const form = ref({
-  client_id: '',
+  unit_id: '',
   frequency: 'monthly',
   start_date: '',
   remaining_cycles: 'endless',
@@ -492,7 +488,7 @@ const form = ref({
 // Form errors
 const errors = ref({
   general: '',
-  client_id: '',
+  unit_id: '',
   frequency: '',
   start_date: '',
   remaining_cycles: '',
@@ -507,13 +503,13 @@ const errors = ref({
 // Loading state
 const isSubmitting = ref(false);
 
-// Dummy clients data (replace with API call later)
-const clients = ref([
-  { id: 1, name: 'John Smith' },
-  { id: 2, name: 'Sarah Johnson' },
-  { id: 3, name: 'Mike Wilson' },
-  { id: 4, name: 'Emily Davis' },
-  { id: 5, name: 'Robert Taylor' },
+// Dummy units data (replace with API call later)
+const units = ref([
+  { id: 1, title: 'Unit 101' },
+  { id: 2, title: 'Unit 102' },
+  { id: 3, title: 'Unit 201' },
+  { id: 4, title: 'Unit 202' },
+  { id: 5, title: 'Unit 301' },
 ]);
 
 // Methods
@@ -521,7 +517,7 @@ const handleSubmit = async () => {
   // Clear previous errors
   errors.value = {
     general: '',
-    client_id: '',
+    unit_id: '',
     frequency: '',
     start_date: '',
     remaining_cycles: '',
@@ -534,8 +530,8 @@ const handleSubmit = async () => {
   };
 
   // Basic validation
-  if (!form.value.client_id) {
-    errors.value.client_id = 'Please select a client';
+  if (!form.value.unit_id) {
+    errors.value.unit_id = 'Please select a unit';
     return;
   }
 
