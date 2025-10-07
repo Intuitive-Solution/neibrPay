@@ -144,6 +144,41 @@ class ResidentController extends Controller
     }
 
     /**
+     * Get units available to be assigned to the specified resident.
+     */
+    public function availableUnits(Request $request, string $id): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        $resident = User::forTenant($user->tenant_id)
+            ->byRole('resident')
+            ->findOrFail($id);
+        
+        // Get all units for the tenant
+        $allUnits = \App\Models\Unit::forTenant($user->tenant_id)
+            ->where('is_active', true)
+            ->orderBy('title', 'asc')
+            ->get();
+        
+        // Get units already owned by this resident
+        $ownedUnitIds = $resident->ownedUnits()->pluck('units.id')->toArray();
+        
+        // Filter out units already owned by this resident
+        $availableUnits = $allUnits->reject(function ($unit) use ($ownedUnitIds) {
+            return in_array($unit->id, $ownedUnitIds);
+        });
+        
+        return response()->json([
+            'data' => $availableUnits->values(),
+            'meta' => [
+                'total' => $availableUnits->count(),
+                'resident_id' => $resident->id,
+                'owned_units_count' => count($ownedUnitIds),
+            ]
+        ]);
+    }
+
+    /**
      * Update the specified resident.
      */
     public function update(ResidentRequest $request, string $id): JsonResponse

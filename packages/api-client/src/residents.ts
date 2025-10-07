@@ -53,6 +53,16 @@ export const residentsApi = {
   },
 
   /**
+   * Get units available to be assigned to a resident
+   */
+  async getAvailableUnitsForResident(id: number): Promise<Unit[]> {
+    const response: AxiosResponse<UnitsResponse> = await apiClient.get(
+      `/residents/${id}/available-units`
+    );
+    return response.data.data;
+  },
+
+  /**
    * Create a new resident
    */
   async createResident(data: CreateResidentRequest): Promise<Resident> {

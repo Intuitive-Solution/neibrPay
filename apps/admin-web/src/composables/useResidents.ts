@@ -42,6 +42,16 @@ export function useResidentUnits(id: number) {
   });
 }
 
+export function useAvailableUnitsForResident(id: number) {
+  return useQuery({
+    queryKey: ['residents', id, 'available-units'],
+    queryFn: () => residentsApi.getAvailableUnitsForResident(id),
+    enabled: !!id,
+    staleTime: 30 * 1000, // 30 seconds - shorter stale time for more frequent updates
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+  });
+}
+
 // Mutation hooks with optimistic updates
 export function useCreateResident() {
   const queryClient = useQueryClient();

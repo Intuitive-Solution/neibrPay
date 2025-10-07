@@ -783,8 +783,39 @@
             <div
               class="max-h-64 overflow-y-auto border border-gray-200 rounded-md"
             >
+              <!-- Loading State -->
               <div
-                v-if="availableUnitsForResident.length === 0"
+                v-if="isLoadingAvailableUnits"
+                class="flex items-center justify-center py-8"
+              >
+                <svg
+                  class="animate-spin h-8 w-8 text-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span class="ml-2 text-gray-600"
+                  >Loading available units...</span
+                >
+              </div>
+
+              <!-- Empty State -->
+              <div
+                v-else-if="availableUnitsForResident.length === 0"
                 class="p-4 text-center text-gray-500"
               >
                 <p v-if="addUnitsSearchQuery">
@@ -885,6 +916,7 @@ import {
   useUpdateResident,
   useResident,
   useResidentUnits,
+  useAvailableUnitsForResident,
 } from '../composables/useResidents';
 import { residentsApi } from '@neibrpay/api-client';
 import {
@@ -946,59 +978,12 @@ const {
   refetch: refetchUnits,
 } = useResidentUnits(residentId.value!);
 
-// Dummy data for available units (replace with API call later)
-const availableUnits = ref([
-  {
-    id: 1,
-    title: 'Unit 101',
-    address: '123 Main St',
-    city: 'New York',
-    state: 'NY',
-    zip_code: '10001',
-    starting_balance: 2500.0,
-    balance_as_of_date: '2024-01-15',
-  },
-  {
-    id: 2,
-    title: 'Unit 102',
-    address: '123 Main St',
-    city: 'New York',
-    state: 'NY',
-    zip_code: '10001',
-    starting_balance: 3200.5,
-    balance_as_of_date: '2024-01-15',
-  },
-  {
-    id: 3,
-    title: 'Unit 201',
-    address: '456 Oak Ave',
-    city: 'New York',
-    state: 'NY',
-    zip_code: '10002',
-    starting_balance: 1800.0,
-    balance_as_of_date: '2024-01-10',
-  },
-  {
-    id: 4,
-    title: 'Unit 202',
-    address: '456 Oak Ave',
-    city: 'New York',
-    state: 'NY',
-    zip_code: '10002',
-    starting_balance: 4100.75,
-    balance_as_of_date: '2024-01-20',
-  },
-  {
-    id: 5,
-    title: 'Unit 301',
-    address: '789 Pine St',
-    city: 'New York',
-    state: 'NY',
-    zip_code: '10003',
-    starting_balance: 2900.25,
-    balance_as_of_date: '2024-01-12',
-  },
-]);
+// Get available units for the resident from API
+const {
+  data: availableUnits,
+  isLoading: isLoadingAvailableUnits,
+  refetch: refetchAvailableUnits,
+} = useAvailableUnitsForResident(residentId.value!);
 
 const invoices = ref([
   {
@@ -1046,6 +1031,7 @@ const filteredUnits = computed(() => {
 
 // Filter available units for the add modal
 const filteredAvailableUnits = computed(() => {
+  if (!availableUnits.value) return [];
   if (!addUnitsSearchQuery.value) return availableUnits.value;
   return availableUnits.value.filter(
     (unit: any) =>
@@ -1059,13 +1045,9 @@ const filteredAvailableUnits = computed(() => {
   );
 });
 
-// Get units that are not already assigned to this resident
+// Use the filtered available units directly since the API already filters out assigned units
 const availableUnitsForResident = computed(() => {
-  if (!units.value) return filteredAvailableUnits.value;
-  const assignedUnitIds = units.value.map((unit: any) => unit.id);
-  return filteredAvailableUnits.value.filter(
-    (unit: any) => !assignedUnitIds.includes(unit.id)
-  );
+  return filteredAvailableUnits.value;
 });
 
 // Methods
@@ -1108,6 +1090,8 @@ const openAddUnitsModal = () => {
   selectedUnits.value = [];
   addUnitsSearchQuery.value = '';
   showAddUnitsModal.value = true;
+  // Refetch available units when opening the modal
+  refetchAvailableUnits();
 };
 
 const closeAddUnitsModal = () => {
