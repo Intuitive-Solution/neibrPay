@@ -248,11 +248,11 @@
                     errors.frequency,
                 }"
               >
+                <option value="one-time">One Time</option>
                 <option value="monthly">Monthly</option>
                 <option value="weekly">Weekly</option>
                 <option value="quarterly">Quarterly</option>
                 <option value="yearly">Yearly</option>
-                <option value="one-time">One Time</option>
               </select>
               <div
                 class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
@@ -274,49 +274,6 @@
             </div>
             <p v-if="errors.frequency" class="mt-2 text-sm text-red-600">
               {{ errors.frequency }}
-            </p>
-          </div>
-
-          <!-- Start Date -->
-          <div>
-            <label
-              for="start_date"
-              class="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Start Date <span class="text-red-500">*</span>
-            </label>
-            <div class="relative">
-              <input
-                id="start_date"
-                v-model="form.start_date"
-                type="date"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-                :class="{
-                  'border-red-300 focus:ring-red-500 focus:border-red-500':
-                    errors.start_date,
-                }"
-              />
-              <div
-                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-              >
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <p v-if="errors.start_date" class="mt-2 text-sm text-red-600">
-              {{ errors.start_date }}
             </p>
           </div>
 
@@ -368,7 +325,48 @@
               {{ errors.remaining_cycles }}
             </p>
           </div>
-
+          <!-- Start Date -->
+          <div>
+            <label
+              for="start_date"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Start Date <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input
+                id="start_date"
+                v-model="form.start_date"
+                type="date"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                :class="{
+                  'border-red-300 focus:ring-red-500 focus:border-red-500':
+                    errors.start_date,
+                }"
+              />
+              <div
+                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+              >
+                <svg
+                  class="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+            </div>
+            <p v-if="errors.start_date" class="mt-2 text-sm text-red-600">
+              {{ errors.start_date }}
+            </p>
+          </div>
           <!-- Due Date -->
           <div>
             <label
@@ -619,7 +617,7 @@ const router = useRouter();
 // Form data
 const form = ref({
   unit_ids: [] as number[], // Changed to support multiple units with proper typing
-  frequency: 'monthly',
+  frequency: 'one-time',
   start_date: '',
   remaining_cycles: 'endless',
   due_date: 'use_payment_terms',
