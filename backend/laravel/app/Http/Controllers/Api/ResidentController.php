@@ -179,6 +179,64 @@ class ResidentController extends Controller
     }
 
     /**
+     * Add units to the specified resident.
+     */
+    public function addUnits(Request $request, string $id): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        $resident = User::forTenant($user->tenant_id)
+            ->byRole('resident')
+            ->findOrFail($id);
+        
+        // Validate the request
+        $request->validate([
+            'unit_ids' => 'required|array|min:1',
+            'unit_ids.*' => 'integer|exists:units,id'
+        ]);
+        
+        $unitIds = $request->input('unit_ids');
+        
+        // Verify all units belong to the same tenant and are active
+        $units = \App\Models\Unit::forTenant($user->tenant_id)
+            ->where('is_active', true)
+            ->whereIn('id', $unitIds)
+            ->get();
+        
+        if ($units->count() !== count($unitIds)) {
+            return response()->json([
+                'message' => 'Some units are invalid or not available',
+                'errors' => ['unit_ids' => ['One or more units are invalid or not available']]
+            ], 422);
+        }
+        
+        // Check if any units are already owned by this resident
+        $existingUnitIds = $resident->ownedUnits()->whereIn('units.id', $unitIds)->pluck('units.id')->toArray();
+        
+        if (!empty($existingUnitIds)) {
+            return response()->json([
+                'message' => 'Some units are already owned by this resident',
+                'errors' => ['unit_ids' => ['One or more units are already owned by this resident']]
+            ], 422);
+        }
+        
+        // Add the relationships
+        $resident->ownedUnits()->attach($unitIds);
+        
+        // Get the newly added units with their details
+        $addedUnits = $resident->ownedUnits()->whereIn('units.id', $unitIds)->get();
+        
+        return response()->json([
+            'message' => 'Units added to resident successfully',
+            'data' => [
+                'resident_id' => $resident->id,
+                'added_units' => $addedUnits,
+                'added_count' => count($unitIds),
+            ]
+        ], 201);
+    }
+
+    /**
      * Update the specified resident.
      */
     public function update(ResidentRequest $request, string $id): JsonResponse

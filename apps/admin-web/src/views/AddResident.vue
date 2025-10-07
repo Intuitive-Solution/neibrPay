@@ -1116,18 +1116,13 @@ const confirmAddUnits = async () => {
   isAddingUnits.value = true;
 
   try {
-    // TODO: Call API to add units to resident
-    // await residentsApi.addResidentUnits(residentId.value, selectedUnits.value);
-
-    // For now, simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Call API to add units to resident
+    await residentsApi.addResidentUnits(residentId.value!, selectedUnits.value);
 
     // Close modal and refresh units
     closeAddUnitsModal();
     refetchUnits();
-
-    // Show success message
-    alert(`${selectedUnits.value.length} unit(s) added successfully`);
+    refetchAvailableUnits();
   } catch (error) {
     console.error('Error adding units:', error);
     alert('Failed to add units. Please try again.');

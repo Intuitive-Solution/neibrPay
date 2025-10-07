@@ -49,6 +49,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::apiResource('residents', ResidentController::class);
     Route::get('residents/{resident}/units', [ResidentController::class, 'units']);
     Route::get('residents/{resident}/available-units', [ResidentController::class, 'availableUnits']);
+    Route::post('residents/{resident}/units', [ResidentController::class, 'addUnits']);
     Route::delete('residents/{resident}/units/{unit}', [ResidentController::class, 'removeUnit']);
     Route::post('residents/{resident}/restore', [ResidentController::class, 'restore']);
     Route::delete('residents/{resident}/force', [ResidentController::class, 'forceDelete']);

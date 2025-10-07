@@ -63,6 +63,15 @@ export const residentsApi = {
   },
 
   /**
+   * Add units to a resident
+   */
+  async addResidentUnits(residentId: number, unitIds: number[]): Promise<void> {
+    await apiClient.post(`/residents/${residentId}/units`, {
+      unit_ids: unitIds,
+    });
+  },
+
+  /**
    * Create a new resident
    */
   async createResident(data: CreateResidentRequest): Promise<Resident> {
