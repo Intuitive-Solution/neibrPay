@@ -34,55 +34,192 @@
         <div class="space-y-4">
           <!-- Unit Selection -->
           <div>
-            <label
-              for="unit"
-              class="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Unit <span class="text-red-500">*</span>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Units <span class="text-red-500">*</span>
             </label>
-            <div class="relative">
-              <select
-                id="unit"
-                v-model="form.unit_id"
-                required
-                :disabled="isLoadingUnits"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
-                :class="{
-                  'border-red-300 focus:ring-red-500 focus:border-red-500':
-                    errors.unit_id,
-                  'opacity-50 cursor-not-allowed': isLoadingUnits,
-                }"
-              >
-                <option value="">
-                  {{ isLoadingUnits ? 'Loading units...' : 'Select a unit' }}
-                </option>
-                <option v-for="unit in units" :key="unit.id" :value="unit.id">
-                  {{ unit.title }} ({{ unit.resident_name }})
-                </option>
-              </select>
+
+            <!-- Loading State -->
+            <div
+              v-if="isLoadingUnits"
+              class="flex items-center justify-center py-8"
+            >
               <div
-                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"
+              ></div>
+              <span class="ml-2 text-gray-600">Loading units...</span>
+            </div>
+
+            <!-- Error State -->
+            <div
+              v-else-if="unitsError"
+              class="p-4 text-center text-red-600 bg-red-50 rounded-lg"
+            >
+              <p>Failed to load units. Please try again.</p>
+            </div>
+
+            <!-- Searchable Multiselect Dropdown -->
+            <div v-else ref="dropdownRef" class="relative">
+              <!-- Main Input Field -->
+              <div
+                class="relative min-h-[42px] w-full px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors duration-200 cursor-pointer"
+                :class="{
+                  'border-red-300 focus-within:ring-red-500 focus-within:border-red-500':
+                    errors.unit_ids,
+                }"
+                @click="toggleDropdown"
               >
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
+                <!-- Selected Units as Chips -->
+                <div class="flex flex-wrap gap-2 items-center min-h-[26px]">
+                  <div
+                    v-for="unitId in form.unit_ids"
+                    :key="unitId"
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                  >
+                    {{ getUnitTitle(unitId) }}
+                    <button
+                      type="button"
+                      @click.stop="removeUnit(unitId)"
+                      class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <svg
+                        class="w-2.5 h-2.5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Search Input -->
+                  <input
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Search units..."
+                    class="flex-1 min-w-[120px] border-0 outline-none bg-transparent text-sm placeholder-gray-500"
+                    @click.stop
+                    @keydown.escape="closeDropdown"
+                    @keydown.down.prevent="navigateDown"
+                    @keydown.up.prevent="navigateUp"
+                    @keydown.enter.prevent="selectHighlighted"
                   />
-                </svg>
+                </div>
+
+                <!-- Action Icons -->
+                <div
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 space-x-1"
+                >
+                  <!-- Clear All Button -->
+                  <button
+                    v-if="form.unit_ids.length > 0"
+                    type="button"
+                    @click.stop="clearAllUnits"
+                    class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <svg
+                      class="w-3 h-3 text-gray-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Toggle -->
+                  <button
+                    type="button"
+                    @click.stop="toggleDropdown"
+                    class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <svg
+                      class="w-3 h-3 text-gray-400 transition-transform duration-200"
+                      :class="{ 'rotate-180': isDropdownOpen }"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Dropdown Menu -->
+              <div
+                v-if="isDropdownOpen"
+                class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+              >
+                <!-- Select All Option -->
+                <div
+                  class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                  @click="toggleSelectAll"
+                >
+                  <div class="flex items-center">
+                    <input
+                      :checked="isAllSelected"
+                      type="checkbox"
+                      class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                      @click.stop
+                    />
+                    <span class="ml-2">Select all options</span>
+                  </div>
+                </div>
+
+                <!-- Filtered Units List -->
+                <div
+                  v-if="filteredUnits.length === 0"
+                  class="px-3 py-2 text-sm text-gray-500 text-center"
+                >
+                  No units found matching "{{ searchQuery }}"
+                </div>
+
+                <div v-else class="divide-y divide-gray-100">
+                  <div
+                    v-for="(unit, index) in filteredUnits"
+                    :key="unit.id"
+                    class="px-3 py-2 cursor-pointer hover:bg-gray-50"
+                    :class="{ 'bg-gray-50': highlightedIndex === index }"
+                    @click="toggleUnitSelection(unit.id)"
+                    @mouseenter="highlightedIndex = index"
+                  >
+                    <div class="flex items-center">
+                      <input
+                        :checked="form.unit_ids.includes(unit.id)"
+                        type="checkbox"
+                        class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                        @click.stop="toggleUnitSelection(unit.id)"
+                      />
+                      <div class="ml-2 flex-1">
+                        <div class="text-sm font-medium text-gray-900">
+                          {{ unit.title }}
+                        </div>
+                        <div class="text-xs text-gray-500">
+                          {{ unit.resident_name }} • {{ unit.address }},
+                          {{ unit.city }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <p v-if="errors.unit_id" class="mt-2 text-sm text-red-600">
-              {{ errors.unit_id }}
-            </p>
-            <p v-if="unitsError" class="mt-2 text-sm text-red-600">
-              Failed to load units. Please try again.
+
+            <!-- Error Message -->
+            <p v-if="errors.unit_ids" class="mt-2 text-sm text-red-600">
+              {{ errors.unit_ids }}
             </p>
           </div>
         </div>
@@ -472,7 +609,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUnitsForInvoices } from '../composables/useUnits';
 
@@ -481,7 +618,7 @@ const router = useRouter();
 
 // Form data
 const form = ref({
-  unit_id: '',
+  unit_ids: [], // Changed to support multiple units
   frequency: 'monthly',
   start_date: '',
   remaining_cycles: 'endless',
@@ -496,7 +633,7 @@ const form = ref({
 // Form errors
 const errors = ref({
   general: '',
-  unit_id: '',
+  unit_ids: '', // Changed to match form data
   frequency: '',
   start_date: '',
   remaining_cycles: '',
@@ -518,12 +655,115 @@ const {
   error: unitsError,
 } = useUnitsForInvoices();
 
+// Dropdown state
+const isDropdownOpen = ref(false);
+const searchQuery = ref('');
+const highlightedIndex = ref(-1);
+const dropdownRef = ref<HTMLElement | null>(null);
+
+// Computed properties
+const filteredUnits = computed(() => {
+  if (!units.value) return [];
+  if (!searchQuery.value) return units.value;
+
+  const query = searchQuery.value.toLowerCase();
+  return units.value.filter(
+    (unit: any) =>
+      unit.title.toLowerCase().includes(query) ||
+      unit.resident_name.toLowerCase().includes(query) ||
+      unit.address.toLowerCase().includes(query) ||
+      unit.city.toLowerCase().includes(query)
+  );
+});
+
+const isAllSelected = computed(() => {
+  if (!units.value || units.value.length === 0) return false;
+  return units.value.every((unit: any) =>
+    form.value.unit_ids.includes(unit.id)
+  );
+});
+
 // Methods
+const getUnitTitle = (unitId: number) => {
+  const unit = units.value?.find((u: any) => u.id === unitId);
+  return unit ? unit.title : `Unit ${unitId}`;
+};
+
+const toggleUnitSelection = (unitId: number) => {
+  const index = form.value.unit_ids.indexOf(unitId);
+  if (index > -1) {
+    form.value.unit_ids.splice(index, 1);
+  } else {
+    form.value.unit_ids.push(unitId);
+  }
+};
+
+const removeUnit = (unitId: number) => {
+  const index = form.value.unit_ids.indexOf(unitId);
+  if (index > -1) {
+    form.value.unit_ids.splice(index, 1);
+  }
+};
+
+const clearAllUnits = () => {
+  form.value.unit_ids = [];
+};
+
+const toggleDropdown = () => {
+  isDropdownOpen.value = !isDropdownOpen.value;
+  if (isDropdownOpen.value) {
+    highlightedIndex.value = -1;
+  }
+};
+
+const closeDropdown = () => {
+  isDropdownOpen.value = false;
+  highlightedIndex.value = -1;
+  searchQuery.value = '';
+};
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    form.value.unit_ids = [];
+  } else {
+    form.value.unit_ids = units.value?.map((unit: any) => unit.id) || [];
+  }
+};
+
+const navigateDown = () => {
+  if (highlightedIndex.value < filteredUnits.value.length - 1) {
+    highlightedIndex.value++;
+  }
+};
+
+const navigateUp = () => {
+  if (highlightedIndex.value > 0) {
+    highlightedIndex.value--;
+  }
+};
+
+const selectHighlighted = () => {
+  if (
+    highlightedIndex.value >= 0 &&
+    highlightedIndex.value < filteredUnits.value.length
+  ) {
+    const unit = filteredUnits.value[highlightedIndex.value];
+    toggleUnitSelection(unit.id);
+  }
+};
+
+// Click outside handler
+const handleClickOutside = (event: Event) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+    closeDropdown();
+  }
+};
+
 const handleSubmit = async () => {
   // Clear previous errors
   errors.value = {
     general: '',
-    unit_id: '',
+    unit_ids: '',
     frequency: '',
     start_date: '',
     remaining_cycles: '',
@@ -536,8 +776,8 @@ const handleSubmit = async () => {
   };
 
   // Basic validation
-  if (!form.value.unit_id) {
-    errors.value.unit_id = 'Please select a unit';
+  if (form.value.unit_ids.length === 0) {
+    errors.value.unit_ids = 'Please select at least one unit';
     return;
   }
 
@@ -579,5 +819,13 @@ onMounted(() => {
   // Set default start date to today
   const today = new Date();
   form.value.start_date = today.toISOString().split('T')[0];
+
+  // Add click outside listener
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  // Remove click outside listener
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>
