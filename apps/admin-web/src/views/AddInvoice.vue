@@ -53,7 +53,7 @@
               >
                 <option value="">Select a unit</option>
                 <option v-for="unit in units" :key="unit.id" :value="unit.id">
-                  {{ unit.title }}
+                  {{ unit.title }} ({{ unit.resident_name }})
                 </option>
               </select>
               <div
@@ -505,11 +505,11 @@ const isSubmitting = ref(false);
 
 // Dummy units data (replace with API call later)
 const units = ref([
-  { id: 1, title: 'Unit 101' },
-  { id: 2, title: 'Unit 102' },
-  { id: 3, title: 'Unit 201' },
-  { id: 4, title: 'Unit 202' },
-  { id: 5, title: 'Unit 301' },
+  { id: 1, title: 'Unit 101', resident_name: 'John Smith' },
+  { id: 2, title: 'Unit 102', resident_name: 'Sarah Johnson' },
+  { id: 3, title: 'Unit 201', resident_name: 'Mike Wilson' },
+  { id: 4, title: 'Unit 202', resident_name: 'Emily Davis' },
+  { id: 5, title: 'Unit 301', resident_name: 'Robert Taylor' },
 ]);
 
 // Methods
