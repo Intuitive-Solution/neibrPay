@@ -37,6 +37,45 @@ class UnitsController extends Controller
     }
 
     /**
+     * Get units with resident information for invoice creation.
+     */
+    public function forInvoices(Request $request): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        $units = Unit::forTenant($user->tenant_id)
+            ->where('is_active', true)
+            ->with(['owners' => function ($query) {
+                $query->select('users.id', 'users.name', 'users.email');
+            }])
+            ->orderBy('title', 'asc')
+            ->get()
+            ->map(function ($unit) {
+                // Get the first owner's name (assuming one owner per unit for now)
+                $residentName = $unit->owners->first()?->name ?? 'No Resident';
+                
+                return [
+                    'id' => $unit->id,
+                    'title' => $unit->title,
+                    'resident_name' => $residentName,
+                    'address' => $unit->address,
+                    'city' => $unit->city,
+                    'state' => $unit->state,
+                    'zip_code' => $unit->zip_code,
+                    'starting_balance' => $unit->starting_balance,
+                    'balance_as_of_date' => $unit->balance_as_of_date,
+                ];
+            });
+        
+        return response()->json([
+            'data' => $units,
+            'meta' => [
+                'total' => $units->count(),
+            ],
+        ]);
+    }
+
+    /**
      * Store a newly created unit in storage.
      */
     public function store(Request $request): JsonResponse

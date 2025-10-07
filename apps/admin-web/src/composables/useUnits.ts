@@ -33,6 +33,15 @@ export function useUnit(id: number) {
   });
 }
 
+export function useUnitsForInvoices() {
+  return useQuery({
+    queryKey: ['units', 'for-invoices'],
+    queryFn: () => unitsApi.getUnitsForInvoices(),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: true,
+  });
+}
+
 // Mutation hooks with optimistic updates
 export function useCreateUnit() {
   const queryClient = useQueryClient();

@@ -55,6 +55,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::delete('residents/{resident}/force', [ResidentController::class, 'forceDelete']);
     
     // Unit management routes
+    Route::get('units/for-invoices', [UnitsController::class, 'forInvoices']);
     Route::apiResource('units', UnitsController::class);
     Route::post('units/{unit}/restore', [UnitsController::class, 'restore']);
     Route::delete('units/{unit}/force', [UnitsController::class, 'forceDelete']);

@@ -27,6 +27,16 @@ export const unitsApi = {
   },
 
   /**
+   * Get units with resident information for invoice creation
+   */
+  async getUnitsForInvoices(): Promise<Unit[]> {
+    const response: AxiosResponse<UnitsResponse> = await apiClient.get(
+      '/units/for-invoices'
+    );
+    return response.data.data;
+  },
+
+  /**
    * Get a specific unit by ID
    */
   async getUnit(id: number): Promise<Unit> {

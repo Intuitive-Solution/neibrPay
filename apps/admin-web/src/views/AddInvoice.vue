@@ -45,13 +45,17 @@
                 id="unit"
                 v-model="form.unit_id"
                 required
+                :disabled="isLoadingUnits"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
                     errors.unit_id,
+                  'opacity-50 cursor-not-allowed': isLoadingUnits,
                 }"
               >
-                <option value="">Select a unit</option>
+                <option value="">
+                  {{ isLoadingUnits ? 'Loading units...' : 'Select a unit' }}
+                </option>
                 <option v-for="unit in units" :key="unit.id" :value="unit.id">
                   {{ unit.title }} ({{ unit.resident_name }})
                 </option>
@@ -76,6 +80,9 @@
             </div>
             <p v-if="errors.unit_id" class="mt-2 text-sm text-red-600">
               {{ errors.unit_id }}
+            </p>
+            <p v-if="unitsError" class="mt-2 text-sm text-red-600">
+              Failed to load units. Please try again.
             </p>
           </div>
         </div>
@@ -467,6 +474,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useUnitsForInvoices } from '../composables/useUnits';
 
 // Router
 const router = useRouter();
@@ -503,14 +511,12 @@ const errors = ref({
 // Loading state
 const isSubmitting = ref(false);
 
-// Dummy units data (replace with API call later)
-const units = ref([
-  { id: 1, title: 'Unit 101', resident_name: 'John Smith' },
-  { id: 2, title: 'Unit 102', resident_name: 'Sarah Johnson' },
-  { id: 3, title: 'Unit 201', resident_name: 'Mike Wilson' },
-  { id: 4, title: 'Unit 202', resident_name: 'Emily Davis' },
-  { id: 5, title: 'Unit 301', resident_name: 'Robert Taylor' },
-]);
+// Fetch units with resident information
+const {
+  data: units,
+  isLoading: isLoadingUnits,
+  error: unitsError,
+} = useUnitsForInvoices();
 
 // Methods
 const handleSubmit = async () => {
