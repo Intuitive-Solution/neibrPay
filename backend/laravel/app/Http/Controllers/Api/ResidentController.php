@@ -118,6 +118,32 @@ class ResidentController extends Controller
     }
 
     /**
+     * Remove a unit from the specified resident.
+     */
+    public function removeUnit(Request $request, string $id, string $unitId): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        $resident = User::forTenant($user->tenant_id)
+            ->byRole('resident')
+            ->findOrFail($id);
+        
+        // Check if the unit exists and belongs to the same tenant
+        $unit = \App\Models\Unit::forTenant($user->tenant_id)->findOrFail($unitId);
+        
+        // Remove the relationship
+        $resident->ownedUnits()->detach($unitId);
+        
+        return response()->json([
+            'message' => 'Unit removed from resident successfully',
+            'data' => [
+                'resident_id' => $resident->id,
+                'unit_id' => $unitId,
+            ]
+        ]);
+    }
+
+    /**
      * Update the specified resident.
      */
     public function update(ResidentRequest $request, string $id): JsonResponse

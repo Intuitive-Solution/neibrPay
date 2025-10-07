@@ -46,6 +46,13 @@ export const residentsApi = {
   },
 
   /**
+   * Remove a unit from a resident
+   */
+  async removeResidentUnit(residentId: number, unitId: number): Promise<void> {
+    await apiClient.delete(`/residents/${residentId}/units/${unitId}`);
+  },
+
+  /**
    * Create a new resident
    */
   async createResident(data: CreateResidentRequest): Promise<Resident> {
