@@ -3,5 +3,6 @@
 
 export * from './residents';
 export { unitsApi } from './units';
+export { invoicesApi } from './invoices';
 export * from './queryKeys';
 export { setAuthTokenGetter } from './apiClient';

@@ -67,6 +67,14 @@ class Unit extends Model
     }
 
     /**
+     * Get the invoices associated with this unit.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(InvoiceUnit::class);
+    }
+
+    /**
      * Scope a query to only include units for a specific tenant.
      */
     public function scopeForTenant($query, $tenantId)

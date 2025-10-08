@@ -842,7 +842,7 @@
                   <input
                     type="color"
                     @change="
-                      e =>
+                      (e: Event) =>
                         formatText(
                           'foreColor',
                           (e.target as HTMLInputElement)?.value
@@ -854,7 +854,7 @@
                   <input
                     type="color"
                     @change="
-                      e =>
+                      (e: Event) =>
                         formatText(
                           'backColor',
                           (e.target as HTMLInputElement)?.value
@@ -991,7 +991,7 @@
                 >{{
                   getWordCount(
                     getPlainText(
-                      tabContent[activeTab as keyof typeof tabContent]
+                      tabContent[activeTab as keyof typeof tabContent] || ''
                     )
                   )
                 }}
@@ -1245,7 +1245,8 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUnitsForInvoices } from '../composables/useUnits';
-import type { UnitWithResident } from '@neibrpay/models';
+import { useCreateInvoice } from '../composables/useInvoices';
+import type { UnitWithResident, CreateInvoiceRequest } from '@neibrpay/models';
 import InvoiceTemplate from '../components/InvoiceTemplate.vue';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -1283,7 +1284,7 @@ const errors = ref({
 });
 
 // Loading state
-const isSubmitting = ref(false);
+const isSubmitting = computed(() => createInvoiceMutation.isPending.value);
 const isGeneratingPDF = ref(false);
 
 // PDF Preview state
@@ -1295,6 +1296,9 @@ const {
   isLoading: isLoadingUnits,
   error: unitsError,
 } = useUnitsForInvoices();
+
+// Create invoice mutation
+const createInvoiceMutation = useCreateInvoice();
 
 // Dropdown state
 const isDropdownOpen = ref(false);
@@ -1731,7 +1735,7 @@ const updateLineTotal = (index: number) => {
 
 // Tab helper methods
 const getTabPlaceholder = (tabId: string) => {
-  const placeholders = {
+  const placeholders: Record<string, string> = {
     'public-notes': 'Add public notes that will be visible to the customer...',
     'private-notes': 'Add private notes for internal use only...',
     terms: 'Add payment terms and conditions...',
@@ -1809,8 +1813,8 @@ const updateFormatState = () => {
 
 const updateContent = () => {
   if (editorRef.value) {
-    tabContent.value[activeTab.value as keyof typeof tabContent.value] =
-      editorRef.value.innerHTML;
+    const key = activeTab.value as keyof typeof tabContent.value;
+    tabContent.value[key] = editorRef.value.innerHTML;
   }
 };
 
@@ -1887,22 +1891,68 @@ const handleSubmit = async () => {
     return;
   }
 
-  isSubmitting.value = true;
+  if (invoiceItems.value.length === 0) {
+    errors.value.general = 'Please add at least one invoice item';
+    return;
+  }
 
   try {
-    // TODO: Implement API call to create invoice
-    // await invoicesApi.createInvoice(form.value);
+    // Prepare the request data
+    const requestData: CreateInvoiceRequest = {
+      unit_ids: form.value.unit_ids,
+      frequency: form.value.frequency as any,
+      start_date: form.value.start_date,
+      remaining_cycles:
+        form.value.frequency === 'one-time'
+          ? undefined
+          : form.value.remaining_cycles,
+      due_date: form.value.due_date as any,
+      discount_amount: form.value.discount_amount
+        ? parseFloat(form.value.discount_amount)
+        : undefined,
+      discount_type: form.value.discount_type as any,
+      auto_bill: form.value.auto_bill as any,
+      items: invoiceItems.value.map((item: any) => ({
+        name: item.name,
+        description: item.description,
+        unit_cost: item.unitCost,
+        quantity: item.quantity,
+        line_total: item.lineTotal,
+        sort_order: 0,
+        taxable: true,
+      })),
+      tax_rate: taxRate.value,
+      notes: {
+        public_notes: tabContent.value['public-notes'],
+        private_notes: tabContent.value['private-notes'],
+        terms: tabContent.value.terms,
+        footer: tabContent.value.footer,
+      },
+      po_number: form.value.po_number || undefined,
+    };
 
-    // For now, simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Create the invoice
+    const response = await createInvoiceMutation.mutateAsync(requestData);
 
-    // Redirect to invoices list or show success message
+    // Show success message and redirect
+    console.log('Invoice created successfully:', response);
     router.push('/invoices');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating invoice:', error);
-    errors.value.general = 'Failed to create invoice. Please try again.';
-  } finally {
-    isSubmitting.value = false;
+
+    // Handle validation errors
+    if (error.errors) {
+      // Map backend validation errors to form errors
+      Object.keys(error.errors).forEach(field => {
+        if (errors.value.hasOwnProperty(field)) {
+          errors.value[field as keyof typeof errors.value] =
+            error.errors[field][0];
+        }
+      });
+    } else {
+      errors.value.general =
+        error.message || 'Failed to create invoice. Please try again.';
+    }
   }
 };
 
