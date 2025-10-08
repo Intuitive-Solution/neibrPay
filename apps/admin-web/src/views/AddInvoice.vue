@@ -735,7 +735,7 @@
                 <div class="flex items-center space-x-1">
                   <select
                     v-model="selectedFormat"
-                    @change="formatText('formatBlock', selectedFormat)"
+                    @change="formatBlock(selectedFormat)"
                     class="text-sm border border-gray-300 rounded px-2 py-1"
                   >
                     <option value="p">Paragraph</option>
@@ -944,7 +944,7 @@
                 @input="updateContent"
                 @keyup="updateFormatState"
                 @mouseup="updateFormatState"
-                class="w-full h-48 border-0 outline-none resize-none text-sm focus:outline-none"
+                class="rich-text-editor w-full h-48 border-0 outline-none resize-none text-sm focus:outline-none"
                 :placeholder="getTabPlaceholder(activeTab)"
               ></div>
             </div>
@@ -1387,6 +1387,17 @@ const formatText = (command: string, value?: string) => {
   updateFormatState();
 };
 
+const formatBlock = (tag: string) => {
+  // Focus the editor first
+  if (editorRef.value) {
+    editorRef.value.focus();
+  }
+
+  // Simple and reliable approach using execCommand
+  document.execCommand('formatBlock', false, tag);
+  updateFormatState();
+};
+
 const isFormatActive = (command: string) => {
   return formatState.value[command as keyof typeof formatState.value] || false;
 };
@@ -1407,6 +1418,26 @@ const updateFormatState = () => {
   );
   formatState.value.insertOrderedList =
     document.queryCommandState('insertOrderedList');
+
+  // Update the selected format in dropdown
+  const selection = window.getSelection();
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const element =
+      container.nodeType === Node.TEXT_NODE
+        ? container.parentElement
+        : (container as Element);
+
+    if (element) {
+      const tagName = element.tagName.toLowerCase();
+      if (['h1', 'h2', 'h3', 'p'].includes(tagName)) {
+        selectedFormat.value = tagName;
+      } else {
+        selectedFormat.value = 'p';
+      }
+    }
+  }
 };
 
 const updateContent = () => {
@@ -1526,3 +1557,66 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 </script>
+
+<style>
+/* Rich text editor styles - Global styles for contenteditable */
+.rich-text-editor h1 {
+  font-size: 2rem !important;
+  font-weight: bold !important;
+  margin: 0.5rem 0 !important;
+  line-height: 1.2 !important;
+  color: #1f2937 !important;
+}
+
+.rich-text-editor h2 {
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  margin: 0.5rem 0 !important;
+  line-height: 1.3 !important;
+  color: #1f2937 !important;
+}
+
+.rich-text-editor h3 {
+  font-size: 1.25rem !important;
+  font-weight: bold !important;
+  margin: 0.5rem 0 !important;
+  line-height: 1.4 !important;
+  color: #1f2937 !important;
+}
+
+.rich-text-editor p {
+  margin: 0.5rem 0 !important;
+  line-height: 1.5 !important;
+}
+
+.rich-text-editor ul,
+.rich-text-editor ol {
+  margin: 0.5rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+.rich-text-editor li {
+  margin: 0.25rem 0 !important;
+}
+
+.rich-text-editor table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 0.5rem 0 !important;
+}
+
+.rich-text-editor td {
+  border: 1px solid #ccc !important;
+  padding: 0.5rem !important;
+  min-width: 50px !important;
+}
+
+.rich-text-editor a {
+  color: #2563eb !important;
+  text-decoration: underline !important;
+}
+
+.rich-text-editor a:hover {
+  color: #1d4ed8 !important;
+}
+</style>
