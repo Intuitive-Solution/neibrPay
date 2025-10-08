@@ -443,9 +443,10 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const formatCurrency = (amount: number) => {
+const formatCurrency = (amount: number | string) => {
   if (amount === null || amount === undefined) return '0.00';
-  return amount.toFixed(2);
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return numAmount.toFixed(2);
 };
 
 const getStatusText = (status: string) => {

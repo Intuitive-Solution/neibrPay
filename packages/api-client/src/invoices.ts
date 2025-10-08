@@ -34,27 +34,25 @@ export const invoicesApi = {
     include_deleted?: boolean;
     unit_id?: number;
     status?: string;
-  }): Promise<InvoiceListResponse> {
+  }): Promise<InvoiceUnit[]> {
     const response = await apiClient.get('/invoices', { params });
-    return response.data;
+    return response.data.data; // Extract the data array from the response
   },
 
   /**
    * Get a specific invoice by ID
    */
-  async getInvoice(id: number): Promise<InvoiceResponse> {
+  async getInvoice(id: number): Promise<InvoiceUnit> {
     const response = await apiClient.get(`/invoices/${id}`);
-    return response.data;
+    return response.data.data; // Extract the data object from the response
   },
 
   /**
    * Create new invoice(s)
    */
-  async createInvoice(
-    data: CreateInvoiceRequest
-  ): Promise<CreateInvoiceResponse> {
+  async createInvoice(data: CreateInvoiceRequest): Promise<InvoiceUnit[]> {
     const response = await apiClient.post('/invoices', data);
-    return response.data;
+    return response.data.data; // Extract the data array from the response
   },
 
   /**
@@ -63,9 +61,9 @@ export const invoicesApi = {
   async updateInvoice(
     id: number,
     data: UpdateInvoiceRequest
-  ): Promise<InvoiceResponse> {
+  ): Promise<InvoiceUnit> {
     const response = await apiClient.put(`/invoices/${id}`, data);
-    return response.data;
+    return response.data.data; // Extract the data object from the response
   },
 
   /**
@@ -79,9 +77,9 @@ export const invoicesApi = {
   /**
    * Restore a soft-deleted invoice
    */
-  async restoreInvoice(id: number): Promise<InvoiceResponse> {
+  async restoreInvoice(id: number): Promise<InvoiceUnit> {
     const response = await apiClient.post(`/invoices/${id}/restore`);
-    return response.data;
+    return response.data.data; // Extract the data object from the response
   },
 
   /**
@@ -95,16 +93,16 @@ export const invoicesApi = {
   /**
    * Mark an invoice as sent
    */
-  async markInvoiceAsSent(id: number): Promise<InvoiceResponse> {
+  async markInvoiceAsSent(id: number): Promise<InvoiceUnit> {
     const response = await apiClient.post(`/invoices/${id}/mark-sent`);
-    return response.data;
+    return response.data.data; // Extract the data object from the response
   },
 
   /**
    * Get invoices for a specific unit
    */
-  async getInvoicesForUnit(unitId: number): Promise<InvoiceListResponse> {
+  async getInvoicesForUnit(unitId: number): Promise<InvoiceUnit[]> {
     const response = await apiClient.get(`/units/${unitId}/invoices`);
-    return response.data;
+    return response.data.data; // Extract the data array from the response
   },
 };
