@@ -726,7 +726,7 @@
 
         <!-- Tab Content -->
         <div class="p-6">
-          <!-- Rich Text Editor Placeholder -->
+          <!-- Rich Text Editor -->
           <div class="border border-gray-300 rounded-lg">
             <!-- Toolbar -->
             <div class="border-b border-gray-200 p-3 bg-gray-50">
@@ -734,45 +734,83 @@
                 <!-- Formatting buttons -->
                 <div class="flex items-center space-x-1">
                   <select
+                    v-model="selectedFormat"
+                    @change="formatText('formatBlock', selectedFormat)"
                     class="text-sm border border-gray-300 rounded px-2 py-1"
                   >
-                    <option>Paragraph</option>
-                    <option>Heading 1</option>
-                    <option>Heading 2</option>
-                    <option>Heading 3</option>
+                    <option value="p">Paragraph</option>
+                    <option value="h1">Heading 1</option>
+                    <option value="h2">Heading 2</option>
+                    <option value="h3">Heading 3</option>
                   </select>
                   <select
+                    v-model="selectedFont"
+                    @change="formatText('fontName', selectedFont)"
                     class="text-sm border border-gray-300 rounded px-2 py-1"
                   >
-                    <option>Helvetica</option>
-                    <option>Arial</option>
-                    <option>Times New Roman</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Georgia">Georgia</option>
                   </select>
                   <select
+                    v-model="selectedSize"
+                    @change="formatText('fontSize', selectedSize)"
                     class="text-sm border border-gray-300 rounded px-2 py-1"
                   >
-                    <option>14px</option>
-                    <option>12px</option>
-                    <option>16px</option>
-                    <option>18px</option>
+                    <option value="3">12px</option>
+                    <option value="4">14px</option>
+                    <option value="5">16px</option>
+                    <option value="6">18px</option>
+                    <option value="7">24px</option>
                   </select>
                 </div>
 
                 <div class="flex items-center space-x-1">
-                  <button class="p-1 hover:bg-gray-200 rounded" title="Bold">
+                  <button
+                    @click="formatText('bold')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('bold')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
+                    title="Bold"
+                  >
                     <span class="font-bold text-sm">B</span>
                   </button>
-                  <button class="p-1 hover:bg-gray-200 rounded" title="Italic">
+                  <button
+                    @click="formatText('italic')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('italic')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
+                    title="Italic"
+                  >
                     <span class="italic text-sm">I</span>
                   </button>
                   <button
-                    class="p-1 hover:bg-gray-200 rounded"
+                    @click="formatText('underline')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('underline')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
                     title="Underline"
                   >
                     <span class="underline text-sm">U</span>
                   </button>
                   <button
-                    class="p-1 hover:bg-gray-200 rounded"
+                    @click="formatText('strikeThrough')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('strikeThrough')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
                     title="Strikethrough"
                   >
                     <span class="line-through text-sm">S</span>
@@ -780,65 +818,119 @@
                 </div>
 
                 <div class="flex items-center space-x-1">
-                  <button
-                    class="p-1 hover:bg-gray-200 rounded"
+                  <input
+                    type="color"
+                    @change="formatText('foreColor', $event.target.value)"
+                    class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
                     title="Text Color"
-                  >
-                    <span class="text-sm">A</span>
-                  </button>
+                  />
+                  <input
+                    type="color"
+                    @change="formatText('backColor', $event.target.value)"
+                    class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
+                    title="Highlight Color"
+                  />
                   <button
+                    @click="createLink"
                     class="p-1 hover:bg-gray-200 rounded"
-                    title="Highlight"
+                    title="Link"
                   >
-                    <span class="text-sm">🖍️</span>
-                  </button>
-                  <button class="p-1 hover:bg-gray-200 rounded" title="Link">
                     <span class="text-sm">🔗</span>
-                  </button>
-                  <button class="p-1 hover:bg-gray-200 rounded" title="Image">
-                    <span class="text-sm">🖼️</span>
                   </button>
                 </div>
 
                 <div class="flex items-center space-x-1">
                   <button
-                    class="p-1 hover:bg-gray-200 rounded"
+                    @click="formatText('justifyLeft')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('justifyLeft')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
                     title="Align Left"
                   >
                     <span class="text-sm">⬅️</span>
                   </button>
                   <button
-                    class="p-1 hover:bg-gray-200 rounded"
+                    @click="formatText('justifyCenter')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('justifyCenter')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
                     title="Align Center"
                   >
                     <span class="text-sm">↔️</span>
                   </button>
                   <button
-                    class="p-1 hover:bg-gray-200 rounded"
+                    @click="formatText('justifyRight')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('justifyRight')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
                     title="Align Right"
                   >
                     <span class="text-sm">➡️</span>
                   </button>
-                  <button class="p-1 hover:bg-gray-200 rounded" title="Justify">
+                  <button
+                    @click="formatText('justifyFull')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('justifyFull')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
+                    title="Justify"
+                  >
                     <span class="text-sm">⬌</span>
                   </button>
                 </div>
 
                 <div class="flex items-center space-x-1">
                   <button
-                    class="p-1 hover:bg-gray-200 rounded"
+                    @click="formatText('insertUnorderedList')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('insertUnorderedList')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
                     title="Bullet List"
                   >
                     <span class="text-sm">•</span>
                   </button>
                   <button
-                    class="p-1 hover:bg-gray-200 rounded"
+                    @click="formatText('insertOrderedList')"
+                    :class="[
+                      'p-1 rounded',
+                      isFormatActive('insertOrderedList')
+                        ? 'bg-blue-200'
+                        : 'hover:bg-gray-200',
+                    ]"
                     title="Numbered List"
                   >
                     <span class="text-sm">1.</span>
                   </button>
-                  <button class="p-1 hover:bg-gray-200 rounded" title="Table">
+                  <button
+                    @click="insertTable"
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Table"
+                  >
                     <span class="text-sm">⊞</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center space-x-1">
+                  <button
+                    @click="formatText('removeFormat')"
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Clear Formatting"
+                  >
+                    <span class="text-sm">Tx</span>
                   </button>
                 </div>
               </div>
@@ -846,19 +938,28 @@
 
             <!-- Editor Content Area -->
             <div class="p-4 min-h-[200px]">
-              <textarea
-                v-model="tabContent[activeTab]"
-                class="w-full h-48 border-0 outline-none resize-none text-sm"
+              <div
+                ref="editorRef"
+                contenteditable="true"
+                @input="updateContent"
+                @keyup="updateFormatState"
+                @mouseup="updateFormatState"
+                class="w-full h-48 border-0 outline-none resize-none text-sm focus:outline-none"
                 :placeholder="getTabPlaceholder(activeTab)"
-              ></textarea>
+              ></div>
             </div>
 
             <!-- Status Bar -->
             <div
               class="border-t border-gray-200 px-4 py-2 bg-gray-50 flex justify-between items-center text-xs text-gray-500"
             >
-              <span>p</span>
-              <span>{{ getWordCount(tabContent[activeTab]) }} words</span>
+              <span>{{ getCurrentTag() }}</span>
+              <span
+                >{{
+                  getWordCount(getPlainText(tabContent[activeTab]))
+                }}
+                words</span
+              >
             </div>
           </div>
         </div>
@@ -1072,6 +1173,24 @@ const tabContent = ref({
 const taxRate = ref(0);
 const paidToDate = ref(0);
 
+// Rich text editor state
+const editorRef = ref<HTMLElement | null>(null);
+const selectedFormat = ref('p');
+const selectedFont = ref('Helvetica');
+const selectedSize = ref('4');
+const formatState = ref({
+  bold: false,
+  italic: false,
+  underline: false,
+  strikeThrough: false,
+  justifyLeft: false,
+  justifyCenter: false,
+  justifyRight: false,
+  justifyFull: false,
+  insertUnorderedList: false,
+  insertOrderedList: false,
+});
+
 // Computed properties
 const filteredUnits = computed((): UnitWithResident[] => {
   if (!units.value) return [];
@@ -1126,6 +1245,13 @@ watch(
     }
   }
 );
+
+// Watch for tab changes to load content
+watch(activeTab, newTab => {
+  if (editorRef.value) {
+    editorRef.value.innerHTML = tabContent.value[newTab] || '';
+  }
+});
 
 // Methods
 const getUnitTitle = (unitId: number) => {
@@ -1253,6 +1379,74 @@ const getWordCount = (text: string) => {
     .trim()
     .split(/\s+/)
     .filter(word => word.length > 0).length;
+};
+
+// Rich text editor methods
+const formatText = (command: string, value?: string) => {
+  document.execCommand(command, false, value);
+  updateFormatState();
+};
+
+const isFormatActive = (command: string) => {
+  return formatState.value[command as keyof typeof formatState.value] || false;
+};
+
+const updateFormatState = () => {
+  if (!editorRef.value) return;
+
+  formatState.value.bold = document.queryCommandState('bold');
+  formatState.value.italic = document.queryCommandState('italic');
+  formatState.value.underline = document.queryCommandState('underline');
+  formatState.value.strikeThrough = document.queryCommandState('strikeThrough');
+  formatState.value.justifyLeft = document.queryCommandState('justifyLeft');
+  formatState.value.justifyCenter = document.queryCommandState('justifyCenter');
+  formatState.value.justifyRight = document.queryCommandState('justifyRight');
+  formatState.value.justifyFull = document.queryCommandState('justifyFull');
+  formatState.value.insertUnorderedList = document.queryCommandState(
+    'insertUnorderedList'
+  );
+  formatState.value.insertOrderedList =
+    document.queryCommandState('insertOrderedList');
+};
+
+const updateContent = () => {
+  if (editorRef.value) {
+    tabContent.value[activeTab.value] = editorRef.value.innerHTML;
+  }
+};
+
+const createLink = () => {
+  const url = prompt('Enter URL:');
+  if (url) {
+    formatText('createLink', url);
+  }
+};
+
+const insertTable = () => {
+  const table =
+    '<table border="1" style="border-collapse: collapse; width: 100%;"><tr><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>&nbsp;</td><td>&nbsp;</td></tr></table>';
+  formatText('insertHTML', table);
+};
+
+const getCurrentTag = () => {
+  if (!editorRef.value) return 'p';
+  const selection = window.getSelection();
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const element =
+      container.nodeType === Node.TEXT_NODE
+        ? container.parentElement
+        : (container as Element);
+    return element?.tagName?.toLowerCase() || 'p';
+  }
+  return 'p';
+};
+
+const getPlainText = (html: string) => {
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  return temp.textContent || temp.innerText || '';
 };
 
 // Click outside handler
