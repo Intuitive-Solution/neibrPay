@@ -841,13 +841,25 @@
                 <div class="flex items-center space-x-1">
                   <input
                     type="color"
-                    @change="formatText('foreColor', $event.target.value)"
+                    @change="
+                      e =>
+                        formatText(
+                          'foreColor',
+                          (e.target as HTMLInputElement)?.value
+                        )
+                    "
                     class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
                     title="Text Color"
                   />
                   <input
                     type="color"
-                    @change="formatText('backColor', $event.target.value)"
+                    @change="
+                      e =>
+                        formatText(
+                          'backColor',
+                          (e.target as HTMLInputElement)?.value
+                        )
+                    "
                     class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
                     title="Highlight Color"
                   />
@@ -977,7 +989,11 @@
               <span>{{ getCurrentTag() }}</span>
               <span
                 >{{
-                  getWordCount(getPlainText(tabContent[activeTab]))
+                  getWordCount(
+                    getPlainText(
+                      tabContent[activeTab as keyof typeof tabContent]
+                    )
+                  )
                 }}
                 words</span
               >
@@ -1105,43 +1121,99 @@
       </button>
     </div>
   </div>
-  <!-- PDF Preview  Panel -->
+  <!-- PDF Preview Panel -->
   <div v-if="showPreview" class="max-w-7xl bg-white rounded-lg shadow p-6 mt-6">
-    <!-- Card Title -->
-    <div class="bg-gray-300 px-6 py-3 rounded-t-lg -m-6 mb-6">
+    <!-- Card Title with Action Buttons -->
+    <div
+      class="bg-gray-300 px-6 py-3 rounded-t-lg -m-6 mb-6 flex justify-between items-center"
+    >
       <h3 class="text-lg font-medium text-gray-900">Invoice Preview</h3>
+      <div class="flex space-x-2">
+        <button
+          @click="generatePDFPreview"
+          :disabled="isGeneratingPDF"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+          {{ isGeneratingPDF ? 'Generating...' : 'Preview PDF' }}
+        </button>
+
+        <button
+          @click="downloadPDF"
+          :disabled="isGeneratingPDF"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          Download PDF
+        </button>
+
+        <button
+          @click="printPDF"
+          :disabled="isGeneratingPDF"
+          class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+            />
+          </svg>
+          Print PDF
+        </button>
+      </div>
     </div>
 
-    <!-- Preview Card - Full Width -->
-    <div
-      class="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
-    >
-      <div class="mb-4">
-        <svg
-          class="mx-auto h-16 w-16 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      </div>
-      <h4 class="text-lg font-medium text-gray-900 mb-2">Invoice Preview</h4>
-      <p class="text-gray-600 mb-4">
-        PDF preview will be generated here once you have selected units and
-        added invoice items.
-      </p>
-      <div class="text-sm text-gray-500">
-        <p><strong>Selected Units:</strong> {{ form.unit_ids.length }}</p>
-        <p><strong>Invoice Items:</strong> {{ invoiceItems.length }}</p>
-        <p><strong>Subtotal:</strong> ${{ subtotal.toFixed(2) }}</p>
-        <p><strong>Total:</strong> ${{ total.toFixed(2) }}</p>
-      </div>
+    <!-- Invoice Template Preview -->
+    <div class="preview-container">
+      <InvoiceTemplate
+        :form="form"
+        :invoice-items="invoiceItems"
+        :subtotal="subtotal"
+        :tax-rate="taxRate"
+        :tax-amount="taxAmount"
+        :total="total"
+        :paid-to-date="paidToDate"
+        :balance-due="balanceDue"
+        :tab-content="tabContent"
+        :units="units"
+      />
     </div>
   </div>
 </template>
@@ -1151,6 +1223,9 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUnitsForInvoices } from '../composables/useUnits';
 import type { UnitWithResident } from '@neibrpay/models';
+import InvoiceTemplate from '../components/InvoiceTemplate.vue';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Router
 const router = useRouter();
@@ -1186,6 +1261,7 @@ const errors = ref({
 
 // Loading state
 const isSubmitting = ref(false);
+const isGeneratingPDF = ref(false);
 
 // Fetch units with resident information
 const {
@@ -1287,7 +1363,10 @@ const isOneTimeFrequency = computed(() => {
 
 // Financial calculations
 const subtotal = computed(() => {
-  return invoiceItems.value.reduce((sum, item) => sum + item.lineTotal, 0);
+  return invoiceItems.value.reduce(
+    (sum: number, item: any) => sum + item.lineTotal,
+    0
+  );
 });
 
 const taxAmount = computed(() => {
@@ -1310,7 +1389,7 @@ const showPreview = computed(() => {
 // Watchers
 watch(
   () => form.value.frequency,
-  (newFrequency, oldFrequency) => {
+  (newFrequency: string, oldFrequency: string) => {
     if (newFrequency === 'one-time') {
       form.value.remaining_cycles = '';
     } else if (oldFrequency === 'one-time' && newFrequency !== 'one-time') {
@@ -1320,11 +1399,172 @@ watch(
 );
 
 // Watch for tab changes to load content
-watch(activeTab, newTab => {
+watch(activeTab, (newTab: string) => {
   if (editorRef.value) {
-    editorRef.value.innerHTML = tabContent.value[newTab] || '';
+    editorRef.value.innerHTML =
+      tabContent.value[newTab as keyof typeof tabContent.value] || '';
   }
 });
+
+// PDF Generation Methods
+const generatePDFPreview = async () => {
+  try {
+    isGeneratingPDF.value = true;
+
+    const element = document.getElementById('invoice-preview');
+    if (!element) {
+      console.error('Invoice preview element not found');
+      return;
+    }
+
+    const canvas = await html2canvas(element, {
+      scale: 2, // Higher quality
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    const imgWidth = 210; // A4 width in mm
+    const pageHeight = 295; // A4 height in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // Open PDF in new tab
+    const pdfBlob = pdf.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    window.open(pdfUrl, '_blank');
+
+    // Clean up
+    setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
+  } catch (error) {
+    console.error('Error generating PDF preview:', error);
+    alert('Error generating PDF preview. Please try again.');
+  } finally {
+    isGeneratingPDF.value = false;
+  }
+};
+
+const downloadPDF = async () => {
+  try {
+    isGeneratingPDF.value = true;
+
+    const element = document.getElementById('invoice-preview');
+    if (!element) {
+      console.error('Invoice preview element not found');
+      return;
+    }
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // Download the PDF
+    const fileName = `invoice-${form.value.invoice_number || 'preview'}-${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(fileName);
+  } catch (error) {
+    console.error('Error downloading PDF:', error);
+    alert('Error downloading PDF. Please try again.');
+  } finally {
+    isGeneratingPDF.value = false;
+  }
+};
+
+const printPDF = async () => {
+  try {
+    isGeneratingPDF.value = true;
+
+    const element = document.getElementById('invoice-preview');
+    if (!element) {
+      console.error('Invoice preview element not found');
+      return;
+    }
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    // Create blob and open in new window for printing
+    const pdfBlob = pdf.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+
+    // Open PDF in new window and trigger print dialog
+    const printWindow = window.open(pdfUrl, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+
+      // Clean up after printing
+      setTimeout(() => {
+        URL.revokeObjectURL(pdfUrl);
+        printWindow.close();
+      }, 1000);
+    }
+  } catch (error) {
+    console.error('Error printing PDF:', error);
+    alert('Error printing PDF. Please try again.');
+  } finally {
+    isGeneratingPDF.value = false;
+  }
+};
 
 // Methods
 const getUnitTitle = (unitId: number) => {
@@ -1451,7 +1691,7 @@ const getWordCount = (text: string) => {
   return text
     .trim()
     .split(/\s+/)
-    .filter(word => word.length > 0).length;
+    .filter((word: string) => word.length > 0).length;
 };
 
 // Rich text editor methods
@@ -1515,7 +1755,8 @@ const updateFormatState = () => {
 
 const updateContent = () => {
   if (editorRef.value) {
-    tabContent.value[activeTab.value] = editorRef.value.innerHTML;
+    tabContent.value[activeTab.value as keyof typeof tabContent.value] =
+      editorRef.value.innerHTML;
   }
 };
 
@@ -1691,5 +1932,22 @@ onUnmounted(() => {
 
 .rich-text-editor a:hover {
   color: #1d4ed8 !important;
+}
+
+/* PDF Preview Container Styles */
+.preview-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f9fafb;
+  padding: 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.preview-container .invoice-template {
+  transform: scale(0.8);
+  transform-origin: top left;
+  margin-bottom: -20%;
 }
 </style>

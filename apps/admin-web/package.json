@@ -15,6 +15,8 @@
     "@tanstack/vue-query": "^5.90.2",
     "axios": "^1.5.0",
     "firebase": "^10.0.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
     "pdfjs-dist": "^3.11.0",
     "pinia": "^2.1.0",
     "vue": "^3.3.0",
