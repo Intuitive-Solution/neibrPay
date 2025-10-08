@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import { computed, unref, type Ref } from 'vue';
 import { invoicesApi } from '@neibrpay/api-client';
 import type {
   CreateInvoiceRequest,
@@ -20,14 +21,14 @@ export const invoiceQueryKeys = {
 // Get all invoices with optional filters
 export function useInvoices(
   filters: {
-    include_deleted?: boolean;
-    unit_id?: number;
-    status?: string;
+    include_deleted?: boolean | Ref<boolean>;
+    unit_id?: number | Ref<number>;
+    status?: string | Ref<string>;
   } = {}
 ) {
   return useQuery({
-    queryKey: invoiceQueryKeys.list(filters),
-    queryFn: () => invoicesApi.getInvoices(filters),
+    queryKey: computed(() => invoiceQueryKeys.list(unref(filters))),
+    queryFn: () => invoicesApi.getInvoices(unref(filters)),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
