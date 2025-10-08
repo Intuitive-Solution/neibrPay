@@ -564,6 +564,143 @@
       </div>
     </div>
 
+    <!-- Invoice Items Table -->
+    <div class="mt-8 bg-white rounded-lg shadow">
+      <!-- Table Header -->
+      <div class="bg-gray-300 px-6 py-3 rounded-t-lg">
+        <div
+          class="grid grid-cols-5 gap-4 text-sm font-medium text-gray-700 uppercase tracking-wide"
+        >
+          <div class="text-left">Item</div>
+          <div class="text-left">Description</div>
+          <div class="text-left">Unit Cost</div>
+          <div class="text-left">Quantity</div>
+          <div class="text-right">Line Total</div>
+        </div>
+      </div>
+
+      <!-- Table Content -->
+      <div class="divide-y divide-gray-200">
+        <!-- Empty State -->
+        <div v-if="invoiceItems.length === 0" class="text-center py-8">
+          <div class="text-gray-500 mb-4">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <p class="text-gray-500 text-sm">No items added yet</p>
+        </div>
+
+        <!-- Items List -->
+        <div v-else>
+          <div
+            v-for="(item, index) in invoiceItems"
+            :key="index"
+            class="grid grid-cols-5 gap-4 items-start py-3 px-6 hover:bg-gray-50"
+          >
+            <!-- Item Name -->
+            <div>
+              <input
+                v-model="item.name"
+                type="text"
+                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                placeholder="Item name"
+              />
+            </div>
+
+            <!-- Description -->
+            <div>
+              <textarea
+                v-model="item.description"
+                rows="2"
+                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 resize-none"
+                placeholder="Item description"
+              ></textarea>
+            </div>
+
+            <!-- Unit Cost -->
+            <div>
+              <div class="relative">
+                <span
+                  class="absolute left-2 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+                  >$</span
+                >
+                <input
+                  v-model.number="item.unitCost"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  class="w-full pl-6 pr-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                  placeholder="0.00"
+                  @input="updateLineTotal(index)"
+                />
+              </div>
+            </div>
+
+            <!-- Quantity -->
+            <div>
+              <input
+                v-model.number="item.quantity"
+                type="number"
+                min="1"
+                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                placeholder="1"
+                @input="updateLineTotal(index)"
+              />
+            </div>
+
+            <!-- Line Total (Read-only) -->
+            <div class="flex items-center justify-end">
+              <span class="text-sm text-gray-900 mr-3 font-medium">
+                ${{ item.lineTotal.toFixed(2) }}
+              </span>
+              <button
+                type="button"
+                @click="removeItem(index)"
+                class="text-red-600 hover:text-red-800 focus:outline-none text-sm"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Item Button -->
+    <div class="mt-4 flex justify-center">
+      <button
+        type="button"
+        @click="addItem"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+      >
+        <svg
+          class="w-4 h-4 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+          />
+        </svg>
+        Add Item
+      </button>
+    </div>
+
     <!-- Action Buttons -->
     <div class="mt-8 flex justify-end space-x-4">
       <button
@@ -661,6 +798,25 @@ const isDropdownOpen = ref(false);
 const searchQuery = ref('');
 const highlightedIndex = ref(-1);
 const dropdownRef = ref<HTMLElement | null>(null);
+
+// Invoice items
+const invoiceItems = ref([
+  // Sample data for demonstration
+  {
+    name: 'Monthly HOA Fee',
+    description: 'Homeowners Association monthly maintenance fee',
+    unitCost: 150.0,
+    quantity: 1,
+    lineTotal: 150.0,
+  },
+  {
+    name: 'Landscaping Service',
+    description: 'Monthly lawn care and garden maintenance',
+    unitCost: 75.0,
+    quantity: 1,
+    lineTotal: 75.0,
+  },
+]);
 
 // Computed properties
 const filteredUnits = computed((): UnitWithResident[] => {
@@ -779,6 +935,33 @@ const selectHighlighted = () => {
   ) {
     const unit = filteredUnits.value[highlightedIndex.value];
     toggleUnitSelection(unit.id);
+  }
+};
+
+// Invoice items methods
+const addItem = () => {
+  const newItem = {
+    name: 'New Item',
+    description: 'Item description',
+    unitCost: 0.0,
+    quantity: 1,
+    lineTotal: 0.0,
+  };
+  invoiceItems.value.push(newItem);
+};
+
+const removeItem = (index: number) => {
+  invoiceItems.value.splice(index, 1);
+};
+
+const updateLineTotal = (index: number) => {
+  const item = invoiceItems.value[index];
+  if (
+    item &&
+    typeof item.unitCost === 'number' &&
+    typeof item.quantity === 'number'
+  ) {
+    item.lineTotal = item.unitCost * item.quantity;
   }
 };
 
