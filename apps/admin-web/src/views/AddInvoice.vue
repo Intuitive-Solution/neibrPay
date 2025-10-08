@@ -1105,6 +1105,8 @@
       </button>
     </div>
   </div>
+  <!-- PDF Preview  Panel -->
+  <div class="max-w-7xl bg-white p-6 mt-6 rounded-lg shadow">Preview</div>
 </template>
 
 <script setup lang="ts">
