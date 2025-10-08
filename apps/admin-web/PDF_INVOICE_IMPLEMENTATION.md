@@ -52,7 +52,7 @@ npm install jspdf html2canvas
 
 - Professional invoice layout
 - Company branding area
-- Multiple unit billing support
+- **Single unit billing display** (with unit selector for multiple units)
 - Itemized billing table
 - Tax and discount calculations
 - Rich text notes and terms
@@ -64,7 +64,8 @@ npm install jspdf html2canvas
 
 1. Fill out the invoice form with units, items, and details
 2. The preview panel will appear when units and items are selected
-3. Use the action buttons to:
+3. **If multiple units are selected**: Use the "Preview Unit" dropdown to select which unit to display in the PDF
+4. Use the action buttons to:
    - **Preview PDF**: Review the invoice before saving
    - **Download PDF**: Save the invoice to your device
    - **Print PDF**: Print the invoice directly

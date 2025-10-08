@@ -1127,7 +1127,30 @@
     <div
       class="bg-gray-300 px-6 py-3 rounded-t-lg -m-6 mb-6 flex justify-between items-center"
     >
-      <h3 class="text-lg font-medium text-gray-900">Invoice Preview</h3>
+      <div class="flex items-center space-x-4">
+        <h3 class="text-lg font-medium text-gray-900">Invoice Preview</h3>
+
+        <!-- Unit Selector Dropdown (only show if multiple units) -->
+        <div
+          v-if="form.unit_ids.length > 1"
+          class="flex items-center space-x-2"
+        >
+          <label class="text-sm font-medium text-gray-700">Unit:</label>
+          <select
+            v-model="selectedPreviewUnitId"
+            class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+          >
+            <option
+              v-for="unitId in form.unit_ids"
+              :key="unitId"
+              :value="unitId"
+            >
+              {{ getUnitTitle(unitId) }}
+            </option>
+          </select>
+        </div>
+      </div>
+
       <div class="flex space-x-2">
         <button
           @click="generatePDFPreview"
@@ -1203,7 +1226,7 @@
     <!-- Invoice Template Preview -->
     <div class="preview-container">
       <InvoiceTemplate
-        :form="form"
+        :form="previewForm"
         :invoice-items="invoiceItems"
         :subtotal="subtotal"
         :tax-rate="taxRate"
@@ -1262,6 +1285,9 @@ const errors = ref({
 // Loading state
 const isSubmitting = ref(false);
 const isGeneratingPDF = ref(false);
+
+// PDF Preview state
+const selectedPreviewUnitId = ref<number | null>(null);
 
 // Fetch units with resident information
 const {
@@ -1386,6 +1412,15 @@ const showPreview = computed(() => {
   return form.value.unit_ids.length > 0 && invoiceItems.value.length > 0;
 });
 
+// Preview form with only the selected unit
+const previewForm = computed(() => {
+  const selectedUnitId = selectedPreviewUnitId.value || form.value.unit_ids[0];
+  return {
+    ...form.value,
+    unit_ids: [selectedUnitId],
+  };
+});
+
 // Watchers
 watch(
   () => form.value.frequency,
@@ -1405,6 +1440,25 @@ watch(activeTab, (newTab: string) => {
       tabContent.value[newTab as keyof typeof tabContent.value] || '';
   }
 });
+
+// Watch for unit changes to update selected preview unit
+watch(
+  () => form.value.unit_ids,
+  (newUnitIds: number[]) => {
+    if (newUnitIds.length > 0) {
+      // If no unit is selected or the selected unit is not in the new list, select the first one
+      if (
+        !selectedPreviewUnitId.value ||
+        !newUnitIds.includes(selectedPreviewUnitId.value)
+      ) {
+        selectedPreviewUnitId.value = newUnitIds[0];
+      }
+    } else {
+      selectedPreviewUnitId.value = null;
+    }
+  },
+  { immediate: true }
+);
 
 // PDF Generation Methods
 const generatePDFPreview = async () => {

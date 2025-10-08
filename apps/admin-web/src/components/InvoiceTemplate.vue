@@ -301,6 +301,7 @@ const getUnitResident = (unitId: number) => {
 .unit-info {
   flex: 1;
   min-width: 200px;
+  max-width: 100%;
 }
 
 .unit-header h4 {
