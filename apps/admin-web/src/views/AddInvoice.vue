@@ -1083,7 +1083,7 @@
     <div class="mt-8 flex justify-end space-x-4">
       <button
         type="button"
-        @click="handleCancel"
+        @click.prevent="handleCancel"
         class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
       >
         Cancel
@@ -1957,7 +1957,21 @@ const handleSubmit = async () => {
 };
 
 const handleCancel = () => {
-  router.push('/invoices');
+  console.log('Cancel button clicked');
+  try {
+    // Try to go back in history first, fallback to invoices list
+    if (window.history.length > 1) {
+      console.log('Going back in history');
+      router.go(-1);
+    } else {
+      console.log('Navigating to /invoices');
+      router.push('/invoices');
+    }
+  } catch (error) {
+    console.error('Navigation error:', error);
+    // Fallback to direct navigation
+    window.location.href = '/invoices';
+  }
 };
 
 // Initialize form with default values
