@@ -937,14 +937,14 @@
             </div>
 
             <!-- Editor Content Area -->
-            <div class="p-4 min-h-[200px]">
+            <div class="p-4 h-48 overflow-y-auto">
               <div
                 ref="editorRef"
                 contenteditable="true"
                 @input="updateContent"
                 @keyup="updateFormatState"
                 @mouseup="updateFormatState"
-                class="rich-text-editor w-full h-48 border-0 outline-none resize-none text-sm focus:outline-none"
+                class="rich-text-editor w-full border-0 outline-none resize-none text-sm focus:outline-none"
                 :placeholder="getTabPlaceholder(activeTab)"
               ></div>
             </div>
