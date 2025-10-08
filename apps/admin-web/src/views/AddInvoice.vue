@@ -701,6 +701,238 @@
       </button>
     </div>
 
+    <!-- Tabs and Total Panel Section -->
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Section: Tabs and Rich Text Editor -->
+      <div class="lg:col-span-2 bg-white rounded-lg shadow">
+        <!-- Tabs -->
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              @click="activeTab = tab.id"
+              :class="[
+                activeTab === tab.id
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
+              ]"
+            >
+              {{ tab.name }}
+            </button>
+          </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="p-6">
+          <!-- Rich Text Editor Placeholder -->
+          <div class="border border-gray-300 rounded-lg">
+            <!-- Toolbar -->
+            <div class="border-b border-gray-200 p-3 bg-gray-50">
+              <div class="flex flex-wrap gap-2">
+                <!-- Formatting buttons -->
+                <div class="flex items-center space-x-1">
+                  <select
+                    class="text-sm border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option>Paragraph</option>
+                    <option>Heading 1</option>
+                    <option>Heading 2</option>
+                    <option>Heading 3</option>
+                  </select>
+                  <select
+                    class="text-sm border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option>Helvetica</option>
+                    <option>Arial</option>
+                    <option>Times New Roman</option>
+                  </select>
+                  <select
+                    class="text-sm border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option>14px</option>
+                    <option>12px</option>
+                    <option>16px</option>
+                    <option>18px</option>
+                  </select>
+                </div>
+
+                <div class="flex items-center space-x-1">
+                  <button class="p-1 hover:bg-gray-200 rounded" title="Bold">
+                    <span class="font-bold text-sm">B</span>
+                  </button>
+                  <button class="p-1 hover:bg-gray-200 rounded" title="Italic">
+                    <span class="italic text-sm">I</span>
+                  </button>
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Underline"
+                  >
+                    <span class="underline text-sm">U</span>
+                  </button>
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Strikethrough"
+                  >
+                    <span class="line-through text-sm">S</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center space-x-1">
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Text Color"
+                  >
+                    <span class="text-sm">A</span>
+                  </button>
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Highlight"
+                  >
+                    <span class="text-sm">🖍️</span>
+                  </button>
+                  <button class="p-1 hover:bg-gray-200 rounded" title="Link">
+                    <span class="text-sm">🔗</span>
+                  </button>
+                  <button class="p-1 hover:bg-gray-200 rounded" title="Image">
+                    <span class="text-sm">🖼️</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center space-x-1">
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Align Left"
+                  >
+                    <span class="text-sm">⬅️</span>
+                  </button>
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Align Center"
+                  >
+                    <span class="text-sm">↔️</span>
+                  </button>
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Align Right"
+                  >
+                    <span class="text-sm">➡️</span>
+                  </button>
+                  <button class="p-1 hover:bg-gray-200 rounded" title="Justify">
+                    <span class="text-sm">⬌</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center space-x-1">
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Bullet List"
+                  >
+                    <span class="text-sm">•</span>
+                  </button>
+                  <button
+                    class="p-1 hover:bg-gray-200 rounded"
+                    title="Numbered List"
+                  >
+                    <span class="text-sm">1.</span>
+                  </button>
+                  <button class="p-1 hover:bg-gray-200 rounded" title="Table">
+                    <span class="text-sm">⊞</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Editor Content Area -->
+            <div class="p-4 min-h-[200px]">
+              <textarea
+                v-model="tabContent[activeTab]"
+                class="w-full h-48 border-0 outline-none resize-none text-sm"
+                :placeholder="getTabPlaceholder(activeTab)"
+              ></textarea>
+            </div>
+
+            <!-- Status Bar -->
+            <div
+              class="border-t border-gray-200 px-4 py-2 bg-gray-50 flex justify-between items-center text-xs text-gray-500"
+            >
+              <span>p</span>
+              <span>{{ getWordCount(tabContent[activeTab]) }} words</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Section: Total Panel -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Invoice Summary</h3>
+
+        <div class="space-y-3">
+          <!-- Subtotal -->
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">Subtotal</span>
+            <span class="text-sm font-medium text-gray-900"
+              >${{ subtotal.toFixed(2) }}</span
+            >
+          </div>
+
+          <!-- Tax -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Tax</span>
+              <div class="flex items-center space-x-2">
+                <input
+                  v-model.number="taxRate"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                  placeholder="0"
+                />
+                <span class="text-sm text-gray-500">%</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Tax Amount</span>
+              <span class="text-sm font-medium text-gray-900"
+                >${{ taxAmount.toFixed(2) }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Total -->
+          <div class="border-t border-gray-200 pt-3">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-900">Total</span>
+              <span class="text-sm font-bold text-gray-900"
+                >${{ total.toFixed(2) }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Paid to Date -->
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">Paid to Date</span>
+            <span class="text-sm font-medium text-gray-900"
+              >${{ paidToDate.toFixed(2) }}</span
+            >
+          </div>
+
+          <!-- Balance Due -->
+          <div class="border-t border-gray-200 pt-3">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-900">Balance Due</span>
+              <span class="text-sm font-bold text-gray-900"
+                >${{ balanceDue.toFixed(2) }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Action Buttons -->
     <div class="mt-8 flex justify-end space-x-4">
       <button
@@ -818,6 +1050,28 @@ const invoiceItems = ref([
   },
 ]);
 
+// Tabs data
+const tabs = ref([
+  { id: 'public-notes', name: 'Public Notes' },
+  { id: 'private-notes', name: 'Private Notes' },
+  { id: 'terms', name: 'Terms' },
+  { id: 'footer', name: 'Footer' },
+]);
+
+const activeTab = ref('public-notes');
+
+// Tab content
+const tabContent = ref({
+  'public-notes': '',
+  'private-notes': '',
+  terms: '',
+  footer: '',
+});
+
+// Financial calculations
+const taxRate = ref(0);
+const paidToDate = ref(0);
+
 // Computed properties
 const filteredUnits = computed((): UnitWithResident[] => {
   if (!units.value) return [];
@@ -842,6 +1096,23 @@ const isAllSelected = computed(() => {
 
 const isOneTimeFrequency = computed(() => {
   return form.value.frequency === 'one-time';
+});
+
+// Financial calculations
+const subtotal = computed(() => {
+  return invoiceItems.value.reduce((sum, item) => sum + item.lineTotal, 0);
+});
+
+const taxAmount = computed(() => {
+  return (subtotal.value * taxRate.value) / 100;
+});
+
+const total = computed(() => {
+  return subtotal.value + taxAmount.value;
+});
+
+const balanceDue = computed(() => {
+  return total.value - paidToDate.value;
 });
 
 // Watchers
@@ -963,6 +1234,25 @@ const updateLineTotal = (index: number) => {
   ) {
     item.lineTotal = item.unitCost * item.quantity;
   }
+};
+
+// Tab helper methods
+const getTabPlaceholder = (tabId: string) => {
+  const placeholders = {
+    'public-notes': 'Add public notes that will be visible to the customer...',
+    'private-notes': 'Add private notes for internal use only...',
+    terms: 'Add payment terms and conditions...',
+    footer: 'Add footer text for the invoice...',
+  };
+  return placeholders[tabId] || 'Enter content...';
+};
+
+const getWordCount = (text: string) => {
+  if (!text) return 0;
+  return text
+    .trim()
+    .split(/\s+/)
+    .filter(word => word.length > 0).length;
 };
 
 // Click outside handler
