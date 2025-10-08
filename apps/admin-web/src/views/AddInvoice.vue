@@ -1106,7 +1106,7 @@
     </div>
   </div>
   <!-- PDF Preview  Panel -->
-  <div class="max-w-7xl bg-white rounded-lg shadow p-6 mt-6">
+  <div v-if="showPreview" class="max-w-7xl bg-white rounded-lg shadow p-6 mt-6">
     <!-- Card Title -->
     <div class="bg-gray-300 px-6 py-3 rounded-t-lg -m-6 mb-6">
       <h3 class="text-lg font-medium text-gray-900">Invoice Preview</h3>
@@ -1300,6 +1300,11 @@ const total = computed(() => {
 
 const balanceDue = computed(() => {
   return total.value - paidToDate.value;
+});
+
+// Show preview when conditions are met
+const showPreview = computed(() => {
+  return form.value.unit_ids.length > 0 && invoiceItems.value.length > 0;
 });
 
 // Watchers
