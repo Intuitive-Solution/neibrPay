@@ -572,6 +572,8 @@ const goBack = () => {
     router.push('/people');
   } else if (route.name === 'AddUnit' || route.name === 'EditUnit') {
     router.push('/units');
+  } else if (route.name === 'AddInvoice') {
+    router.push('/invoices');
   }
 };
 </script>
