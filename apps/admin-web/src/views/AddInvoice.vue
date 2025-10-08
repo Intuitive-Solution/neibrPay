@@ -706,7 +706,7 @@
       <!-- Left Section: Tabs and Rich Text Editor -->
       <div class="lg:col-span-2 bg-white rounded-lg shadow">
         <!-- Tabs -->
-        <div class="border-b border-gray-200">
+        <div class="bg-gray-300 border-b border-gray-200 rounded-t-lg">
           <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
             <button
               v-for="tab in tabs"
