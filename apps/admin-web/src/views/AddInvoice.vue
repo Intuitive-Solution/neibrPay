@@ -966,68 +966,76 @@
       </div>
 
       <!-- Right Section: Total Panel -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Invoice Summary</h3>
+      <div class="bg-white rounded-lg shadow">
+        <!-- Card Title -->
+        <div class="bg-gray-300 px-6 py-3 rounded-t-lg">
+          <h3 class="text-lg font-medium text-gray-900">Invoice Summary</h3>
+        </div>
 
-        <div class="space-y-3">
-          <!-- Subtotal -->
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600">Subtotal</span>
-            <span class="text-sm font-medium text-gray-900"
-              >${{ subtotal.toFixed(2) }}</span
-            >
-          </div>
-
-          <!-- Tax -->
-          <div class="space-y-2">
+        <!-- Card Content -->
+        <div class="p-6">
+          <div class="space-y-3">
+            <!-- Subtotal -->
             <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">Tax</span>
-              <div class="flex items-center space-x-2">
-                <input
-                  v-model.number="taxRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                  placeholder="0"
-                />
-                <span class="text-sm text-gray-500">%</span>
+              <span class="text-sm text-gray-600">Subtotal</span>
+              <span class="text-sm font-medium text-gray-900"
+                >${{ subtotal.toFixed(2) }}</span
+              >
+            </div>
+
+            <!-- Tax -->
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Tax</span>
+                <div class="flex items-center space-x-2">
+                  <input
+                    v-model.number="taxRate"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                    placeholder="0"
+                  />
+                  <span class="text-sm text-gray-500">%</span>
+                </div>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Tax Amount</span>
+                <span class="text-sm font-medium text-gray-900"
+                  >${{ taxAmount.toFixed(2) }}</span
+                >
               </div>
             </div>
+
+            <!-- Total -->
+            <div class="border-t border-gray-200 pt-3">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-900">Total</span>
+                <span class="text-sm font-bold text-gray-900"
+                  >${{ total.toFixed(2) }}</span
+                >
+              </div>
+            </div>
+
+            <!-- Paid to Date -->
             <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">Tax Amount</span>
+              <span class="text-sm text-gray-600">Paid to Date</span>
               <span class="text-sm font-medium text-gray-900"
-                >${{ taxAmount.toFixed(2) }}</span
+                >${{ paidToDate.toFixed(2) }}</span
               >
             </div>
-          </div>
 
-          <!-- Total -->
-          <div class="border-t border-gray-200 pt-3">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-gray-900">Total</span>
-              <span class="text-sm font-bold text-gray-900"
-                >${{ total.toFixed(2) }}</span
-              >
-            </div>
-          </div>
-
-          <!-- Paid to Date -->
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600">Paid to Date</span>
-            <span class="text-sm font-medium text-gray-900"
-              >${{ paidToDate.toFixed(2) }}</span
-            >
-          </div>
-
-          <!-- Balance Due -->
-          <div class="border-t border-gray-200 pt-3">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-gray-900">Balance Due</span>
-              <span class="text-sm font-bold text-gray-900"
-                >${{ balanceDue.toFixed(2) }}</span
-              >
+            <!-- Balance Due -->
+            <div class="border-t border-gray-200 pt-3">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-900"
+                  >Balance Due</span
+                >
+                <span class="text-sm font-bold text-gray-900"
+                  >${{ balanceDue.toFixed(2) }}</span
+                >
+              </div>
             </div>
           </div>
         </div>
