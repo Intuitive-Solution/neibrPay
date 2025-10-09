@@ -15,20 +15,16 @@ class InvoiceAttachmentController extends Controller
     /**
      * Display a listing of attachments for an invoice.
      */
-    public function index(Request $request, int $invoiceId): JsonResponse
+    public function index(Request $request, InvoiceUnit $invoice): JsonResponse
     {
         $user = $request->get('firebase_user');
         
         // Verify the invoice belongs to the user's tenant
-        $invoice = InvoiceUnit::where('id', $invoiceId)
-            ->where('tenant_id', $user->tenant_id)
-            ->first();
-
-        if (!$invoice) {
+        if ($invoice->tenant_id !== $user->tenant_id) {
             return response()->json(['message' => 'Invoice not found'], 404);
         }
 
-        $attachments = InvoiceAttachment::where('invoice_unit_id', $invoiceId)
+        $attachments = InvoiceAttachment::where('invoice_unit_id', $invoice->id)
             ->with('uploader')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -45,16 +41,12 @@ class InvoiceAttachmentController extends Controller
     /**
      * Store a newly uploaded attachment.
      */
-    public function store(Request $request, int $invoiceId): JsonResponse
+    public function store(Request $request, InvoiceUnit $invoice): JsonResponse
     {
         $user = $request->get('firebase_user');
         
         // Verify the invoice belongs to the user's tenant
-        $invoice = InvoiceUnit::where('id', $invoiceId)
-            ->where('tenant_id', $user->tenant_id)
-            ->first();
-
-        if (!$invoice) {
+        if ($invoice->tenant_id !== $user->tenant_id) {
             return response()->json(['message' => 'Invoice not found'], 404);
         }
 
@@ -77,7 +69,7 @@ class InvoiceAttachmentController extends Controller
 
         // Check if file already exists
         $existingAttachment = InvoiceAttachment::where('file_hash', $fileHash)
-            ->where('invoice_unit_id', $invoiceId)
+            ->where('invoice_unit_id', $invoice->id)
             ->first();
 
         if ($existingAttachment) {
@@ -100,7 +92,7 @@ class InvoiceAttachmentController extends Controller
 
         // Create attachment record
         $attachment = InvoiceAttachment::create([
-            'invoice_unit_id' => $invoiceId,
+            'invoice_unit_id' => $invoice->id,
             'file_name' => $originalName,
             'file_path' => $filePath,
             'file_hash' => $fileHash,
@@ -121,21 +113,17 @@ class InvoiceAttachmentController extends Controller
     /**
      * Display the specified attachment.
      */
-    public function show(Request $request, int $invoiceId, int $attachmentId): JsonResponse
+    public function show(Request $request, InvoiceUnit $invoice, int $attachmentId): JsonResponse
     {
         $user = $request->get('firebase_user');
         
         // Verify the invoice belongs to the user's tenant
-        $invoice = InvoiceUnit::where('id', $invoiceId)
-            ->where('tenant_id', $user->tenant_id)
-            ->first();
-
-        if (!$invoice) {
+        if ($invoice->tenant_id !== $user->tenant_id) {
             return response()->json(['message' => 'Invoice not found'], 404);
         }
 
         $attachment = InvoiceAttachment::where('id', $attachmentId)
-            ->where('invoice_unit_id', $invoiceId)
+            ->where('invoice_unit_id', $invoice->id)
             ->with('uploader')
             ->first();
 
@@ -151,21 +139,17 @@ class InvoiceAttachmentController extends Controller
     /**
      * Download the specified attachment.
      */
-    public function download(Request $request, int $invoiceId, int $attachmentId)
+    public function download(Request $request, InvoiceUnit $invoice, int $attachmentId)
     {
         $user = $request->get('firebase_user');
         
         // Verify the invoice belongs to the user's tenant
-        $invoice = InvoiceUnit::where('id', $invoiceId)
-            ->where('tenant_id', $user->tenant_id)
-            ->first();
-
-        if (!$invoice) {
+        if ($invoice->tenant_id !== $user->tenant_id) {
             return response()->json(['message' => 'Invoice not found'], 404);
         }
 
         $attachment = InvoiceAttachment::where('id', $attachmentId)
-            ->where('invoice_unit_id', $invoiceId)
+            ->where('invoice_unit_id', $invoice->id)
             ->first();
 
         if (!$attachment) {
@@ -184,16 +168,12 @@ class InvoiceAttachmentController extends Controller
     /**
      * Remove the specified attachment.
      */
-    public function destroy(Request $request, int $invoiceId, int $attachmentId): JsonResponse
+    public function destroy(Request $request, InvoiceUnit $invoice, int $attachmentId): JsonResponse
     {
         $user = $request->get('firebase_user');
         
         // Verify the invoice belongs to the user's tenant
-        $invoice = InvoiceUnit::where('id', $invoiceId)
-            ->where('tenant_id', $user->tenant_id)
-            ->first();
-
-        if (!$invoice) {
+        if ($invoice->tenant_id !== $user->tenant_id) {
             return response()->json(['message' => 'Invoice not found'], 404);
         }
 
@@ -203,7 +183,7 @@ class InvoiceAttachmentController extends Controller
         }
 
         $attachment = InvoiceAttachment::where('id', $attachmentId)
-            ->where('invoice_unit_id', $invoiceId)
+            ->where('invoice_unit_id', $invoice->id)
             ->first();
 
         if (!$attachment) {

@@ -440,9 +440,8 @@ import {
   useInvoices,
   useDeleteInvoice,
   useRestoreInvoice,
-} from '@/composables/useInvoices';
-import type { InvoiceUnit } from '@neibrpay/models';
-import ConfirmDialog from '@/components/ConfirmDialog.vue';
+} from '../composables/useInvoices';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 
 const router = useRouter();
 
