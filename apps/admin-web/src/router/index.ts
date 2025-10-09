@@ -8,6 +8,7 @@ import TermsOfService from '../views/TermsOfService.vue';
 import PrivacyNotice from '../views/PrivacyNotice.vue';
 import Invoices from '../views/Invoices.vue';
 import AddInvoice from '../views/AddInvoice.vue';
+import InvoiceDetail from '../views/InvoiceDetail.vue';
 import People from '../views/People.vue';
 import AddResident from '../views/AddResident.vue';
 import Units from '../views/Units.vue';
@@ -64,6 +65,12 @@ const router = createRouter({
       path: '/invoices/create',
       name: 'AddInvoice',
       component: AddInvoice,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/invoices/:id',
+      name: 'InvoiceDetail',
+      component: InvoiceDetail,
       meta: { requiresAuth: true },
     },
     {

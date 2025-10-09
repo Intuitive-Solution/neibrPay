@@ -168,4 +168,30 @@ export const invoicesApi = {
     );
     return response.data;
   },
+
+  /**
+   * Mark an invoice as paid
+   */
+  async markInvoiceAsPaid(id: number): Promise<InvoiceUnit> {
+    const response = await apiClient.post(`/invoices/${id}/mark-paid`);
+    return response.data.data;
+  },
+
+  /**
+   * Clone an existing invoice
+   */
+  async cloneInvoice(id: number): Promise<InvoiceUnit[]> {
+    const response = await apiClient.post(`/invoices/${id}/clone`);
+    return response.data.data;
+  },
+
+  /**
+   * Email an invoice
+   */
+  async emailInvoice(id: number, email?: string): Promise<{ message: string }> {
+    const response = await apiClient.post(`/invoices/${id}/email`, {
+      email,
+    });
+    return response.data;
+  },
 };

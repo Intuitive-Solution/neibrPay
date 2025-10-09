@@ -337,6 +337,148 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Mark an invoice as paid.
+     */
+    public function markAsPaid(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        // Ensure the invoice belongs to the user's tenant
+        if ($invoiceUnit->tenant_id !== $user->tenant_id) {
+            return response()->json(['message' => 'Invoice not found'], 404);
+        }
+
+        if ($invoiceUnit->status === 'paid') {
+            return response()->json(['message' => 'Invoice is already marked as paid'], 400);
+        }
+
+        // Update invoice status and paid amount
+        $invoiceUnit->update([
+            'status' => 'paid',
+            'paid_to_date' => $invoiceUnit->total,
+        ]);
+
+        // Create a payment record
+        $invoiceUnit->payments()->create([
+            'amount' => $invoiceUnit->total,
+            'payment_method' => 'other',
+            'payment_reference' => 'Marked as paid',
+            'notes' => 'Invoice marked as paid by admin',
+            'payment_date' => now(),
+            'recorded_by' => $user->id,
+        ]);
+
+        $invoiceUnit->load(['unit', 'creator', 'notes', 'payments', 'schedule']);
+
+        return response()->json([
+            'data' => $invoiceUnit,
+            'message' => 'Invoice marked as paid',
+        ]);
+    }
+
+    /**
+     * Clone an existing invoice.
+     */
+    public function clone(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        // Ensure the invoice belongs to the user's tenant
+        if ($invoiceUnit->tenant_id !== $user->tenant_id) {
+            return response()->json(['message' => 'Invoice not found'], 404);
+        }
+
+        DB::beginTransaction();
+        
+        try {
+            // Create a new invoice with the same data
+            $clonedInvoice = new InvoiceUnit([
+                'tenant_id' => $user->tenant_id,
+                'unit_id' => $invoiceUnit->unit_id,
+                'frequency' => $invoiceUnit->frequency,
+                'start_date' => now()->format('Y-m-d'), // Set start date to today
+                'remaining_cycles' => $invoiceUnit->remaining_cycles,
+                'due_date' => $invoiceUnit->due_date,
+                'discount_amount' => $invoiceUnit->discount_amount,
+                'discount_type' => $invoiceUnit->discount_type,
+                'auto_bill' => $invoiceUnit->auto_bill,
+                'items' => $invoiceUnit->items,
+                'tax_rate' => $invoiceUnit->tax_rate,
+                'status' => 'draft',
+                'created_by' => $user->id,
+            ]);
+
+            // Generate new invoice number
+            $clonedInvoice->generateInvoiceNumber();
+            
+            // Calculate totals
+            $clonedInvoice->calculateTotals();
+            
+            $clonedInvoice->save();
+
+            // Clone notes if they exist
+            if ($invoiceUnit->notes) {
+                foreach ($invoiceUnit->notes as $note) {
+                    $clonedInvoice->notes()->create([
+                        'type' => $note->type,
+                        'content' => $note->content,
+                    ]);
+                }
+            }
+
+            // Create schedule for recurring invoices
+            if ($invoiceUnit->frequency !== 'one-time') {
+                $this->createInvoiceSchedule($clonedInvoice);
+            }
+
+            DB::commit();
+
+            $clonedInvoice->load(['unit', 'creator', 'notes', 'payments', 'schedule']);
+
+            return response()->json([
+                'data' => [$clonedInvoice],
+                'message' => 'Invoice cloned successfully',
+            ], 201);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to clone invoice: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Email an invoice.
+     */
+    public function email(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
+    {
+        $user = $request->get('firebase_user');
+        
+        // Ensure the invoice belongs to the user's tenant
+        if ($invoiceUnit->tenant_id !== $user->tenant_id) {
+            return response()->json(['message' => 'Invoice not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'email' => 'nullable|email',
+        ]);
+
+        // Get the email address - use provided email or unit owner's email
+        $email = $validated['email'] ?? $invoiceUnit->unit->owners->first()?->email;
+        
+        if (!$email) {
+            return response()->json(['message' => 'No email address available for this invoice'], 400);
+        }
+
+        // TODO: Implement actual email sending functionality
+        // For now, just return success message
+        return response()->json([
+            'message' => "Invoice would be sent to {$email}",
+        ]);
+    }
+
+    /**
      * Get invoices for a specific unit.
      */
     public function forUnit(Request $request, Unit $unit): JsonResponse

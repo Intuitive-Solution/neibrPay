@@ -153,3 +153,39 @@ export function useForceDeleteInvoice() {
     },
   });
 }
+
+// Mark invoice as paid mutation
+export function useMarkInvoiceAsPaid() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => invoicesApi.markInvoiceAsPaid(id),
+    onSuccess: (response, id) => {
+      // Update the specific invoice in cache
+      queryClient.setQueryData(invoiceQueryKeys.detail(id), response);
+      // Invalidate lists to ensure consistency
+      queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.lists() });
+    },
+  });
+}
+
+// Clone invoice mutation
+export function useCloneInvoice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => invoicesApi.cloneInvoice(id),
+    onSuccess: () => {
+      // Invalidate lists to show the new cloned invoice
+      queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.lists() });
+    },
+  });
+}
+
+// Email invoice mutation
+export function useEmailInvoice() {
+  return useMutation({
+    mutationFn: ({ id, email }: { id: number; email?: string }) =>
+      invoicesApi.emailInvoice(id, email),
+  });
+}

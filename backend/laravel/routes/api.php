@@ -80,6 +80,9 @@ Route::middleware('firebase.auth')->group(function () {
     Route::post('invoices/{id}/restore', [InvoiceController::class, 'restore']);
     Route::delete('invoices/{id}/force', [InvoiceController::class, 'forceDelete']);
     Route::post('invoices/{invoice}/mark-sent', [InvoiceController::class, 'markAsSent']);
+    Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid']);
+    Route::post('invoices/{invoice}/clone', [InvoiceController::class, 'clone']);
+    Route::post('invoices/{invoice}/email', [InvoiceController::class, 'email']);
     Route::get('units/{unit}/invoices', [InvoiceController::class, 'forUnit']);
     
     // Invoice attachment management routes
