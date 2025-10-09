@@ -585,26 +585,300 @@
       </div>
     </div>
 
-    <!-- Invoice Items Table -->
+    <!-- Invoice Items Section with Tabs -->
     <div class="mt-8 bg-white rounded-lg shadow">
-      <!-- Table Header -->
-      <div class="bg-gray-300 px-6 py-3 rounded-t-lg">
-        <div
-          class="grid grid-cols-5 gap-4 text-sm font-medium text-gray-700 uppercase tracking-wide"
-        >
-          <div class="text-left">Item</div>
-          <div class="text-left">Description</div>
-          <div class="text-left">Unit Cost</div>
-          <div class="text-left">Quantity</div>
-          <div class="text-right">Line Total</div>
-        </div>
+      <!-- Tab Navigation -->
+      <div class="bg-gray-100 rounded-t-lg">
+        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+          <button
+            v-for="tab in invoiceItemsTabs"
+            :key="tab.id"
+            @click="activeInvoiceItemsTab = tab.id"
+            :class="[
+              activeInvoiceItemsTab === tab.id
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700',
+              'whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200',
+            ]"
+          >
+            {{ tab.name }}
+          </button>
+        </nav>
       </div>
 
-      <!-- Table Content -->
-      <div class="divide-y divide-gray-200">
-        <!-- Empty State -->
-        <div v-if="invoiceItems.length === 0" class="text-center py-8">
-          <div class="text-gray-500 mb-4">
+      <!-- Tab Content -->
+      <div class="p-6">
+        <!-- Invoice Items Tab -->
+        <div v-if="activeInvoiceItemsTab === 'invoice-items'">
+          <!-- Table Header -->
+          <div class="mb-4">
+            <div
+              class="grid grid-cols-5 gap-4 text-sm font-medium text-gray-700 uppercase tracking-wide pb-2 border-b border-gray-200"
+            >
+              <div class="text-left">Item</div>
+              <div class="text-left">Description</div>
+              <div class="text-left">Unit Cost</div>
+              <div class="text-left">Quantity</div>
+              <div class="text-right">Line Total</div>
+            </div>
+          </div>
+
+          <!-- Table Content -->
+          <div class="divide-y divide-gray-200">
+            <!-- Empty State -->
+            <div v-if="invoiceItems.length === 0" class="text-center py-8">
+              <div class="text-gray-500 mb-4">
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <p class="text-gray-500 text-sm">No items added yet</p>
+            </div>
+
+            <!-- Items List -->
+            <div v-else>
+              <div
+                v-for="(item, index) in invoiceItems"
+                :key="index"
+                class="grid grid-cols-5 gap-4 items-start py-3 hover:bg-gray-50"
+              >
+                <!-- Item Name -->
+                <div>
+                  <input
+                    v-model="item.name"
+                    type="text"
+                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                    placeholder="Item name"
+                  />
+                </div>
+
+                <!-- Description -->
+                <div>
+                  <textarea
+                    v-model="item.description"
+                    rows="2"
+                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 resize-none"
+                    placeholder="Item description"
+                  ></textarea>
+                </div>
+
+                <!-- Unit Cost -->
+                <div>
+                  <div class="relative">
+                    <span
+                      class="absolute left-2 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+                      >$</span
+                    >
+                    <input
+                      v-model.number="item.unitCost"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="w-full pl-6 pr-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                      placeholder="0.00"
+                      @input="updateLineTotal(index)"
+                    />
+                  </div>
+                </div>
+
+                <!-- Quantity -->
+                <div>
+                  <input
+                    v-model.number="item.quantity"
+                    type="number"
+                    min="1"
+                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                    placeholder="1"
+                    @input="updateLineTotal(index)"
+                  />
+                </div>
+
+                <!-- Line Total (Read-only) -->
+                <div class="flex items-center justify-end">
+                  <span class="text-sm text-gray-900 mr-3 font-medium">
+                    ${{ item.lineTotal.toFixed(2) }}
+                  </span>
+                  <button
+                    type="button"
+                    @click="removeItem(index)"
+                    class="text-red-600 hover:text-red-800 focus:outline-none text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Item Button -->
+          <div class="mt-4 flex justify-center">
+            <button
+              type="button"
+              @click="addItem"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Add Item
+            </button>
+          </div>
+        </div>
+
+        <!-- Documents Tab -->
+        <div v-else-if="activeInvoiceItemsTab === 'documents'">
+          <!-- Upload Section -->
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6">
+            <div class="text-center">
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
+                aria-hidden="true"
+              >
+                <path
+                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="mt-4">
+                <label
+                  for="file-upload"
+                  class="cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary"
+                >
+                  <span>Upload a file</span>
+                  <input
+                    id="file-upload"
+                    name="file-upload"
+                    type="file"
+                    class="sr-only"
+                    @change="handleFileUpload"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif"
+                  />
+                </label>
+                <p class="pl-1">or drag and drop</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">
+                PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, PNG, GIF up to
+                10MB
+              </p>
+            </div>
+          </div>
+
+          <!-- Upload Progress -->
+          <div
+            v-if="uploadProgress > 0 && uploadProgress < 100"
+            class="mt-4 w-full bg-gray-200 rounded-full h-2.5"
+          >
+            <div
+              class="bg-primary h-2.5 rounded-full transition-all duration-300"
+              :style="{ width: uploadProgress + '%' }"
+            ></div>
+          </div>
+
+          <!-- Attachments List -->
+          <div v-if="attachments.length > 0" class="mt-6 space-y-3">
+            <h3 class="text-lg font-medium text-gray-900">
+              Attached Documents
+            </h3>
+            <div class="space-y-2">
+              <div
+                v-for="attachment in attachments"
+                :key="attachment.id"
+                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+              >
+                <div class="flex items-center space-x-3">
+                  <div class="flex-shrink-0">
+                    <svg
+                      v-if="attachment.attachment_type === 'pdf'"
+                      class="h-8 w-8 text-red-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <svg
+                      v-else-if="attachment.attachment_type === 'image'"
+                      class="h-8 w-8 text-green-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <svg
+                      v-else
+                      class="h-8 w-8 text-blue-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      {{ attachment.file_name }}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                      {{ attachment.file_size_human }} •
+                      {{ attachment.attachment_type.toUpperCase() }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button
+                    @click="downloadAttachment(attachment)"
+                    class="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                  >
+                    Download
+                  </button>
+                  <button
+                    @click="removeAttachment(attachment)"
+                    class="text-red-600 hover:text-red-900 text-sm font-medium"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="text-center py-8">
             <svg
               class="mx-auto h-12 w-12 text-gray-400"
               fill="none"
@@ -618,108 +892,13 @@
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-          </div>
-          <p class="text-gray-500 text-sm">No items added yet</p>
-        </div>
-
-        <!-- Items List -->
-        <div v-else>
-          <div
-            v-for="(item, index) in invoiceItems"
-            :key="index"
-            class="grid grid-cols-5 gap-4 items-start py-3 px-6 hover:bg-gray-50"
-          >
-            <!-- Item Name -->
-            <div>
-              <input
-                v-model="item.name"
-                type="text"
-                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
-                placeholder="Item name"
-              />
-            </div>
-
-            <!-- Description -->
-            <div>
-              <textarea
-                v-model="item.description"
-                rows="2"
-                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 resize-none"
-                placeholder="Item description"
-              ></textarea>
-            </div>
-
-            <!-- Unit Cost -->
-            <div>
-              <div class="relative">
-                <span
-                  class="absolute left-2 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
-                  >$</span
-                >
-                <input
-                  v-model.number="item.unitCost"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  class="w-full pl-6 pr-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
-                  placeholder="0.00"
-                  @input="updateLineTotal(index)"
-                />
-              </div>
-            </div>
-
-            <!-- Quantity -->
-            <div>
-              <input
-                v-model.number="item.quantity"
-                type="number"
-                min="1"
-                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
-                placeholder="1"
-                @input="updateLineTotal(index)"
-              />
-            </div>
-
-            <!-- Line Total (Read-only) -->
-            <div class="flex items-center justify-end">
-              <span class="text-sm text-gray-900 mr-3 font-medium">
-                ${{ item.lineTotal.toFixed(2) }}
-              </span>
-              <button
-                type="button"
-                @click="removeItem(index)"
-                class="text-red-600 hover:text-red-800 focus:outline-none text-sm"
-              >
-                Remove
-              </button>
-            </div>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No documents</h3>
+            <p class="mt-1 text-sm text-gray-500">
+              Get started by uploading a document.
+            </p>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Add Item Button -->
-    <div class="mt-4 flex justify-center">
-      <button
-        type="button"
-        @click="addItem"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
-      >
-        <svg
-          class="w-4 h-4 mr-2"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          />
-        </svg>
-        Add Item
-      </button>
     </div>
 
     <!-- Tabs and Total Panel Section -->
@@ -1246,6 +1425,11 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUnitsForInvoices } from '../composables/useUnits';
 import { useCreateInvoice } from '../composables/useInvoices';
+import {
+  useUploadInvoiceAttachment,
+  useDeleteInvoiceAttachment,
+  useDownloadInvoiceAttachment,
+} from '../composables/useInvoiceAttachments';
 import type { UnitWithResident, CreateInvoiceRequest } from '@neibrpay/models';
 import InvoiceTemplate from '../components/InvoiceTemplate.vue';
 import { jsPDF } from 'jspdf';
@@ -1334,6 +1518,21 @@ const tabs = ref([
 ]);
 
 const activeTab = ref('public-notes');
+
+// Invoice items tabs
+const invoiceItemsTabs = ref([
+  { id: 'invoice-items', name: 'Invoice Items' },
+  { id: 'documents', name: 'Documents' },
+]);
+
+const activeInvoiceItemsTab = ref('invoice-items');
+
+// Document management
+const attachments = ref<any[]>([]);
+const uploadProgress = ref(0);
+const uploadAttachmentMutation = useUploadInvoiceAttachment();
+const deleteAttachmentMutation = useDeleteInvoiceAttachment();
+const downloadAttachmentMutation = useDownloadInvoiceAttachment();
 
 // Tab content
 const tabContent = ref({
@@ -1733,6 +1932,149 @@ const updateLineTotal = (index: number) => {
   }
 };
 
+// Document management functions
+const handleFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+
+  if (!file) return;
+
+  // Validate file size (10MB max)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('File size must be less than 10MB');
+    return;
+  }
+
+  // For now, we'll store the file locally since we don't have an invoice ID yet
+  // In a real implementation, you might want to create a draft invoice first
+  try {
+    // Simulate upload progress
+    uploadProgress.value = 0;
+    const progressInterval = setInterval(() => {
+      if (uploadProgress.value < 90) {
+        uploadProgress.value += 10;
+      }
+    }, 100);
+
+    // Create a local attachment object
+    const attachment = {
+      id: Date.now(), // Temporary ID
+      file_name: file.name,
+      file_size: file.size,
+      file_size_human: formatFileSize(file.size),
+      attachment_type: getAttachmentType(file.type, file.name),
+      mime_type: file.type,
+      file: file, // Store the actual file for later upload
+      is_local: true, // Flag to indicate this is a local file
+    };
+
+    attachments.value.push(attachment);
+    uploadProgress.value = 100;
+
+    setTimeout(() => {
+      uploadProgress.value = 0;
+      clearInterval(progressInterval);
+    }, 500);
+
+    // Clear the input
+    target.value = '';
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    alert('Failed to upload file');
+    uploadProgress.value = 0;
+  }
+};
+
+const removeAttachment = async (attachment: any) => {
+  if (attachment.is_local) {
+    // Remove from local array
+    const index = attachments.value.findIndex(
+      (a: any) => a.id === attachment.id
+    );
+    if (index > -1) {
+      attachments.value.splice(index, 1);
+    }
+  } else {
+    // Delete from server (this would require an invoice ID)
+    try {
+      await deleteAttachmentMutation.mutateAsync({
+        invoiceId: 0, // This would be the actual invoice ID
+        attachmentId: attachment.id,
+      });
+
+      // Remove from local array
+      const index = attachments.value.findIndex(
+        (a: any) => a.id === attachment.id
+      );
+      if (index > -1) {
+        attachments.value.splice(index, 1);
+      }
+    } catch (error) {
+      console.error('Error deleting attachment:', error);
+      alert('Failed to delete attachment');
+    }
+  }
+};
+
+const downloadAttachment = async (attachment: any) => {
+  if (attachment.is_local) {
+    // For local files, create a download link
+    const url = URL.createObjectURL(attachment.file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = attachment.file_name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } else {
+    // Download from server
+    try {
+      await downloadAttachmentMutation.mutateAsync({
+        invoiceId: 0, // This would be the actual invoice ID
+        attachmentId: attachment.id,
+        fileName: attachment.file_name,
+      });
+    } catch (error) {
+      console.error('Error downloading attachment:', error);
+      alert('Failed to download attachment');
+    }
+  }
+};
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const getAttachmentType = (mimeType: string, fileName: string): string => {
+  if (
+    mimeType === 'application/pdf' ||
+    fileName.toLowerCase().endsWith('.pdf')
+  ) {
+    return 'pdf';
+  }
+  if (mimeType.startsWith('image/')) {
+    return 'image';
+  }
+  const documentExtensions = [
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.ppt',
+    '.pptx',
+    '.txt',
+  ];
+  if (documentExtensions.some(ext => fileName.toLowerCase().endsWith(ext))) {
+    return 'document';
+  }
+  return 'other';
+};
+
 // Tab helper methods
 const getTabPlaceholder = (tabId: string) => {
   const placeholders: Record<string, string> = {
@@ -1933,6 +2275,26 @@ const handleSubmit = async () => {
 
     // Create the invoice
     const response = await createInvoiceMutation.mutateAsync(requestData);
+
+    // Upload attachments if any
+    if (attachments.value.length > 0 && response.length > 0) {
+      const invoiceId = response[0].id; // Use the first invoice ID for attachments
+
+      // Upload each local attachment
+      for (const attachment of attachments.value.filter(
+        (a: any) => a.is_local
+      )) {
+        try {
+          await uploadAttachmentMutation.mutateAsync({
+            invoiceId: invoiceId,
+            file: attachment.file,
+          });
+        } catch (error) {
+          console.error('Error uploading attachment:', error);
+          // Continue with other attachments even if one fails
+        }
+      }
+    }
 
     // Show success message and redirect
     console.log('Invoice created successfully:', response);

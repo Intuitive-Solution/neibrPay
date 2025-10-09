@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\InvoiceAttachmentController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\UnitsController;
@@ -80,6 +81,13 @@ Route::middleware('firebase.auth')->group(function () {
     Route::delete('invoices/{id}/force', [InvoiceController::class, 'forceDelete']);
     Route::post('invoices/{invoice}/mark-sent', [InvoiceController::class, 'markAsSent']);
     Route::get('units/{unit}/invoices', [InvoiceController::class, 'forUnit']);
+    
+    // Invoice attachment management routes
+    Route::get('invoices/{invoice}/attachments', [InvoiceAttachmentController::class, 'index']);
+    Route::post('invoices/{invoice}/attachments', [InvoiceAttachmentController::class, 'store']);
+    Route::get('invoices/{invoice}/attachments/{attachment}', [InvoiceAttachmentController::class, 'show']);
+    Route::get('invoices/{invoice}/attachments/{attachment}/download', [InvoiceAttachmentController::class, 'download']);
+    Route::delete('invoices/{invoice}/attachments/{attachment}', [InvoiceAttachmentController::class, 'destroy']);
 });
 
 // Legacy route for backward compatibility

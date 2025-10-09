@@ -105,4 +105,67 @@ export const invoicesApi = {
     const response = await apiClient.get(`/units/${unitId}/invoices`);
     return response.data.data; // Extract the data array from the response
   },
+
+  /**
+   * Get attachments for a specific invoice
+   */
+  async getInvoiceAttachments(invoiceId: number): Promise<any[]> {
+    const response = await apiClient.get(`/invoices/${invoiceId}/attachments`);
+    return response.data.data; // Extract the data array from the response
+  },
+
+  /**
+   * Upload an attachment to an invoice
+   */
+  async uploadInvoiceAttachment(
+    invoiceId: number,
+    file: File,
+    description?: string
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+
+    const response = await apiClient.post(
+      `/invoices/${invoiceId}/attachments`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data.data; // Extract the data object from the response
+  },
+
+  /**
+   * Download an invoice attachment
+   */
+  async downloadInvoiceAttachment(
+    invoiceId: number,
+    attachmentId: number
+  ): Promise<Blob> {
+    const response = await apiClient.get(
+      `/invoices/${invoiceId}/attachments/${attachmentId}/download`,
+      {
+        responseType: 'blob',
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Delete an invoice attachment
+   */
+  async deleteInvoiceAttachment(
+    invoiceId: number,
+    attachmentId: number
+  ): Promise<{ message: string }> {
+    const response = await apiClient.delete(
+      `/invoices/${invoiceId}/attachments/${attachmentId}`
+    );
+    return response.data;
+  },
 };
