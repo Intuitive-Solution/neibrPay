@@ -28,6 +28,9 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->ip());
         });
 
+        // Custom route model binding for invoices
+        Route::model('invoice', \App\Models\InvoiceUnit::class);
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

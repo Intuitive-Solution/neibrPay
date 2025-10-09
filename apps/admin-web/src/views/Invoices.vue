@@ -377,16 +377,26 @@
                   <button
                     v-if="!invoice.deleted_at"
                     @click="deleteInvoice(invoice.id)"
-                    class="text-red-600 hover:text-red-900"
+                    :disabled="deletingInvoiceId === invoice.id"
+                    class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Delete
+                    {{
+                      deletingInvoiceId === invoice.id
+                        ? 'Deleting...'
+                        : 'Delete'
+                    }}
                   </button>
                   <button
                     v-else
                     @click="restoreInvoice(invoice.id)"
-                    class="text-green-600 hover:text-green-900"
+                    :disabled="restoringInvoiceId === invoice.id"
+                    class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Restore
+                    {{
+                      restoringInvoiceId === invoice.id
+                        ? 'Restoring...'
+                        : 'Restore'
+                    }}
                   </button>
                 </div>
               </td>
@@ -399,7 +409,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   useInvoices,
@@ -412,6 +422,8 @@ const router = useRouter();
 
 // Local state
 const includeDeleted = ref(false);
+const deletingInvoiceId = ref<number | null>(null);
+const restoringInvoiceId = ref<number | null>(null);
 
 // Queries and mutations
 const {
@@ -480,22 +492,57 @@ const editInvoice = (invoiceId: number) => {
 };
 
 const deleteInvoice = async (invoiceId: number) => {
-  if (confirm('Are you sure you want to delete this invoice?')) {
+  if (
+    confirm(
+      'Are you sure you want to delete this invoice? This action can be undone.'
+    )
+  ) {
+    deletingInvoiceId.value = invoiceId;
     try {
-      await deleteInvoiceMutation.mutateAsync(invoiceId);
+      console.log('Starting delete for invoice:', invoiceId);
+      const result = await deleteInvoiceMutation.mutateAsync(invoiceId);
+      console.log('Delete result:', result);
+      // Show success message
+      console.log('Invoice deleted successfully');
+      // Refetch data to update the list
       refetch();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting invoice:', error);
+
+      // Check if it's an authentication error
+      if (error.message && error.message.includes('Invoice not found')) {
+        // This might be an authentication issue
+        alert('Authentication error. Please refresh the page and try again.');
+        // Optionally redirect to login
+        // router.push('/login');
+      } else {
+        // Show error message to user
+        alert(`Failed to delete invoice: ${error.message || 'Unknown error'}`);
+      }
+    } finally {
+      // Always reset the loading state
+      deletingInvoiceId.value = null;
+      deleteInvoiceMutation.reset();
     }
   }
 };
 
 const restoreInvoice = async (invoiceId: number) => {
+  restoringInvoiceId.value = invoiceId;
   try {
     await restoreInvoiceMutation.mutateAsync(invoiceId);
+    // Show success message
+    console.log('Invoice restored successfully');
+    // Refetch data to update the list
     refetch();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error restoring invoice:', error);
+    // Show error message to user
+    alert(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
+  } finally {
+    // Always reset the loading state
+    restoringInvoiceId.value = null;
+    restoreInvoiceMutation.reset();
   }
 };
 
@@ -504,4 +551,19 @@ watch(includeDeleted, () => {
   // Refetch with new filter
   refetchInvoices();
 });
+
+// Reset mutation states on component mount to clear any stuck states
+onMounted(() => {
+  deleteInvoiceMutation.reset();
+  restoreInvoiceMutation.reset();
+});
+
+// Global reset function for debugging (can be called from browser console)
+(window as any).resetInvoiceMutations = () => {
+  deleteInvoiceMutation.reset();
+  restoreInvoiceMutation.reset();
+  deletingInvoiceId.value = null;
+  restoringInvoiceId.value = null;
+  console.log('Invoice mutations and local state reset');
+};
 </script>
