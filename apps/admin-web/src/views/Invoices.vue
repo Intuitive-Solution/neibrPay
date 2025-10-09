@@ -376,7 +376,7 @@
                   </button>
                   <button
                     v-if="!invoice.deleted_at"
-                    @click="deleteInvoice(invoice.id)"
+                    @click="deleteInvoice(invoice)"
                     :disabled="deletingInvoiceId === invoice.id"
                     class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -405,6 +405,19 @@
         </table>
       </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <ConfirmDialog
+      :is-open="showDeleteModal"
+      title="Delete Invoice"
+      :message="`Are you sure you want to delete ${invoiceToDelete?.invoice_number || 'this invoice'}? This action can be undone by restoring the invoice.`"
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      type="danger"
+      :is-loading="deletingInvoiceId === invoiceToDelete?.id"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+    />
   </div>
 </template>
 
@@ -417,6 +430,7 @@ import {
   useRestoreInvoice,
 } from '@/composables/useInvoices';
 import type { InvoiceUnit } from '@neibrpay/models';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 const router = useRouter();
 
@@ -424,6 +438,8 @@ const router = useRouter();
 const includeDeleted = ref(false);
 const deletingInvoiceId = ref<number | null>(null);
 const restoringInvoiceId = ref<number | null>(null);
+const showDeleteModal = ref(false);
+const invoiceToDelete = ref<any>(null);
 
 // Queries and mutations
 const {
@@ -491,40 +507,50 @@ const editInvoice = (invoiceId: number) => {
   router.push(`/invoices/${invoiceId}/edit`);
 };
 
-const deleteInvoice = async (invoiceId: number) => {
-  if (
-    confirm(
-      'Are you sure you want to delete this invoice? This action can be undone.'
-    )
-  ) {
-    deletingInvoiceId.value = invoiceId;
-    try {
-      console.log('Starting delete for invoice:', invoiceId);
-      const result = await deleteInvoiceMutation.mutateAsync(invoiceId);
-      console.log('Delete result:', result);
-      // Show success message
-      console.log('Invoice deleted successfully');
-      // Refetch data to update the list
-      refetch();
-    } catch (error: any) {
-      console.error('Error deleting invoice:', error);
+const deleteInvoice = (invoice: any) => {
+  // Store the invoice to delete and show the modal
+  invoiceToDelete.value = invoice;
+  showDeleteModal.value = true;
+};
 
-      // Check if it's an authentication error
-      if (error.message && error.message.includes('Invoice not found')) {
-        // This might be an authentication issue
-        alert('Authentication error. Please refresh the page and try again.');
-        // Optionally redirect to login
-        // router.push('/login');
-      } else {
-        // Show error message to user
-        alert(`Failed to delete invoice: ${error.message || 'Unknown error'}`);
-      }
-    } finally {
-      // Always reset the loading state
-      deletingInvoiceId.value = null;
-      deleteInvoiceMutation.reset();
+const confirmDelete = async () => {
+  if (!invoiceToDelete.value) return;
+
+  const invoiceId = invoiceToDelete.value.id;
+  deletingInvoiceId.value = invoiceId;
+
+  try {
+    console.log('Starting delete for invoice:', invoiceId);
+    const result = await deleteInvoiceMutation.mutateAsync(invoiceId);
+    console.log('Delete result:', result);
+    // Show success message
+    console.log('Invoice deleted successfully');
+    // Close modal
+    showDeleteModal.value = false;
+    invoiceToDelete.value = null;
+    // Refetch data to update the list
+    refetch();
+  } catch (error: any) {
+    console.error('Error deleting invoice:', error);
+
+    // Check if it's an authentication error
+    if (error.message && error.message.includes('Invoice not found')) {
+      // This might be an authentication issue
+      alert('Authentication error. Please refresh the page and try again.');
+    } else {
+      // Show error message to user
+      alert(`Failed to delete invoice: ${error.message || 'Unknown error'}`);
     }
+  } finally {
+    // Always reset the loading state
+    deletingInvoiceId.value = null;
+    deleteInvoiceMutation.reset();
   }
+};
+
+const cancelDelete = () => {
+  showDeleteModal.value = false;
+  invoiceToDelete.value = null;
 };
 
 const restoreInvoice = async (invoiceId: number) => {
