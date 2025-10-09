@@ -185,30 +185,68 @@ class InvoiceUnit extends Model
 
     /**
      * Generate a unique invoice number for this unit.
+     * Format: [UnitTitle]-[Month]-[Date]-[Year]-[SequentialNumber]
      */
     public function generateInvoiceNumber(): void
     {
         $unit = $this->unit;
-        $year = date('Y');
-        $month = date('m');
+        $now = now();
+        $month = $now->format('m'); // Month number (01-12)
+        $date = $now->format('d');  // Date (01-31)
+        $year = $now->format('Y');  // Full year (2025)
         
-        // Get the last invoice number for this unit this month
-        $lastInvoice = self::where('unit_id', $this->unit_id)
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->orderBy('id', 'desc')
-            ->first();
+        // Clean unit title - remove spaces and special characters, keep alphanumeric and hyphens
+        $unitTitle = preg_replace('/[^a-zA-Z0-9\-]/', '', str_replace(' ', '', $unit->title));
         
-        $sequence = $lastInvoice ? 
-            (int)substr($lastInvoice->invoice_number, -3) + 1 : 1;
+        // Get the total count of invoices for this tenant and add 1
+        $invoiceCount = self::where('tenant_id', $this->tenant_id)->count() + 1;
         
-        $this->invoice_number = sprintf(
-            '%s-%s-%s-%03d',
-            str_replace(' ', '-', $unit->title),
-            $year,
+        // Format the sequential number with at least 4 digits (0001, 0002, etc.)
+        $sequentialNumber = str_pad($invoiceCount, 4, '0', STR_PAD_LEFT);
+        
+        // Create the invoice number
+        $invoiceNumber = sprintf(
+            '%s-%s-%s-%s-%s',
+            $unitTitle,
             $month,
-            $sequence
+            $date,
+            $year,
+            $sequentialNumber
         );
+        
+        // Ensure uniqueness by checking if this invoice number already exists
+        // If it exists, increment the sequential number until we find a unique one
+        $attempts = 0;
+        $maxAttempts = 100; // Allow up to 100 attempts to find a unique number
+        
+        while (self::where('invoice_number', $invoiceNumber)->exists() && $attempts < $maxAttempts) {
+            $invoiceCount++;
+            $sequentialNumber = str_pad($invoiceCount, 4, '0', STR_PAD_LEFT);
+            $invoiceNumber = sprintf(
+                '%s-%s-%s-%s-%s',
+                $unitTitle,
+                $month,
+                $date,
+                $year,
+                $sequentialNumber
+            );
+            $attempts++;
+        }
+        
+        // If we still have a duplicate after max attempts, append timestamp as fallback
+        if (self::where('invoice_number', $invoiceNumber)->exists()) {
+            $timestamp = substr(str_replace('.', '', microtime(true)), -4);
+            $invoiceNumber = sprintf(
+                '%s-%s-%s-%s-%s',
+                $unitTitle,
+                $month,
+                $date,
+                $year,
+                $timestamp
+            );
+        }
+        
+        $this->invoice_number = $invoiceNumber;
     }
 
     /**
