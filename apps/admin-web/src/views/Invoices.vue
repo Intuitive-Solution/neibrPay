@@ -387,7 +387,7 @@
                   </button>
                   <button
                     v-else
-                    @click="restoreInvoice(invoice.id)"
+                    @click="showRestoreConfirmation(invoice)"
                     :disabled="restoringInvoiceId === invoice.id"
                     class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -417,6 +417,19 @@
       @confirm="confirmDelete"
       @cancel="cancelDelete"
     />
+
+    <!-- Restore Confirmation Modal -->
+    <ConfirmDialog
+      :is-open="showRestoreModal"
+      title="Restore Invoice"
+      :message="`Are you sure you want to restore ${invoiceToRestore?.invoice_number || 'this invoice'}? This will make the invoice active again.`"
+      confirm-text="Restore"
+      cancel-text="Cancel"
+      type="info"
+      :is-loading="restoringInvoiceId === invoiceToRestore?.id"
+      @confirm="confirmRestore"
+      @cancel="cancelRestore"
+    />
   </div>
 </template>
 
@@ -438,7 +451,9 @@ const includeDeleted = ref(false);
 const deletingInvoiceId = ref<number | null>(null);
 const restoringInvoiceId = ref<number | null>(null);
 const showDeleteModal = ref(false);
+const showRestoreModal = ref(false);
 const invoiceToDelete = ref<any>(null);
+const invoiceToRestore = ref<any>(null);
 
 // Queries and mutations
 const {
@@ -552,23 +567,51 @@ const cancelDelete = () => {
   invoiceToDelete.value = null;
 };
 
-const restoreInvoice = async (invoiceId: number) => {
+const showRestoreConfirmation = (invoice: any) => {
+  invoiceToRestore.value = invoice;
+  showRestoreModal.value = true;
+};
+
+const confirmRestore = async () => {
+  if (!invoiceToRestore.value) return;
+
+  const invoiceId = invoiceToRestore.value.id;
   restoringInvoiceId.value = invoiceId;
+
   try {
-    await restoreInvoiceMutation.mutateAsync(invoiceId);
+    console.log('Starting restore for invoice:', invoiceId);
+    const result = await restoreInvoiceMutation.mutateAsync(invoiceId);
+    console.log('Restore result:', result);
     // Show success message
     console.log('Invoice restored successfully');
+    // Close modal
+    showRestoreModal.value = false;
+    invoiceToRestore.value = null;
     // Refetch data to update the list
     refetch();
   } catch (error: any) {
     console.error('Error restoring invoice:', error);
-    // Show error message to user
-    alert(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
+
+    // Check if it's an authentication error or invoice not found
+    if (error.message && error.message.includes('Invoice not found')) {
+      // This might be an authentication issue or the invoice was already restored
+      alert(
+        'Invoice not found. It may have already been restored or deleted permanently.'
+      );
+    } else {
+      // Show error message to user
+      alert(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
+    }
   } finally {
     // Always reset the loading state
     restoringInvoiceId.value = null;
     restoreInvoiceMutation.reset();
   }
+};
+
+const cancelRestore = () => {
+  showRestoreModal.value = false;
+  invoiceToRestore.value = null;
 };
 
 // Note: No need to watch includeDeleted as the query automatically refetches when reactive filters change

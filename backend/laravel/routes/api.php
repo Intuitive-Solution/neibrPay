@@ -76,8 +76,8 @@ Route::middleware('firebase.auth')->group(function () {
     
     // Invoice management routes
     Route::apiResource('invoices', InvoiceController::class);
-    Route::post('invoices/{invoice}/restore', [InvoiceController::class, 'restore']);
-    Route::delete('invoices/{invoice}/force', [InvoiceController::class, 'forceDelete']);
+    Route::post('invoices/{id}/restore', [InvoiceController::class, 'restore']);
+    Route::delete('invoices/{id}/force', [InvoiceController::class, 'forceDelete']);
     Route::post('invoices/{invoice}/mark-sent', [InvoiceController::class, 'markAsSent']);
     Route::get('units/{unit}/invoices', [InvoiceController::class, 'forUnit']);
 });
