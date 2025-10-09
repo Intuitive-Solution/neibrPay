@@ -748,7 +748,13 @@
         <!-- Documents Tab -->
         <div v-else-if="activeInvoiceItemsTab === 'documents'">
           <!-- Upload Section -->
-          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6">
+          <div
+            class="border-2 border-dashed border-gray-300 rounded-lg p-6 transition-colors duration-200"
+            :class="{ 'border-blue-400 bg-blue-50': isDragOver }"
+            @dragover.prevent="handleDragOver"
+            @dragleave.prevent="handleDragLeave"
+            @drop.prevent="handleDrop"
+          >
             <div class="text-center">
               <svg
                 class="mx-auto h-12 w-12 text-gray-400"
@@ -1530,6 +1536,7 @@ const activeInvoiceItemsTab = ref('invoice-items');
 // Document management
 const attachments = ref<any[]>([]);
 const uploadProgress = ref(0);
+const isDragOver = ref(false);
 const uploadAttachmentMutation = useUploadInvoiceAttachment();
 const deleteAttachmentMutation = useDeleteInvoiceAttachment();
 const downloadAttachmentMutation = useDownloadInvoiceAttachment();
@@ -1939,50 +1946,10 @@ const handleFileUpload = async (event: Event) => {
 
   if (!file) return;
 
-  // Validate file size (10MB max)
-  if (file.size > 10 * 1024 * 1024) {
-    alert('File size must be less than 10MB');
-    return;
-  }
+  processFile(file);
 
-  // For now, we'll store the file locally since we don't have an invoice ID yet
-  // In a real implementation, you might want to create a draft invoice first
-  try {
-    // Simulate upload progress
-    uploadProgress.value = 0;
-    const progressInterval = setInterval(() => {
-      if (uploadProgress.value < 90) {
-        uploadProgress.value += 10;
-      }
-    }, 100);
-
-    // Create a local attachment object
-    const attachment = {
-      id: Date.now(), // Temporary ID
-      file_name: file.name,
-      file_size: file.size,
-      file_size_human: formatFileSize(file.size),
-      attachment_type: getAttachmentType(file.type, file.name),
-      mime_type: file.type,
-      file: file, // Store the actual file for later upload
-      is_local: true, // Flag to indicate this is a local file
-    };
-
-    attachments.value.push(attachment);
-    uploadProgress.value = 100;
-
-    setTimeout(() => {
-      uploadProgress.value = 0;
-      clearInterval(progressInterval);
-    }, 500);
-
-    // Clear the input
-    target.value = '';
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    alert('Failed to upload file');
-    uploadProgress.value = 0;
-  }
+  // Clear the input
+  target.value = '';
 };
 
 const removeAttachment = async (attachment: any) => {
@@ -2073,6 +2040,119 @@ const getAttachmentType = (mimeType: string, fileName: string): string => {
     return 'document';
   }
   return 'other';
+};
+
+// Drag and drop handlers
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault();
+  isDragOver.value = true;
+};
+
+const handleDragLeave = (event: DragEvent) => {
+  event.preventDefault();
+  // Only set isDragOver to false if we're leaving the drop zone entirely
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const x = event.clientX;
+  const y = event.clientY;
+
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    isDragOver.value = false;
+  }
+};
+
+const handleDrop = (event: DragEvent) => {
+  event.preventDefault();
+  isDragOver.value = false;
+
+  const files = event.dataTransfer?.files;
+  if (files && files.length > 0) {
+    const file = files[0];
+    processFile(file);
+  }
+};
+
+const processFile = (file: File) => {
+  // Validate file size (10MB max)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('File size must be less than 10MB');
+    return;
+  }
+
+  // Validate file type
+  const allowedTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+  ];
+
+  const allowedExtensions = [
+    '.pdf',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.ppt',
+    '.pptx',
+    '.txt',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+  ];
+  const fileName = file.name.toLowerCase();
+
+  if (
+    !allowedTypes.includes(file.type) &&
+    !allowedExtensions.some(ext => fileName.endsWith(ext))
+  ) {
+    alert(
+      'File type not supported. Please upload PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, PNG, or GIF files.'
+    );
+    return;
+  }
+
+  // Process the file (same logic as handleFileUpload)
+  try {
+    // Simulate upload progress
+    uploadProgress.value = 0;
+    const progressInterval = setInterval(() => {
+      if (uploadProgress.value < 90) {
+        uploadProgress.value += 10;
+      }
+    }, 100);
+
+    // Create a local attachment object
+    const attachment = {
+      id: Date.now(), // Temporary ID
+      file_name: file.name,
+      file_size: file.size,
+      file_size_human: formatFileSize(file.size),
+      attachment_type: getAttachmentType(file.type, file.name),
+      mime_type: file.type,
+      file: file, // Store the actual file for later upload
+      is_local: true, // Flag to indicate this is a local file
+    };
+
+    attachments.value.push(attachment);
+    uploadProgress.value = 100;
+
+    setTimeout(() => {
+      uploadProgress.value = 0;
+      clearInterval(progressInterval);
+    }, 500);
+  } catch (error) {
+    console.error('Error processing file:', error);
+    alert('Failed to process file');
+    uploadProgress.value = 0;
+  }
 };
 
 // Tab helper methods
