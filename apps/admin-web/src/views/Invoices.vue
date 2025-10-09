@@ -90,10 +90,9 @@
       <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">Invoice Directory</h1>
-            <p class="text-sm text-gray-600 mt-1">
-              Manage community invoices and billing
-            </p>
+            <h2 class="text-lg font-semibold text-gray-900">
+              Invoice Directory
+            </h2>
           </div>
 
           <!-- Header Controls -->
@@ -106,7 +105,7 @@
                 type="checkbox"
                 class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
               />
-              <label for="show-deleted" class="ml-2 text-sm text-gray-700">
+              <label for="show-deleted" class="ml-2 text-sm text-gray-600">
                 Show deleted
               </label>
             </div>
@@ -115,7 +114,7 @@
             <button
               @click="refetch"
               :disabled="isLoading"
-              class="inline-flex items-center p-2 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
             >
               <svg
                 class="h-4 w-4"
