@@ -67,7 +67,7 @@ class InvoiceAttachmentController extends Controller
         $fileSize = $file->getSize();
         $fileHash = hash_file('sha256', $file->getPathname());
 
-        // Check if file already exists
+        // Check if file already exists for this specific invoice
         $existingAttachment = InvoiceAttachment::where('file_hash', $fileHash)
             ->where('invoice_unit_id', $invoice->id)
             ->first();
@@ -76,19 +76,19 @@ class InvoiceAttachmentController extends Controller
             return response()->json(['message' => 'This file has already been uploaded to this invoice'], 400);
         }
 
-        // Determine attachment type
-        $attachmentType = $this->getAttachmentType($mimeType, $extension);
-
-        // Generate unique filename
+        // Generate unique filename for each unit (allow duplicate file storage)
         $filename = Str::uuid() . '.' . $extension;
         $filePath = 'invoice-attachments/' . $filename;
 
-        // Store the file
+        // Store the file (each unit gets its own copy)
         $stored = Storage::disk('public')->put($filePath, file_get_contents($file));
 
         if (!$stored) {
             return response()->json(['message' => 'Failed to store file'], 500);
         }
+
+        // Determine attachment type
+        $attachmentType = $this->getAttachmentType($mimeType, $extension);
 
         // Create attachment record
         $attachment = InvoiceAttachment::create([

@@ -2356,22 +2356,25 @@ const handleSubmit = async () => {
     // Create the invoice
     const response = await createInvoiceMutation.mutateAsync(requestData);
 
-    // Upload attachments if any
+    // Upload attachments if any - create one attachment record for each invoice (unit)
     if (attachments.value.length > 0 && response.length > 0) {
-      const invoiceId = response[0].id; // Use the first invoice ID for attachments
-
-      // Upload each local attachment
-      for (const attachment of attachments.value.filter(
-        (a: any) => a.is_local
-      )) {
-        try {
-          await uploadAttachmentMutation.mutateAsync({
-            invoiceId: invoiceId,
-            file: attachment.file,
-          });
-        } catch (error) {
-          console.error('Error uploading attachment:', error);
-          // Continue with other attachments even if one fails
+      // Upload attachments to each created invoice (one for each unit)
+      for (const invoice of response) {
+        for (const attachment of attachments.value.filter(
+          (a: any) => a.is_local
+        )) {
+          try {
+            await uploadAttachmentMutation.mutateAsync({
+              invoiceId: invoice.id,
+              file: attachment.file,
+            });
+          } catch (error) {
+            console.error(
+              `Error uploading attachment to invoice ${invoice.id}:`,
+              error
+            );
+            // Continue with other attachments even if one fails
+          }
         }
       }
     }
