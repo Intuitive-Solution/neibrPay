@@ -27,8 +27,22 @@ export function useInvoices(
   } = {}
 ) {
   return useQuery({
-    queryKey: computed(() => invoiceQueryKeys.list(unref(filters))),
-    queryFn: () => invoicesApi.getInvoices(unref(filters)),
+    queryKey: computed(() => {
+      const unwrappedFilters = {
+        include_deleted: unref(filters.include_deleted),
+        unit_id: unref(filters.unit_id),
+        status: unref(filters.status),
+      };
+      return invoiceQueryKeys.list(unwrappedFilters);
+    }),
+    queryFn: () => {
+      const unwrappedFilters = {
+        include_deleted: unref(filters.include_deleted),
+        unit_id: unref(filters.unit_id),
+        status: unref(filters.status),
+      };
+      return invoicesApi.getInvoices(unwrappedFilters);
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

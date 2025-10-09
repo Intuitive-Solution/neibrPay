@@ -421,7 +421,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   useInvoices,
@@ -571,11 +571,7 @@ const restoreInvoice = async (invoiceId: number) => {
   }
 };
 
-// Watch for changes in includeDeleted to refetch data
-watch(includeDeleted, () => {
-  // Refetch with new filter
-  refetchInvoices();
-});
+// Note: No need to watch includeDeleted as the query automatically refetches when reactive filters change
 
 // Reset mutation states on component mount to clear any stuck states
 onMounted(() => {
