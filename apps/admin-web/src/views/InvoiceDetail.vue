@@ -154,7 +154,7 @@
         <div class="flex flex-wrap gap-3 mt-6">
           <button
             @click="emailInvoice"
-            :disabled="isEmailing"
+            :disabled="isEmailing || invoice.status === 'paid'"
             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             <svg
@@ -238,7 +238,7 @@
 
           <button
             @click="deleteInvoice"
-            :disabled="isDeleting"
+            :disabled="isDeleting || invoice.status === 'paid'"
             class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             <svg
