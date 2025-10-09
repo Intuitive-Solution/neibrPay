@@ -30,7 +30,7 @@
       <!-- Column 1: Units -->
       <div class="bg-white rounded-lg shadow">
         <!-- Card Title -->
-        <div class="bg-gray-300 px-6 py-3 rounded-t-lg">
+        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
           <h3 class="text-lg font-medium text-gray-900">Units</h3>
         </div>
 
@@ -233,7 +233,7 @@
       <!-- Column 2: Scheduling/Frequency -->
       <div class="bg-white rounded-lg shadow">
         <!-- Card Title -->
-        <div class="bg-gray-300 px-6 py-3 rounded-t-lg">
+        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
           <h3 class="text-lg font-medium text-gray-900">Scheduling</h3>
         </div>
 
@@ -438,7 +438,7 @@
       <!-- Column 3: Invoice Details -->
       <div class="bg-white rounded-lg shadow">
         <!-- Card Title -->
-        <div class="bg-gray-300 px-6 py-3 rounded-t-lg">
+        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
           <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
         </div>
 
@@ -906,7 +906,7 @@
       <!-- Left Section: Tabs and Rich Text Editor -->
       <div class="lg:col-span-2 bg-white rounded-lg shadow">
         <!-- Tabs -->
-        <div class="bg-gray-300 border-b border-gray-200 rounded-t-lg">
+        <div class="bg-gray-100 border-b border-gray-200 rounded-t-lg">
           <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
             <button
               v-for="tab in tabs"
@@ -1184,7 +1184,7 @@
       <!-- Right Section: Total Panel -->
       <div class="bg-white rounded-lg shadow">
         <!-- Card Title -->
-        <div class="bg-gray-300 px-6 py-3 rounded-t-lg">
+        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
           <h3 class="text-lg font-medium text-gray-900">Invoice Summary</h3>
         </div>
 
