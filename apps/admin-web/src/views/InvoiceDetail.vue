@@ -726,101 +726,6 @@
       @confirm="confirmDelete"
       @cancel="cancelDelete"
     />
-
-    <!-- Invoice Preview Section -->
-    <div class="bg-white rounded-lg shadow mt-6">
-      <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-medium text-gray-900">Invoice Preview</h3>
-          <div class="flex gap-2">
-            <button
-              @click="previewPDF"
-              class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-              Preview PDF
-            </button>
-            <button
-              @click="downloadPDF"
-              class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Download PDF
-            </button>
-            <button
-              @click="printPDF"
-              class="inline-flex items-center px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors duration-200"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                />
-              </svg>
-              Print PDF
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="p-8 bg-gray-50">
-        <div v-if="invoice">
-          <div class="preview-container">
-            <InvoiceTemplate
-              :form="invoiceForm"
-              :invoiceItems="invoiceItems"
-              :subtotal="invoice.subtotal"
-              :taxRate="invoice.tax_rate"
-              :taxAmount="invoice.tax_amount"
-              :total="invoice.total"
-              :paidToDate="invoice.paid_to_date"
-              :balanceDue="invoice.balance_due"
-              :tabContent="tabContent"
-              :units="transformedUnits"
-            />
-          </div>
-        </div>
-        <div v-else class="text-center py-8 text-gray-500">
-          Loading invoice preview...
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -835,7 +740,6 @@ import {
   useEmailInvoice,
 } from '../composables/useInvoices';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
-import InvoiceTemplate from '../components/InvoiceTemplate.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -970,91 +874,6 @@ const getNoteContent = (type: string) => {
   return note?.content || '';
 };
 
-// Computed properties for InvoiceTemplate
-const invoiceForm = computed(() => {
-  if (!invoice.value) {
-    return {
-      unit_ids: [],
-      invoice_number: '',
-      po_number: '',
-      start_date: '',
-      due_date: '',
-      discount_amount: 0,
-      discount_type: 'amount',
-    };
-  }
-
-  return {
-    unit_ids: [invoice.value.unit_id],
-    invoice_number: invoice.value.invoice_number,
-    po_number: invoice.value.po_number || '',
-    start_date: invoice.value.start_date,
-    due_date: invoice.value.due_date || invoice.value.start_date,
-    discount_amount: invoice.value.discount_amount,
-    discount_type: invoice.value.discount_type,
-  };
-});
-
-const invoiceItems = computed(() => {
-  if (!invoice.value?.items) {
-    return [];
-  }
-
-  return invoice.value.items.map((item: any) => ({
-    name: item.name,
-    description: item.description || '',
-    unitCost: parseFloat(item.unit_cost),
-    quantity: parseInt(item.quantity),
-    lineTotal: parseFloat(item.line_total),
-  }));
-});
-
-const tabContent = computed(() => {
-  if (!invoice.value?.notes)
-    return {
-      'public-notes': '',
-      'private-notes': '',
-      terms: '',
-      footer: '',
-    };
-
-  const notes = invoice.value.notes;
-  return {
-    'public-notes':
-      notes.find((n: any) => n.type === 'public_notes')?.content || '',
-    'private-notes':
-      notes.find((n: any) => n.type === 'private_notes')?.content || '',
-    terms: notes.find((n: any) => n.type === 'terms')?.content || '',
-    footer: notes.find((n: any) => n.type === 'footer')?.content || '',
-  };
-});
-
-const transformedUnits = computed(() => {
-  if (!invoice.value?.unit) {
-    return [];
-  }
-
-  const unit = invoice.value.unit;
-  const residentName =
-    unit.owners && unit.owners.length > 0
-      ? unit.owners[0].name
-      : 'Unknown Resident';
-
-  return [
-    {
-      id: unit.id,
-      title: unit.title,
-      resident_name: residentName,
-      address: unit.address,
-      city: unit.city,
-      state: unit.state,
-      zip_code: unit.zip_code,
-      starting_balance: 0,
-      balance_as_of_date: new Date().toISOString().split('T')[0],
-    },
-  ];
-});
-
 // Action handlers
 const emailInvoice = async () => {
   if (!invoice.value) return;
@@ -1128,48 +947,6 @@ const goBack = () => {
   router.push('/invoices');
 };
 
-// PDF Actions
-const previewPDF = () => {
-  showSuccess('PDF preview functionality will be implemented soon');
-};
-
-const downloadPDF = () => {
-  showSuccess('PDF download functionality will be implemented soon');
-};
-
-const printPDF = () => {
-  const printContent = document.querySelector('.invoice-template');
-  if (!printContent) return;
-
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Invoice #${invoice.value?.invoice_number}</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .invoice-template { width: 100%; }
-        @media print {
-          body { margin: 0; padding: 15px; }
-          .no-print { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      ${printContent.innerHTML}
-    </body>
-    </html>
-  `);
-
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-  printWindow.close();
-};
-
 // Helper functions for showing messages
 const showSuccess = (message: string) => {
   successMessage.value = message;
@@ -1187,22 +964,3 @@ const showError = (message: string) => {
   }, 5000);
 };
 </script>
-
-<style scoped>
-/* PDF Preview Container Styles */
-.preview-container {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #f9fafb;
-  padding: 20px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.preview-container .invoice-template {
-  transform: scale(0.8);
-  transform-origin: top left;
-  margin-bottom: -20%;
-}
-</style>
