@@ -81,7 +81,7 @@ class InvoiceController extends Controller
             'notes.private_notes' => 'nullable|string',
             'notes.terms' => 'nullable|string',
             'notes.footer' => 'nullable|string',
-            'po_number' => 'nullable|string|max:255',
+            'paid_to_date' => 'nullable|numeric|min:0',
         ]);
 
         // Ensure all units belong to the same tenant
@@ -178,7 +178,6 @@ class InvoiceController extends Controller
         }
 
         $validated = $request->validate([
-            'po_number' => 'nullable|string|max:255',
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_type' => 'sometimes|in:amount,percentage',
             'auto_bill' => 'sometimes|in:disabled,enabled,on_due_date,on_send',
@@ -189,6 +188,7 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required_with:items|numeric|min:1',
             'items.*.line_total' => 'required_with:items|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'paid_to_date' => 'nullable|numeric|min:0',
             'notes' => 'nullable|array',
             'notes.public_notes' => 'nullable|string',
             'notes.private_notes' => 'nullable|string',
@@ -523,6 +523,7 @@ class InvoiceController extends Controller
             'auto_bill' => $validated['auto_bill'],
             'items' => $validated['items'],
             'tax_rate' => $validated['tax_rate'] ?? 0,
+            'paid_to_date' => $validated['paid_to_date'] ?? 0,
             'status' => 'draft',
             'parent_invoice_id' => $parentInvoiceId,
             'created_by' => $user->id,
