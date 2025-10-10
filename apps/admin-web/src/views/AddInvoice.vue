@@ -469,27 +469,35 @@
               </p>
             </div>
 
-            <!-- PO # -->
+            <!-- Paid to Date -->
             <div>
               <label
-                for="po_number"
+                for="paid_to_date"
                 class="block text-sm font-medium text-gray-700 mb-2"
               >
-                PO #
+                Paid to Date
               </label>
-              <input
-                id="po_number"
-                v-model="form.po_number"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-                :class="{
-                  'border-red-300 focus:ring-red-500 focus:border-red-500':
-                    errors.po_number,
-                }"
-                placeholder="Purchase order number"
-              />
-              <p v-if="errors.po_number" class="mt-2 text-sm text-red-600">
-                {{ errors.po_number }}
+              <div class="relative">
+                <span
+                  class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+                  >$</span
+                >
+                <input
+                  id="paid_to_date"
+                  v-model.number="form.paid_to_date"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.paid_to_date,
+                  }"
+                  placeholder="0.00"
+                />
+              </div>
+              <p v-if="errors.paid_to_date" class="mt-2 text-sm text-red-600">
+                {{ errors.paid_to_date }}
               </p>
             </div>
 
@@ -1453,7 +1461,7 @@ const form = ref({
   remaining_cycles: 'endless',
   due_date: 'use_payment_terms',
   invoice_number: '',
-  po_number: '',
+  paid_to_date: 0,
   discount_amount: '',
   discount_type: 'amount',
   auto_bill: 'disabled',
@@ -1468,7 +1476,7 @@ const errors = ref({
   remaining_cycles: '',
   due_date: '',
   invoice_number: '',
-  po_number: '',
+  paid_to_date: '',
   discount_amount: '',
   discount_type: '',
   auto_bill: '',
@@ -1558,7 +1566,7 @@ const tabContent = ref({
 
 // Financial calculations
 const taxRate = ref(0);
-const paidToDate = ref(0);
+const paidToDate = computed(() => form.value.paid_to_date || 0);
 
 // Rich text editor state
 const editorRef = ref<HTMLElement | null>(null);
@@ -2188,7 +2196,7 @@ const generateInvoiceHtml = (invoice: any) => {
               <p><strong>Invoice #:</strong> ${invoice.invoice_number}</p>
               <p><strong>Date:</strong> ${formatDate(invoice.start_date)}</p>
               <p><strong>Due Date:</strong> ${formatDate(invoice.start_date)}</p>
-              ${invoice.po_number ? `<p><strong>PO #:</strong> ${invoice.po_number}</p>` : ''}
+              ${invoice.paid_to_date ? `<p><strong>Paid to Date:</strong> $${Number(invoice.paid_to_date).toFixed(2)}</p>` : ''}
             </div>
           </div>
         </div>
@@ -2715,7 +2723,7 @@ const handleSubmit = async () => {
     remaining_cycles: '',
     due_date: '',
     invoice_number: '',
-    po_number: '',
+    paid_to_date: '',
     discount_amount: '',
     discount_type: '',
     auto_bill: '',
@@ -2774,7 +2782,7 @@ const handleSubmit = async () => {
         terms: tabContent.value.terms,
         footer: tabContent.value.footer,
       },
-      po_number: form.value.po_number || undefined,
+      paid_to_date: form.value.paid_to_date || undefined,
     };
 
     // Create the invoice
