@@ -33,7 +33,7 @@ class InvoiceAttachmentController extends Controller
             'data' => $attachments,
             'meta' => [
                 'total' => $attachments->count(),
-                'invoice_id' => $invoiceId,
+                'invoice_id' => $invoice->id,
             ],
         ]);
     }

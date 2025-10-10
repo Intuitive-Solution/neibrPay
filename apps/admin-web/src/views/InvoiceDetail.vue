@@ -602,81 +602,6 @@
         </div>
       </div>
 
-      <!-- Documents/Attachments Section -->
-      <div
-        v-if="attachments && attachments.length > 0"
-        class="bg-white rounded-lg shadow"
-      >
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <h3 class="text-lg font-medium text-gray-900">Attachments</h3>
-        </div>
-        <div class="p-6">
-          <div class="space-y-3">
-            <div
-              v-for="attachment in attachments"
-              :key="attachment.id"
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div class="flex items-center space-x-3">
-                <div class="flex-shrink-0">
-                  <svg
-                    v-if="attachment.attachment_type === 'pdf'"
-                    class="h-8 w-8 text-red-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <svg
-                    v-else-if="attachment.attachment_type === 'image'"
-                    class="h-8 w-8 text-green-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <svg
-                    v-else
-                    class="h-8 w-8 text-blue-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-900 truncate">
-                    {{ attachment.file_name }}
-                  </p>
-                  <p class="text-sm text-gray-500">
-                    {{ formatFileSize(attachment.file_size) }} •
-                    {{ attachment.attachment_type.toUpperCase() }}
-                  </p>
-                </div>
-              </div>
-              <button
-                @click="downloadAttachment"
-                class="text-blue-600 hover:text-blue-900 text-sm font-medium"
-              >
-                Download
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Notes Sections -->
       <div v-if="hasNotes" class="bg-white rounded-lg shadow">
         <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
@@ -909,7 +834,6 @@ import {
   useCloneInvoice,
   useEmailInvoice,
 } from '../composables/useInvoices';
-import { useInvoiceAttachments } from '../composables/useInvoiceAttachments';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import InvoiceTemplate from '../components/InvoiceTemplate.vue';
 
@@ -921,9 +845,6 @@ const invoiceId = computed(() => parseInt(route.params.id as string));
 
 // Fetch invoice data
 const { data: invoice, isLoading, error } = useInvoice(invoiceId.value);
-
-// Fetch attachments
-const { data: attachments } = useInvoiceAttachments(invoiceId);
 
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
@@ -965,14 +886,6 @@ const formatCurrency = (amount: number | string) => {
   if (amount === null || amount === undefined) return '0.00';
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   return numAmount.toFixed(2);
-};
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 const getStatusText = (status: string) => {
@@ -1209,16 +1122,6 @@ const confirmDelete = async () => {
 
 const cancelDelete = () => {
   showDeleteModal.value = false;
-};
-
-const downloadAttachment = async () => {
-  try {
-    // TODO: Implement download functionality
-    showSuccess('Download functionality will be implemented soon');
-  } catch (error) {
-    console.error('Error downloading attachment:', error);
-    showError('Failed to download attachment');
-  }
 };
 
 const goBack = () => {
