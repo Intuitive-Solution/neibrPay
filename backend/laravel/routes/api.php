@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\InvoiceAttachmentController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InvoicePdfController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\Api\UnitDocumentController;
@@ -91,6 +92,13 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('invoices/{invoice}/attachments/{attachment}', [InvoiceAttachmentController::class, 'show']);
     Route::get('invoices/{invoice}/attachments/{attachment}/download', [InvoiceAttachmentController::class, 'download']);
     Route::delete('invoices/{invoice}/attachments/{attachment}', [InvoiceAttachmentController::class, 'destroy']);
+    
+    // Invoice PDF management routes
+    Route::post('invoices/{invoice}/pdf/generate', [InvoicePdfController::class, 'generate']);
+    Route::get('invoices/{invoice}/pdf', [InvoicePdfController::class, 'latest']);
+    Route::get('invoices/{invoice}/pdf/download', [InvoicePdfController::class, 'download']);
+    Route::get('invoices/{invoice}/pdf/versions', [InvoicePdfController::class, 'versions']);
+    Route::get('invoices/{invoice}/pdf/versions/{version}/download', [InvoicePdfController::class, 'downloadVersion']);
 });
 
 // Legacy route for backward compatibility

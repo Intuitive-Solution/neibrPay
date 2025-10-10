@@ -1436,6 +1436,7 @@ import {
   useDeleteInvoiceAttachment,
   useDownloadInvoiceAttachment,
 } from '../composables/useInvoiceAttachments';
+import { useGenerateInvoicePdf } from '../composables/useInvoicePdf';
 import type { UnitWithResident, CreateInvoiceRequest } from '@neibrpay/models';
 import InvoiceTemplate from '../components/InvoiceTemplate.vue';
 import { jsPDF } from 'jspdf';
@@ -1474,7 +1475,10 @@ const errors = ref({
 });
 
 // Loading state
-const isSubmitting = computed(() => createInvoiceMutation.isPending.value);
+const isSubmitting = computed(
+  () =>
+    createInvoiceMutation.isPending.value || generatePdfMutation.isPending.value
+);
 const isGeneratingPDF = ref(false);
 
 // PDF Preview state
@@ -1489,6 +1493,9 @@ const {
 
 // Create invoice mutation
 const createInvoiceMutation = useCreateInvoice();
+
+// Generate PDF mutation
+const generatePdfMutation = useGenerateInvoicePdf();
 
 // Dropdown state
 const isDropdownOpen = ref(false);
@@ -1834,6 +1841,390 @@ const printPDF = async () => {
 const getUnitTitle = (unitId: number) => {
   const unit = units.value?.find((u: UnitWithResident) => u.id === unitId);
   return unit ? unit.title : `Unit ${unitId}`;
+};
+
+// Helper function to generate HTML for PDF
+const generateInvoiceHtml = (invoice: any) => {
+  const unit = units.value?.find(
+    (u: UnitWithResident) => u.id === invoice.unit_id
+  );
+  const unitTitle = unit ? unit.title : `Unit ${invoice.unit_id}`;
+  const unitAddress = unit ? `${unit.address}, ${unit.city}` : '';
+  const unitResident = unit ? unit.resident_name : '';
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const publicNotes =
+    invoice.notes?.find((n: any) => n.type === 'public_notes')?.content || '';
+  const terms =
+    invoice.notes?.find((n: any) => n.type === 'terms')?.content || '';
+  const footer =
+    invoice.notes?.find((n: any) => n.type === 'footer')?.content || '';
+
+  const itemsHtml = invoice.items
+    .map(
+      (item: any) => `
+    <tr>
+      <td class="item-name">${item.name}</td>
+      <td class="item-description">${item.description || ''}</td>
+      <td class="item-cost">$${Number(item.unit_cost).toFixed(2)}</td>
+      <td class="item-quantity">${item.quantity}</td>
+      <td class="item-total">$${Number(item.line_total).toFixed(2)}</td>
+    </tr>
+  `
+    )
+    .join('');
+
+  const discountHtml =
+    invoice.discount_amount && invoice.discount_amount > 0
+      ? `
+    <div class="total-row">
+      <span class="total-label">Discount (${invoice.discount_type === 'percentage' ? invoice.discount_amount + '%' : 'Amount'}):</span>
+      <span class="total-value">-$${(invoice.discount_type === 'percentage' ? (Number(invoice.subtotal) * Number(invoice.discount_amount)) / 100 : Number(invoice.discount_amount)).toFixed(2)}</span>
+    </div>
+  `
+      : '';
+
+  const taxHtml =
+    invoice.tax_rate && invoice.tax_rate > 0
+      ? `
+    <div class="total-row">
+      <span class="total-label">Tax (${invoice.tax_rate}%):</span>
+      <span class="total-value">$${Number(invoice.tax_amount).toFixed(2)}</span>
+    </div>
+  `
+      : '';
+
+  const paidToDateHtml =
+    invoice.paid_to_date && invoice.paid_to_date > 0
+      ? `
+    <div class="total-row">
+      <span class="total-label">Paid to Date:</span>
+      <span class="total-value">$${Number(invoice.paid_to_date).toFixed(2)}</span>
+    </div>
+  `
+      : '';
+
+  const balanceDueHtml =
+    invoice.balance_due && invoice.balance_due > 0
+      ? `
+    <div class="total-row balance-due">
+      <span class="total-label">Balance Due:</span>
+      <span class="total-value">$${Number(invoice.balance_due).toFixed(2)}</span>
+    </div>
+  `
+      : '';
+
+  const notesHtml = publicNotes
+    ? `
+    <div class="notes-section">
+      <h3 class="section-title">Notes:</h3>
+      <div class="notes-content">${publicNotes}</div>
+    </div>
+  `
+    : '';
+
+  const termsHtml = terms
+    ? `
+    <div class="terms-section">
+      <h3 class="section-title">Terms & Conditions:</h3>
+      <div class="terms-content">${terms}</div>
+    </div>
+  `
+    : '';
+
+  const footerHtml = footer
+    ? `
+    <div class="footer-section">
+      <div class="footer-content">${footer}</div>
+    </div>
+  `
+    : '';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Invoice ${invoice.invoice_number}</title>
+      <style>
+        .invoice-template {
+          width: 210mm;
+          min-height: 297mm;
+          padding: 20mm;
+          font-family: 'Arial', sans-serif;
+          background: white;
+          color: #333;
+          line-height: 1.4;
+        }
+        .invoice-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 30px;
+          border-bottom: 3px solid #2563eb;
+          padding-bottom: 20px;
+        }
+        .company-info {
+          flex: 1;
+        }
+        .company-name {
+          font-size: 28px;
+          font-weight: bold;
+          color: #2563eb;
+          margin: 0 0 10px 0;
+        }
+        .company-details p {
+          margin: 2px 0;
+          font-size: 14px;
+          color: #666;
+        }
+        .invoice-meta {
+          text-align: right;
+          flex: 1;
+        }
+        .invoice-title {
+          font-size: 32px;
+          font-weight: bold;
+          color: #1f2937;
+          margin: 0 0 15px 0;
+        }
+        .invoice-details p {
+          margin: 3px 0;
+          font-size: 14px;
+        }
+        .bill-to-section {
+          margin-bottom: 30px;
+        }
+        .section-title {
+          font-size: 16px;
+          font-weight: bold;
+          color: #1f2937;
+          margin: 0 0 10px 0;
+          border-bottom: 1px solid #e5e7eb;
+          padding-bottom: 5px;
+        }
+        .unit-header h4 {
+          font-size: 16px;
+          font-weight: bold;
+          margin: 0 0 5px 0;
+          color: #1f2937;
+        }
+        .unit-details p {
+          margin: 2px 0;
+          font-size: 14px;
+          color: #666;
+        }
+        .items-section {
+          margin-bottom: 30px;
+        }
+        .items-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 0;
+        }
+        .items-table th {
+          background-color: #f8fafc;
+          color: #1f2937;
+          font-weight: bold;
+          padding: 12px 8px;
+          text-align: left;
+          border: 1px solid #e5e7eb;
+          font-size: 14px;
+        }
+        .items-table td {
+          padding: 10px 8px;
+          border: 1px solid #e5e7eb;
+          font-size: 14px;
+          vertical-align: top;
+        }
+        .item-name {
+          width: 20%;
+          font-weight: 500;
+        }
+        .item-description {
+          width: 35%;
+        }
+        .item-cost, .item-quantity, .item-total {
+          width: 15%;
+          text-align: right;
+        }
+        .item-total {
+          font-weight: 500;
+        }
+        .totals-section {
+          margin-bottom: 30px;
+        }
+        .totals-container {
+          max-width: 300px;
+          margin-left: auto;
+        }
+        .total-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+          border-bottom: 1px solid #f3f4f6;
+        }
+        .total-label {
+          font-size: 14px;
+          color: #6b7280;
+        }
+        .total-value {
+          font-size: 14px;
+          font-weight: 500;
+          color: #1f2937;
+        }
+        .final-total {
+          border-top: 2px solid #1f2937;
+          border-bottom: 2px solid #1f2937;
+          font-weight: bold;
+          font-size: 16px;
+          margin-top: 10px;
+          padding: 12px 0;
+        }
+        .final-total .total-label, .final-total .total-value {
+          font-size: 16px;
+          font-weight: bold;
+        }
+        .balance-due {
+          background-color: #fef2f2;
+          border: 1px solid #fecaca;
+          border-radius: 4px;
+          padding: 10px 15px;
+          margin-top: 10px;
+        }
+        .balance-due .total-label, .balance-due .total-value {
+          color: #dc2626;
+          font-weight: bold;
+        }
+        .notes-section, .terms-section {
+          margin-bottom: 25px;
+        }
+        .notes-content, .terms-content {
+          font-size: 14px;
+          line-height: 1.6;
+          color: #4b5563;
+          margin-top: 10px;
+        }
+        .footer-section {
+          margin-bottom: 25px;
+          padding-top: 20px;
+          border-top: 1px solid #e5e7eb;
+        }
+        .footer-content {
+          font-size: 12px;
+          color: #6b7280;
+          text-align: center;
+        }
+        .payment-section {
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 1px solid #e5e7eb;
+        }
+        .payment-details p {
+          margin: 5px 0;
+          font-size: 14px;
+          color: #4b5563;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="invoice-template">
+        <div class="invoice-header">
+          <div class="company-info">
+            <h1 class="company-name">NeibrPay HOA</h1>
+            <div class="company-details">
+              <p>123 HOA Management Street</p>
+              <p>Property City, PC 12345</p>
+              <p>Phone: (555) 123-4567</p>
+              <p>Email: info@neibrpay.com</p>
+            </div>
+          </div>
+          <div class="invoice-meta">
+            <h2 class="invoice-title">INVOICE</h2>
+            <div class="invoice-details">
+              <p><strong>Invoice #:</strong> ${invoice.invoice_number}</p>
+              <p><strong>Date:</strong> ${formatDate(invoice.start_date)}</p>
+              <p><strong>Due Date:</strong> ${formatDate(invoice.start_date)}</p>
+              ${invoice.po_number ? `<p><strong>PO #:</strong> ${invoice.po_number}</p>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="bill-to-section">
+          <h3 class="section-title">Bill To:</h3>
+          <div class="bill-to-content">
+            <div class="unit-info">
+              <div class="unit-header">
+                <h4>${unitTitle}</h4>
+              </div>
+              <div class="unit-details">
+                <p>${unitAddress}</p>
+                <p>${unitResident}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="items-section">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th class="item-name">Item</th>
+                <th class="item-description">Description</th>
+                <th class="item-cost">Unit Cost</th>
+                <th class="item-quantity">Qty</th>
+                <th class="item-total">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="totals-section">
+          <div class="totals-container">
+            <div class="total-row">
+              <span class="total-label">Subtotal:</span>
+              <span class="total-value">$${Number(invoice.subtotal).toFixed(2)}</span>
+            </div>
+            ${discountHtml}
+            ${taxHtml}
+            <div class="total-row final-total">
+              <span class="total-label">Total:</span>
+              <span class="total-value">$${Number(invoice.total).toFixed(2)}</span>
+            </div>
+            ${paidToDateHtml}
+            ${balanceDueHtml}
+          </div>
+        </div>
+
+        ${notesHtml}
+        ${termsHtml}
+        ${footerHtml}
+
+        <div class="payment-section">
+          <h3 class="section-title">Payment Information</h3>
+          <div class="payment-details">
+            <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p>
+            <p><strong>Make checks payable to:</strong> NeibrPay HOA</p>
+            <p><strong>For questions about this invoice, contact:</strong> (555) 123-4567</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 };
 
 const toggleUnitSelection = (unitId: number) => {
@@ -2375,6 +2766,30 @@ const handleSubmit = async () => {
             );
             // Continue with other attachments even if one fails
           }
+        }
+      }
+    }
+
+    // Generate PDFs for each created invoice
+    if (response.length > 0) {
+      for (const invoice of response) {
+        try {
+          // Generate HTML for the invoice
+          const html = generateInvoiceHtml(invoice);
+
+          // Generate PDF on the server
+          await generatePdfMutation.mutateAsync({
+            invoiceId: invoice.id,
+            html: html,
+          });
+
+          console.log(`PDF generated successfully for invoice ${invoice.id}`);
+        } catch (error) {
+          console.error(
+            `Error generating PDF for invoice ${invoice.id}:`,
+            error
+          );
+          // Continue with other invoices even if PDF generation fails
         }
       }
     }

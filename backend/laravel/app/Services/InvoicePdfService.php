@@ -1,0 +1,192 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\InvoicePdf;
+use App\Models\InvoiceUnit;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class InvoicePdfService
+{
+    /**
+     * Generate PDF from HTML and store it with versioning.
+     */
+    public function generatePdf(InvoiceUnit $invoice, string $html, int $generatedBy): InvoicePdf
+    {
+        // Get the next version number
+        $version = InvoicePdf::getNextVersion($invoice->id);
+        
+        // Generate filename
+        $filename = $this->generateFilename($invoice->invoice_number);
+        
+        // Handle existing PDFs (versioning)
+        $this->handleExistingPdfs($invoice->id, $version);
+        
+        // Generate PDF from HTML
+        $pdf = Pdf::loadHTML($html);
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Get PDF content
+        $pdfContent = $pdf->output();
+        
+        // Store PDF file
+        $filePath = $this->storePdfFile($filename, $pdfContent);
+        
+        // Create database record
+        $invoicePdf = InvoicePdf::create([
+            'invoice_unit_id' => $invoice->id,
+            'version' => $version,
+            'file_name' => $filename,
+            'file_path' => $filePath,
+            'file_size' => strlen($pdfContent),
+            'is_latest' => true,
+            'generated_by' => $generatedBy,
+        ]);
+        
+        // Mark all other versions as not latest
+        $invoicePdf->markOthersAsNotLatest();
+        
+        return $invoicePdf;
+    }
+    
+    /**
+     * Generate filename for the PDF.
+     */
+    private function generateFilename(string $invoiceNumber): string
+    {
+        return $invoiceNumber . '.pdf';
+    }
+    
+    /**
+     * Handle existing PDFs by archiving them.
+     */
+    private function handleExistingPdfs(int $invoiceUnitId, int $newVersion): void
+    {
+        $existingPdfs = InvoicePdf::where('invoice_unit_id', $invoiceUnitId)
+            ->where('is_latest', true)
+            ->get();
+        
+        foreach ($existingPdfs as $existingPdf) {
+            // Move file to archive with version suffix
+            $this->archivePdfFile($existingPdf);
+            
+            // Mark as not latest
+            $existingPdf->update(['is_latest' => false]);
+        }
+    }
+    
+    /**
+     * Archive an existing PDF file.
+     */
+    private function archivePdfFile(InvoicePdf $invoicePdf): void
+    {
+        $originalPath = $invoicePdf->file_path;
+        $archivePath = $this->getArchivePath($invoicePdf);
+        
+        // Create archive directory if it doesn't exist
+        $archiveDir = dirname($archivePath);
+        if (!Storage::disk('public')->exists($archiveDir)) {
+            Storage::disk('public')->makeDirectory($archiveDir);
+        }
+        
+        // Move file to archive
+        if (Storage::disk('public')->exists($originalPath)) {
+            Storage::disk('public')->move($originalPath, $archivePath);
+            
+            // Update the file path in database
+            $invoicePdf->update(['file_path' => $archivePath]);
+        }
+    }
+    
+    /**
+     * Get archive path for a PDF.
+     */
+    private function getArchivePath(InvoicePdf $invoicePdf): string
+    {
+        $filename = pathinfo($invoicePdf->file_name, PATHINFO_FILENAME);
+        $extension = pathinfo($invoicePdf->file_name, PATHINFO_EXTENSION);
+        
+        return "invoice-pdfs/archive/{$filename}-v{$invoicePdf->version}.{$extension}";
+    }
+    
+    /**
+     * Store PDF file in storage.
+     */
+    private function storePdfFile(string $filename, string $content): string
+    {
+        $filePath = "invoice-pdfs/{$filename}";
+        
+        // Create directory if it doesn't exist
+        $dir = dirname($filePath);
+        if (!Storage::disk('public')->exists($dir)) {
+            Storage::disk('public')->makeDirectory($dir);
+        }
+        
+        // Store the file
+        Storage::disk('public')->put($filePath, $content);
+        
+        return $filePath;
+    }
+    
+    /**
+     * Get the latest PDF for an invoice.
+     */
+    public function getLatestPdf(InvoiceUnit $invoice): ?InvoicePdf
+    {
+        return InvoicePdf::where('invoice_unit_id', $invoice->id)
+            ->latest()
+            ->first();
+    }
+    
+    /**
+     * Get all versions of PDFs for an invoice.
+     */
+    public function getAllVersions(InvoiceUnit $invoice): \Illuminate\Database\Eloquent\Collection
+    {
+        return InvoicePdf::where('invoice_unit_id', $invoice->id)
+            ->orderBy('version', 'desc')
+            ->get();
+    }
+    
+    /**
+     * Get a specific version of PDF for an invoice.
+     */
+    public function getPdfVersion(InvoiceUnit $invoice, int $version): ?InvoicePdf
+    {
+        return InvoicePdf::where('invoice_unit_id', $invoice->id)
+            ->where('version', $version)
+            ->first();
+    }
+    
+    /**
+     * Delete all PDFs for an invoice (including archived versions).
+     */
+    public function deleteAllPdfs(InvoiceUnit $invoice): void
+    {
+        $pdfs = InvoicePdf::where('invoice_unit_id', $invoice->id)->get();
+        
+        foreach ($pdfs as $pdf) {
+            // Delete file from storage
+            if (Storage::disk('public')->exists($pdf->file_path)) {
+                Storage::disk('public')->delete($pdf->file_path);
+            }
+            
+            // Delete database record
+            $pdf->delete();
+        }
+    }
+    
+    /**
+     * Get PDF file content for download.
+     */
+    public function getPdfContent(InvoicePdf $invoicePdf): ?string
+    {
+        if (!Storage::disk('public')->exists($invoicePdf->file_path)) {
+            return null;
+        }
+        
+        return Storage::disk('public')->get($invoicePdf->file_path);
+    }
+}

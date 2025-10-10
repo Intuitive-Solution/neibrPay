@@ -194,4 +194,62 @@ export const invoicesApi = {
     });
     return response.data;
   },
+
+  /**
+   * Generate PDF from HTML for an invoice
+   */
+  async generateInvoicePdf(invoiceId: number, html: string): Promise<any> {
+    const response = await apiClient.post(
+      `/invoices/${invoiceId}/pdf/generate`,
+      {
+        html,
+      }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get the latest PDF info for an invoice
+   */
+  async getLatestInvoicePdf(invoiceId: number): Promise<any> {
+    const response = await apiClient.get(`/invoices/${invoiceId}/pdf`);
+    return response.data.data;
+  },
+
+  /**
+   * Download the latest PDF for an invoice
+   */
+  async downloadInvoicePdf(invoiceId: number): Promise<Blob> {
+    const response = await apiClient.get(
+      `/invoices/${invoiceId}/pdf/download`,
+      {
+        responseType: 'blob',
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Get all versions of PDFs for an invoice
+   */
+  async getInvoicePdfVersions(invoiceId: number): Promise<any[]> {
+    const response = await apiClient.get(`/invoices/${invoiceId}/pdf/versions`);
+    return response.data.data;
+  },
+
+  /**
+   * Download a specific version of PDF for an invoice
+   */
+  async downloadInvoicePdfVersion(
+    invoiceId: number,
+    version: number
+  ): Promise<Blob> {
+    const response = await apiClient.get(
+      `/invoices/${invoiceId}/pdf/versions/${version}/download`,
+      {
+        responseType: 'blob',
+      }
+    );
+    return response.data;
+  },
 };

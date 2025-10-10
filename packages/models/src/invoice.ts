@@ -59,6 +59,28 @@ export const UpdateInvoiceRequestSchema = z.object({
   notes: InvoiceNotesSchema.optional(),
 });
 
+// Invoice PDF Schema
+export const InvoicePdfSchema = z.object({
+  id: z.number().int().positive(),
+  invoice_unit_id: z.number().int().positive(),
+  version: z.number().int().positive(),
+  file_name: z.string(),
+  file_path: z.string(),
+  file_size: z.number().int(),
+  is_latest: z.boolean(),
+  generated_by: z.number().int().positive(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  // Relationships
+  generator: z
+    .object({
+      id: z.number().int().positive(),
+      name: z.string(),
+      email: z.string(),
+    })
+    .optional(),
+});
+
 // Invoice Unit Schema
 export const InvoiceUnitSchema = z.object({
   id: z.number().int().positive(),
@@ -184,6 +206,7 @@ export type InvoiceItem = z.infer<typeof InvoiceItemSchema>;
 export type InvoiceNotes = z.infer<typeof InvoiceNotesSchema>;
 export type CreateInvoiceRequest = z.infer<typeof CreateInvoiceRequestSchema>;
 export type UpdateInvoiceRequest = z.infer<typeof UpdateInvoiceRequestSchema>;
+export type InvoicePdf = z.infer<typeof InvoicePdfSchema>;
 export type InvoiceUnit = z.infer<typeof InvoiceUnitSchema>;
 
 // Validation functions
