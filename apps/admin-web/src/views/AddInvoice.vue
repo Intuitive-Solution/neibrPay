@@ -1886,7 +1886,7 @@ const generateInvoiceHtml = (invoice: any) => {
   const discountHtml =
     invoice.discount_amount && invoice.discount_amount > 0
       ? `
-    <div class="total-row">
+    <div class="total-row clearfix">
       <span class="total-label">Discount (${invoice.discount_type === 'percentage' ? invoice.discount_amount + '%' : 'Amount'}):</span>
       <span class="total-value">-$${(invoice.discount_type === 'percentage' ? (Number(invoice.subtotal) * Number(invoice.discount_amount)) / 100 : Number(invoice.discount_amount)).toFixed(2)}</span>
     </div>
@@ -1896,7 +1896,7 @@ const generateInvoiceHtml = (invoice: any) => {
   const taxHtml =
     invoice.tax_rate && invoice.tax_rate > 0
       ? `
-    <div class="total-row">
+    <div class="total-row clearfix">
       <span class="total-label">Tax (${invoice.tax_rate}%):</span>
       <span class="total-value">$${Number(invoice.tax_amount).toFixed(2)}</span>
     </div>
@@ -1906,7 +1906,7 @@ const generateInvoiceHtml = (invoice: any) => {
   const paidToDateHtml =
     invoice.paid_to_date && invoice.paid_to_date > 0
       ? `
-    <div class="total-row">
+    <div class="total-row clearfix">
       <span class="total-label">Paid to Date:</span>
       <span class="total-value">$${Number(invoice.paid_to_date).toFixed(2)}</span>
     </div>
@@ -1916,7 +1916,7 @@ const generateInvoiceHtml = (invoice: any) => {
   const balanceDueHtml =
     invoice.balance_due && invoice.balance_due > 0
       ? `
-    <div class="total-row balance-due">
+    <div class="total-row balance-due clearfix">
       <span class="total-label">Balance Due:</span>
       <span class="total-value">$${Number(invoice.balance_due).toFixed(2)}</span>
     </div>
@@ -1956,56 +1956,67 @@ const generateInvoiceHtml = (invoice: any) => {
       <meta charset="utf-8">
       <title>Invoice ${invoice.invoice_number}</title>
       <style>
-        .invoice-template {
-          width: 210mm;
-          min-height: 297mm;
-          padding: 20mm;
-          font-family: 'Arial', sans-serif;
-          background: white;
-          color: #333;
+        * {
+          box-sizing: border-box;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+          font-size: 12px;
           line-height: 1.4;
+          color: #333;
+        }
+        .invoice-template {
+          width: 100%;
+          max-width: 750px;
+          margin: 0 auto;
+          padding: 15px 25px;
+          background: white;
         }
         .invoice-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
+          width: 100%;
           margin-bottom: 30px;
           border-bottom: 3px solid #2563eb;
           padding-bottom: 20px;
+          overflow: hidden;
         }
         .company-info {
-          flex: 1;
+          float: left;
+          width: 55%;
         }
         .company-name {
-          font-size: 28px;
+          font-size: 22px;
           font-weight: bold;
           color: #2563eb;
           margin: 0 0 10px 0;
         }
         .company-details p {
           margin: 2px 0;
-          font-size: 14px;
+          font-size: 11px;
           color: #666;
         }
         .invoice-meta {
+          float: right;
+          width: 40%;
           text-align: right;
-          flex: 1;
         }
         .invoice-title {
-          font-size: 32px;
+          font-size: 24px;
           font-weight: bold;
           color: #1f2937;
-          margin: 0 0 15px 0;
+          margin: 0 0 12px 0;
         }
         .invoice-details p {
-          margin: 3px 0;
-          font-size: 14px;
+          margin: 2px 0;
+          font-size: 11px;
         }
         .bill-to-section {
+          clear: both;
           margin-bottom: 30px;
         }
         .section-title {
-          font-size: 16px;
+          font-size: 14px;
           font-weight: bold;
           color: #1f2937;
           margin: 0 0 10px 0;
@@ -2013,14 +2024,14 @@ const generateInvoiceHtml = (invoice: any) => {
           padding-bottom: 5px;
         }
         .unit-header h4 {
-          font-size: 16px;
+          font-size: 14px;
           font-weight: bold;
           margin: 0 0 5px 0;
           color: #1f2937;
         }
         .unit-details p {
           margin: 2px 0;
-          font-size: 14px;
+          font-size: 12px;
           color: #666;
         }
         .items-section {
@@ -2030,56 +2041,66 @@ const generateInvoiceHtml = (invoice: any) => {
           width: 100%;
           border-collapse: collapse;
           margin: 0;
+          table-layout: fixed;
         }
         .items-table th {
           background-color: #f8fafc;
           color: #1f2937;
           font-weight: bold;
-          padding: 12px 8px;
+          padding: 8px 6px;
           text-align: left;
           border: 1px solid #e5e7eb;
-          font-size: 14px;
+          font-size: 11px;
         }
         .items-table td {
-          padding: 10px 8px;
+          padding: 8px 6px;
           border: 1px solid #e5e7eb;
-          font-size: 14px;
+          font-size: 11px;
           vertical-align: top;
+          word-wrap: break-word;
         }
         .item-name {
-          width: 20%;
+          width: 22%;
           font-weight: 500;
         }
         .item-description {
-          width: 35%;
+          width: 28%;
         }
-        .item-cost, .item-quantity, .item-total {
-          width: 15%;
+        .item-cost {
+          width: 18%;
           text-align: right;
         }
+        .item-quantity {
+          width: 12%;
+          text-align: center;
+        }
         .item-total {
+          width: 20%;
+          text-align: right;
           font-weight: 500;
         }
         .totals-section {
           margin-bottom: 30px;
         }
         .totals-container {
-          max-width: 300px;
+          width: 280px;
           margin-left: auto;
+          margin-right: 10px;
         }
         .total-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 8px 0;
+          width: 100%;
+          padding: 6px 0;
           border-bottom: 1px solid #f3f4f6;
+          overflow: hidden;
         }
         .total-label {
-          font-size: 14px;
+          float: left;
+          font-size: 12px;
           color: #6b7280;
         }
         .total-value {
-          font-size: 14px;
+          float: right;
+          font-size: 12px;
           font-weight: 500;
           color: #1f2937;
         }
@@ -2087,30 +2108,37 @@ const generateInvoiceHtml = (invoice: any) => {
           border-top: 2px solid #1f2937;
           border-bottom: 2px solid #1f2937;
           font-weight: bold;
-          font-size: 16px;
+          font-size: 14px;
           margin-top: 10px;
-          padding: 12px 0;
+          padding: 10px 0;
         }
         .final-total .total-label, .final-total .total-value {
-          font-size: 16px;
+          font-size: 14px;
           font-weight: bold;
         }
         .balance-due {
-          background-color: #fef2f2;
-          border: 1px solid #fecaca;
-          border-radius: 4px;
-          padding: 10px 15px;
-          margin-top: 10px;
+         
+          padding: 10px 0;
+          margin-top: 5px;
+          margin-right: 0;
+          width: 100%;
+          box-sizing: border-box;
         }
         .balance-due .total-label, .balance-due .total-value {
-          color: #dc2626;
           font-weight: bold;
+          font-size: 14px;
+        }
+        .balance-due .total-label {
+          float: left;
+        }
+        .balance-due .total-value {
+          float: right;
         }
         .notes-section, .terms-section {
           margin-bottom: 25px;
         }
         .notes-content, .terms-content {
-          font-size: 14px;
+          font-size: 12px;
           line-height: 1.6;
           color: #4b5563;
           margin-top: 10px;
@@ -2121,7 +2149,7 @@ const generateInvoiceHtml = (invoice: any) => {
           border-top: 1px solid #e5e7eb;
         }
         .footer-content {
-          font-size: 12px;
+          font-size: 10px;
           color: #6b7280;
           text-align: center;
         }
@@ -2132,14 +2160,19 @@ const generateInvoiceHtml = (invoice: any) => {
         }
         .payment-details p {
           margin: 5px 0;
-          font-size: 14px;
+          font-size: 12px;
           color: #4b5563;
+        }
+        .clearfix::after {
+          content: "";
+          display: table;
+          clear: both;
         }
       </style>
     </head>
     <body>
       <div class="invoice-template">
-        <div class="invoice-header">
+        <div class="invoice-header clearfix">
           <div class="company-info">
             <h1 class="company-name">NeibrPay HOA</h1>
             <div class="company-details">
@@ -2194,13 +2227,13 @@ const generateInvoiceHtml = (invoice: any) => {
 
         <div class="totals-section">
           <div class="totals-container">
-            <div class="total-row">
+            <div class="total-row clearfix">
               <span class="total-label">Subtotal:</span>
               <span class="total-value">$${Number(invoice.subtotal).toFixed(2)}</span>
             </div>
             ${discountHtml}
             ${taxHtml}
-            <div class="total-row final-total">
+            <div class="total-row final-total clearfix">
               <span class="total-label">Total:</span>
               <span class="total-value">$${Number(invoice.total).toFixed(2)}</span>
             </div>
