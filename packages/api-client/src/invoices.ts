@@ -212,7 +212,7 @@ export const invoicesApi = {
    * Get the latest PDF info for an invoice
    */
   async getLatestInvoicePdf(invoiceId: number): Promise<any> {
-    const response = await apiClient.get(`/invoices/${invoiceId}/pdf`);
+    const response = await apiClient.get(`/invoices/${invoiceId}/pdf/info`);
     return response.data.data;
   },
 

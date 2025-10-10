@@ -602,6 +602,81 @@
         </div>
       </div>
 
+      <!-- Invoice PDF Section -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Invoice PDF</h3>
+          </div>
+        </div>
+        <div class="p-6">
+          <div v-if="latestPdf" class="space-y-4">
+            <!-- Embedded PDF Viewer -->
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+              <iframe
+                :src="pdfViewerUrl"
+                class="w-full h-96"
+                frameborder="0"
+                title="Invoice PDF Viewer"
+                @load="onPdfLoad"
+                @error="onPdfError"
+              ></iframe>
+            </div>
+
+            <!-- Fallback message if PDF doesn't load -->
+            <div v-if="pdfLoadError" class="text-center py-8 text-gray-500">
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">
+                PDF Preview Unavailable
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                Unable to display PDF preview. Use the download button to view
+                the PDF.
+              </p>
+            </div>
+          </div>
+          <div v-else-if="isLoadingPdf" class="text-center py-8">
+            <div
+              class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
+            ></div>
+            <p class="mt-2 text-sm text-gray-600">Loading PDF information...</p>
+          </div>
+          <div v-else class="text-center py-8 text-gray-500">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">
+              No PDF Available
+            </h3>
+            <p class="mt-1 text-sm text-gray-500">
+              No PDF has been generated for this invoice yet.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Notes Sections -->
       <div v-if="hasNotes" class="bg-white rounded-lg shadow">
         <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
@@ -739,6 +814,10 @@ import {
   useCloneInvoice,
   useEmailInvoice,
 } from '../composables/useInvoices';
+import {
+  useLatestInvoicePdf,
+  useDownloadInvoicePdf,
+} from '../composables/useInvoicePdf';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 
 const route = useRoute();
@@ -750,16 +829,23 @@ const invoiceId = computed(() => parseInt(route.params.id as string));
 // Fetch invoice data
 const { data: invoice, isLoading, error } = useInvoice(invoiceId.value);
 
+// Fetch PDF data
+const { data: latestPdf, isLoading: isLoadingPdf } = useLatestInvoicePdf(
+  invoiceId.value
+);
+
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
 const markAsPaidMutation = useMarkInvoiceAsPaid();
 const cloneInvoiceMutation = useCloneInvoice();
 const emailInvoiceMutation = useEmailInvoice();
+const downloadPdfMutation = useDownloadInvoicePdf();
 
 // Loading states
 const isDeleting = computed(() => deleteInvoiceMutation.isPending.value);
 const isMarkingPaid = computed(() => markAsPaidMutation.isPending.value);
 const isEmailing = computed(() => emailInvoiceMutation.isPending.value);
+const isDownloadingPdf = computed(() => downloadPdfMutation.isPending.value);
 const showDeleteModal = ref(false);
 
 // Success/Error messages
@@ -767,6 +853,7 @@ const successMessage = ref('');
 const errorMessage = ref('');
 const showSuccessMessage = ref(false);
 const showErrorMessage = ref(false);
+const pdfLoadError = ref(false);
 
 // Computed properties
 const hasNotes = computed(() => {
@@ -774,6 +861,15 @@ const hasNotes = computed(() => {
   return invoice.value.notes.some(
     (note: any) => note.content && note.content.trim() !== ''
   );
+});
+
+const pdfViewerUrl = computed(() => {
+  if (!latestPdf.value?.file_path) return '';
+  // Use direct storage path to the PDF file from Laravel backend
+  const baseUrl =
+    (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api';
+  const backendUrl = baseUrl.replace('/api', '');
+  return `${backendUrl}/storage/${latestPdf.value.file_path}`;
 });
 
 // Methods
@@ -790,6 +886,14 @@ const formatCurrency = (amount: number | string) => {
   if (amount === null || amount === undefined) return '0.00';
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   return numAmount.toFixed(2);
+};
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 const getStatusText = (status: string) => {
@@ -945,6 +1049,36 @@ const cancelDelete = () => {
 
 const goBack = () => {
   router.push('/invoices');
+};
+
+// PDF Actions
+const downloadLatestPdf = async () => {
+  if (!invoice.value) return;
+
+  try {
+    await downloadPdfMutation.mutateAsync(invoice.value.id);
+    showSuccess('PDF downloaded successfully!');
+  } catch (error: any) {
+    console.error('Error downloading PDF:', error);
+    showError(error.message || 'Failed to download PDF');
+  }
+};
+
+const openPdfInNewTab = () => {
+  if (!latestPdf.value) return;
+
+  // Open PDF in new tab
+  const pdfUrl = `/api/invoices/${invoice.value?.id}/pdf/download`;
+  window.open(pdfUrl, '_blank');
+};
+
+// PDF iframe event handlers
+const onPdfLoad = () => {
+  pdfLoadError.value = false;
+};
+
+const onPdfError = () => {
+  pdfLoadError.value = true;
 };
 
 // Helper functions for showing messages

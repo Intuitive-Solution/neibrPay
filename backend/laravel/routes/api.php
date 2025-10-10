@@ -95,7 +95,8 @@ Route::middleware('firebase.auth')->group(function () {
     
     // Invoice PDF management routes
     Route::post('invoices/{invoice}/pdf/generate', [InvoicePdfController::class, 'generate']);
-    Route::get('invoices/{invoice}/pdf', [InvoicePdfController::class, 'latest']);
+    Route::get('invoices/{invoice}/pdf', [InvoicePdfController::class, 'view']);
+    Route::get('invoices/{invoice}/pdf/info', [InvoicePdfController::class, 'latest']);
     Route::get('invoices/{invoice}/pdf/download', [InvoicePdfController::class, 'download']);
     Route::get('invoices/{invoice}/pdf/versions', [InvoicePdfController::class, 'versions']);
     Route::get('invoices/{invoice}/pdf/versions/{version}/download', [InvoicePdfController::class, 'downloadVersion']);

@@ -86,6 +86,37 @@ class InvoicePdfController extends Controller
     }
 
     /**
+     * View the latest PDF for an invoice (for iframe display).
+     */
+    public function view(Request $request, InvoiceUnit $invoice): Response
+    {
+        $user = $request->get('firebase_user');
+        
+        // Verify the invoice belongs to the user's tenant
+        if ($invoice->tenant_id !== $user->tenant_id) {
+            return response('Invoice not found', 404);
+        }
+
+        $latestPdf = $this->pdfService->getLatestPdf($invoice);
+
+        if (!$latestPdf) {
+            return response('No PDF found for this invoice', 404);
+        }
+
+        $content = $this->pdfService->getPdfContent($latestPdf);
+
+        if (!$content) {
+            return response('PDF file not found', 404);
+        }
+
+        return response($content)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $latestPdf->file_name . '"')
+            ->header('Content-Length', strlen($content))
+            ->header('Cache-Control', 'public, max-age=3600');
+    }
+
+    /**
      * Download the latest PDF for an invoice.
      */
     public function download(Request $request, InvoiceUnit $invoice): Response
