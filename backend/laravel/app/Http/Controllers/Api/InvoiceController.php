@@ -356,6 +356,7 @@ class InvoiceController extends Controller
         $invoiceUnit->update([
             'status' => 'paid',
             'paid_to_date' => $invoiceUnit->total,
+            'balance_due' => 0, // Set balance_due to 0 when fully paid
         ]);
 
         // Create a payment record
