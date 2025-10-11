@@ -406,7 +406,8 @@
                 route.name === 'EditResident' ||
                 route.name === 'AddUnit' ||
                 route.name === 'EditUnit' ||
-                route.name === 'AddInvoice'
+                route.name === 'AddInvoice' ||
+                route.name === 'InvoiceDetail'
               "
               @click="goBack"
               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -501,6 +502,8 @@ const pageTitle = computed(() => {
       return 'Invoices';
     case 'AddInvoice':
       return 'Create Invoice';
+    case 'InvoiceDetail':
+      return 'View Invoice';
     case 'People':
       return 'People';
     case 'AddResident':
@@ -532,6 +535,8 @@ const pageDescription = computed(() => {
       return 'Manage community invoices and billing';
     case 'AddInvoice':
       return 'Create a new invoice for your community';
+    case 'InvoiceDetail':
+      return 'View and manage invoice details';
     case 'People':
       return 'Manage residents and community members';
     case 'AddResident':
@@ -572,7 +577,7 @@ const goBack = () => {
     router.push('/people');
   } else if (route.name === 'AddUnit' || route.name === 'EditUnit') {
     router.push('/units');
-  } else if (route.name === 'AddInvoice') {
+  } else if (route.name === 'AddInvoice' || route.name === 'InvoiceDetail') {
     router.push('/invoices');
   }
 };
