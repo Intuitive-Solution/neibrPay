@@ -814,10 +814,7 @@ import {
   useCloneInvoice,
   useEmailInvoice,
 } from '../composables/useInvoices';
-import {
-  useLatestInvoicePdf,
-  useDownloadInvoicePdf,
-} from '../composables/useInvoicePdf';
+import { useLatestInvoicePdf } from '../composables/useInvoicePdf';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 
 const route = useRoute();
@@ -839,13 +836,11 @@ const deleteInvoiceMutation = useDeleteInvoice();
 const markAsPaidMutation = useMarkInvoiceAsPaid();
 const cloneInvoiceMutation = useCloneInvoice();
 const emailInvoiceMutation = useEmailInvoice();
-const downloadPdfMutation = useDownloadInvoicePdf();
 
 // Loading states
 const isDeleting = computed(() => deleteInvoiceMutation.isPending.value);
 const isMarkingPaid = computed(() => markAsPaidMutation.isPending.value);
 const isEmailing = computed(() => emailInvoiceMutation.isPending.value);
-const isDownloadingPdf = computed(() => downloadPdfMutation.isPending.value);
 const showDeleteModal = ref(false);
 
 // Success/Error messages
@@ -886,14 +881,6 @@ const formatCurrency = (amount: number | string) => {
   if (amount === null || amount === undefined) return '0.00';
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   return numAmount.toFixed(2);
-};
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 const getStatusText = (status: string) => {
@@ -1049,27 +1036,6 @@ const cancelDelete = () => {
 
 const goBack = () => {
   router.push('/invoices');
-};
-
-// PDF Actions
-const downloadLatestPdf = async () => {
-  if (!invoice.value) return;
-
-  try {
-    await downloadPdfMutation.mutateAsync(invoice.value.id);
-    showSuccess('PDF downloaded successfully!');
-  } catch (error: any) {
-    console.error('Error downloading PDF:', error);
-    showError(error.message || 'Failed to download PDF');
-  }
-};
-
-const openPdfInNewTab = () => {
-  if (!latestPdf.value) return;
-
-  // Open PDF in new tab
-  const pdfUrl = `/api/invoices/${invoice.value?.id}/pdf/download`;
-  window.open(pdfUrl, '_blank');
 };
 
 // PDF iframe event handlers

@@ -1461,6 +1461,7 @@ const form = ref({
   remaining_cycles: 'endless',
   due_date: 'use_payment_terms',
   invoice_number: '',
+  po_number: '',
   paid_to_date: 0,
   discount_amount: '',
   discount_type: 'amount',
@@ -2782,7 +2783,6 @@ const handleSubmit = async () => {
         terms: tabContent.value.terms,
         footer: tabContent.value.footer,
       },
-      paid_to_date: form.value.paid_to_date || undefined,
     };
 
     // Create the invoice

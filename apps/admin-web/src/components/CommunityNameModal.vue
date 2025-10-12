@@ -176,14 +176,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  reactive,
-  watch,
-  ref,
-  withDefaults,
-  defineProps,
-  defineEmits,
-} from 'vue';
+import { reactive, watch, ref } from 'vue';
 
 interface Props {
   isOpen: boolean;
