@@ -97,6 +97,18 @@
 
           <!-- Header Controls -->
           <div class="flex items-center space-x-4">
+            <!-- Show Paid Checkbox -->
+            <div class="flex items-center">
+              <input
+                id="show-paid"
+                v-model="includePaid"
+                type="checkbox"
+                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              />
+              <label for="show-paid" class="ml-2 text-sm text-gray-600">
+                Show paid
+              </label>
+            </div>
             <!-- Show Deleted Checkbox -->
             <div class="flex items-center">
               <input
@@ -214,13 +226,21 @@
               />
             </svg>
             <h3 class="mt-2 text-sm font-medium text-gray-900">
-              No invoices found
+              {{
+                includeDeleted
+                  ? 'No deleted invoices found'
+                  : includePaid
+                    ? 'No invoices found'
+                    : 'No unpaid invoices found'
+              }}
             </h3>
             <p class="mt-1 text-sm text-gray-500">
               {{
                 includeDeleted
                   ? 'No deleted invoices found.'
-                  : 'Get started by creating your first invoice.'
+                  : includePaid
+                    ? 'No invoices found.'
+                    : 'No unpaid invoices found. Toggle "Show paid" to see all invoices.'
               }}
             </p>
             <div v-if="!includeDeleted" class="mt-4">
@@ -447,6 +467,7 @@ const router = useRouter();
 
 // Local state
 const includeDeleted = ref(false);
+const includePaid = ref(false);
 const deletingInvoiceId = ref<number | null>(null);
 const restoringInvoiceId = ref<number | null>(null);
 const showDeleteModal = ref(false);
@@ -460,14 +481,28 @@ const {
   isLoading,
   error,
   refetch: refetchInvoices,
-} = useInvoices({ include_deleted: includeDeleted });
+} = useInvoices({ include_deleted: true }); // Always fetch all invoices including deleted ones
 
 const deleteInvoiceMutation = useDeleteInvoice();
 const restoreInvoiceMutation = useRestoreInvoice();
 
-// Computed properties - invoices are already filtered by the API based on include_deleted
+// Computed properties - filter invoices based on includePaid and includeDeleted
 const filteredInvoices = computed(() => {
-  return invoices.value || [];
+  if (!invoices.value) return [];
+
+  return invoices.value.filter((invoice: any) => {
+    // Filter out paid invoices unless includePaid is true
+    if (invoice.status === 'paid' && !includePaid.value) {
+      return false;
+    }
+
+    // Filter out deleted invoices unless includeDeleted is true
+    if (invoice.deleted_at && !includeDeleted.value) {
+      return false;
+    }
+
+    return true;
+  });
 });
 
 // Methods
