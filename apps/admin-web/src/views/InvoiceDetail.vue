@@ -614,6 +614,7 @@
             <!-- Embedded PDF Viewer -->
             <div class="border border-gray-200 rounded-lg overflow-hidden">
               <iframe
+                :key="pdfRefreshKey"
                 :src="pdfViewerUrl"
                 class="w-full h-96"
                 frameborder="0"
@@ -849,6 +850,7 @@ const errorMessage = ref('');
 const showSuccessMessage = ref(false);
 const showErrorMessage = ref(false);
 const pdfLoadError = ref(false);
+const pdfRefreshKey = ref(0);
 
 // Computed properties
 const hasNotes = computed(() => {
@@ -864,7 +866,8 @@ const pdfViewerUrl = computed(() => {
   const baseUrl =
     (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api';
   const backendUrl = baseUrl.replace('/api', '');
-  return `${backendUrl}/storage/${latestPdf.value.file_path}`;
+  // Add refresh key to force iframe reload when PDF is updated
+  return `${backendUrl}/storage/${latestPdf.value.file_path}?t=${pdfRefreshKey.value}`;
 });
 
 // Methods
@@ -1004,6 +1007,10 @@ const markAsPaid = async () => {
 
   try {
     await markAsPaidMutation.mutateAsync(invoice.value.id);
+
+    // Force refresh of PDF viewer by updating the refresh key
+    pdfRefreshKey.value = Date.now();
+
     showSuccess('Invoice marked as paid successfully!');
   } catch (error: any) {
     console.error('Error marking as paid:', error);
