@@ -734,17 +734,6 @@ const formatFrequency = (frequency: string) => {
   return frequencyMap[frequency] || frequency;
 };
 
-const formatPaymentMethod = (method: string) => {
-  const methodMap: Record<string, string> = {
-    cash: 'Cash',
-    check: 'Check',
-    credit_card: 'Credit Card',
-    bank_transfer: 'Bank Transfer',
-    other: 'Other',
-  };
-  return methodMap[method] || method;
-};
-
 const getDueDate = () => {
   if (!invoice.value) return 'N/A';
 
