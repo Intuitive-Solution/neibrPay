@@ -534,6 +534,243 @@
           </div>
         </div>
       </div>
+
+      <!-- Documents and Activity Tabs Section -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
+          </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+            <button
+              @click="activeTab = 'documents'"
+              :class="[
+                activeTab === 'documents'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+              ]"
+            >
+              Documents
+            </button>
+            <button
+              @click="activeTab = 'activity'"
+              :class="[
+                activeTab === 'activity'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+              ]"
+            >
+              Activity
+            </button>
+          </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="p-6">
+          <!-- Documents Tab -->
+          <div v-if="activeTab === 'documents'">
+            <div v-if="isLoadingAttachments" class="text-center py-8">
+              <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
+              ></div>
+              <p class="mt-2 text-sm text-gray-600">Loading documents...</p>
+            </div>
+
+            <div
+              v-else-if="attachmentsError"
+              class="text-center py-8 text-red-500"
+            >
+              <svg
+                class="mx-auto h-12 w-12 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">
+                Error Loading Documents
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                Failed to load invoice documents
+              </p>
+            </div>
+
+            <div
+              v-else-if="!attachments || attachments.length === 0"
+              class="text-center py-8 text-gray-500"
+            >
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">
+                No Documents
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                No documents have been uploaded for this invoice yet.
+              </p>
+            </div>
+
+            <div v-else class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Name
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Type
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Size
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Upload Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Uploaded By
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr
+                    v-for="attachment in attachments"
+                    :key="attachment.id"
+                    class="hover:bg-gray-50"
+                  >
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <span class="text-lg mr-3">{{
+                          getFileIcon(attachment.attachment_type)
+                        }}</span>
+                        <div class="text-sm font-medium text-gray-900">
+                          {{ attachment.file_name }}
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900 capitalize">
+                        {{ attachment.attachment_type }}
+                      </div>
+                      <div class="text-sm text-gray-500">
+                        {{ attachment.mime_type }}
+                      </div>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ formatFileSize(attachment.file_size) }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ formatDate(attachment.created_at) }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{
+                        attachment.uploader?.name ||
+                        attachment.uploader?.email ||
+                        'Unknown'
+                      }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        @click="handleDownload(attachment)"
+                        :disabled="downloadAttachmentMutation.isPending.value"
+                        class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                      >
+                        <svg
+                          class="w-4 h-4 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        {{
+                          downloadAttachmentMutation.isPending.value
+                            ? 'Downloading...'
+                            : 'Download'
+                        }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Activity Tab -->
+          <div
+            v-if="activeTab === 'activity'"
+            class="text-center py-12 text-gray-500"
+          >
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">
+              Activity Tracking Coming Soon
+            </h3>
+            <p class="mt-1 text-sm text-gray-500">
+              Invoice activity and history will be displayed here.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Invoice PDF Section -->
       <div class="bg-white rounded-lg shadow">
         <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
@@ -637,6 +874,10 @@ import {
   useEmailInvoice,
 } from '../composables/useInvoices';
 import { useLatestInvoicePdf } from '../composables/useInvoicePdf';
+import {
+  useInvoiceAttachments,
+  useDownloadInvoiceAttachment,
+} from '../composables/useInvoiceAttachments';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 
 const route = useRoute();
@@ -653,11 +894,19 @@ const { data: latestPdf, isLoading: isLoadingPdf } = useLatestInvoicePdf(
   invoiceId.value
 );
 
+// Fetch invoice attachments
+const {
+  data: attachments,
+  isLoading: isLoadingAttachments,
+  error: attachmentsError,
+} = useInvoiceAttachments(invoiceId.value);
+
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
 const markAsPaidMutation = useMarkInvoiceAsPaid();
 const cloneInvoiceMutation = useCloneInvoice();
 const emailInvoiceMutation = useEmailInvoice();
+const downloadAttachmentMutation = useDownloadInvoiceAttachment();
 
 // Loading states
 const isDeleting = computed(() => deleteInvoiceMutation.isPending.value);
@@ -672,6 +921,9 @@ const showSuccessMessage = ref(false);
 const showErrorMessage = ref(false);
 const pdfLoadError = ref(false);
 const pdfRefreshKey = ref(0);
+
+// Tab state
+const activeTab = ref('documents');
 
 const pdfViewerUrl = computed(() => {
   if (!latestPdf.value?.file_path) return '';
@@ -865,5 +1117,37 @@ const showError = (message: string) => {
   setTimeout(() => {
     showErrorMessage.value = false;
   }, 5000);
+};
+
+// Helper functions for file handling
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const getFileIcon = (attachmentType: string): string => {
+  const iconMap: Record<string, string> = {
+    pdf: '📄',
+    image: '🖼️',
+    document: '📝',
+    other: '📎',
+  };
+  return iconMap[attachmentType] || '📎';
+};
+
+const handleDownload = async (attachment: any) => {
+  try {
+    await downloadAttachmentMutation.mutateAsync({
+      invoiceId: invoiceId.value,
+      attachmentId: attachment.id,
+      fileName: attachment.file_name,
+    });
+  } catch (error: any) {
+    console.error('Error downloading attachment:', error);
+    showError(error.message || 'Failed to download file');
+  }
 };
 </script>
