@@ -127,6 +127,25 @@ class InvoiceController extends Controller
             
             DB::commit();
             
+            // Generate PDF for each created invoice
+            foreach ($createdInvoices as $invoice) {
+                try {
+                    // Load the invoice with necessary relationships for PDF generation
+                    $invoice->load(['unit', 'notes']);
+                    
+                    // Generate HTML for the invoice
+                    $html = $this->generateInvoiceHtml($invoice);
+                    
+                    // Generate and store PDF
+                    $this->pdfService->generatePdf($invoice, $html, $user->id);
+                    
+                    \Log::info("PDF generated successfully for new invoice {$invoice->id}");
+                } catch (\Exception $e) {
+                    // Log error but don't fail the invoice creation
+                    \Log::error("Failed to generate PDF for new invoice {$invoice->id}: " . $e->getMessage());
+                }
+            }
+            
             return response()->json([
                 'data' => $createdInvoices,
                 'message' => 'Invoice(s) created successfully',
@@ -417,6 +436,243 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Generate HTML for standard invoice (without payment details).
+     */
+    private function generateInvoiceHtml(InvoiceUnit $invoiceUnit): string
+    {
+        $unit = $invoiceUnit->unit;
+        $unitTitle = $unit ? $unit->title : "Unit {$invoiceUnit->unit_id}";
+        $unitAddress = $unit ? "{$unit->address}, {$unit->city}" : '';
+        $unitResident = $unit ? $unit->resident_name : '';
+
+        $formatDate = function ($dateString) {
+            if (!$dateString || $dateString === 'use_payment_terms' || strpos($dateString, 'use_') === 0) {
+                return '';
+            }
+            
+            try {
+                // Handle different date formats
+                if (is_object($dateString) && method_exists($dateString, 'format')) {
+                    return $dateString->format('F j, Y');
+                }
+                
+                return \Carbon\Carbon::parse($dateString)->format('F j, Y');
+            } catch (\Exception $e) {
+                // Log the error for debugging
+                \Log::warning('Failed to parse date in PDF generation', [
+                    'date_string' => $dateString,
+                    'date_type' => gettype($dateString),
+                    'error' => $e->getMessage(),
+                ]);
+                return '';
+            }
+        };
+
+        $publicNotes = $invoiceUnit->notes->where('type', 'public_notes')->first()?->content ?? '';
+        $terms = $invoiceUnit->notes->where('type', 'terms')->first()?->content ?? '';
+        $footer = $invoiceUnit->notes->where('type', 'footer')->first()?->content ?? '';
+
+        $itemsHtml = '';
+        foreach ($invoiceUnit->items as $item) {
+            $itemsHtml .= "
+            <tr>
+                <td class=\"item-name\">{$item['name']}</td>
+                <td class=\"item-description\">" . ($item['description'] ?? '') . "</td>
+                <td class=\"item-cost\">$" . number_format((float)$item['unit_cost'], 2) . "</td>
+                <td class=\"item-quantity\">{$item['quantity']}</td>
+                <td class=\"item-total\">$" . number_format((float)$item['line_total'], 2) . "</td>
+            </tr>";
+        }
+
+        $discountHtml = '';
+        if ($invoiceUnit->discount_amount && $invoiceUnit->discount_amount > 0) {
+            $discountValue = $invoiceUnit->discount_type === 'percentage' 
+                ? ($invoiceUnit->subtotal * $invoiceUnit->discount_amount) / 100 
+                : $invoiceUnit->discount_amount;
+            $discountHtml = "
+            <div class=\"total-row clearfix\">
+                <span class=\"total-label\">Discount (" . ($invoiceUnit->discount_type === 'percentage' ? $invoiceUnit->discount_amount . '%' : 'Amount') . "):</span>
+                <span class=\"total-value\">-$" . number_format((float)$discountValue, 2) . "</span>
+            </div>";
+        }
+
+        $taxHtml = '';
+        if ($invoiceUnit->tax_rate > 0) {
+            $taxHtml = "
+            <div class=\"total-row clearfix\">
+                <span class=\"total-label\">Tax ({$invoiceUnit->tax_rate}%):</span>
+                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->tax_amount, 2) . "</span>
+            </div>";
+        }
+
+        $paidToDateHtml = '';
+        if ($invoiceUnit->paid_to_date > 0) {
+            $paidToDateHtml = "
+            <div class=\"total-row clearfix\">
+                <span class=\"total-label\">Paid to Date:</span>
+                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->paid_to_date, 2) . "</span>
+            </div>";
+        }
+
+        $balanceDueHtml = '';
+        if ($invoiceUnit->balance_due > 0) {
+            $balanceDueHtml = "
+            <div class=\"total-row balance-due clearfix\">
+                <span class=\"total-label\">Balance Due:</span>
+                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->balance_due, 2) . "</span>
+            </div>";
+        }
+
+        $notesHtml = $publicNotes ? "
+        <div class=\"notes-section\">
+            <h3 class=\"section-title\">Notes:</h3>
+            <div class=\"notes-content\">{$publicNotes}</div>
+        </div>" : '';
+
+        $termsHtml = $terms ? "
+        <div class=\"terms-section\">
+            <h3 class=\"section-title\">Terms & Conditions:</h3>
+            <div class=\"terms-content\">{$terms}</div>
+        </div>" : '';
+
+        $footerHtml = $footer ? "
+        <div class=\"footer-section\">
+            <div class=\"footer-content\">{$footer}</div>
+        </div>" : '';
+
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset=\"utf-8\">
+            <title>Invoice {$invoiceUnit->invoice_number}</title>
+            <style>
+                * { box-sizing: border-box; }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+                .invoice-template { width: 180mm; max-width: 180mm; min-height: 297mm; padding: 10mm 8mm 10mm 10mm; font-family: Arial, sans-serif; background: white; color: #333; line-height: 1.3; overflow: hidden; }
+                .invoice-header { width: 100%; margin-bottom: 25px; border-bottom: 3px solid #2563eb; padding-bottom: 15px; overflow: hidden; position: relative; }
+                .company-info { float: left; width: 55%; }
+                .company-name { font-size: 18px; font-weight: bold; color: #2563eb; margin: 0 0 4px 0; }
+                .company-details p { margin: 1px 0; font-size: 9px; color: #666; }
+                .invoice-meta { float: right; width: 40%; text-align: right; padding-right: 5mm; }
+                .invoice-title { font-size: 18px; font-weight: bold; color: #1f2937; margin: 0 0 6px 0; }
+                .invoice-details p { margin: 1px 0; font-size: 9px; }
+                .bill-to-section { margin-bottom: 25px; }
+                .section-title { font-size: 12px; font-weight: bold; color: #1f2937; margin: 0 0 6px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; }
+                .unit-header h4 { font-size: 12px; font-weight: bold; margin: 0 0 3px 0; color: #1f2937; }
+                .unit-details p { margin: 1px 0; font-size: 10px; color: #666; }
+                .items-section { margin-bottom: 25px; }
+                .items-table { width: 100%; border-collapse: collapse; margin: 0; table-layout: fixed; }
+                .items-table th { background-color: #f8fafc; color: #1f2937; font-weight: bold; padding: 6px 4px; text-align: left; border: 1px solid #e5e7eb; font-size: 10px; }
+                .items-table td { padding: 6px 4px; border: 1px solid #e5e7eb; font-size: 10px; vertical-align: top; word-wrap: break-word; }
+                .item-name { width: 18%; font-weight: 500; }
+                .item-description { width: 32%; }
+                .item-cost { width: 15%; text-align: right; }
+                .item-quantity { width: 10%; text-align: right; }
+                .item-total { width: 15%; text-align: right; font-weight: 500; }
+                .totals-section { margin-bottom: 25px; }
+                .totals-container { max-width: 220px; margin-left: auto; margin-right: 5mm; }
+                .total-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+                .total-label { font-size: 10px; color: #6b7280; }
+                .total-value { font-size: 10px; font-weight: 500; color: #1f2937; }
+                .final-total { border-top: 2px solid #1f2937; border-bottom: 2px solid #1f2937; font-weight: bold; font-size: 12px; margin-top: 6px; padding: 8px 0; }
+                .final-total .total-label, .final-total .total-value { font-size: 12px; font-weight: bold; }
+                .balance-due { background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 3px; padding: 8px 12px; margin-top: 8px; }
+                .balance-due .total-label, .balance-due .total-value { color: #dc2626; font-weight: bold; }
+                .payment-section { margin-top: 20px; padding-top: 12px; border-top: 1px solid #e5e7eb; }
+                .payment-details p { margin: 3px 0; font-size: 9px; color: #4b5563; }
+                .notes-section, .terms-section { margin-bottom: 15px; }
+                .notes-content, .terms-content { font-size: 10px; line-height: 1.4; color: #4b5563; margin-top: 6px; }
+                .footer-section { margin-bottom: 15px; padding-top: 12px; border-top: 1px solid #e5e7eb; }
+                .footer-content { font-size: 9px; color: #6b7280; text-align: center; }
+                .clearfix::after { content: \"\"; display: table; clear: both; }
+            </style>
+        </head>
+        <body>
+            <div class=\"invoice-template\">
+                <div class=\"invoice-header clearfix\">
+                    <div class=\"company-info\">
+                        <h1 class=\"company-name\">NeibrPay HOA</h1>
+                        <div class=\"company-details\">
+                            <p>123 HOA Management Street</p>
+                            <p>Property City, PC 12345</p>
+                            <p>Phone: (555) 123-4567</p>
+                            <p>Email: info@neibrpay.com</p>
+                        </div>
+                    </div>
+                    <div class=\"invoice-meta\">
+                        <h2 class=\"invoice-title\">INVOICE</h2>
+                        <div class=\"invoice-details\">
+                            <p><strong>Invoice #:</strong> {$invoiceUnit->invoice_number}</p>
+                            <p><strong>Date:</strong> {$formatDate($invoiceUnit->start_date)}</p>
+                            <p><strong>Due Date:</strong> {$formatDate($invoiceUnit->due_date)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class=\"bill-to-section\">
+                    <h3 class=\"section-title\">Bill To:</h3>
+                    <div class=\"unit-header\">
+                        <h4>{$unitTitle}</h4>
+                    </div>
+                    <div class=\"unit-details\">
+                        <p>{$unitAddress}</p>
+                        <p>{$unitResident}</p>
+                    </div>
+                </div>
+
+                <div class=\"items-section\">
+                    <table class=\"items-table\">
+                        <thead>
+                            <tr>
+                                <th class=\"item-name\">Item</th>
+                                <th class=\"item-description\">Description</th>
+                                <th class=\"item-cost\">Unit Cost</th>
+                                <th class=\"item-quantity\">Qty</th>
+                                <th class=\"item-total\">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {$itemsHtml}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class=\"totals-section\">
+                    <div class=\"totals-container\">
+                        <div class=\"total-row\">
+                            <span class=\"total-label\">Subtotal:</span>
+                            <span class=\"total-value\">$" . number_format((float)$invoiceUnit->subtotal, 2) . "</span>
+                        </div>
+                        {$discountHtml}
+                        {$taxHtml}
+                        <div class=\"total-row final-total\">
+                            <span class=\"total-label\">Total:</span>
+                            <span class=\"total-value\">$" . number_format((float)$invoiceUnit->total, 2) . "</span>
+                        </div>
+                        {$paidToDateHtml}
+                        {$balanceDueHtml}
+                    </div>
+                </div>
+
+                {$notesHtml}
+                {$termsHtml}
+                {$footerHtml}
+
+                <div class=\"payment-section\">
+                    <h3 class=\"section-title\">Payment Information</h3>
+                    <div class=\"payment-details\">
+                        <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p>
+                        <p><strong>Make checks payable to:</strong> NeibrPay HOA</p>
+                        <p><strong>For questions about this invoice, contact:</strong> (555) 123-4567</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>";
+    }
+
+    /**
      * Generate HTML for invoice with payment details.
      */
     private function generateInvoiceHtmlWithPayment(InvoiceUnit $invoiceUnit, $payment): string
@@ -470,9 +726,9 @@ class InvoiceController extends Controller
             <tr>
                 <td class=\"item-name\">{$item['name']}</td>
                 <td class=\"item-description\">" . ($item['description'] ?? '') . "</td>
-                <td class=\"item-cost\">$" . number_format($item['unit_cost'], 2) . "</td>
+                <td class=\"item-cost\">$" . number_format((float)$item['unit_cost'], 2) . "</td>
                 <td class=\"item-quantity\">{$item['quantity']}</td>
-                <td class=\"item-total\">$" . number_format($item['line_total'], 2) . "</td>
+                <td class=\"item-total\">$" . number_format((float)$item['line_total'], 2) . "</td>
             </tr>";
         }
 
@@ -484,7 +740,7 @@ class InvoiceController extends Controller
             $discountHtml = "
             <div class=\"total-row clearfix\">
                 <span class=\"total-label\">Discount (" . ($invoiceUnit->discount_type === 'percentage' ? $invoiceUnit->discount_amount . '%' : 'Amount') . "):</span>
-                <span class=\"total-value\">-$" . number_format($discountValue, 2) . "</span>
+                <span class=\"total-value\">-$" . number_format((float)$discountValue, 2) . "</span>
             </div>";
         }
 
@@ -493,7 +749,7 @@ class InvoiceController extends Controller
             $taxHtml = "
             <div class=\"total-row clearfix\">
                 <span class=\"total-label\">Tax ({$invoiceUnit->tax_rate}%):</span>
-                <span class=\"total-value\">$" . number_format($invoiceUnit->tax_amount, 2) . "</span>
+                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->tax_amount, 2) . "</span>
             </div>";
         }
 
@@ -502,7 +758,7 @@ class InvoiceController extends Controller
             $paidToDateHtml = "
             <div class=\"total-row clearfix\">
                 <span class=\"total-label\">Paid to Date:</span>
-                <span class=\"total-value\">$" . number_format($invoiceUnit->paid_to_date, 2) . "</span>
+                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->paid_to_date, 2) . "</span>
             </div>";
         }
 
@@ -511,7 +767,7 @@ class InvoiceController extends Controller
             $balanceDueHtml = "
             <div class=\"total-row balance-due clearfix\">
                 <span class=\"total-label\">Balance Due:</span>
-                <span class=\"total-value\">$" . number_format($invoiceUnit->balance_due, 2) . "</span>
+                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->balance_due, 2) . "</span>
             </div>";
         }
 
@@ -674,13 +930,13 @@ class InvoiceController extends Controller
                     <div class=\"totals-container\">
                         <div class=\"total-row\">
                             <span class=\"total-label\">Subtotal:</span>
-                            <span class=\"total-value\">$" . number_format($invoiceUnit->subtotal, 2) . "</span>
+                            <span class=\"total-value\">$" . number_format((float)$invoiceUnit->subtotal, 2) . "</span>
                         </div>
                         {$discountHtml}
                         {$taxHtml}
                         <div class=\"total-row final-total\">
                             <span class=\"total-label\">Total:</span>
-                            <span class=\"total-value\">$" . number_format($invoiceUnit->total, 2) . "</span>
+                            <span class=\"total-value\">$" . number_format((float)$invoiceUnit->total, 2) . "</span>
                         </div>
                         {$paidToDateHtml}
                         {$balanceDueHtml}

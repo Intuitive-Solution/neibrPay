@@ -1344,75 +1344,12 @@
         </div>
       </div>
 
-      <div class="flex space-x-2">
-        <button
-          @click="generatePDFPreview"
-          :disabled="isGeneratingPDF"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
-        >
-          <svg
-            class="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            />
-          </svg>
-          {{ isGeneratingPDF ? 'Generating...' : 'Preview PDF' }}
-        </button>
-
-        <button
-          @click="downloadPDF"
-          :disabled="isGeneratingPDF"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
-        >
-          <svg
-            class="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          Download PDF
-        </button>
-
-        <button
-          @click="printPDF"
-          :disabled="isGeneratingPDF"
-          class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-200"
-        >
-          <svg
-            class="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-            />
-          </svg>
-          Print PDF
-        </button>
+      <div class="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+        <p class="font-medium text-blue-800">PDF Generation</p>
+        <p>
+          PDFs are automatically generated on the server when invoices are
+          created. You can view and download them from the invoice detail page.
+        </p>
       </div>
     </div>
 
@@ -1444,11 +1381,8 @@ import {
   useDeleteInvoiceAttachment,
   useDownloadInvoiceAttachment,
 } from '../composables/useInvoiceAttachments';
-import { useGenerateInvoicePdf } from '../composables/useInvoicePdf';
 import type { UnitWithResident, CreateInvoiceRequest } from '@neibrpay/models';
 import InvoiceTemplate from '../components/InvoiceTemplate.vue';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 
 // Router
 const router = useRouter();
@@ -1484,11 +1418,8 @@ const errors = ref({
 });
 
 // Loading state
-const isSubmitting = computed(
-  () =>
-    createInvoiceMutation.isPending.value || generatePdfMutation.isPending.value
-);
-const isGeneratingPDF = ref(false);
+const isSubmitting = computed(() => createInvoiceMutation.isPending.value);
+// PDF generation is now handled automatically on the server
 
 // PDF Preview state
 const selectedPreviewUnitId = ref<number | null>(null);
@@ -1504,7 +1435,7 @@ const {
 const createInvoiceMutation = useCreateInvoice();
 
 // Generate PDF mutation
-const generatePdfMutation = useGenerateInvoicePdf();
+// PDF generation is now handled automatically on the server
 
 // Dropdown state
 const isDropdownOpen = ref(false);
@@ -1686,165 +1617,8 @@ watch(
   { immediate: true }
 );
 
-// PDF Generation Methods
-const generatePDFPreview = async () => {
-  try {
-    isGeneratingPDF.value = true;
-
-    const element = document.getElementById('invoice-preview');
-    if (!element) {
-      console.error('Invoice preview element not found');
-      return;
-    }
-
-    const canvas = await html2canvas(element, {
-      scale: 2, // Higher quality
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 295; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    // Open PDF in new tab
-    const pdfBlob = pdf.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    window.open(pdfUrl, '_blank');
-
-    // Clean up
-    setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
-  } catch (error) {
-    console.error('Error generating PDF preview:', error);
-    alert('Error generating PDF preview. Please try again.');
-  } finally {
-    isGeneratingPDF.value = false;
-  }
-};
-
-const downloadPDF = async () => {
-  try {
-    isGeneratingPDF.value = true;
-
-    const element = document.getElementById('invoice-preview');
-    if (!element) {
-      console.error('Invoice preview element not found');
-      return;
-    }
-
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-
-    const imgWidth = 210;
-    const pageHeight = 295;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    // Download the PDF
-    const fileName = `invoice-${form.value.invoice_number || 'preview'}-${new Date().toISOString().split('T')[0]}.pdf`;
-    pdf.save(fileName);
-  } catch (error) {
-    console.error('Error downloading PDF:', error);
-    alert('Error downloading PDF. Please try again.');
-  } finally {
-    isGeneratingPDF.value = false;
-  }
-};
-
-const printPDF = async () => {
-  try {
-    isGeneratingPDF.value = true;
-
-    const element = document.getElementById('invoice-preview');
-    if (!element) {
-      console.error('Invoice preview element not found');
-      return;
-    }
-
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-
-    const imgWidth = 210;
-    const pageHeight = 295;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    // Create blob and open in new window for printing
-    const pdfBlob = pdf.output('blob');
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-
-    // Open PDF in new window and trigger print dialog
-    const printWindow = window.open(pdfUrl, '_blank');
-    if (printWindow) {
-      printWindow.onload = () => {
-        printWindow.print();
-      };
-
-      // Clean up after printing
-      setTimeout(() => {
-        URL.revokeObjectURL(pdfUrl);
-        printWindow.close();
-      }, 1000);
-    }
-  } catch (error) {
-    console.error('Error printing PDF:', error);
-    alert('Error printing PDF. Please try again.');
-  } finally {
-    isGeneratingPDF.value = false;
-  }
-};
+// PDF generation is now handled automatically on the server
+// Client-side PDF generation methods have been removed
 
 // Methods
 const getUnitTitle = (unitId: number) => {
@@ -2877,28 +2651,11 @@ const handleSubmit = async () => {
     }
 
     // Generate PDFs for each created invoice
-    if (response.length > 0) {
-      for (const invoice of response) {
-        try {
-          // Generate HTML for the invoice
-          const html = generateInvoiceHtml(invoice);
-
-          // Generate PDF on the server
-          await generatePdfMutation.mutateAsync({
-            invoiceId: invoice.id,
-            html: html,
-          });
-
-          console.log(`PDF generated successfully for invoice ${invoice.id}`);
-        } catch (error) {
-          console.error(
-            `Error generating PDF for invoice ${invoice.id}:`,
-            error
-          );
-          // Continue with other invoices even if PDF generation fails
-        }
-      }
-    }
+    // PDFs are now automatically generated on the server during invoice creation
+    console.log(
+      'Invoice(s) created successfully with PDFs generated automatically:',
+      response
+    );
 
     // Show success message and redirect
     console.log('Invoice created successfully:', response);
