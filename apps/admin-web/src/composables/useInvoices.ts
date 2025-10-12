@@ -5,6 +5,7 @@ import type {
   CreateInvoiceRequest,
   UpdateInvoiceRequest,
 } from '@neibrpay/models';
+import { invoicePdfKeys } from './useInvoicePdf';
 
 // Query keys
 export const invoiceQueryKeys = {
@@ -165,6 +166,9 @@ export function useMarkInvoiceAsPaid() {
       queryClient.setQueryData(invoiceQueryKeys.detail(id), response);
       // Invalidate lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.lists() });
+      // Invalidate PDF queries to refresh PDF viewer with payment details
+      queryClient.invalidateQueries({ queryKey: invoicePdfKeys.latest(id) });
+      queryClient.invalidateQueries({ queryKey: invoicePdfKeys.versions(id) });
     },
   });
 }

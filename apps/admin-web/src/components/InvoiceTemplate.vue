@@ -2,6 +2,11 @@
   <div id="invoice-preview" class="invoice-template">
     <!-- Header Section -->
     <div class="invoice-header">
+      <!-- PAID Stamp -->
+      <div v-if="paymentInfo" class="paid-stamp">
+        <div class="paid-stamp-content">PAID</div>
+      </div>
+
       <div class="company-info">
         <h1 class="company-name">NeibrPay HOA</h1>
         <div class="company-details">
@@ -101,6 +106,24 @@
       </div>
     </div>
 
+    <!-- Payment Details Section -->
+    <div v-if="paymentInfo" class="payment-details-section">
+      <h3 class="section-title">Payment Details:</h3>
+      <div class="payment-details-content">
+        <p>
+          <strong>Payment Date:</strong>
+          {{ formatDate(paymentInfo.payment_date) }}
+        </p>
+        <p>
+          <strong>Payment Method:</strong>
+          {{ formatPaymentMethod(paymentInfo.payment_method) }}
+        </p>
+        <p v-if="paymentInfo.payment_reference">
+          <strong>Reference:</strong> {{ paymentInfo.payment_reference }}
+        </p>
+      </div>
+    </div>
+
     <!-- Notes Section -->
     <div v-if="publicNotes" class="notes-section">
       <h3 class="section-title">Notes:</h3>
@@ -170,6 +193,11 @@ interface Props {
     footer: string;
   };
   units?: UnitWithResident[];
+  paymentInfo?: {
+    payment_date: string;
+    payment_method: string;
+    payment_reference?: string;
+  };
 }
 
 const props = defineProps<Props>();
@@ -207,6 +235,17 @@ const formatDate = (dateString: string) => {
   });
 };
 
+const formatPaymentMethod = (method: string) => {
+  const methodMap: Record<string, string> = {
+    cash: 'Cash',
+    check: 'Check',
+    credit_card: 'Credit Card',
+    bank_transfer: 'Bank Transfer',
+    other: 'Other',
+  };
+  return methodMap[method] || method;
+};
+
 const getUnitTitle = (unitId: number) => {
   const unit = props.units?.find((u: UnitWithResident) => u.id === unitId);
   return unit ? unit.title : `Unit ${unitId}`;
@@ -225,13 +264,16 @@ const getUnitResident = (unitId: number) => {
 
 <style scoped>
 .invoice-template {
-  width: 210mm; /* A4 width */
+  width: 180mm; /* A4 width with margins */
+  max-width: 180mm;
   min-height: 297mm; /* A4 height */
-  padding: 20mm;
+  padding: 10mm 8mm 10mm 10mm;
   font-family: 'Arial', sans-serif;
   background: white;
   color: #333;
-  line-height: 1.4;
+  line-height: 1.3;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Header Section */
@@ -239,43 +281,64 @@ const getUnitResident = (unitId: number) => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
   border-bottom: 3px solid #2563eb;
-  padding-bottom: 20px;
+  padding-bottom: 15px;
+  position: relative;
+}
+
+.paid-stamp {
+  position: absolute;
+  top: 10px;
+  right: 15mm;
+  z-index: 10;
+}
+
+.paid-stamp-content {
+  background: #10b981;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 12px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: rotate(-15deg);
 }
 
 .company-info {
-  flex: 1;
+  flex: 1.2;
 }
 
 .company-name {
-  font-size: 28px;
+  font-size: 18px;
   font-weight: bold;
   color: #2563eb;
-  margin: 0 0 10px 0;
+  margin: 0 0 4px 0;
 }
 
 .company-details p {
-  margin: 2px 0;
-  font-size: 14px;
+  margin: 1px 0;
+  font-size: 9px;
   color: #666;
 }
 
 .invoice-meta {
   text-align: right;
   flex: 1;
+  padding-right: 5mm;
 }
 
 .invoice-title {
-  font-size: 32px;
+  font-size: 18px;
   font-weight: bold;
   color: #1f2937;
-  margin: 0 0 15px 0;
+  margin: 0 0 6px 0;
 }
 
 .invoice-details p {
-  margin: 3px 0;
-  font-size: 14px;
+  margin: 1px 0;
+  font-size: 9px;
 }
 
 /* Bill To Section */
@@ -284,12 +347,12 @@ const getUnitResident = (unitId: number) => {
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: bold;
   color: #1f2937;
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
   border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 5px;
+  padding-bottom: 3px;
 }
 
 .bill-to-content {
@@ -326,70 +389,78 @@ const getUnitResident = (unitId: number) => {
   width: 100%;
   border-collapse: collapse;
   margin: 0;
+  table-layout: fixed;
 }
 
 .items-table th {
   background-color: #f8fafc;
   color: #1f2937;
   font-weight: bold;
-  padding: 12px 8px;
+  padding: 6px 4px;
   text-align: left;
   border: 1px solid #e5e7eb;
-  font-size: 14px;
+  font-size: 10px;
 }
 
 .items-table td {
-  padding: 10px 8px;
+  padding: 6px 4px;
   border: 1px solid #e5e7eb;
-  font-size: 14px;
+  font-size: 10px;
   vertical-align: top;
+  word-wrap: break-word;
 }
 
 .item-name {
-  width: 20%;
+  width: 18%;
   font-weight: 500;
 }
 
 .item-description {
-  width: 35%;
+  width: 32%;
 }
 
-.item-cost,
-.item-quantity,
-.item-total {
+.item-cost {
   width: 15%;
   text-align: right;
 }
 
+.item-quantity {
+  width: 10%;
+  text-align: right;
+}
+
 .item-total {
+  width: 15%;
+  text-align: right;
   font-weight: 500;
 }
 
 /* Totals Section */
 .totals-section {
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 .totals-container {
-  max-width: 300px;
+  max-width: 220px;
   margin-left: auto;
+  margin-right: 5mm;
 }
 
 .total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #f3f4f6;
 }
 
 .total-label {
-  font-size: 14px;
+  font-size: 10px;
   color: #6b7280;
 }
 
 .total-value {
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 500;
   color: #1f2937;
 }
@@ -398,14 +469,14 @@ const getUnitResident = (unitId: number) => {
   border-top: 2px solid #1f2937;
   border-bottom: 2px solid #1f2937;
   font-weight: bold;
-  font-size: 16px;
-  margin-top: 10px;
-  padding: 12px 0;
+  font-size: 12px;
+  margin-top: 6px;
+  padding: 8px 0;
 }
 
 .final-total .total-label,
 .final-total .total-value {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: bold;
 }
 
@@ -421,6 +492,22 @@ const getUnitResident = (unitId: number) => {
 .balance-due .total-value {
   color: #dc2626;
   font-weight: bold;
+}
+
+/* Payment Details Section */
+.payment-details-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  margin-right: 5mm;
+  background-color: #f0fdf4;
+  border: 2px solid #10b981;
+  border-radius: 6px;
+}
+
+.payment-details-content p {
+  margin: 4px 0;
+  font-size: 10px;
+  color: #1f2937;
 }
 
 /* Notes and Terms Sections */

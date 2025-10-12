@@ -1853,7 +1853,7 @@ const getUnitTitle = (unitId: number) => {
 };
 
 // Helper function to generate HTML for PDF
-const generateInvoiceHtml = (invoice: any) => {
+const generateInvoiceHtml = (invoice: any, paymentInfo?: any) => {
   const unit = units.value?.find(
     (u: UnitWithResident) => u.id === invoice.unit_id
   );
@@ -1932,6 +1932,30 @@ const generateInvoiceHtml = (invoice: any) => {
   `
       : '';
 
+  const formatPaymentMethod = (method: string) => {
+    const methodMap: Record<string, string> = {
+      cash: 'Cash',
+      check: 'Check',
+      credit_card: 'Credit Card',
+      bank_transfer: 'Bank Transfer',
+      other: 'Other',
+    };
+    return methodMap[method] || method;
+  };
+
+  const paymentDetailsHtml = paymentInfo
+    ? `
+    <div class="payment-details-section">
+      <h3 class="section-title">Payment Details:</h3>
+      <div class="payment-details-content">
+        <p><strong>Payment Date:</strong> ${formatDate(paymentInfo.payment_date)}</p>
+        <p><strong>Payment Method:</strong> ${formatPaymentMethod(paymentInfo.payment_method)}</p>
+        ${paymentInfo.payment_reference ? `<p><strong>Reference:</strong> ${paymentInfo.payment_reference}</p>` : ''}
+      </div>
+    </div>
+  `
+    : '';
+
   const notesHtml = publicNotes
     ? `
     <div class="notes-section">
@@ -1989,6 +2013,24 @@ const generateInvoiceHtml = (invoice: any) => {
           border-bottom: 3px solid #2563eb;
           padding-bottom: 20px;
           overflow: hidden;
+          position: relative;
+        }
+        .paid-stamp {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          z-index: 10;
+        }
+        .paid-stamp-content {
+          background: #10b981;
+          color: white;
+          padding: 6px 12px;
+          border-radius: 4px;
+          font-weight: bold;
+          font-size: 14px;
+          text-align: center;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          transform: rotate(-15deg);
         }
         .company-info {
           float: left;
@@ -2143,6 +2185,18 @@ const generateInvoiceHtml = (invoice: any) => {
         .balance-due .total-value {
           float: right;
         }
+        .payment-details-section {
+          margin-bottom: 25px;
+          padding: 20px;
+          background-color: #f0fdf4;
+          border: 2px solid #10b981;
+          border-radius: 8px;
+        }
+        .payment-details-content p {
+          margin: 6px 0;
+          font-size: 12px;
+          color: #1f2937;
+        }
         .notes-section, .terms-section {
           margin-bottom: 25px;
         }
@@ -2182,6 +2236,15 @@ const generateInvoiceHtml = (invoice: any) => {
     <body>
       <div class="invoice-template">
         <div class="invoice-header clearfix">
+          ${
+            paymentInfo
+              ? `
+          <div class="paid-stamp">
+            <div class="paid-stamp-content">PAID</div>
+          </div>
+          `
+              : ''
+          }
           <div class="company-info">
             <h1 class="company-name">NeibrPay HOA</h1>
             <div class="company-details">
@@ -2250,6 +2313,8 @@ const generateInvoiceHtml = (invoice: any) => {
             ${balanceDueHtml}
           </div>
         </div>
+
+        ${paymentDetailsHtml}
 
         ${notesHtml}
         ${termsHtml}
