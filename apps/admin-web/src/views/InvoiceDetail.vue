@@ -534,74 +534,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Invoice Items Table -->
-      <div class="bg-white rounded-lg shadow">
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <h3 class="text-lg font-medium text-gray-900">Invoice Items</h3>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Item
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Description
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Unit Cost
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Quantity
-                </th>
-                <th
-                  class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Line Total
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr
-                v-for="(item, index) in invoice.items"
-                :key="index"
-                class="hover:bg-gray-50"
-              >
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                >
-                  {{ item.name }}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500">
-                  {{ item.description || '-' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  ${{ formatCurrency(item.unit_cost) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ item.quantity }}
-                </td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right"
-                >
-                  ${{ formatCurrency(item.line_total) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <!-- Invoice PDF Section -->
       <div class="bg-white rounded-lg shadow">
         <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
@@ -677,117 +609,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Notes Sections -->
-      <div v-if="hasNotes" class="bg-white rounded-lg shadow">
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <h3 class="text-lg font-medium text-gray-900">Notes</h3>
-        </div>
-        <div class="p-6">
-          <div class="space-y-6">
-            <div v-if="getNoteContent('public_notes')">
-              <h4 class="text-sm font-medium text-gray-900 mb-2">
-                Public Notes
-              </h4>
-              <div
-                class="bg-gray-50 p-4 rounded-lg"
-                v-html="getNoteContent('public_notes')"
-              ></div>
-            </div>
-            <div v-if="getNoteContent('private_notes')">
-              <h4 class="text-sm font-medium text-gray-900 mb-2">
-                Private Notes
-              </h4>
-              <div
-                class="bg-gray-50 p-4 rounded-lg"
-                v-html="getNoteContent('private_notes')"
-              ></div>
-            </div>
-            <div v-if="getNoteContent('terms')">
-              <h4 class="text-sm font-medium text-gray-900 mb-2">Terms</h4>
-              <div
-                class="bg-gray-50 p-4 rounded-lg"
-                v-html="getNoteContent('terms')"
-              ></div>
-            </div>
-            <div v-if="getNoteContent('footer')">
-              <h4 class="text-sm font-medium text-gray-900 mb-2">Footer</h4>
-              <div
-                class="bg-gray-50 p-4 rounded-lg"
-                v-html="getNoteContent('footer')"
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Payment History -->
-      <div
-        v-if="invoice.payments && invoice.payments.length > 0"
-        class="bg-white rounded-lg shadow"
-      >
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <h3 class="text-lg font-medium text-gray-900">Payment History</h3>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Date
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Amount
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Method
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Reference
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Recorded By
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr
-                v-for="payment in invoice.payments"
-                :key="payment.id"
-                class="hover:bg-gray-50"
-              >
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ formatDate(payment.payment_date) }}
-                </td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                >
-                  ${{ formatCurrency(payment.amount) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatPaymentMethod(payment.payment_method) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ payment.payment_reference || '-' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ payment.recorded_by }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -851,14 +672,6 @@ const showSuccessMessage = ref(false);
 const showErrorMessage = ref(false);
 const pdfLoadError = ref(false);
 const pdfRefreshKey = ref(0);
-
-// Computed properties
-const hasNotes = computed(() => {
-  if (!invoice.value?.notes) return false;
-  return invoice.value.notes.some(
-    (note: any) => note.content && note.content.trim() !== ''
-  );
-});
 
 const pdfViewerUrl = computed(() => {
   if (!latestPdf.value?.file_path) return '';
@@ -960,12 +773,6 @@ const getDueDate = () => {
   }
 
   return formatDate(dueDate.toISOString());
-};
-
-const getNoteContent = (type: string) => {
-  if (!invoice.value?.notes) return '';
-  const note = invoice.value.notes.find((n: any) => n.type === type);
-  return note?.content || '';
 };
 
 // Action handlers
