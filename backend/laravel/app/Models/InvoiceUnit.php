@@ -132,6 +132,14 @@ class InvoiceUnit extends Model
     }
 
     /**
+     * Get the PDFs for this invoice.
+     */
+    public function pdfs(): HasMany
+    {
+        return $this->hasMany(InvoicePdf::class);
+    }
+
+    /**
      * Scope a query to only include invoices for a specific tenant.
      */
     public function scopeForTenant($query, $tenantId)

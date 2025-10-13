@@ -870,7 +870,6 @@ import {
   useInvoice,
   useDeleteInvoice,
   useMarkInvoiceAsPaid,
-  useCloneInvoice,
   useEmailInvoice,
 } from '../composables/useInvoices';
 import { useLatestInvoicePdf } from '../composables/useInvoicePdf';
@@ -904,7 +903,6 @@ const {
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
 const markAsPaidMutation = useMarkInvoiceAsPaid();
-const cloneInvoiceMutation = useCloneInvoice();
 const emailInvoiceMutation = useEmailInvoice();
 const downloadAttachmentMutation = useDownloadInvoiceAttachment();
 
@@ -1032,17 +1030,35 @@ const emailInvoice = async () => {
   }
 };
 
-const cloneInvoice = async () => {
+const cloneInvoice = () => {
   if (!invoice.value) return;
 
-  try {
-    await cloneInvoiceMutation.mutateAsync(invoice.value.id);
-    showSuccess('Invoice cloned successfully!');
-    router.push('/invoices');
-  } catch (error: any) {
-    console.error('Error cloning invoice:', error);
-    showError(error.message || 'Failed to clone invoice');
-  }
+  // Extract notes by type
+  const publicNotes =
+    invoice.value.notes?.find((n: any) => n.type === 'public_notes')?.content ||
+    '';
+  const terms =
+    invoice.value.notes?.find((n: any) => n.type === 'terms')?.content || '';
+  const footer =
+    invoice.value.notes?.find((n: any) => n.type === 'footer')?.content || '';
+
+  // Store cloned data in sessionStorage for persistence across navigation
+  const clonedData = {
+    frequency: invoice.value.frequency,
+    remaining_cycles: invoice.value.remaining_cycles,
+    start_date: invoice.value.start_date,
+    due_date: invoice.value.due_date,
+    items: invoice.value.items,
+    tax_rate: invoice.value.tax_rate,
+    public_notes: publicNotes,
+    terms: terms,
+    footer: footer,
+  };
+
+  sessionStorage.setItem('clonedInvoice', JSON.stringify(clonedData));
+
+  // Navigate to create invoice
+  router.push('/invoices/create');
 };
 
 const editInvoice = () => {

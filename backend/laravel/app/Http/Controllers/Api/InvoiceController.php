@@ -205,6 +205,12 @@ class InvoiceController extends Controller
         }
 
         $validated = $request->validate([
+            'unit_id' => 'required|integer|exists:units,id',
+            'frequency' => 'required|in:one-time,monthly,weekly,quarterly,yearly',
+            'start_date' => 'required|date',
+            'remaining_cycles' => 'nullable|string',
+            'due_date' => 'required|in:use_payment_terms,net_15,net_30,net_45,net_60,due_on_receipt',
+            'po_number' => 'nullable|string',
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_type' => 'sometimes|in:amount,percentage',
             'auto_bill' => 'sometimes|in:disabled,enabled,on_due_date,on_send',
@@ -215,7 +221,6 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required_with:items|numeric|min:1',
             'items.*.line_total' => 'required_with:items|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
-            'paid_to_date' => 'nullable|numeric|min:0',
             'notes' => 'nullable|array',
             'notes.public_notes' => 'nullable|string',
             'notes.private_notes' => 'nullable|string',
@@ -223,13 +228,26 @@ class InvoiceController extends Controller
             'notes.footer' => 'nullable|string',
         ]);
 
+        // Ensure the new unit belongs to the user's tenant
+        if (isset($validated['unit_id'])) {
+            $newUnit = Unit::where('id', $validated['unit_id'])
+                ->where('tenant_id', $user->tenant_id)
+                ->first();
+            
+            if (!$newUnit) {
+                return response()->json(['message' => 'Unit does not belong to your tenant'], 400);
+            }
+        }
+
         DB::beginTransaction();
         
         try {
-            // Update invoice fields
-            $invoiceUnit->update(array_filter($validated, function($key) {
+            // Update invoice fields (exclude items and notes which are handled separately)
+            $updateFields = array_filter($validated, function($key) {
                 return !in_array($key, ['items', 'notes']);
-            }, ARRAY_FILTER_USE_KEY));
+            }, ARRAY_FILTER_USE_KEY);
+            
+            $invoiceUnit->update($updateFields);
 
             // Update items if provided
             if (isset($validated['items'])) {
@@ -243,6 +261,26 @@ class InvoiceController extends Controller
             // Update notes if provided
             if (isset($validated['notes'])) {
                 $this->updateInvoiceNotes($invoiceUnit, $validated['notes']);
+            }
+            
+            // Generate new PDF with is_latest = true (mark previous PDFs as is_latest = false)
+            try {
+                // Mark all existing PDFs as not latest
+                $invoiceUnit->pdfs()->update(['is_latest' => false]);
+                
+                // Load the invoice with necessary relationships for PDF generation
+                $invoiceUnit->load(['unit', 'notes']);
+                
+                // Generate HTML for the invoice
+                $html = $this->generateInvoiceHtml($invoiceUnit);
+                
+                // Generate and store new PDF with is_latest = true
+                $this->pdfService->generatePdf($invoiceUnit, $html, $user->id);
+                
+                \Log::info("PDF regenerated successfully for updated invoice {$invoiceUnit->id}");
+            } catch (\Exception $e) {
+                // Log error but don't fail the invoice update
+                \Log::error("Failed to regenerate PDF for updated invoice {$invoiceUnit->id}: " . $e->getMessage());
             }
             
             DB::commit();

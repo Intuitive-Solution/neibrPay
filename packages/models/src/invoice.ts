@@ -48,6 +48,18 @@ export const CreateInvoiceRequestSchema = z.object({
 
 // Update Invoice Request Schema
 export const UpdateInvoiceRequestSchema = z.object({
+  unit_id: z.number().int().positive(),
+  frequency: z.enum(['one-time', 'monthly', 'weekly', 'quarterly', 'yearly']),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  remaining_cycles: z.string().optional(),
+  due_date: z.enum([
+    'use_payment_terms',
+    'net_15',
+    'net_30',
+    'net_45',
+    'net_60',
+    'due_on_receipt',
+  ]),
   po_number: z.string().optional(),
   discount_amount: z.number().min(0).optional(),
   discount_type: z.enum(['amount', 'percentage']).optional(),

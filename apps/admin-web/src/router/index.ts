@@ -74,6 +74,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/invoices/:id/edit',
+      name: 'EditInvoice',
+      component: AddInvoice,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/people',
       name: 'People',
       component: People,

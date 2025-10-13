@@ -118,9 +118,9 @@
                   <div
                     class="absolute inset-y-0 right-0 flex items-center pr-3 space-x-1"
                   >
-                    <!-- Clear All Button -->
+                    <!-- Clear All Button (hidden in edit mode) -->
                     <button
-                      v-if="form.unit_ids.length > 0"
+                      v-if="form.unit_ids.length > 0 && !isEditMode"
                       type="button"
                       @click.stop="clearAllUnits"
                       class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -167,8 +167,9 @@
                   v-if="isDropdownOpen"
                   class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
                 >
-                  <!-- Select All Option -->
+                  <!-- Select All Option (hidden in edit mode) -->
                   <div
+                    v-if="!isEditMode"
                     class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
                     @click="toggleSelectAll"
                   >
@@ -1034,25 +1035,13 @@
                 <div class="flex items-center space-x-1">
                   <input
                     type="color"
-                    @change="
-                      (e: Event) =>
-                        formatText(
-                          'foreColor',
-                          (e.target as HTMLInputElement)?.value
-                        )
-                    "
+                    @change="handleForeColorChange"
                     class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
                     title="Text Color"
                   />
                   <input
                     type="color"
-                    @change="
-                      (e: Event) =>
-                        formatText(
-                          'backColor',
-                          (e.target as HTMLInputElement)?.value
-                        )
-                    "
+                    @change="handleBackColorChange"
                     class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
                     title="Highlight Color"
                   />
@@ -1182,11 +1171,7 @@
               <span>{{ getCurrentTag() }}</span>
               <span
                 >{{
-                  getWordCount(
-                    getPlainText(
-                      tabContent[activeTab as keyof typeof tabContent] || ''
-                    )
-                  )
+                  getWordCount(getPlainText(getCurrentTabContent()))
                 }}
                 words</span
               >
@@ -1308,9 +1293,9 @@
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          Creating...
+          {{ isEditMode ? 'Saving...' : 'Creating...' }}
         </span>
-        <span v-else>Create Invoice</span>
+        <span v-else>{{ isEditMode ? 'Save Changes' : 'Create Invoice' }}</span>
       </button>
     </div>
   </div>
@@ -1372,20 +1357,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useUnitsForInvoices } from '../composables/useUnits';
-import { useCreateInvoice } from '../composables/useInvoices';
+import {
+  useCreateInvoice,
+  useUpdateInvoice,
+  useInvoice,
+} from '../composables/useInvoices';
 import {
   useUploadInvoiceAttachment,
   useDeleteInvoiceAttachment,
   useDownloadInvoiceAttachment,
+  useInvoiceAttachments,
 } from '../composables/useInvoiceAttachments';
-import type { UnitWithResident, CreateInvoiceRequest } from '@neibrpay/models';
+import type {
+  UnitWithResident,
+  CreateInvoiceRequest,
+  UpdateInvoiceRequest,
+} from '@neibrpay/models';
 import InvoiceTemplate from '../components/InvoiceTemplate.vue';
 
 // Router
 const router = useRouter();
+const route = useRoute();
+
+// Edit mode detection
+const isEditMode = computed(() => !!route.params.id);
+const invoiceId = computed(() =>
+  route.params.id ? parseInt(route.params.id as string) : null
+);
 
 // Form data
 const form = ref({
@@ -1418,7 +1419,11 @@ const errors = ref({
 });
 
 // Loading state
-const isSubmitting = computed(() => createInvoiceMutation.isPending.value);
+const isSubmitting = computed(() =>
+  isEditMode.value
+    ? updateInvoiceMutation.isPending.value
+    : createInvoiceMutation.isPending.value
+);
 // PDF generation is now handled automatically on the server
 
 // PDF Preview state
@@ -1433,6 +1438,17 @@ const {
 
 // Create invoice mutation
 const createInvoiceMutation = useCreateInvoice();
+
+// Update invoice mutation
+const updateInvoiceMutation = useUpdateInvoice();
+
+// Fetch existing invoice data in edit mode
+const { data: existingInvoice } = useInvoice(invoiceId.value || 0);
+
+// Fetch existing attachments in edit mode
+const { data: existingAttachments } = useInvoiceAttachments(
+  invoiceId.value || 0
+);
 
 // Generate PDF mutation
 // PDF generation is now handled automatically on the server
@@ -1498,6 +1514,75 @@ const tabContent = ref({
 
 // Financial calculations
 const taxRate = ref(0);
+
+// Watch for existing invoice data to populate form
+watch(
+  existingInvoice,
+  (invoice: any) => {
+    if (invoice && isEditMode.value) {
+      // Populate form with existing data
+      form.value.unit_ids = [invoice.unit_id];
+      form.value.frequency = invoice.frequency;
+      // Convert ISO date to yyyy-MM-dd format
+      form.value.start_date = invoice.start_date
+        ? new Date(invoice.start_date).toISOString().split('T')[0]
+        : '';
+      form.value.remaining_cycles = invoice.remaining_cycles || 'endless';
+      form.value.due_date = invoice.due_date;
+      form.value.po_number = invoice.po_number || '';
+      form.value.discount_amount = invoice.discount_amount?.toString() || '';
+      form.value.discount_type = invoice.discount_type;
+      form.value.auto_bill = invoice.auto_bill;
+
+      // Transform invoice items to UI format
+      invoiceItems.value = invoice.items.map((item: any) => ({
+        name: item.name,
+        description: item.description || '',
+        unitCost: item.unit_cost,
+        quantity: item.quantity,
+        lineTotal: item.line_total,
+      }));
+
+      // Set tax rate - convert string to number
+      taxRate.value =
+        typeof invoice.tax_rate === 'string'
+          ? parseFloat(invoice.tax_rate)
+          : invoice.tax_rate || 0;
+
+      // Populate notes from existing invoice
+      if (invoice.notes) {
+        invoice.notes.forEach((note: any) => {
+          if (note.type === 'public_notes') {
+            tabContent.value['public-notes'] = note.content;
+          } else if (note.type === 'private_notes') {
+            tabContent.value['private-notes'] = note.content;
+          } else if (note.type === 'terms') {
+            tabContent.value.terms = note.content;
+          } else if (note.type === 'footer') {
+            tabContent.value.footer = note.content;
+          }
+        });
+      }
+    }
+  },
+  { immediate: true }
+);
+
+// Watch for existing attachments to populate attachments array
+watch(
+  existingAttachments,
+  (attachmentsData: any) => {
+    if (attachmentsData && isEditMode.value) {
+      // Mark existing attachments as not local
+      attachments.value = attachmentsData.map((attachment: any) => ({
+        ...attachment,
+        is_local: false,
+      }));
+    }
+  },
+  { immediate: true }
+);
+
 const paidToDate = computed(() => form.value.paid_to_date || 0);
 
 // Rich text editor state
@@ -1626,494 +1711,19 @@ const getUnitTitle = (unitId: number) => {
   return unit ? unit.title : `Unit ${unitId}`;
 };
 
-// Helper function to generate HTML for PDF
-const generateInvoiceHtml = (invoice: any, paymentInfo?: any) => {
-  const unit = units.value?.find(
-    (u: UnitWithResident) => u.id === invoice.unit_id
-  );
-  const unitTitle = unit ? unit.title : `Unit ${invoice.unit_id}`;
-  const unitAddress = unit ? `${unit.address}, ${unit.city}` : '';
-  const unitResident = unit ? unit.resident_name : '';
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const publicNotes =
-    invoice.notes?.find((n: any) => n.type === 'public_notes')?.content || '';
-  const terms =
-    invoice.notes?.find((n: any) => n.type === 'terms')?.content || '';
-  const footer =
-    invoice.notes?.find((n: any) => n.type === 'footer')?.content || '';
-
-  const itemsHtml = invoice.items
-    .map(
-      (item: any) => `
-    <tr>
-      <td class="item-name">${item.name}</td>
-      <td class="item-description">${item.description || ''}</td>
-      <td class="item-cost">$${Number(item.unit_cost).toFixed(2)}</td>
-      <td class="item-quantity">${item.quantity}</td>
-      <td class="item-total">$${Number(item.line_total).toFixed(2)}</td>
-    </tr>
-  `
-    )
-    .join('');
-
-  const discountHtml =
-    invoice.discount_amount && invoice.discount_amount > 0
-      ? `
-    <div class="total-row clearfix">
-      <span class="total-label">Discount (${invoice.discount_type === 'percentage' ? invoice.discount_amount + '%' : 'Amount'}):</span>
-      <span class="total-value">-$${(invoice.discount_type === 'percentage' ? (Number(invoice.subtotal) * Number(invoice.discount_amount)) / 100 : Number(invoice.discount_amount)).toFixed(2)}</span>
-    </div>
-  `
-      : '';
-
-  const taxHtml =
-    invoice.tax_rate && invoice.tax_rate > 0
-      ? `
-    <div class="total-row clearfix">
-      <span class="total-label">Tax (${invoice.tax_rate}%):</span>
-      <span class="total-value">$${Number(invoice.tax_amount).toFixed(2)}</span>
-    </div>
-  `
-      : '';
-
-  const paidToDateHtml =
-    invoice.paid_to_date && invoice.paid_to_date > 0
-      ? `
-    <div class="total-row clearfix">
-      <span class="total-label">Paid to Date:</span>
-      <span class="total-value">$${Number(invoice.paid_to_date).toFixed(2)}</span>
-    </div>
-  `
-      : '';
-
-  const balanceDueHtml =
-    invoice.balance_due && invoice.balance_due > 0
-      ? `
-    <div class="total-row balance-due clearfix">
-      <span class="total-label">Balance Due:</span>
-      <span class="total-value">$${Number(invoice.balance_due).toFixed(2)}</span>
-    </div>
-  `
-      : '';
-
-  const formatPaymentMethod = (method: string) => {
-    const methodMap: Record<string, string> = {
-      cash: 'Cash',
-      check: 'Check',
-      credit_card: 'Credit Card',
-      bank_transfer: 'Bank Transfer',
-      other: 'Other',
-    };
-    return methodMap[method] || method;
-  };
-
-  const paymentDetailsHtml = paymentInfo
-    ? `
-    <div class="payment-details-section">
-      <h3 class="section-title">Payment Details:</h3>
-      <div class="payment-details-content">
-        <p><strong>Payment Date:</strong> ${formatDate(paymentInfo.payment_date)}</p>
-        <p><strong>Payment Method:</strong> ${formatPaymentMethod(paymentInfo.payment_method)}</p>
-        ${paymentInfo.payment_reference ? `<p><strong>Reference:</strong> ${paymentInfo.payment_reference}</p>` : ''}
-      </div>
-    </div>
-  `
-    : '';
-
-  const notesHtml = publicNotes
-    ? `
-    <div class="notes-section">
-      <h3 class="section-title">Notes:</h3>
-      <div class="notes-content">${publicNotes}</div>
-    </div>
-  `
-    : '';
-
-  const termsHtml = terms
-    ? `
-    <div class="terms-section">
-      <h3 class="section-title">Terms & Conditions:</h3>
-      <div class="terms-content">${terms}</div>
-    </div>
-  `
-    : '';
-
-  const footerHtml = footer
-    ? `
-    <div class="footer-section">
-      <div class="footer-content">${footer}</div>
-    </div>
-  `
-    : '';
-
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Invoice ${invoice.invoice_number}</title>
-      <style>
-        * {
-          box-sizing: border-box;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: Arial, sans-serif;
-          font-size: 12px;
-          line-height: 1.4;
-          color: #333;
-        }
-        .invoice-template {
-          width: 100%;
-          max-width: 750px;
-          margin: 0 auto;
-          padding: 15px 25px;
-          background: white;
-        }
-        .invoice-header {
-          width: 100%;
-          margin-bottom: 30px;
-          border-bottom: 3px solid #2563eb;
-          padding-bottom: 20px;
-          overflow: hidden;
-          position: relative;
-        }
-        .paid-stamp {
-          position: absolute;
-          top: 15px;
-          right: 15px;
-          z-index: 10;
-        }
-        .paid-stamp-content {
-          background: #10b981;
-          color: white;
-          padding: 6px 12px;
-          border-radius: 4px;
-          font-weight: bold;
-          font-size: 14px;
-          text-align: center;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          transform: rotate(-15deg);
-        }
-        .company-info {
-          float: left;
-          width: 55%;
-        }
-        .company-name {
-          font-size: 22px;
-          font-weight: bold;
-          color: #2563eb;
-          margin: 0 0 10px 0;
-        }
-        .company-details p {
-          margin: 2px 0;
-          font-size: 11px;
-          color: #666;
-        }
-        .invoice-meta {
-          float: right;
-          width: 40%;
-          text-align: right;
-        }
-        .invoice-title {
-          font-size: 24px;
-          font-weight: bold;
-          color: #1f2937;
-          margin: 0 0 12px 0;
-        }
-        .invoice-details p {
-          margin: 2px 0;
-          font-size: 11px;
-        }
-        .bill-to-section {
-          clear: both;
-          margin-bottom: 30px;
-        }
-        .section-title {
-          font-size: 14px;
-          font-weight: bold;
-          color: #1f2937;
-          margin: 0 0 10px 0;
-          border-bottom: 1px solid #e5e7eb;
-          padding-bottom: 5px;
-        }
-        .unit-header h4 {
-          font-size: 14px;
-          font-weight: bold;
-          margin: 0 0 5px 0;
-          color: #1f2937;
-        }
-        .unit-details p {
-          margin: 2px 0;
-          font-size: 12px;
-          color: #666;
-        }
-        .items-section {
-          margin-bottom: 30px;
-        }
-        .items-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 0;
-          table-layout: fixed;
-        }
-        .items-table th {
-          background-color: #f8fafc;
-          color: #1f2937;
-          font-weight: bold;
-          padding: 8px 6px;
-          text-align: left;
-          border: 1px solid #e5e7eb;
-          font-size: 11px;
-        }
-        .items-table td {
-          padding: 8px 6px;
-          border: 1px solid #e5e7eb;
-          font-size: 11px;
-          vertical-align: top;
-          word-wrap: break-word;
-        }
-        .item-name {
-          width: 22%;
-          font-weight: 500;
-        }
-        .item-description {
-          width: 28%;
-        }
-        .item-cost {
-          width: 18%;
-          text-align: right;
-        }
-        .item-quantity {
-          width: 12%;
-          text-align: center;
-        }
-        .item-total {
-          width: 20%;
-          text-align: right;
-          font-weight: 500;
-        }
-        .totals-section {
-          margin-bottom: 30px;
-        }
-        .totals-container {
-          width: 280px;
-          margin-left: auto;
-          margin-right: 10px;
-        }
-        .total-row {
-          width: 100%;
-          padding: 6px 0;
-          border-bottom: 1px solid #f3f4f6;
-          overflow: hidden;
-        }
-        .total-label {
-          float: left;
-          font-size: 12px;
-          color: #6b7280;
-        }
-        .total-value {
-          float: right;
-          font-size: 12px;
-          font-weight: 500;
-          color: #1f2937;
-        }
-        .final-total {
-          border-top: 2px solid #1f2937;
-          border-bottom: 2px solid #1f2937;
-          font-weight: bold;
-          font-size: 14px;
-          margin-top: 10px;
-          padding: 10px 0;
-        }
-        .final-total .total-label, .final-total .total-value {
-          font-size: 14px;
-          font-weight: bold;
-        }
-        .balance-due {
-         
-          padding: 10px 0;
-          margin-top: 5px;
-          margin-right: 0;
-          width: 100%;
-          box-sizing: border-box;
-        }
-        .balance-due .total-label, .balance-due .total-value {
-          font-weight: bold;
-          font-size: 14px;
-        }
-        .balance-due .total-label {
-          float: left;
-        }
-        .balance-due .total-value {
-          float: right;
-        }
-        .payment-details-section {
-          margin-bottom: 25px;
-          padding: 20px;
-          background-color: #f0fdf4;
-          border: 2px solid #10b981;
-          border-radius: 8px;
-        }
-        .payment-details-content p {
-          margin: 6px 0;
-          font-size: 12px;
-          color: #1f2937;
-        }
-        .notes-section, .terms-section {
-          margin-bottom: 25px;
-        }
-        .notes-content, .terms-content {
-          font-size: 12px;
-          line-height: 1.6;
-          color: #4b5563;
-          margin-top: 10px;
-        }
-        .footer-section {
-          margin-bottom: 25px;
-          padding-top: 20px;
-          border-top: 1px solid #e5e7eb;
-        }
-        .footer-content {
-          font-size: 10px;
-          color: #6b7280;
-          text-align: center;
-        }
-        .payment-section {
-          margin-top: 30px;
-          padding-top: 20px;
-          border-top: 1px solid #e5e7eb;
-        }
-        .payment-details p {
-          margin: 5px 0;
-          font-size: 12px;
-          color: #4b5563;
-        }
-        .clearfix::after {
-          content: "";
-          display: table;
-          clear: both;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="invoice-template">
-        <div class="invoice-header clearfix">
-          ${
-            paymentInfo
-              ? `
-          <div class="paid-stamp">
-            <div class="paid-stamp-content">PAID</div>
-          </div>
-          `
-              : ''
-          }
-          <div class="company-info">
-            <h1 class="company-name">NeibrPay HOA</h1>
-            <div class="company-details">
-              <p>123 HOA Management Street</p>
-              <p>Property City, PC 12345</p>
-              <p>Phone: (555) 123-4567</p>
-              <p>Email: info@neibrpay.com</p>
-            </div>
-          </div>
-          <div class="invoice-meta">
-            <h2 class="invoice-title">INVOICE</h2>
-            <div class="invoice-details">
-              <p><strong>Invoice #:</strong> ${invoice.invoice_number}</p>
-              <p><strong>Date:</strong> ${formatDate(invoice.start_date)}</p>
-              <p><strong>Due Date:</strong> ${formatDate(invoice.start_date)}</p>
-              ${invoice.paid_to_date ? `<p><strong>Paid to Date:</strong> $${Number(invoice.paid_to_date).toFixed(2)}</p>` : ''}
-            </div>
-          </div>
-        </div>
-
-        <div class="bill-to-section">
-          <h3 class="section-title">Bill To:</h3>
-          <div class="bill-to-content">
-            <div class="unit-info">
-              <div class="unit-header">
-                <h4>${unitTitle}</h4>
-              </div>
-              <div class="unit-details">
-                <p>${unitAddress}</p>
-                <p>${unitResident}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="items-section">
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th class="item-name">Item</th>
-                <th class="item-description">Description</th>
-                <th class="item-cost">Unit Cost</th>
-                <th class="item-quantity">Qty</th>
-                <th class="item-total">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHtml}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="totals-section">
-          <div class="totals-container">
-            <div class="total-row clearfix">
-              <span class="total-label">Subtotal:</span>
-              <span class="total-value">$${Number(invoice.subtotal).toFixed(2)}</span>
-            </div>
-            ${discountHtml}
-            ${taxHtml}
-            <div class="total-row final-total clearfix">
-              <span class="total-label">Total:</span>
-              <span class="total-value">$${Number(invoice.total).toFixed(2)}</span>
-            </div>
-            ${paidToDateHtml}
-            ${balanceDueHtml}
-          </div>
-        </div>
-
-        ${paymentDetailsHtml}
-
-        ${notesHtml}
-        ${termsHtml}
-        ${footerHtml}
-
-        <div class="payment-section">
-          <h3 class="section-title">Payment Information</h3>
-          <div class="payment-details">
-            <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p>
-            <p><strong>Make checks payable to:</strong> NeibrPay HOA</p>
-            <p><strong>For questions about this invoice, contact:</strong> (555) 123-4567</p>
-          </div>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-};
-
 const toggleUnitSelection = (unitId: number) => {
-  const index = form.value.unit_ids.indexOf(unitId);
-  if (index > -1) {
-    form.value.unit_ids.splice(index, 1);
+  if (isEditMode.value) {
+    // In edit mode, allow only single selection
+    form.value.unit_ids = [unitId];
+    closeDropdown();
   } else {
-    form.value.unit_ids.push(unitId);
+    // In create mode, allow multiple selection
+    const index = form.value.unit_ids.indexOf(unitId);
+    if (index > -1) {
+      form.value.unit_ids.splice(index, 1);
+    } else {
+      form.value.unit_ids.push(unitId);
+    }
   }
 };
 
@@ -2234,23 +1844,32 @@ const removeAttachment = async (attachment: any) => {
       attachments.value.splice(index, 1);
     }
   } else {
-    // Delete from server (this would require an invoice ID)
-    try {
-      await deleteAttachmentMutation.mutateAsync({
-        invoiceId: 0, // This would be the actual invoice ID
-        attachmentId: attachment.id,
-      });
-
-      // Remove from local array
+    // In edit mode, delete from server immediately
+    if (isEditMode.value && invoiceId.value) {
+      try {
+        await deleteAttachmentMutation.mutateAsync({
+          invoiceId: invoiceId.value,
+          attachmentId: attachment.id,
+        });
+        // Remove from local array
+        const index = attachments.value.findIndex(
+          (a: any) => a.id === attachment.id
+        );
+        if (index > -1) {
+          attachments.value.splice(index, 1);
+        }
+      } catch (error) {
+        console.error('Error deleting attachment:', error);
+        alert('Failed to delete attachment');
+      }
+    } else {
+      // In create mode, just remove from local array
       const index = attachments.value.findIndex(
         (a: any) => a.id === attachment.id
       );
       if (index > -1) {
         attachments.value.splice(index, 1);
       }
-    } catch (error) {
-      console.error('Error deleting attachment:', error);
-      alert('Failed to delete attachment');
     }
   }
 };
@@ -2269,8 +1888,9 @@ const downloadAttachment = async (attachment: any) => {
   } else {
     // Download from server
     try {
+      const invoiceIdToUse = isEditMode.value ? invoiceId.value || 0 : 0;
       await downloadAttachmentMutation.mutateAsync({
-        invoiceId: 0, // This would be the actual invoice ID
+        invoiceId: invoiceIdToUse,
         attachmentId: attachment.id,
         fileName: attachment.file_name,
       });
@@ -2452,6 +2072,16 @@ const formatText = (command: string, value?: string) => {
   updateFormatState();
 };
 
+const handleForeColorChange = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  formatText('foreColor', target?.value);
+};
+
+const handleBackColorChange = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  formatText('backColor', target?.value);
+};
+
 const formatBlock = (tag: string) => {
   // Focus the editor first
   if (editorRef.value) {
@@ -2546,6 +2176,12 @@ const getPlainText = (html: string) => {
   return temp.textContent || temp.innerText || '';
 };
 
+const getCurrentTabContent = () => {
+  return (
+    tabContent.value[activeTab.value as keyof typeof tabContent.value] || ''
+  );
+};
+
 // Click outside handler
 const handleClickOutside = (event: Event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
@@ -2591,77 +2227,145 @@ const handleSubmit = async () => {
   }
 
   try {
-    // Prepare the request data
-    const requestData: CreateInvoiceRequest = {
-      unit_ids: form.value.unit_ids,
-      frequency: form.value.frequency as any,
-      start_date: form.value.start_date,
-      remaining_cycles:
-        form.value.frequency === 'one-time'
-          ? undefined
-          : form.value.remaining_cycles,
-      due_date: form.value.due_date as any,
-      discount_amount: form.value.discount_amount
-        ? parseFloat(form.value.discount_amount)
-        : undefined,
-      discount_type: form.value.discount_type as any,
-      auto_bill: form.value.auto_bill as any,
-      items: invoiceItems.value.map((item: any) => ({
-        name: item.name,
-        description: item.description,
-        unit_cost: item.unitCost,
-        quantity: item.quantity,
-        line_total: item.lineTotal,
-        sort_order: 0,
-        taxable: true,
-      })),
-      tax_rate: taxRate.value,
-      notes: {
-        public_notes: tabContent.value['public-notes'],
-        private_notes: tabContent.value['private-notes'],
-        terms: tabContent.value.terms,
-        footer: tabContent.value.footer,
-      },
-    };
+    if (isEditMode.value) {
+      // UPDATE flow
+      const updateData: UpdateInvoiceRequest = {
+        unit_id: form.value.unit_ids[0], // Single unit
+        frequency: form.value.frequency as any,
+        start_date: form.value.start_date,
+        remaining_cycles:
+          form.value.frequency === 'one-time'
+            ? undefined
+            : form.value.remaining_cycles,
+        due_date: form.value.due_date as any,
+        po_number: form.value.po_number,
+        discount_amount: form.value.discount_amount
+          ? parseFloat(form.value.discount_amount)
+          : undefined,
+        discount_type: form.value.discount_type as any,
+        auto_bill: form.value.auto_bill as any,
+        items: invoiceItems.value.map((item: any) => ({
+          name: item.name,
+          description: item.description,
+          unit_cost: item.unitCost,
+          quantity: item.quantity,
+          line_total: item.lineTotal,
+          sort_order: 0,
+          taxable: true,
+        })),
+        tax_rate: taxRate.value,
+        notes: {
+          public_notes: tabContent.value['public-notes'],
+          private_notes: tabContent.value['private-notes'],
+          terms: tabContent.value.terms,
+          footer: tabContent.value.footer,
+        },
+      };
 
-    // Create the invoice
-    const response = await createInvoiceMutation.mutateAsync(requestData);
+      // Update the invoice
+      const response = await updateInvoiceMutation.mutateAsync({
+        id: invoiceId.value!,
+        data: updateData,
+      });
 
-    // Upload attachments if any - create one attachment record for each invoice (unit)
-    if (attachments.value.length > 0 && response.length > 0) {
-      // Upload attachments to each created invoice (one for each unit)
-      for (const invoice of response) {
+      // Upload new attachments if any
+      if (attachments.value.length > 0) {
         for (const attachment of attachments.value.filter(
           (a: any) => a.is_local
         )) {
           try {
             await uploadAttachmentMutation.mutateAsync({
-              invoiceId: invoice.id,
+              invoiceId: invoiceId.value!,
               file: attachment.file,
             });
           } catch (error) {
             console.error(
-              `Error uploading attachment to invoice ${invoice.id}:`,
+              `Error uploading attachment to invoice ${invoiceId.value}:`,
               error
             );
             // Continue with other attachments even if one fails
           }
         }
       }
+
+      console.log('Invoice updated successfully:', response);
+      router.push(`/invoices/${invoiceId.value}`);
+    } else {
+      // CREATE flow
+      const requestData: CreateInvoiceRequest = {
+        unit_ids: form.value.unit_ids,
+        frequency: form.value.frequency as any,
+        start_date: form.value.start_date,
+        remaining_cycles:
+          form.value.frequency === 'one-time'
+            ? undefined
+            : form.value.remaining_cycles,
+        due_date: form.value.due_date as any,
+        discount_amount: form.value.discount_amount
+          ? parseFloat(form.value.discount_amount)
+          : undefined,
+        discount_type: form.value.discount_type as any,
+        auto_bill: form.value.auto_bill as any,
+        items: invoiceItems.value.map((item: any) => ({
+          name: item.name,
+          description: item.description,
+          unit_cost: item.unitCost,
+          quantity: item.quantity,
+          line_total: item.lineTotal,
+          sort_order: 0,
+          taxable: true,
+        })),
+        tax_rate: taxRate.value,
+        notes: {
+          public_notes: tabContent.value['public-notes'],
+          private_notes: tabContent.value['private-notes'],
+          terms: tabContent.value.terms,
+          footer: tabContent.value.footer,
+        },
+      };
+
+      // Create the invoice
+      const response = await createInvoiceMutation.mutateAsync(requestData);
+
+      // Upload attachments if any - create one attachment record for each invoice (unit)
+      if (attachments.value.length > 0 && response.length > 0) {
+        // Upload attachments to each created invoice (one for each unit)
+        for (const invoice of response) {
+          for (const attachment of attachments.value.filter(
+            (a: any) => a.is_local
+          )) {
+            try {
+              await uploadAttachmentMutation.mutateAsync({
+                invoiceId: invoice.id,
+                file: attachment.file,
+              });
+            } catch (error) {
+              console.error(
+                `Error uploading attachment to invoice ${invoice.id}:`,
+                error
+              );
+              // Continue with other attachments even if one fails
+            }
+          }
+        }
+      }
+
+      // Generate PDFs for each created invoice
+      // PDFs are now automatically generated on the server during invoice creation
+      console.log(
+        'Invoice(s) created successfully with PDFs generated automatically:',
+        response
+      );
+
+      // Show success message and redirect
+      console.log('Invoice created successfully:', response);
+      router.push('/invoices');
     }
-
-    // Generate PDFs for each created invoice
-    // PDFs are now automatically generated on the server during invoice creation
-    console.log(
-      'Invoice(s) created successfully with PDFs generated automatically:',
-      response
-    );
-
-    // Show success message and redirect
-    console.log('Invoice created successfully:', response);
-    router.push('/invoices');
   } catch (error: any) {
-    console.error('Error creating invoice:', error);
+    console.error(
+      `Error ${isEditMode.value ? 'updating' : 'creating'} invoice:`,
+      error
+    );
 
     // Handle validation errors
     if (error.errors) {
@@ -2674,7 +2378,8 @@ const handleSubmit = async () => {
       });
     } else {
       errors.value.general =
-        error.message || 'Failed to create invoice. Please try again.';
+        error.message ||
+        `Failed to ${isEditMode.value ? 'update' : 'create'} invoice. Please try again.`;
     }
   }
 };
@@ -2682,26 +2387,103 @@ const handleSubmit = async () => {
 const handleCancel = () => {
   console.log('Cancel button clicked');
   try {
-    // Try to go back in history first, fallback to invoices list
-    if (window.history.length > 1) {
-      console.log('Going back in history');
-      router.go(-1);
+    if (isEditMode.value && invoiceId.value) {
+      // In edit mode, go back to invoice detail
+      router.push(`/invoices/${invoiceId.value}`);
     } else {
-      console.log('Navigating to /invoices');
-      router.push('/invoices');
+      // In create mode, try to go back in history first, fallback to invoices list
+      if (window.history.length > 1) {
+        console.log('Going back in history');
+        router.go(-1);
+      } else {
+        console.log('Navigating to /invoices');
+        router.push('/invoices');
+      }
     }
   } catch (error) {
     console.error('Navigation error:', error);
     // Fallback to direct navigation
-    window.location.href = '/invoices';
+    if (isEditMode.value && invoiceId.value) {
+      window.location.href = `/invoices/${invoiceId.value}`;
+    } else {
+      window.location.href = '/invoices';
+    }
   }
 };
 
 // Initialize form with default values
 onMounted(() => {
-  // Set default start date to today
-  const today = new Date();
-  form.value.start_date = today.toISOString().split('T')[0];
+  // Check for cloned invoice data from sessionStorage
+  const clonedDataString = sessionStorage.getItem('clonedInvoice');
+  const clonedData = clonedDataString ? JSON.parse(clonedDataString) : null;
+  console.log('clonedData from sessionStorage', clonedData);
+  console.log('start_date from cloned data:', clonedData?.start_date);
+  console.log('tax_rate from cloned data:', clonedData?.tax_rate);
+
+  if (clonedData) {
+    // Populate scheduling details
+    form.value.frequency = clonedData.frequency || 'monthly';
+    form.value.remaining_cycles = clonedData.remaining_cycles || 'endless';
+
+    // Handle start_date - convert to YYYY-MM-DD format if needed
+    if (clonedData.start_date) {
+      const startDate = new Date(clonedData.start_date);
+      if (!isNaN(startDate.getTime())) {
+        form.value.start_date = startDate.toISOString().split('T')[0];
+      } else {
+        form.value.start_date = clonedData.start_date;
+      }
+    } else {
+      form.value.start_date = '';
+    }
+
+    form.value.due_date = clonedData.due_date || 'use_payment_terms';
+
+    // Populate tax rate
+    if (clonedData.tax_rate !== undefined && clonedData.tax_rate !== null) {
+      taxRate.value = parseFloat(clonedData.tax_rate) || 0;
+    }
+
+    // Populate invoice items
+    if (clonedData.items && Array.isArray(clonedData.items)) {
+      invoiceItems.value = clonedData.items.map((item: any) => ({
+        name: item.name || '',
+        description: item.description || '',
+        unitCost: parseFloat(item.unit_cost) || 0,
+        quantity: parseInt(item.quantity) || 1,
+        lineTotal:
+          parseFloat(item.unit_cost || 0) * parseInt(item.quantity || 1),
+      }));
+    }
+
+    // Populate notes, terms, and footer
+    tabContent.value['public-notes'] = clonedData.public_notes || '';
+    tabContent.value['terms'] = clonedData.terms || '';
+    tabContent.value['footer'] = clonedData.footer || '';
+
+    console.log('Tab content after cloning:', {
+      'public-notes': tabContent.value['public-notes'],
+      terms: tabContent.value['terms'],
+      footer: tabContent.value['footer'],
+    });
+
+    // Set the active tab to public-notes to show the cloned content immediately
+    activeTab.value = 'public-notes';
+
+    // Update the editor content to display the cloned data
+    nextTick(() => {
+      if (editorRef.value) {
+        editorRef.value.innerHTML = tabContent.value['public-notes'];
+      }
+    });
+
+    // Clear the cloned data from sessionStorage after using it
+    sessionStorage.removeItem('clonedInvoice');
+  } else {
+    // Set default start date to today only if not cloning
+    const today = new Date();
+    form.value.start_date = today.toISOString().split('T')[0];
+  }
 
   // Add click outside listener
   document.addEventListener('click', handleClickOutside);
@@ -2792,3 +2574,5 @@ onUnmounted(() => {
   margin-bottom: -20%;
 }
 </style>
+// Helper function to generate HTML for PDF (removed to fix TypeScript
+compilation errors)
