@@ -1,0 +1,51 @@
+---
+description: HOA management business logic and domain rules
+---
+
+# HOA Management Business Logic
+
+## Core Entities
+- **Units**: Individual properties in HOA communities
+- **Residents**: People living in units (owners/tenants)
+- **Invoices**: Billing documents for HOA fees
+- **Payments**: Payment records for invoices
+- **Schedules**: Recurring billing schedules
+
+## Invoice System
+- **InvoiceUnit** model handles all invoice logic
+- Support for recurring invoices with frequency (monthly, quarterly, annually)
+- Automatic billing with `auto_bill` flag
+- Discount support (amount or percentage)
+- Tax calculation with configurable rates
+- Payment tracking with `paid_to_date` and `balance_due`
+
+## Multi-tenant Architecture
+- Each HOA community is a separate tenant
+- All data isolated by `tenant_id`
+- Firebase authentication with tenant association
+- Tenant-specific configuration and branding
+
+## PDF Generation
+- Server-side: Laravel DomPDF for invoice PDFs
+- Client-side: jsPDF for dynamic PDF generation
+- Invoice templates with HOA branding
+- Support for multiple invoice formats
+
+## Payment Processing
+- Track payment history per invoice
+- Support for partial payments
+- Automatic balance calculation
+- Payment status tracking (pending, paid, overdue)
+
+## Data Validation
+- Use Zod schemas in [packages/models/src/validation.ts](mdc:packages/models/src/validation.ts)
+- Laravel validation rules in controllers
+- Type-safe API contracts between frontend and backend
+
+## Business Rules
+- Invoices can be recurring or one-time
+- Units can have multiple residents
+- Residents can be owners or tenants
+- HOA fees are typically monthly or quarterly
+- Late fees and penalties can be applied
+- Payment reminders can be automated

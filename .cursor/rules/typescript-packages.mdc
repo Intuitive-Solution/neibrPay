@@ -1,0 +1,40 @@
+---
+globs: packages/**/*.ts,packages/**/*.js
+description: TypeScript package development patterns
+---
+
+# TypeScript Package Development Rules
+
+## Package Structure
+- Shared packages in [packages/](mdc:packages/) directory
+- Each package has its own `package.json` and `tsconfig.json`
+- Build output in `dist/` directory
+
+## API Client Package
+- Location: [packages/api-client/src/](mdc:packages/api-client/src/)
+- Export all APIs from [packages/api-client/src/index.ts](mdc:packages/api-client/src/index.ts)
+- Use typed endpoints with proper error handling
+- Query keys in [packages/api-client/src/queryKeys.ts](mdc:packages/api-client/src/queryKeys.ts)
+
+## Models Package
+- Location: [packages/models/src/](mdc:packages/models/src/)
+- Export all models from [packages/models/src/index.ts](mdc:packages/models/src/index.ts)
+- Use Zod schemas for validation
+- Include TypeScript types and interfaces
+
+## UI Package
+- Location: [packages/ui/src/](mdc:packages/ui/src/)
+- Shared Vue components and utilities
+- Build with Vite configuration
+
+## Config Package
+- Location: [packages/config/src/](mdc:packages/config/src/)
+- Shared configuration files
+- ESLint, Prettier, TypeScript configs
+
+## Development Guidelines
+- Use proper TypeScript types throughout
+- Export everything from package index files
+- Use path aliases defined in root [tsconfig.json](mdc:tsconfig.json)
+- Build packages before using in apps
+- Follow monorepo workspace patterns

@@ -1,0 +1,42 @@
+---
+globs: *.vue,*.ts,*.js
+description: Vue 3 frontend development patterns
+---
+
+# Vue 3 Frontend Development Rules
+
+## Vue Component Structure
+- Use **Composition API** with `<script setup lang="ts">`
+- Import components from [apps/admin-web/src/components/](mdc:apps/admin-web/src/components/)
+- Follow the pattern in [App.vue](mdc:apps/admin-web/src/App.vue)
+
+## State Management
+- Use **Pinia** for global state: [apps/admin-web/src/stores/](mdc:apps/admin-web/src/stores/)
+- Use **TanStack Query** for server state: [packages/api-client/src/](mdc:packages/api-client/src/)
+- Query keys defined in [packages/api-client/src/queryKeys.ts](mdc:packages/api-client/src/queryKeys.ts)
+
+## API Integration
+- Use typed API client from [packages/api-client/src/](mdc:packages/api-client/src/)
+- Import models from [packages/models/src/](mdc:packages/models/src/)
+- Example: `import { invoicesApi } from '@neibrpay/api-client'`
+
+## Styling
+- Use **Tailwind CSS** for styling
+- Configuration: [apps/admin-web/tailwind.config.js](mdc:apps/admin-web/tailwind.config.js)
+- Global styles: [apps/admin-web/src/style.css](mdc:apps/admin-web/src/style.css)
+
+## Routing
+- Vue Router configuration: [apps/admin-web/src/router/](mdc:apps/admin-web/src/router/)
+- Use route-based code splitting
+
+## TypeScript
+- Strict TypeScript enabled in [tsconfig.json](mdc:tsconfig.json)
+- Use proper typing for all props, emits, and composables
+- Import types from [packages/models/src/](mdc:packages/models/src/)
+
+## File Organization
+- Components: `src/components/`
+- Views: `src/views/`
+- Composables: `src/composables/`
+- Services: `src/services/`
+- Config: `src/config/`

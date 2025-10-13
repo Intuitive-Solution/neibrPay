@@ -1,0 +1,55 @@
+---
+alwaysApply: true
+---
+
+# Coding Standards and Best Practices
+
+## General Principles
+- **Type Safety**: Use TypeScript strictly, avoid `any` types
+- **Error Handling**: Proper error handling with try-catch and user feedback
+- **Performance**: Optimize for HOA management scale (hundreds of units per community)
+- **Security**: Multi-tenant data isolation, input validation, authentication
+
+## TypeScript Standards
+- Use strict TypeScript configuration from [tsconfig.json](mdc:tsconfig.json)
+- Define proper interfaces and types
+- Use path aliases: `@neibrpay/*` for internal packages
+- Avoid `any` types, use proper typing
+
+## Vue 3 Standards
+- Use Composition API with `<script setup lang="ts">`
+- Proper prop validation with TypeScript
+- Use Pinia for state management
+- Use TanStack Query for server state
+- Component naming: PascalCase for components, camelCase for composables
+
+## Laravel Standards
+- Follow PSR-4 autoloading standards
+- Use dependency injection
+- Proper model relationships and scopes
+- API responses in JSON format
+- Use Laravel validation rules
+
+## File Naming
+- **Vue Components**: PascalCase (e.g., `InvoiceDetail.vue`)
+- **TypeScript Files**: camelCase (e.g., `invoiceService.ts`)
+- **PHP Classes**: PascalCase (e.g., `InvoiceController.php`)
+- **Database Migrations**: snake_case with timestamps
+
+## Code Organization
+- Group related functionality together
+- Use proper imports and exports
+- Follow the established folder structure
+- Keep components focused and single-purpose
+
+## Testing
+- Write tests for business logic
+- Use proper mocking for external dependencies
+- Test multi-tenant data isolation
+- Test PDF generation functionality
+
+## Documentation
+- Document complex business logic
+- Use JSDoc for TypeScript functions
+- Use PHPDoc for PHP methods
+- Keep README files updated

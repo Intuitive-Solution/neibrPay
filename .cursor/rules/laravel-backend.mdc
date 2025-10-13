@@ -1,0 +1,49 @@
+---
+globs: *.php
+description: Laravel backend development patterns
+---
+
+# Laravel Backend Development Rules
+
+## Project Structure
+- Laravel 10 with PHP 8.2+ in [backend/laravel/](mdc:backend/laravel/)
+- API controllers in [backend/laravel/app/Http/Controllers/Api/](mdc:backend/laravel/app/Http/Controllers/Api/)
+- Models in [backend/laravel/app/Models/](mdc:backend/laravel/app/Models/)
+- Services in [backend/laravel/app/Services/](mdc:backend/laravel/app/Services/)
+
+## Multi-tenant Architecture
+- All models use `tenant_id` for data isolation
+- Use `forTenant()` scope method on models
+- Example: `InvoiceUnit::forTenant($user->tenant_id)`
+
+## API Controllers
+- Extend `App\Http\Controllers\Controller`
+- Use dependency injection for services
+- Return `JsonResponse` for API endpoints
+- Follow pattern in [InvoiceController.php](mdc:backend/laravel/app/Http/Controllers/Api/InvoiceController.php)
+
+## Models
+- Use `SoftDeletes` trait for soft deletion
+- Define `$fillable` arrays for mass assignment
+- Use proper `$casts` for data types
+- Example: [InvoiceUnit.php](mdc:backend/laravel/app/Models/InvoiceUnit.php)
+
+## Services
+- Business logic in service classes
+- Example: [InvoicePdfService.php](mdc:backend/laravel/app/Services/InvoicePdfService.php)
+- Use dependency injection in controllers
+
+## Database
+- SQLite database: [backend/laravel/database/database.sqlite](mdc:backend/laravel/database/database.sqlite)
+- Migrations in [backend/laravel/database/migrations/](mdc:backend/laravel/database/migrations/)
+- Use proper foreign key constraints
+
+## Authentication
+- Firebase authentication integration
+- Use `firebase_user` middleware
+- Access user via `$request->get('firebase_user')`
+
+## PDF Generation
+- Use Laravel DomPDF for server-side PDFs
+- Use jsPDF for client-side PDFs
+- PDF service: [InvoicePdfService.php](mdc:backend/laravel/app/Services/InvoicePdfService.php)

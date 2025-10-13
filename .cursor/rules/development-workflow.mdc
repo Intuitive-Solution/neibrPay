@@ -1,0 +1,52 @@
+---
+description: Development workflow and deployment patterns
+---
+
+# Development Workflow
+
+## Getting Started
+1. Install dependencies: `npm install`
+2. Start development: `npm run dev`
+3. Backend runs on Laravel (typically port 8000)
+4. Frontend apps run on Vite (admin-web on port 3000)
+
+## Build Process
+- **Turbo Monorepo**: Use `npm run build` to build all packages and apps
+- **Package Dependencies**: Packages must be built before apps
+- **Type Checking**: Run `npm run type-check` before commits
+- **Linting**: Use `npm run lint` for code quality
+
+## Package Development
+- Work in [packages/](mdc:packages/) for shared code
+- Build packages with their individual build scripts
+- Use proper exports in package index files
+- Test packages in consuming applications
+
+## Database Management
+- Run migrations: `php artisan migrate`
+- Seed data: `php artisan db:seed`
+- Use Laravel Tinker for database exploration
+
+## API Development
+- API routes in [backend/laravel/routes/api.php](mdc:backend/laravel/routes/api.php)
+- Controllers in [backend/laravel/app/Http/Controllers/Api/](mdc:backend/laravel/app/Http/Controllers/Api/)
+- Use proper HTTP status codes and JSON responses
+- Test API endpoints with proper authentication
+
+## Frontend Development
+- Use Vite for fast development builds
+- Hot module replacement for Vue components
+- TypeScript compilation with vue-tsc
+- Tailwind CSS for styling
+
+## Deployment
+- Frontend apps deploy to Netlify (see [netlify.toml](mdc:apps/admin-web/netlify.toml))
+- Backend deploys to Laravel hosting
+- Use proper environment variables
+- Build all packages before deployment
+
+## Testing Strategy
+- Unit tests for business logic
+- Integration tests for API endpoints
+- E2E tests for critical user flows
+- Test multi-tenant data isolation

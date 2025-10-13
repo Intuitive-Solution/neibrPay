@@ -1,0 +1,34 @@
+---
+alwaysApply: true
+---
+
+# NeibrPay Project Structure Guide
+
+This is a **multi-tenant HOA Management Platform** built as a monorepo with the following architecture:
+
+## Monorepo Structure
+- **Root**: [package.json](mdc:package.json) - Turbo monorepo with workspaces
+- **Apps**: [apps/](mdc:apps/) - Frontend applications (admin-web, owner-web, mobile)
+- **Packages**: [packages/](mdc:packages/) - Shared libraries (api-client, models, ui, config)
+- **Backend**: [backend/laravel/](mdc:backend/laravel/) - Laravel API server
+- **Docs**: [md/](mdc:md/) - Project documentation and PRDs
+
+## Key Technologies
+- **Frontend**: Vue 3 + TypeScript + Vite + Tailwind CSS
+- **Backend**: Laravel 10 + PHP 8.2 + SQLite
+- **State Management**: Pinia + TanStack Query
+- **Build System**: Turbo + npm workspaces
+- **PDF Generation**: Laravel DomPDF + jsPDF
+
+## Package Aliases
+Use these TypeScript path aliases:
+- `@neibrpay/ui` → [packages/ui/src](mdc:packages/ui/src)
+- `@neibrpay/api-client` → [packages/api-client/src](mdc:packages/api-client/src)
+- `@neibrpay/models` → [packages/models/src](mdc:packages/models/src)
+- `@neibrpay/config` → [packages/config/src](mdc:packages/config/src)
+
+## Development Commands
+- `npm run dev` - Start all development servers
+- `npm run build` - Build all packages and apps
+- `npm run lint` - Lint all code
+- `npm run type-check` - TypeScript type checking
