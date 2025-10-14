@@ -1563,6 +1563,7 @@ watch(
       form.value.discount_amount = invoice.discount_amount?.toString() || '';
       form.value.discount_type = invoice.discount_type;
       form.value.auto_bill = invoice.auto_bill;
+      form.value.paid_to_date = parseFloat(invoice.paid_to_date) || 0;
 
       // Transform invoice items to UI format
       invoiceItems.value = invoice.items.map((item: any) => ({
@@ -1613,7 +1614,10 @@ watch(
   { immediate: true }
 );
 
-const paidToDate = computed(() => form.value.paid_to_date || 0);
+const paidToDate = computed(() => {
+  const value = form.value.paid_to_date;
+  return typeof value === 'string' ? parseFloat(value) || 0 : value || 0;
+});
 
 // Rich text editor state
 const editorRef = ref<HTMLElement | null>(null);
