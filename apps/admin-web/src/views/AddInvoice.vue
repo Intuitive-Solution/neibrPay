@@ -2624,12 +2624,12 @@ onUnmounted(() => {
   padding: 20px;
   max-height: 80vh;
   overflow-y: auto;
+  width: 100%;
 }
 
 .preview-container .invoice-template {
-  transform: scale(0.8);
-  transform-origin: top left;
-  margin-bottom: -20%;
+  width: 100%;
+  max-width: none;
 }
 </style>
 // Helper function to generate HTML for PDF (removed to fix TypeScript
