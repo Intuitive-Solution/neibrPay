@@ -710,7 +710,7 @@ class InvoiceController extends Controller
                         <div class=\"invoice-details\">
                             <p><strong>Invoice #:</strong> {$invoiceUnit->invoice_number}</p>
                             <p><strong>Date:</strong> {$formatDate($invoiceUnit->start_date)}</p>
-                            <p><strong>Due Date:</strong> {$formatDate($invoiceUnit->due_date)}</p>
+                            <p><strong>Due Date:</strong> {$formatDate($invoiceUnit->getActualDueDate())}</p>
                         </div>
                     </div>
                 </div>
