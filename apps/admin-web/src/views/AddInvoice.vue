@@ -1580,20 +1580,33 @@ watch(
           ? parseFloat(invoice.tax_rate)
           : invoice.tax_rate || 0;
 
-      // Populate notes from existing invoice
+      // Populate notes from existing invoice using the same logic as clone
       if (invoice.notes) {
-        invoice.notes.forEach((note: any) => {
-          if (note.type === 'public_notes') {
-            tabContent.value['public-notes'] = note.content;
-          } else if (note.type === 'private_notes') {
-            tabContent.value['private-notes'] = note.content;
-          } else if (note.type === 'terms') {
-            tabContent.value.terms = note.content;
-          } else if (note.type === 'footer') {
-            tabContent.value.footer = note.content;
-          }
-        });
+        // Extract notes by type with fallback values
+        const publicNotes =
+          invoice.notes.find((n: any) => n.type === 'public_notes')?.content ||
+          '';
+        const privateNotes =
+          invoice.notes.find((n: any) => n.type === 'private_notes')?.content ||
+          '';
+        const terms =
+          invoice.notes.find((n: any) => n.type === 'terms')?.content || '';
+        const footer =
+          invoice.notes.find((n: any) => n.type === 'footer')?.content || '';
+
+        // Set the tab content
+        tabContent.value['public-notes'] = publicNotes;
+        tabContent.value['private-notes'] = privateNotes;
+        tabContent.value.terms = terms;
+        tabContent.value.footer = footer;
       }
+
+      // Update the editor content to display the existing data
+      nextTick(() => {
+        if (editorRef.value) {
+          editorRef.value.innerHTML = tabContent.value['public-notes'];
+        }
+      });
     }
   },
   { immediate: true }
@@ -2358,7 +2371,6 @@ const handleSubmit = async () => {
           }
         }
       }
-
       console.log('Invoice updated successfully:', response);
       router.push(`/invoices/${invoiceId.value}`);
     } else {
