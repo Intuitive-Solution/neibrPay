@@ -662,13 +662,99 @@
                 class="grid grid-cols-5 gap-4 items-start py-3 hover:bg-gray-50"
               >
                 <!-- Item Name -->
-                <div>
-                  <input
-                    v-model="item.name"
-                    type="text"
-                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
-                    placeholder="Item name"
-                  />
+                <div class="relative item-dropdown-container">
+                  <div class="relative">
+                    <input
+                      v-model="item.name"
+                      type="text"
+                      class="w-full px-2 py-1 pr-8 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                      placeholder="Item name"
+                      @focus="showItemDropdown(index)"
+                      @blur="hideItemDropdown(index)"
+                      @input="onItemNameInput(index, $event)"
+                    />
+                    <!-- Dropdown Arrow -->
+                    <div
+                      class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"
+                    >
+                      <svg
+                        class="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <!-- Dropdown Menu -->
+                  <div
+                    v-if="itemDropdowns[index]"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+                  >
+                    <!-- Free Text Option -->
+                    <div
+                      class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer border-b border-gray-200"
+                      @mousedown="selectFreeText(index)"
+                    >
+                      <div class="flex items-center">
+                        <svg
+                          class="w-4 h-4 mr-2 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                        <span class="font-medium">Free text</span>
+                      </div>
+                    </div>
+
+                    <!-- Charges List -->
+                    <div v-if="filteredCharges.length > 0">
+                      <div
+                        class="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-200"
+                      >
+                        Load from Charges
+                      </div>
+                      <div
+                        v-for="charge in filteredCharges"
+                        :key="charge.id"
+                        class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                        @mousedown="loadCharge(index, charge)"
+                      >
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <div class="font-medium">{{ charge.title }}</div>
+                            <div class="text-xs text-gray-500">
+                              {{
+                                getChargeCategoryDisplayName(charge.category)
+                              }}
+                            </div>
+                          </div>
+                          <div class="text-sm font-medium text-gray-900">
+                            ${{ formatCurrency(charge.amount) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- No Charges Message -->
+                    <div v-else class="px-3 py-2 text-sm text-gray-500">
+                      No charges available
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Description -->
@@ -715,7 +801,7 @@
                 <!-- Line Total (Read-only) -->
                 <div class="flex items-center justify-end">
                   <span class="text-sm text-gray-900 mr-3 font-medium">
-                    ${{ item.lineTotal.toFixed(2) }}
+                    ${{ formatCurrency(item.lineTotal) }}
                   </span>
                   <button
                     type="button"
@@ -1194,7 +1280,7 @@
             <div class="flex justify-between items-center">
               <span class="text-sm text-gray-600">Subtotal</span>
               <span class="text-sm font-medium text-gray-900"
-                >${{ subtotal.toFixed(2) }}</span
+                >${{ formatCurrency(subtotal) }}</span
               >
             </div>
 
@@ -1218,7 +1304,7 @@
               <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600">Tax Amount</span>
                 <span class="text-sm font-medium text-gray-900"
-                  >${{ taxAmount.toFixed(2) }}</span
+                  >${{ formatCurrency(taxAmount) }}</span
                 >
               </div>
             </div>
@@ -1228,7 +1314,7 @@
               <div class="flex justify-between items-center">
                 <span class="text-sm font-medium text-gray-900">Total</span>
                 <span class="text-sm font-bold text-gray-900"
-                  >${{ total.toFixed(2) }}</span
+                  >${{ formatCurrency(total) }}</span
                 >
               </div>
             </div>
@@ -1237,7 +1323,7 @@
             <div class="flex justify-between items-center">
               <span class="text-sm text-gray-600">Paid to Date</span>
               <span class="text-sm font-medium text-gray-900"
-                >${{ paidToDate.toFixed(2) }}</span
+                >${{ formatCurrency(paidToDate) }}</span
               >
             </div>
 
@@ -1248,7 +1334,7 @@
                   >Balance Due</span
                 >
                 <span class="text-sm font-bold text-gray-900"
-                  >${{ balanceDue.toFixed(2) }}</span
+                  >${{ formatCurrency(balanceDue) }}</span
                 >
               </div>
             </div>
@@ -1375,7 +1461,11 @@ import type {
   UnitWithResident,
   CreateInvoiceRequest,
   UpdateInvoiceRequest,
+  Charge,
 } from '@neibrpay/models';
+import { chargesApi, queryKeys } from '@neibrpay/api-client';
+import { useQuery } from '@tanstack/vue-query';
+import { getChargeCategoryDisplayName } from '@neibrpay/models';
 import InvoiceTemplate from '../components/InvoiceTemplate.vue';
 
 // Router
@@ -1450,6 +1540,23 @@ const { data: existingAttachments } = useInvoiceAttachments(
   invoiceId.value || 0
 );
 
+// Fetch active charges for item dropdown
+const { data: chargesData } = useQuery({
+  queryKey: queryKeys.charges.list({ is_active: true }),
+  queryFn: () => chargesApi.list({ is_active: true }),
+  select: data => data.data,
+});
+
+const charges = computed(() => chargesData.value || []);
+
+// Filtered charges for item dropdown
+const filteredCharges = computed(() => {
+  if (!chargeSearchQuery.value) return charges.value;
+  return charges.value.filter((charge: Charge) =>
+    charge.title.toLowerCase().includes(chargeSearchQuery.value.toLowerCase())
+  );
+});
+
 // Generate PDF mutation
 // PDF generation is now handled automatically on the server
 
@@ -1458,6 +1565,14 @@ const isDropdownOpen = ref(false);
 const searchQuery = ref('');
 const highlightedIndex = ref(-1);
 const dropdownRef = ref<HTMLElement | null>(null);
+
+// Charge dropdown state
+const showChargeDropdown = ref(false);
+const chargeSearchQuery = ref('');
+
+// Item dropdown state
+const itemDropdowns = ref<Record<number, boolean>>({});
+const itemSearchQueries = ref<Record<number, string>>({});
 
 // Invoice items
 const invoiceItems = ref([
@@ -1887,22 +2002,94 @@ const addItem = () => {
     lineTotal: 0.0,
   };
   invoiceItems.value.push(newItem);
+  // Ensure line total is calculated for the new item
+  updateLineTotal(invoiceItems.value.length - 1);
 };
 
 const removeItem = (index: number) => {
   invoiceItems.value.splice(index, 1);
 };
 
+// Item dropdown methods
+const showItemDropdown = (index: number) => {
+  itemDropdowns.value[index] = true;
+};
+
+const hideItemDropdown = (index: number) => {
+  // Delay hiding to allow for click events
+  setTimeout(() => {
+    itemDropdowns.value[index] = false;
+  }, 150);
+};
+
+const onItemNameInput = (index: number, event: Event) => {
+  const target = event.target as HTMLInputElement;
+  itemSearchQueries.value[index] = target.value;
+  chargeSearchQuery.value = target.value;
+};
+
+const selectFreeText = (index: number) => {
+  // Keep the current input value and close dropdown
+  itemDropdowns.value[index] = false;
+};
+
+const loadCharge = (index: number, charge: Charge) => {
+  const item = invoiceItems.value[index];
+  if (item) {
+    item.name = charge.title;
+    item.description = charge.description || '';
+    item.unitCost = charge.amount;
+    item.quantity = 1;
+    // Don't set lineTotal directly - let updateLineTotal calculate it
+    updateLineTotal(index);
+  }
+  itemDropdowns.value[index] = false;
+};
+
+// Utility functions
+const formatCurrency = (amount: number | string | null | undefined): string => {
+  if (amount === null || amount === undefined) return '0.00';
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(numAmount)) return '0.00';
+  return numAmount.toFixed(2);
+};
+
 const updateLineTotal = (index: number) => {
   const item = invoiceItems.value[index];
-  if (
-    item &&
-    typeof item.unitCost === 'number' &&
-    typeof item.quantity === 'number'
-  ) {
-    item.lineTotal = item.unitCost * item.quantity;
+  if (item) {
+    // Convert to numbers, handling strings and edge cases
+    const unitCost =
+      typeof item.unitCost === 'string'
+        ? parseFloat(item.unitCost)
+        : item.unitCost;
+    const quantity =
+      typeof item.quantity === 'string'
+        ? parseFloat(item.quantity)
+        : item.quantity;
+
+    // Ensure we have valid numbers
+    if (!isNaN(unitCost) && !isNaN(quantity) && unitCost >= 0 && quantity > 0) {
+      item.lineTotal = unitCost * quantity;
+    } else {
+      item.lineTotal = 0;
+    }
   }
 };
+
+// Watch for changes in invoice items and update line totals
+watch(
+  () =>
+    invoiceItems.value.map(item => ({
+      unitCost: item.unitCost,
+      quantity: item.quantity,
+    })),
+  () => {
+    invoiceItems.value.forEach((_, index) => {
+      updateLineTotal(index);
+    });
+  },
+  { deep: true }
+);
 
 // Document management functions
 const handleFileUpload = async (event: Event) => {
@@ -2269,6 +2456,14 @@ const getCurrentTabContent = () => {
 const handleClickOutside = (event: Event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     closeDropdown();
+  }
+
+  // Close item dropdowns if clicking outside
+  const target = event.target as HTMLElement;
+  if (!target.closest('.item-dropdown-container')) {
+    Object.keys(itemDropdowns.value).forEach(key => {
+      itemDropdowns.value[parseInt(key)] = false;
+    });
   }
 };
 

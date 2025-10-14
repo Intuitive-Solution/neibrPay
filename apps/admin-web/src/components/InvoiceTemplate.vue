@@ -59,9 +59,9 @@
           <tr v-for="(item, index) in invoiceItems" :key="index">
             <td class="item-name">{{ item.name }}</td>
             <td class="item-description">{{ item.description }}</td>
-            <td class="item-cost">${{ item.unitCost.toFixed(2) }}</td>
+            <td class="item-cost">${{ formatCurrency(item.unitCost) }}</td>
             <td class="item-quantity">{{ item.quantity }}</td>
-            <td class="item-total">${{ item.lineTotal.toFixed(2) }}</td>
+            <td class="item-total">${{ formatCurrency(item.lineTotal) }}</td>
           </tr>
         </tbody>
       </table>
@@ -72,7 +72,7 @@
       <div class="totals-container">
         <div class="total-row">
           <span class="total-label">Subtotal:</span>
-          <span class="total-value">${{ subtotal.toFixed(2) }}</span>
+          <span class="total-value">${{ formatCurrency(subtotal) }}</span>
         </div>
 
         <div v-if="discountAmount > 0" class="total-row">
@@ -81,27 +81,29 @@
               discountType === 'percentage' ? discountAmount + '%' : 'Amount'
             }}):</span
           >
-          <span class="total-value">-${{ calculatedDiscount.toFixed(2) }}</span>
+          <span class="total-value"
+            >-${{ formatCurrency(calculatedDiscount) }}</span
+          >
         </div>
 
         <div v-if="taxRate > 0" class="total-row">
           <span class="total-label">Tax ({{ taxRate }}%):</span>
-          <span class="total-value">${{ taxAmount.toFixed(2) }}</span>
+          <span class="total-value">${{ formatCurrency(taxAmount) }}</span>
         </div>
 
         <div class="total-row final-total">
           <span class="total-label">Total:</span>
-          <span class="total-value">${{ total.toFixed(2) }}</span>
+          <span class="total-value">${{ formatCurrency(total) }}</span>
         </div>
 
         <div v-if="paidToDate > 0" class="total-row">
           <span class="total-label">Paid to Date:</span>
-          <span class="total-value">${{ paidToDate.toFixed(2) }}</span>
+          <span class="total-value">${{ formatCurrency(paidToDate) }}</span>
         </div>
 
         <div v-if="balanceDue > 0" class="total-row balance-due">
           <span class="total-label">Balance Due:</span>
-          <span class="total-value">${{ balanceDue.toFixed(2) }}</span>
+          <span class="total-value">${{ formatCurrency(balanceDue) }}</span>
         </div>
       </div>
     </div>
@@ -244,6 +246,13 @@ const formatPaymentMethod = (method: string) => {
     other: 'Other',
   };
   return methodMap[method] || method;
+};
+
+const formatCurrency = (amount: number | string | null | undefined): string => {
+  if (amount === null || amount === undefined) return '0.00';
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(numAmount)) return '0.00';
+  return numAmount.toFixed(2);
 };
 
 const getUnitTitle = (unitId: number) => {
