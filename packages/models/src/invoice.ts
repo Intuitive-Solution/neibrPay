@@ -66,6 +66,7 @@ export const UpdateInvoiceRequestSchema = z.object({
   auto_bill: z
     .enum(['disabled', 'enabled', 'on_due_date', 'on_send'])
     .optional(),
+  paid_to_date: z.number().min(0).optional(),
   items: z.array(InvoiceItemSchema).min(1).optional(),
   tax_rate: z.number().min(0).max(100).optional(),
   notes: InvoiceNotesSchema.optional(),

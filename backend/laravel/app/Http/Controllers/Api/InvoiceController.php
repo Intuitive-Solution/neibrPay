@@ -221,6 +221,7 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required_with:items|numeric|min:1',
             'items.*.line_total' => 'required_with:items|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'paid_to_date' => 'nullable|numeric|min:0',
             'notes' => 'nullable|array',
             'notes.public_notes' => 'nullable|string',
             'notes.private_notes' => 'nullable|string',

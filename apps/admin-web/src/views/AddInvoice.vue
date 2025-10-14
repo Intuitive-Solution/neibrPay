@@ -2310,6 +2310,7 @@ const handleSubmit = async () => {
           : undefined,
         discount_type: form.value.discount_type as any,
         auto_bill: form.value.auto_bill as any,
+        paid_to_date: form.value.paid_to_date || 0,
         items: invoiceItems.value.map((item: any) => ({
           name: item.name,
           description: item.description,
