@@ -1880,8 +1880,8 @@ const selectHighlighted = () => {
 // Invoice items methods
 const addItem = () => {
   const newItem = {
-    name: 'New Item',
-    description: 'Item description',
+    name: '',
+    description: '',
     unitCost: 0.0,
     quantity: 1,
     lineTotal: 0.0,
