@@ -1523,10 +1523,40 @@ watch(
       // Populate form with existing data
       form.value.unit_ids = [invoice.unit_id];
       form.value.frequency = invoice.frequency;
-      // Convert ISO date to yyyy-MM-dd format
-      form.value.start_date = invoice.start_date
-        ? new Date(invoice.start_date).toISOString().split('T')[0]
-        : '';
+      // Convert date to yyyy-MM-dd format (handle timezone issues)
+      if (invoice.start_date) {
+        try {
+          // Handle different date formats that might come from the API
+          let dateValue = invoice.start_date;
+
+          // If it's already in YYYY-MM-DD format, use it directly
+          if (
+            typeof dateValue === 'string' &&
+            /^\d{4}-\d{2}-\d{2}$/.test(dateValue)
+          ) {
+            form.value.start_date = dateValue;
+          } else {
+            // If it's an ISO string or other format, convert it
+            const date = new Date(dateValue);
+            if (!isNaN(date.getTime())) {
+              form.value.start_date = date.toISOString().split('T')[0];
+            } else {
+              form.value.start_date = '';
+            }
+          }
+        } catch (error) {
+          console.error(
+            'Error parsing start_date:',
+            error,
+            'Value:',
+            invoice.start_date
+          );
+          form.value.start_date = '';
+        }
+      } else {
+        form.value.start_date = '';
+      }
+
       form.value.remaining_cycles = invoice.remaining_cycles || 'endless';
       form.value.due_date = invoice.due_date;
       form.value.po_number = invoice.po_number || '';
@@ -1654,12 +1684,48 @@ const showPreview = computed(() => {
   return form.value.unit_ids.length > 0 && invoiceItems.value.length > 0;
 });
 
-// Preview form with only the selected unit
+// Calculate actual due date based on due_date string and start_date
+const calculatedDueDate = computed(() => {
+  if (!form.value.start_date) return '';
+
+  const startDate = new Date(form.value.start_date);
+  if (isNaN(startDate.getTime())) return '';
+
+  switch (form.value.due_date) {
+    case 'due_on_receipt':
+      return form.value.start_date; // Same as start date
+    case 'net_15':
+      return new Date(startDate.getTime() + 15 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+    case 'net_30':
+      return new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+    case 'net_45':
+      return new Date(startDate.getTime() + 45 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+    case 'net_60':
+      return new Date(startDate.getTime() + 60 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+    case 'use_payment_terms':
+    default:
+      // Default to 30 days if using payment terms
+      return new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+  }
+});
+
+// Preview form with only the selected unit and calculated due date
 const previewForm = computed(() => {
   const selectedUnitId = selectedPreviewUnitId.value || form.value.unit_ids[0];
   return {
     ...form.value,
     unit_ids: [selectedUnitId],
+    due_date: calculatedDueDate.value, // Override with calculated due date
   };
 });
 
@@ -2416,9 +2482,6 @@ onMounted(() => {
   // Check for cloned invoice data from sessionStorage
   const clonedDataString = sessionStorage.getItem('clonedInvoice');
   const clonedData = clonedDataString ? JSON.parse(clonedDataString) : null;
-  console.log('clonedData from sessionStorage', clonedData);
-  console.log('start_date from cloned data:', clonedData?.start_date);
-  console.log('tax_rate from cloned data:', clonedData?.tax_rate);
 
   if (clonedData) {
     // Populate scheduling details
@@ -2461,12 +2524,6 @@ onMounted(() => {
     tabContent.value['terms'] = clonedData.terms || '';
     tabContent.value['footer'] = clonedData.footer || '';
 
-    console.log('Tab content after cloning:', {
-      'public-notes': tabContent.value['public-notes'],
-      terms: tabContent.value['terms'],
-      footer: tabContent.value['footer'],
-    });
-
     // Set the active tab to public-notes to show the cloned content immediately
     activeTab.value = 'public-notes';
 
@@ -2479,9 +2536,10 @@ onMounted(() => {
 
     // Clear the cloned data from sessionStorage after using it
     sessionStorage.removeItem('clonedInvoice');
-  } else {
-    // Set default start date to today only if not cloning
+  } else if (!isEditMode.value) {
+    // Set default start date to today only if not cloning and not in edit mode
     const today = new Date();
+    console.log('today date being set to start_date', today);
     form.value.start_date = today.toISOString().split('T')[0];
   }
 
