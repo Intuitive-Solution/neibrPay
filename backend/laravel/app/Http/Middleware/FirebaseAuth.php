@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Services\FirebaseService;
 use App\Models\User;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,6 +45,7 @@ class FirebaseAuth
             }
 
             $idToken = $matches[1];
+            
 
             // Verify the Firebase ID token
             $tokenData = $this->firebaseService->verifyIdToken($idToken);
@@ -58,6 +60,9 @@ class FirebaseAuth
                 ], 404);
             }
 
+            // Set the authenticated user in the Auth system
+            Auth::setUser($user);
+            
             // Add user to request for use in controllers
             $request->merge(['firebase_user' => $user]);
             $request->merge(['firebase_token_data' => $tokenData]);

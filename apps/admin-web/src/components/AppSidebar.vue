@@ -147,6 +147,37 @@
 
           <li>
             <router-link
+              to="/charges"
+              :class="[
+                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
+                $route.name === 'Charges' ||
+                $route.name === 'AddCharge' ||
+                $route.name === 'EditCharge'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-700 hover:bg-gray-100',
+                isCollapsed ? 'justify-center px-2' : 'px-4',
+              ]"
+              :title="isCollapsed ? 'Charges' : ''"
+            >
+              <svg
+                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                />
+              </svg>
+              <span v-if="!isCollapsed">Charges</span>
+            </router-link>
+          </li>
+
+          <li>
+            <router-link
               to="/people"
               :class="[
                 'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
@@ -399,7 +430,7 @@
 
           <!-- Search Bar or Back Button -->
           <div class="flex items-center space-x-4">
-            <!-- Back Button for Add/Edit Resident, Unit, and Invoice pages -->
+            <!-- Back Button for Add/Edit Resident, Unit, Invoice, and Charge pages -->
             <button
               v-if="
                 route.name === 'AddResident' ||
@@ -407,7 +438,9 @@
                 route.name === 'AddUnit' ||
                 route.name === 'EditUnit' ||
                 route.name === 'AddInvoice' ||
-                route.name === 'InvoiceDetail'
+                route.name === 'InvoiceDetail' ||
+                route.name === 'AddCharge' ||
+                route.name === 'EditCharge'
               "
               @click="goBack"
               class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -504,6 +537,12 @@ const pageTitle = computed(() => {
       return 'Create Invoice';
     case 'InvoiceDetail':
       return 'View Invoice';
+    case 'Charges':
+      return 'Charges';
+    case 'AddCharge':
+      return 'Add New Charge';
+    case 'EditCharge':
+      return 'Edit Charge';
     case 'People':
       return 'People';
     case 'AddResident':
@@ -537,6 +576,12 @@ const pageDescription = computed(() => {
       return 'Create a new invoice for your community';
     case 'InvoiceDetail':
       return 'View and manage invoice details';
+    case 'Charges':
+      return 'Manage standard charges and fees';
+    case 'AddCharge':
+      return 'Create a new charge template';
+    case 'EditCharge':
+      return 'Update charge information';
     case 'People':
       return 'Manage residents and community members';
     case 'AddResident':
@@ -579,6 +624,8 @@ const goBack = () => {
     router.push('/units');
   } else if (route.name === 'AddInvoice' || route.name === 'InvoiceDetail') {
     router.push('/invoices');
+  } else if (route.name === 'AddCharge' || route.name === 'EditCharge') {
+    router.push('/charges');
   }
 };
 </script>

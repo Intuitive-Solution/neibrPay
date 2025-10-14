@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ChargeController;
 use App\Http\Controllers\Api\InvoiceAttachmentController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoicePdfController;
@@ -100,6 +101,10 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('invoices/{invoice}/pdf/download', [InvoicePdfController::class, 'download']);
     Route::get('invoices/{invoice}/pdf/versions', [InvoicePdfController::class, 'versions']);
     Route::get('invoices/{invoice}/pdf/versions/{version}/download', [InvoicePdfController::class, 'downloadVersion']);
+    
+    // Charge management routes
+    Route::apiResource('charges', ChargeController::class);
+    Route::post('charges/{charge}/restore', [ChargeController::class, 'restore']);
 });
 
 // Legacy route for backward compatibility
