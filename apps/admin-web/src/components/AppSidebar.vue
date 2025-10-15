@@ -418,8 +418,8 @@
       class="flex-1 flex flex-col overflow-hidden"
       style="background-color: #f3f8fd"
     >
-      <!-- Top Header -->
-      <header class="px-6 py-4">
+      <!-- Top Header - Hidden for Add/Edit pages -->
+      <header v-if="!isAddEditPage" class="px-6 py-4">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-2xl font-semibold text-gray-900">
@@ -428,41 +428,9 @@
             <p class="text-sm text-gray-600 mt-1">{{ pageDescription }}</p>
           </div>
 
-          <!-- Search Bar or Back Button -->
+          <!-- Search Bar -->
           <div class="flex items-center space-x-4">
-            <!-- Back Button for Add/Edit Resident, Unit, Invoice, and Charge pages -->
-            <button
-              v-if="
-                route.name === 'AddResident' ||
-                route.name === 'EditResident' ||
-                route.name === 'AddUnit' ||
-                route.name === 'EditUnit' ||
-                route.name === 'AddInvoice' ||
-                route.name === 'InvoiceDetail' ||
-                route.name === 'AddCharge' ||
-                route.name === 'EditCharge'
-              "
-              @click="goBack"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
-              <svg
-                class="-ml-0.5 mr-2 h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              Back
-            </button>
-
-            <!-- Search Bar for other pages -->
-            <div v-else class="relative">
+            <div class="relative">
               <input
                 type="text"
                 placeholder="Search..."
@@ -526,6 +494,22 @@ const userInitials = computed(() => {
 });
 const isLoading = computed(() => authStore.isLoading);
 
+// Check if current page is an add/edit page
+const isAddEditPage = computed(() => {
+  return [
+    'AddResident',
+    'EditResident',
+    'AddUnit',
+    'EditUnit',
+    'AddInvoice',
+    'InvoiceDetail',
+    'AddCharge',
+    'EditCharge',
+    'AddVendor',
+    'EditVendor',
+  ].includes(route.name as string);
+});
+
 // Page title and description based on current route
 const pageTitle = computed(() => {
   switch (route.name) {
@@ -559,6 +543,10 @@ const pageTitle = computed(() => {
       return 'Payments';
     case 'Vendors':
       return 'Vendors';
+    case 'AddVendor':
+      return 'Add New Vendor';
+    case 'EditVendor':
+      return 'Edit Vendor';
     case 'Settings':
       return 'Settings';
     default:
@@ -598,6 +586,10 @@ const pageDescription = computed(() => {
       return 'Track payments and financial transactions';
     case 'Vendors':
       return 'Manage vendors and service providers';
+    case 'AddVendor':
+      return 'Add a new vendor to your community';
+    case 'EditVendor':
+      return 'Update vendor information';
     case 'Settings':
       return 'Configure your community settings';
     default:
@@ -626,6 +618,8 @@ const goBack = () => {
     router.push('/invoices');
   } else if (route.name === 'AddCharge' || route.name === 'EditCharge') {
     router.push('/charges');
+  } else if (route.name === 'AddVendor' || route.name === 'EditVendor') {
+    router.push('/vendors');
   }
 };
 </script>

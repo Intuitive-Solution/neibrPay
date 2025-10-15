@@ -1,5 +1,46 @@
 <template>
   <div class="max-w-4xl">
+    <!-- Header Section -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
+        <div class="mb-4 lg:mb-0">
+          <div class="flex items-center gap-4 mb-2">
+            <h1 class="text-2xl font-bold text-gray-900">
+              {{ isEdit ? 'Edit Vendor' : 'Add New Vendor' }}
+            </h1>
+          </div>
+          <p class="text-gray-600">
+            {{
+              isEdit
+                ? 'Update vendor information and details'
+                : 'Create a new vendor for your HOA management'
+            }}
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            @click="handleCancel"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Vendors
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Error Message -->
     <div
       v-if="submitError"
@@ -27,10 +68,6 @@
 
     <!-- Form -->
     <div class="bg-white rounded-lg shadow p-6">
-      <h3 class="text-lg font-medium text-gray-900 mb-6">
-        {{ isEdit ? 'Edit Vendor' : 'Add New Vendor' }}
-      </h3>
-
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Name Field -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">

@@ -1,5 +1,46 @@
 <template>
-  <div class="max-w-7xl bg-white p-6">
+  <div class="max-w-7xl">
+    <!-- Header Section -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
+        <div class="mb-4 lg:mb-0">
+          <div class="flex items-center gap-4 mb-2">
+            <h1 class="text-2xl font-bold text-gray-900">
+              {{ isEditMode ? 'Edit Invoice' : 'Add New Invoice' }}
+            </h1>
+          </div>
+          <p class="text-gray-600">
+            {{
+              isEditMode
+                ? 'Update invoice information and details'
+                : 'Create a new invoice for your HOA management'
+            }}
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            @click="handleCancel"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Invoices
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Error Message -->
     <div
       v-if="errors.general"
@@ -25,69 +66,110 @@
       </div>
     </div>
 
-    <!-- Three Column Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Column 1: Units -->
-      <div class="bg-white rounded-lg shadow">
-        <!-- Card Title -->
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <h3 class="text-lg font-medium text-gray-900">Units</h3>
-        </div>
+    <!-- Main Content -->
+    <div class="bg-white p-6">
+      <!-- Three Column Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Column 1: Units -->
+        <div class="bg-white rounded-lg shadow">
+          <!-- Card Title -->
+          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+            <h3 class="text-lg font-medium text-gray-900">Units</h3>
+          </div>
 
-        <!-- Card Content -->
-        <div class="p-6">
-          <div class="space-y-4">
-            <!-- Unit Selection -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Units <span class="text-red-500">*</span>
-              </label>
+          <!-- Card Content -->
+          <div class="p-6">
+            <div class="space-y-4">
+              <!-- Unit Selection -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Units <span class="text-red-500">*</span>
+                </label>
 
-              <!-- Loading State -->
-              <div
-                v-if="isLoadingUnits"
-                class="flex items-center justify-center py-8"
-              >
+                <!-- Loading State -->
                 <div
-                  class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"
-                ></div>
-                <span class="ml-2 text-gray-600">Loading units...</span>
-              </div>
-
-              <!-- Error State -->
-              <div
-                v-else-if="unitsError"
-                class="p-4 text-center text-red-600 bg-red-50 rounded-lg"
-              >
-                <p>Failed to load units. Please try again.</p>
-              </div>
-
-              <!-- Searchable Multiselect Dropdown -->
-              <div v-else ref="dropdownRef" class="relative">
-                <!-- Main Input Field -->
-                <div
-                  class="relative min-h-[42px] w-full px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors duration-200 cursor-pointer"
-                  :class="{
-                    'border-red-300 focus-within:ring-red-500 focus-within:border-red-500':
-                      errors.unit_ids,
-                  }"
-                  @click="toggleDropdown"
+                  v-if="isLoadingUnits"
+                  class="flex items-center justify-center py-8"
                 >
-                  <!-- Selected Units as Chips -->
-                  <div class="flex flex-wrap gap-2 items-center min-h-[26px]">
+                  <div
+                    class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"
+                  ></div>
+                  <span class="ml-2 text-gray-600">Loading units...</span>
+                </div>
+
+                <!-- Error State -->
+                <div
+                  v-else-if="unitsError"
+                  class="p-4 text-center text-red-600 bg-red-50 rounded-lg"
+                >
+                  <p>Failed to load units. Please try again.</p>
+                </div>
+
+                <!-- Searchable Multiselect Dropdown -->
+                <div v-else ref="dropdownRef" class="relative">
+                  <!-- Main Input Field -->
+                  <div
+                    class="relative min-h-[42px] w-full px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors duration-200 cursor-pointer"
+                    :class="{
+                      'border-red-300 focus-within:ring-red-500 focus-within:border-red-500':
+                        errors.unit_ids,
+                    }"
+                    @click="toggleDropdown"
+                  >
+                    <!-- Selected Units as Chips -->
+                    <div class="flex flex-wrap gap-2 items-center min-h-[26px]">
+                      <div
+                        v-for="unitId in form.unit_ids"
+                        :key="unitId"
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                      >
+                        {{ getUnitTitle(unitId) }}
+                        <button
+                          type="button"
+                          @click.stop="removeUnit(unitId)"
+                          class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          <svg
+                            class="w-2.5 h-2.5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <!-- Search Input -->
+                      <input
+                        v-model="searchQuery"
+                        type="text"
+                        placeholder="Search units..."
+                        class="flex-1 min-w-[120px] border-0 outline-none bg-transparent text-sm placeholder-gray-500"
+                        @click.stop
+                        @keydown.escape="closeDropdown"
+                        @keydown.down.prevent="navigateDown"
+                        @keydown.up.prevent="navigateUp"
+                        @keydown.enter.prevent="selectHighlighted"
+                      />
+                    </div>
+
+                    <!-- Action Icons -->
                     <div
-                      v-for="unitId in form.unit_ids"
-                      :key="unitId"
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                      class="absolute inset-y-0 right-0 flex items-center pr-3 space-x-1"
                     >
-                      {{ getUnitTitle(unitId) }}
+                      <!-- Clear All Button (hidden in edit mode) -->
                       <button
+                        v-if="form.unit_ids.length > 0 && !isEditMode"
                         type="button"
-                        @click.stop="removeUnit(unitId)"
-                        class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                        @click.stop="clearAllUnits"
+                        class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <svg
-                          class="w-2.5 h-2.5"
+                          class="w-3 h-3 text-gray-400"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -98,898 +180,480 @@
                           />
                         </svg>
                       </button>
-                    </div>
 
-                    <!-- Search Input -->
-                    <input
-                      v-model="searchQuery"
-                      type="text"
-                      placeholder="Search units..."
-                      class="flex-1 min-w-[120px] border-0 outline-none bg-transparent text-sm placeholder-gray-500"
-                      @click.stop
-                      @keydown.escape="closeDropdown"
-                      @keydown.down.prevent="navigateDown"
-                      @keydown.up.prevent="navigateUp"
-                      @keydown.enter.prevent="selectHighlighted"
-                    />
-                  </div>
-
-                  <!-- Action Icons -->
-                  <div
-                    class="absolute inset-y-0 right-0 flex items-center pr-3 space-x-1"
-                  >
-                    <!-- Clear All Button (hidden in edit mode) -->
-                    <button
-                      v-if="form.unit_ids.length > 0 && !isEditMode"
-                      type="button"
-                      @click.stop="clearAllUnits"
-                      class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <svg
-                        class="w-3 h-3 text-gray-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
+                      <!-- Dropdown Toggle -->
+                      <button
+                        type="button"
+                        @click.stop="toggleDropdown"
+                        class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
                       >
-                        <path
-                          fill-rule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </button>
-
-                    <!-- Dropdown Toggle -->
-                    <button
-                      type="button"
-                      @click.stop="toggleDropdown"
-                      class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <svg
-                        class="w-3 h-3 text-gray-400 transition-transform duration-200"
-                        :class="{ 'rotate-180': isDropdownOpen }"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Dropdown Menu -->
-                <div
-                  v-if="isDropdownOpen"
-                  class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
-                >
-                  <!-- Select All Option (hidden in edit mode) -->
-                  <div
-                    v-if="!isEditMode"
-                    class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
-                    @click="toggleSelectAll"
-                  >
-                    <div class="flex items-center">
-                      <input
-                        :checked="isAllSelected"
-                        type="checkbox"
-                        class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                      />
-                      <span class="ml-2">Select all options</span>
-                    </div>
-                  </div>
-
-                  <!-- Filtered Units List -->
-                  <div
-                    v-if="filteredUnits.length === 0"
-                    class="px-3 py-2 text-sm text-gray-500 text-center"
-                  >
-                    No units found matching "{{ searchQuery }}"
-                  </div>
-
-                  <div v-else class="divide-y divide-gray-100">
-                    <div
-                      v-for="(unit, index) in filteredUnits"
-                      :key="unit.id"
-                      class="px-3 py-2 cursor-pointer hover:bg-gray-50"
-                      :class="{ 'bg-gray-50': highlightedIndex === index }"
-                      @click="toggleUnitSelection(unit.id)"
-                      @mouseenter="highlightedIndex = index"
-                    >
-                      <div class="flex items-center">
-                        <input
-                          :checked="form.unit_ids.includes(unit.id)"
-                          type="checkbox"
-                          class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                          @click.stop="toggleUnitSelection(unit.id)"
-                        />
-                        <div class="ml-2 flex-1">
-                          <div class="text-sm font-medium text-gray-900">
-                            {{ unit.title }}
-                          </div>
-                          <div class="text-xs text-gray-500">
-                            {{ unit.resident_name }} • {{ unit.address }},
-                            {{ unit.city }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Error Message -->
-              <p v-if="errors.unit_ids" class="mt-2 text-sm text-red-600">
-                {{ errors.unit_ids }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Column 2: Scheduling/Frequency -->
-      <div class="bg-white rounded-lg shadow">
-        <!-- Card Title -->
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <h3 class="text-lg font-medium text-gray-900">Scheduling</h3>
-        </div>
-
-        <!-- Card Content -->
-        <div class="p-6">
-          <div class="space-y-4">
-            <!-- Frequency -->
-            <div>
-              <label
-                for="frequency"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Frequency <span class="text-red-500">*</span>
-              </label>
-              <div class="relative">
-                <select
-                  id="frequency"
-                  v-model="form.frequency"
-                  required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
-                  :class="{
-                    'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.frequency,
-                  }"
-                >
-                  <option value="one-time">One Time</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-                <div
-                  class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                >
-                  <svg
-                    class="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p v-if="errors.frequency" class="mt-2 text-sm text-red-600">
-                {{ errors.frequency }}
-              </p>
-            </div>
-
-            <!-- Remaining Cycles -->
-            <div>
-              <label
-                for="remaining_cycles"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Remaining Cycles
-              </label>
-              <div class="relative">
-                <select
-                  id="remaining_cycles"
-                  v-model="form.remaining_cycles"
-                  :disabled="isOneTimeFrequency"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
-                  :class="{
-                    'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.remaining_cycles,
-                    'opacity-50 cursor-not-allowed bg-gray-50':
-                      isOneTimeFrequency,
-                  }"
-                >
-                  <option value="endless">Endless</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="6">6</option>
-                  <option value="12">12</option>
-                  <option value="24">24</option>
-                </select>
-                <div
-                  class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                >
-                  <svg
-                    class="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p
-                v-if="errors.remaining_cycles"
-                class="mt-2 text-sm text-red-600"
-              >
-                {{ errors.remaining_cycles }}
-              </p>
-            </div>
-            <!-- Start Date -->
-            <div>
-              <label
-                for="start_date"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Start Date <span class="text-red-500">*</span>
-              </label>
-              <div class="relative">
-                <input
-                  id="start_date"
-                  v-model="form.start_date"
-                  type="date"
-                  required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-                  :class="{
-                    'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.start_date,
-                  }"
-                />
-                <div
-                  class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                >
-                  <svg
-                    class="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p v-if="errors.start_date" class="mt-2 text-sm text-red-600">
-                {{ errors.start_date }}
-              </p>
-            </div>
-            <!-- Due Date -->
-            <div>
-              <label
-                for="due_date"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Due Date
-              </label>
-              <div class="relative">
-                <select
-                  id="due_date"
-                  v-model="form.due_date"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
-                  :class="{
-                    'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.due_date,
-                  }"
-                >
-                  <option value="use_payment_terms">Use Payment Terms</option>
-                  <option value="net_15">Net 15</option>
-                  <option value="net_30">Net 30</option>
-                  <option value="net_45">Net 45</option>
-                  <option value="net_60">Net 60</option>
-                  <option value="due_on_receipt">Due on Receipt</option>
-                </select>
-                <div
-                  class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                >
-                  <svg
-                    class="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p v-if="errors.due_date" class="mt-2 text-sm text-red-600">
-                {{ errors.due_date }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Column 3: Invoice Details -->
-      <div class="bg-white rounded-lg shadow">
-        <!-- Card Title -->
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
-        </div>
-
-        <!-- Card Content -->
-        <div class="p-6">
-          <div class="space-y-4">
-            <!-- Invoice # -->
-            <div>
-              <label
-                for="invoice_number"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Invoice #
-              </label>
-              <input
-                id="invoice_number"
-                v-model="form.invoice_number"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-                :class="{
-                  'border-red-300 focus:ring-red-500 focus:border-red-500':
-                    errors.invoice_number,
-                }"
-                placeholder="Auto-generated if empty"
-              />
-              <p v-if="errors.invoice_number" class="mt-2 text-sm text-red-600">
-                {{ errors.invoice_number }}
-              </p>
-            </div>
-
-            <!-- Paid to Date -->
-            <div>
-              <label
-                for="paid_to_date"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Paid to Date
-              </label>
-              <div class="relative">
-                <span
-                  class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
-                  >$</span
-                >
-                <input
-                  id="paid_to_date"
-                  v-model.number="form.paid_to_date"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-                  :class="{
-                    'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.paid_to_date,
-                  }"
-                  placeholder="0.00"
-                />
-              </div>
-              <p v-if="errors.paid_to_date" class="mt-2 text-sm text-red-600">
-                {{ errors.paid_to_date }}
-              </p>
-            </div>
-
-            <!-- Discount -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Discount
-              </label>
-              <div class="flex gap-2">
-                <div class="flex-1">
-                  <input
-                    v-model="form.discount_amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-                    :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.discount_amount,
-                    }"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div class="w-24">
-                  <select
-                    v-model="form.discount_type"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
-                    :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.discount_type,
-                    }"
-                  >
-                    <option value="amount">Amount</option>
-                    <option value="percentage">%</option>
-                  </select>
-                </div>
-              </div>
-              <p
-                v-if="errors.discount_amount || errors.discount_type"
-                class="mt-2 text-sm text-red-600"
-              >
-                {{ errors.discount_amount || errors.discount_type }}
-              </p>
-            </div>
-
-            <!-- Auto Bill -->
-            <div>
-              <label
-                for="auto_bill"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Auto Bill
-              </label>
-              <div class="relative">
-                <select
-                  id="auto_bill"
-                  v-model="form.auto_bill"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
-                  :class="{
-                    'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.auto_bill,
-                  }"
-                >
-                  <option value="disabled">Disabled</option>
-                  <option value="enabled">Enabled</option>
-                  <option value="on_due_date">On Due Date</option>
-                  <option value="on_send">On Send</option>
-                </select>
-                <div
-                  class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                >
-                  <svg
-                    class="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p v-if="errors.auto_bill" class="mt-2 text-sm text-red-600">
-                {{ errors.auto_bill }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Invoice Items Section with Tabs -->
-    <div class="mt-8 bg-white rounded-lg shadow">
-      <!-- Tab Navigation -->
-      <div class="bg-gray-100 rounded-t-lg">
-        <nav class="flex space-x-8 px-6" aria-label="Tabs">
-          <button
-            v-for="tab in invoiceItemsTabs"
-            :key="tab.id"
-            @click="activeInvoiceItemsTab = tab.id"
-            :class="[
-              activeInvoiceItemsTab === tab.id
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700',
-              'whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200',
-            ]"
-          >
-            {{ tab.name }}
-          </button>
-        </nav>
-      </div>
-
-      <!-- Tab Content -->
-      <div class="p-6">
-        <!-- Invoice Items Tab -->
-        <div v-if="activeInvoiceItemsTab === 'invoice-items'">
-          <!-- Table Header -->
-          <div class="mb-4">
-            <div
-              class="grid grid-cols-5 gap-4 text-sm font-medium text-gray-700 uppercase tracking-wide pb-2 border-b border-gray-200"
-            >
-              <div class="text-left">Item</div>
-              <div class="text-left">Description</div>
-              <div class="text-left">Unit Cost</div>
-              <div class="text-left">Quantity</div>
-              <div class="text-right">Line Total</div>
-            </div>
-          </div>
-
-          <!-- Table Content -->
-          <div class="divide-y divide-gray-200">
-            <!-- Empty State -->
-            <div v-if="invoiceItems.length === 0" class="text-center py-8">
-              <div class="text-gray-500 mb-4">
-                <svg
-                  class="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <p class="text-gray-500 text-sm">No items added yet</p>
-            </div>
-
-            <!-- Items List -->
-            <div v-else>
-              <div
-                v-for="(item, index) in invoiceItems"
-                :key="index"
-                class="grid grid-cols-5 gap-4 items-start py-3 hover:bg-gray-50"
-              >
-                <!-- Item Name -->
-                <div class="relative item-dropdown-container">
-                  <div class="relative">
-                    <input
-                      v-model="item.name"
-                      type="text"
-                      class="w-full px-2 py-1 pr-8 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
-                      placeholder="Item name"
-                      @focus="showItemDropdown(index)"
-                      @blur="hideItemDropdown(index)"
-                      @input="onItemNameInput(index, $event)"
-                    />
-                    <!-- Dropdown Arrow -->
-                    <div
-                      class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"
-                    >
-                      <svg
-                        class="w-4 h-4 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                        <svg
+                          class="w-3 h-3 text-gray-400 transition-transform duration-200"
+                          :class="{ 'rotate-180': isDropdownOpen }"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
                     </div>
                   </div>
 
                   <!-- Dropdown Menu -->
                   <div
-                    v-if="itemDropdowns[index]"
-                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+                    v-if="isDropdownOpen"
+                    class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
                   >
-                    <!-- Charges List -->
-                    <div v-if="filteredCharges.length > 0">
+                    <!-- Select All Option (hidden in edit mode) -->
+                    <div
+                      v-if="!isEditMode"
+                      class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                      @click="toggleSelectAll"
+                    >
+                      <div class="flex items-center">
+                        <input
+                          :checked="isAllSelected"
+                          type="checkbox"
+                          class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                        />
+                        <span class="ml-2">Select all options</span>
+                      </div>
+                    </div>
+
+                    <!-- Filtered Units List -->
+                    <div
+                      v-if="filteredUnits.length === 0"
+                      class="px-3 py-2 text-sm text-gray-500 text-center"
+                    >
+                      No units found matching "{{ searchQuery }}"
+                    </div>
+
+                    <div v-else class="divide-y divide-gray-100">
                       <div
-                        v-for="charge in filteredCharges"
-                        :key="charge.id"
-                        class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                        @mousedown="loadCharge(index, charge)"
+                        v-for="(unit, index) in filteredUnits"
+                        :key="unit.id"
+                        class="px-3 py-2 cursor-pointer hover:bg-gray-50"
+                        :class="{ 'bg-gray-50': highlightedIndex === index }"
+                        @click="toggleUnitSelection(unit.id)"
+                        @mouseenter="highlightedIndex = index"
                       >
-                        <div class="flex items-center justify-between">
-                          <div>
-                            <div class="font-medium">{{ charge.title }}</div>
-                            <div class="text-xs text-gray-500">
-                              {{
-                                getChargeCategoryDisplayName(charge.category)
-                              }}
+                        <div class="flex items-center">
+                          <input
+                            :checked="form.unit_ids.includes(unit.id)"
+                            type="checkbox"
+                            class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            @click.stop="toggleUnitSelection(unit.id)"
+                          />
+                          <div class="ml-2 flex-1">
+                            <div class="text-sm font-medium text-gray-900">
+                              {{ unit.title }}
                             </div>
-                          </div>
-                          <div class="text-sm font-medium text-gray-900">
-                            ${{ formatCurrency(charge.amount) }}
+                            <div class="text-xs text-gray-500">
+                              {{ unit.resident_name }} • {{ unit.address }},
+                              {{ unit.city }}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-
-                    <!-- No Charges Message -->
-                    <div v-else class="px-3 py-2 text-sm text-gray-500">
-                      No charges available
-                    </div>
                   </div>
                 </div>
 
-                <!-- Description -->
-                <div>
-                  <textarea
-                    v-model="item.description"
-                    rows="2"
-                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 resize-none"
-                    placeholder="Item description"
-                  ></textarea>
-                </div>
+                <!-- Error Message -->
+                <p v-if="errors.unit_ids" class="mt-2 text-sm text-red-600">
+                  {{ errors.unit_ids }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                <!-- Unit Cost -->
-                <div>
-                  <div class="relative">
-                    <span
-                      class="absolute left-2 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
-                      >$</span
+        <!-- Column 2: Scheduling/Frequency -->
+        <div class="bg-white rounded-lg shadow">
+          <!-- Card Title -->
+          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+            <h3 class="text-lg font-medium text-gray-900">Scheduling</h3>
+          </div>
+
+          <!-- Card Content -->
+          <div class="p-6">
+            <div class="space-y-4">
+              <!-- Frequency -->
+              <div>
+                <label
+                  for="frequency"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Frequency <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <select
+                    id="frequency"
+                    v-model="form.frequency"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    :class="{
+                      'border-red-300 focus:ring-red-500 focus:border-red-500':
+                        errors.frequency,
+                    }"
+                  >
+                    <option value="one-time">One Time</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                  <div
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                  >
+                    <svg
+                      class="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <p v-if="errors.frequency" class="mt-2 text-sm text-red-600">
+                  {{ errors.frequency }}
+                </p>
+              </div>
+
+              <!-- Remaining Cycles -->
+              <div>
+                <label
+                  for="remaining_cycles"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Remaining Cycles
+                </label>
+                <div class="relative">
+                  <select
+                    id="remaining_cycles"
+                    v-model="form.remaining_cycles"
+                    :disabled="isOneTimeFrequency"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    :class="{
+                      'border-red-300 focus:ring-red-500 focus:border-red-500':
+                        errors.remaining_cycles,
+                      'opacity-50 cursor-not-allowed bg-gray-50':
+                        isOneTimeFrequency,
+                    }"
+                  >
+                    <option value="endless">Endless</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="6">6</option>
+                    <option value="12">12</option>
+                    <option value="24">24</option>
+                  </select>
+                  <div
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                  >
+                    <svg
+                      class="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <p
+                  v-if="errors.remaining_cycles"
+                  class="mt-2 text-sm text-red-600"
+                >
+                  {{ errors.remaining_cycles }}
+                </p>
+              </div>
+              <!-- Start Date -->
+              <div>
+                <label
+                  for="start_date"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Start Date <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <input
+                    id="start_date"
+                    v-model="form.start_date"
+                    type="date"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                    :class="{
+                      'border-red-300 focus:ring-red-500 focus:border-red-500':
+                        errors.start_date,
+                    }"
+                  />
+                  <div
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                  >
+                    <svg
+                      class="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <p v-if="errors.start_date" class="mt-2 text-sm text-red-600">
+                  {{ errors.start_date }}
+                </p>
+              </div>
+              <!-- Due Date -->
+              <div>
+                <label
+                  for="due_date"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Due Date
+                </label>
+                <div class="relative">
+                  <select
+                    id="due_date"
+                    v-model="form.due_date"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    :class="{
+                      'border-red-300 focus:ring-red-500 focus:border-red-500':
+                        errors.due_date,
+                    }"
+                  >
+                    <option value="use_payment_terms">Use Payment Terms</option>
+                    <option value="net_15">Net 15</option>
+                    <option value="net_30">Net 30</option>
+                    <option value="net_45">Net 45</option>
+                    <option value="net_60">Net 60</option>
+                    <option value="due_on_receipt">Due on Receipt</option>
+                  </select>
+                  <div
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                  >
+                    <svg
+                      class="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <p v-if="errors.due_date" class="mt-2 text-sm text-red-600">
+                  {{ errors.due_date }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Invoice Details -->
+        <div class="bg-white rounded-lg shadow">
+          <!-- Card Title -->
+          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+            <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
+          </div>
+
+          <!-- Card Content -->
+          <div class="p-6">
+            <div class="space-y-4">
+              <!-- Invoice # -->
+              <div>
+                <label
+                  for="invoice_number"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Invoice #
+                </label>
+                <input
+                  id="invoice_number"
+                  v-model="form.invoice_number"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.invoice_number,
+                  }"
+                  placeholder="Auto-generated if empty"
+                />
+                <p
+                  v-if="errors.invoice_number"
+                  class="mt-2 text-sm text-red-600"
+                >
+                  {{ errors.invoice_number }}
+                </p>
+              </div>
+
+              <!-- Paid to Date -->
+              <div>
+                <label
+                  for="paid_to_date"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Paid to Date
+                </label>
+                <div class="relative">
+                  <span
+                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+                    >$</span
+                  >
+                  <input
+                    id="paid_to_date"
+                    v-model.number="form.paid_to_date"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                    :class="{
+                      'border-red-300 focus:ring-red-500 focus:border-red-500':
+                        errors.paid_to_date,
+                    }"
+                    placeholder="0.00"
+                  />
+                </div>
+                <p v-if="errors.paid_to_date" class="mt-2 text-sm text-red-600">
+                  {{ errors.paid_to_date }}
+                </p>
+              </div>
+
+              <!-- Discount -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Discount
+                </label>
+                <div class="flex gap-2">
+                  <div class="flex-1">
                     <input
-                      v-model.number="item.unitCost"
+                      v-model="form.discount_amount"
                       type="number"
                       step="0.01"
                       min="0"
-                      class="w-full pl-6 pr-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                      :class="{
+                        'border-red-300 focus:ring-red-500 focus:border-red-500':
+                          errors.discount_amount,
+                      }"
                       placeholder="0.00"
-                      @input="updateLineTotal(index)"
                     />
                   </div>
+                  <div class="w-24">
+                    <select
+                      v-model="form.discount_type"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                      :class="{
+                        'border-red-300 focus:ring-red-500 focus:border-red-500':
+                          errors.discount_type,
+                      }"
+                    >
+                      <option value="amount">Amount</option>
+                      <option value="percentage">%</option>
+                    </select>
+                  </div>
                 </div>
-
-                <!-- Quantity -->
-                <div>
-                  <input
-                    v-model.number="item.quantity"
-                    type="number"
-                    min="1"
-                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
-                    placeholder="1"
-                    @input="updateLineTotal(index)"
-                  />
-                </div>
-
-                <!-- Line Total (Read-only) -->
-                <div class="flex items-center justify-end">
-                  <span class="text-sm text-gray-900 mr-3 font-medium">
-                    ${{ formatCurrency(item.lineTotal) }}
-                  </span>
-                  <button
-                    type="button"
-                    @click="removeItem(index)"
-                    class="text-red-600 hover:text-red-800 focus:outline-none text-sm"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add Item Button -->
-          <div class="mt-4 flex justify-center">
-            <button
-              type="button"
-              @click="addItem"
-              class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              Add Item
-            </button>
-          </div>
-        </div>
-
-        <!-- Documents Tab -->
-        <div v-else-if="activeInvoiceItemsTab === 'documents'">
-          <!-- Upload Section -->
-          <div
-            class="border-2 border-dashed border-gray-300 rounded-lg p-6 transition-colors duration-200"
-            :class="{ 'border-blue-400 bg-blue-50': isDragOver }"
-            @dragover.prevent="handleDragOver"
-            @dragleave.prevent="handleDragLeave"
-            @drop.prevent="handleDrop"
-          >
-            <div class="text-center">
-              <svg
-                class="mx-auto h-12 w-12 text-gray-400"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-                aria-hidden="true"
-              >
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <div class="mt-4">
-                <label
-                  for="file-upload"
-                  class="cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary"
+                <p
+                  v-if="errors.discount_amount || errors.discount_type"
+                  class="mt-2 text-sm text-red-600"
                 >
-                  <span>Upload a file</span>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    class="sr-only"
-                    @change="handleFileUpload"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif"
-                  />
+                  {{ errors.discount_amount || errors.discount_type }}
+                </p>
+              </div>
+
+              <!-- Auto Bill -->
+              <div>
+                <label
+                  for="auto_bill"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Auto Bill
                 </label>
-                <p class="pl-1">or drag and drop</p>
-              </div>
-              <p class="text-xs text-gray-500 mt-2">
-                PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, PNG, GIF up to
-                10MB
-              </p>
-            </div>
-          </div>
-
-          <!-- Upload Progress -->
-          <div
-            v-if="uploadProgress > 0 && uploadProgress < 100"
-            class="mt-4 w-full bg-gray-200 rounded-full h-2.5"
-          >
-            <div
-              class="bg-primary h-2.5 rounded-full transition-all duration-300"
-              :style="{ width: uploadProgress + '%' }"
-            ></div>
-          </div>
-
-          <!-- Attachments List -->
-          <div v-if="attachments.length > 0" class="mt-6 space-y-3">
-            <h3 class="text-lg font-medium text-gray-900">
-              Attached Documents
-            </h3>
-            <div class="space-y-2">
-              <div
-                v-for="attachment in attachments"
-                :key="attachment.id"
-                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
-              >
-                <div class="flex items-center space-x-3">
-                  <div class="flex-shrink-0">
+                <div class="relative">
+                  <select
+                    id="auto_bill"
+                    v-model="form.auto_bill"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    :class="{
+                      'border-red-300 focus:ring-red-500 focus:border-red-500':
+                        errors.auto_bill,
+                    }"
+                  >
+                    <option value="disabled">Disabled</option>
+                    <option value="enabled">Enabled</option>
+                    <option value="on_due_date">On Due Date</option>
+                    <option value="on_send">On Send</option>
+                  </select>
+                  <div
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+                  >
                     <svg
-                      v-if="attachment.attachment_type === 'pdf'"
-                      class="h-8 w-8 text-red-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
+                      class="h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
                       <path
-                        fill-rule="evenodd"
-                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <svg
-                      v-else-if="attachment.attachment_type === 'image'"
-                      class="h-8 w-8 text-green-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <svg
-                      v-else
-                      class="h-8 w-8 text-blue-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                        clip-rule="evenodd"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
                       />
                     </svg>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      {{ attachment.file_name }}
-                    </p>
-                    <p class="text-sm text-gray-500">
-                      {{ attachment.file_size_human }} •
-                      {{ attachment.attachment_type.toUpperCase() }}
-                    </p>
-                  </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                  <button
-                    @click="downloadAttachment(attachment)"
-                    class="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                  >
-                    Download
-                  </button>
-                  <button
-                    @click="removeAttachment(attachment)"
-                    class="text-red-600 hover:text-red-900 text-sm font-medium"
-                  >
-                    Remove
-                  </button>
-                </div>
+                <p v-if="errors.auto_bill" class="mt-2 text-sm text-red-600">
+                  {{ errors.auto_bill }}
+                </p>
               </div>
             </div>
-          </div>
-
-          <!-- Empty State -->
-          <div v-else class="text-center py-8">
-            <svg
-              class="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No documents</h3>
-            <p class="mt-1 text-sm text-gray-500">
-              Get started by uploading a document.
-            </p>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Tabs and Total Panel Section -->
-    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Left Section: Tabs and Rich Text Editor -->
-      <div class="lg:col-span-2 bg-white rounded-lg shadow">
-        <!-- Tabs -->
-        <div class="bg-gray-100 border-b border-gray-200 rounded-t-lg">
-          <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+      <!-- Invoice Items Section with Tabs -->
+      <div class="mt-8 bg-white rounded-lg shadow">
+        <!-- Tab Navigation -->
+        <div class="bg-gray-100 rounded-t-lg">
+          <nav class="flex space-x-8 px-6" aria-label="Tabs">
             <button
-              v-for="tab in tabs"
+              v-for="tab in invoiceItemsTabs"
               :key="tab.id"
-              @click="activeTab = tab.id"
+              @click="activeInvoiceItemsTab = tab.id"
               :class="[
-                activeTab === tab.id
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
+                activeInvoiceItemsTab === tab.id
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500 hover:text-gray-700',
+                'whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200',
               ]"
             >
               {{ tab.name }}
@@ -999,417 +663,808 @@
 
         <!-- Tab Content -->
         <div class="p-6">
-          <!-- Rich Text Editor -->
-          <div class="border border-gray-300 rounded-lg">
-            <!-- Toolbar -->
-            <div class="border-b border-gray-200 p-3 bg-gray-50">
-              <div class="flex flex-wrap gap-2">
-                <!-- Formatting buttons -->
-                <div class="flex items-center space-x-1">
-                  <select
-                    v-model="selectedFormat"
-                    @change="formatBlock(selectedFormat)"
-                    class="text-sm border border-gray-300 rounded px-2 py-1"
-                  >
-                    <option value="p">Paragraph</option>
-                    <option value="h1">Heading 1</option>
-                    <option value="h2">Heading 2</option>
-                    <option value="h3">Heading 3</option>
-                  </select>
-                  <select
-                    v-model="selectedFont"
-                    @change="formatText('fontName', selectedFont)"
-                    class="text-sm border border-gray-300 rounded px-2 py-1"
-                  >
-                    <option value="Helvetica">Helvetica</option>
-                    <option value="Arial">Arial</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Georgia">Georgia</option>
-                  </select>
-                  <select
-                    v-model="selectedSize"
-                    @change="formatText('fontSize', selectedSize)"
-                    class="text-sm border border-gray-300 rounded px-2 py-1"
-                  >
-                    <option value="3">12px</option>
-                    <option value="4">14px</option>
-                    <option value="5">16px</option>
-                    <option value="6">18px</option>
-                    <option value="7">24px</option>
-                  </select>
-                </div>
+          <!-- Invoice Items Tab -->
+          <div v-if="activeInvoiceItemsTab === 'invoice-items'">
+            <!-- Table Header -->
+            <div class="mb-4">
+              <div
+                class="grid grid-cols-5 gap-4 text-sm font-medium text-gray-700 uppercase tracking-wide pb-2 border-b border-gray-200"
+              >
+                <div class="text-left">Item</div>
+                <div class="text-left">Description</div>
+                <div class="text-left">Unit Cost</div>
+                <div class="text-left">Quantity</div>
+                <div class="text-right">Line Total</div>
+              </div>
+            </div>
 
-                <div class="flex items-center space-x-1">
-                  <button
-                    @click="formatText('bold')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('bold')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Bold"
+            <!-- Table Content -->
+            <div class="divide-y divide-gray-200">
+              <!-- Empty State -->
+              <div v-if="invoiceItems.length === 0" class="text-center py-8">
+                <div class="text-gray-500 mb-4">
+                  <svg
+                    class="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <span class="font-bold text-sm">B</span>
-                  </button>
-                  <button
-                    @click="formatText('italic')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('italic')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Italic"
-                  >
-                    <span class="italic text-sm">I</span>
-                  </button>
-                  <button
-                    @click="formatText('underline')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('underline')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Underline"
-                  >
-                    <span class="underline text-sm">U</span>
-                  </button>
-                  <button
-                    @click="formatText('strikeThrough')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('strikeThrough')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Strikethrough"
-                  >
-                    <span class="line-through text-sm">S</span>
-                  </button>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
                 </div>
+                <p class="text-gray-500 text-sm">No items added yet</p>
+              </div>
 
-                <div class="flex items-center space-x-1">
-                  <input
-                    type="color"
-                    @change="handleForeColorChange"
-                    class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
-                    title="Text Color"
-                  />
-                  <input
-                    type="color"
-                    @change="handleBackColorChange"
-                    class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
-                    title="Highlight Color"
-                  />
-                  <button
-                    @click="createLink"
-                    class="p-1 hover:bg-gray-200 rounded"
-                    title="Link"
-                  >
-                    <span class="text-sm">🔗</span>
-                  </button>
-                </div>
+              <!-- Items List -->
+              <div v-else>
+                <div
+                  v-for="(item, index) in invoiceItems"
+                  :key="index"
+                  class="grid grid-cols-5 gap-4 items-start py-3 hover:bg-gray-50"
+                >
+                  <!-- Item Name -->
+                  <div class="relative item-dropdown-container">
+                    <div class="relative">
+                      <input
+                        v-model="item.name"
+                        type="text"
+                        class="w-full px-2 py-1 pr-8 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                        placeholder="Item name"
+                        @focus="showItemDropdown(index)"
+                        @blur="hideItemDropdown(index)"
+                        @input="onItemNameInput(index, $event)"
+                      />
+                      <!-- Dropdown Arrow -->
+                      <div
+                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"
+                      >
+                        <svg
+                          class="w-4 h-4 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
 
-                <div class="flex items-center space-x-1">
-                  <button
-                    @click="formatText('justifyLeft')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('justifyLeft')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Align Left"
-                  >
-                    <span class="text-sm">⬅️</span>
-                  </button>
-                  <button
-                    @click="formatText('justifyCenter')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('justifyCenter')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Align Center"
-                  >
-                    <span class="text-sm">↔️</span>
-                  </button>
-                  <button
-                    @click="formatText('justifyRight')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('justifyRight')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Align Right"
-                  >
-                    <span class="text-sm">➡️</span>
-                  </button>
-                  <button
-                    @click="formatText('justifyFull')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('justifyFull')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Justify"
-                  >
-                    <span class="text-sm">⬌</span>
-                  </button>
-                </div>
+                    <!-- Dropdown Menu -->
+                    <div
+                      v-if="itemDropdowns[index]"
+                      class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+                    >
+                      <!-- Charges List -->
+                      <div v-if="filteredCharges.length > 0">
+                        <div
+                          v-for="charge in filteredCharges"
+                          :key="charge.id"
+                          class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                          @mousedown="loadCharge(index, charge)"
+                        >
+                          <div class="flex items-center justify-between">
+                            <div>
+                              <div class="font-medium">{{ charge.title }}</div>
+                              <div class="text-xs text-gray-500">
+                                {{
+                                  getChargeCategoryDisplayName(charge.category)
+                                }}
+                              </div>
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">
+                              ${{ formatCurrency(charge.amount) }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-                <div class="flex items-center space-x-1">
-                  <button
-                    @click="formatText('insertUnorderedList')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('insertUnorderedList')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Bullet List"
-                  >
-                    <span class="text-sm">•</span>
-                  </button>
-                  <button
-                    @click="formatText('insertOrderedList')"
-                    :class="[
-                      'p-1 rounded',
-                      isFormatActive('insertOrderedList')
-                        ? 'bg-blue-200'
-                        : 'hover:bg-gray-200',
-                    ]"
-                    title="Numbered List"
-                  >
-                    <span class="text-sm">1.</span>
-                  </button>
-                  <button
-                    @click="insertTable"
-                    class="p-1 hover:bg-gray-200 rounded"
-                    title="Table"
-                  >
-                    <span class="text-sm">⊞</span>
-                  </button>
-                </div>
+                      <!-- No Charges Message -->
+                      <div v-else class="px-3 py-2 text-sm text-gray-500">
+                        No charges available
+                      </div>
+                    </div>
+                  </div>
 
-                <div class="flex items-center space-x-1">
-                  <button
-                    @click="formatText('removeFormat')"
-                    class="p-1 hover:bg-gray-200 rounded"
-                    title="Clear Formatting"
-                  >
-                    <span class="text-sm">Tx</span>
-                  </button>
+                  <!-- Description -->
+                  <div>
+                    <textarea
+                      v-model="item.description"
+                      rows="2"
+                      class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 resize-none"
+                      placeholder="Item description"
+                    ></textarea>
+                  </div>
+
+                  <!-- Unit Cost -->
+                  <div>
+                    <div class="relative">
+                      <span
+                        class="absolute left-2 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+                        >$</span
+                      >
+                      <input
+                        v-model.number="item.unitCost"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        class="w-full pl-6 pr-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                        placeholder="0.00"
+                        @input="updateLineTotal(index)"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Quantity -->
+                  <div>
+                    <input
+                      v-model.number="item.quantity"
+                      type="number"
+                      min="1"
+                      class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                      placeholder="1"
+                      @input="updateLineTotal(index)"
+                    />
+                  </div>
+
+                  <!-- Line Total (Read-only) -->
+                  <div class="flex items-center justify-end">
+                    <span class="text-sm text-gray-900 mr-3 font-medium">
+                      ${{ formatCurrency(item.lineTotal) }}
+                    </span>
+                    <button
+                      type="button"
+                      @click="removeItem(index)"
+                      class="text-red-600 hover:text-red-800 focus:outline-none text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Editor Content Area -->
-            <div class="p-4 h-48 overflow-y-auto">
+            <!-- Add Item Button -->
+            <div class="mt-4 flex justify-center">
+              <button
+                type="button"
+                @click="addItem"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Add Item
+              </button>
+            </div>
+          </div>
+
+          <!-- Documents Tab -->
+          <div v-else-if="activeInvoiceItemsTab === 'documents'">
+            <!-- Upload Section -->
+            <div
+              class="border-2 border-dashed border-gray-300 rounded-lg p-6 transition-colors duration-200"
+              :class="{ 'border-blue-400 bg-blue-50': isDragOver }"
+              @dragover.prevent="handleDragOver"
+              @dragleave.prevent="handleDragLeave"
+              @drop.prevent="handleDrop"
+            >
+              <div class="text-center">
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  stroke="currentColor"
+                  fill="none"
+                  viewBox="0 0 48 48"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <div class="mt-4">
+                  <label
+                    for="file-upload"
+                    class="cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary"
+                  >
+                    <span>Upload a file</span>
+                    <input
+                      id="file-upload"
+                      name="file-upload"
+                      type="file"
+                      class="sr-only"
+                      @change="handleFileUpload"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif"
+                    />
+                  </label>
+                  <p class="pl-1">or drag and drop</p>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                  PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, PNG, GIF up to
+                  10MB
+                </p>
+              </div>
+            </div>
+
+            <!-- Upload Progress -->
+            <div
+              v-if="uploadProgress > 0 && uploadProgress < 100"
+              class="mt-4 w-full bg-gray-200 rounded-full h-2.5"
+            >
               <div
-                ref="editorRef"
-                contenteditable="true"
-                @input="updateContent"
-                @keyup="updateFormatState"
-                @mouseup="updateFormatState"
-                class="rich-text-editor w-full border-0 outline-none resize-none text-sm focus:outline-none"
-                :placeholder="getTabPlaceholder(activeTab)"
+                class="bg-primary h-2.5 rounded-full transition-all duration-300"
+                :style="{ width: uploadProgress + '%' }"
               ></div>
             </div>
 
-            <!-- Status Bar -->
-            <div
-              class="border-t border-gray-200 px-4 py-2 bg-gray-50 flex justify-between items-center text-xs text-gray-500"
-            >
-              <span>{{ getCurrentTag() }}</span>
-              <span
-                >{{
-                  getWordCount(getPlainText(getCurrentTabContent()))
-                }}
-                words</span
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Section: Total Panel -->
-      <div class="bg-white rounded-lg shadow">
-        <!-- Card Title -->
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <h3 class="text-lg font-medium text-gray-900">Invoice Summary</h3>
-        </div>
-
-        <!-- Card Content -->
-        <div class="p-6">
-          <div class="space-y-3">
-            <!-- Subtotal -->
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">Subtotal</span>
-              <span class="text-sm font-medium text-gray-900"
-                >${{ formatCurrency(subtotal) }}</span
-              >
-            </div>
-
-            <!-- Tax -->
-            <div class="space-y-2">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Tax</span>
-                <div class="flex items-center space-x-2">
-                  <input
-                    v-model.number="taxRate"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary"
-                    placeholder="0"
-                  />
-                  <span class="text-sm text-gray-500">%</span>
+            <!-- Attachments List -->
+            <div v-if="attachments.length > 0" class="mt-6 space-y-3">
+              <h3 class="text-lg font-medium text-gray-900">
+                Attached Documents
+              </h3>
+              <div class="space-y-2">
+                <div
+                  v-for="attachment in attachments"
+                  :key="attachment.id"
+                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                >
+                  <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0">
+                      <svg
+                        v-if="attachment.attachment_type === 'pdf'"
+                        class="h-8 w-8 text-red-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <svg
+                        v-else-if="attachment.attachment_type === 'image'"
+                        class="h-8 w-8 text-green-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <svg
+                        v-else
+                        class="h-8 w-8 text-blue-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-900 truncate">
+                        {{ attachment.file_name }}
+                      </p>
+                      <p class="text-sm text-gray-500">
+                        {{ attachment.file_size_human }} •
+                        {{ attachment.attachment_type.toUpperCase() }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click="downloadAttachment(attachment)"
+                      class="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                    >
+                      Download
+                    </button>
+                    <button
+                      @click="removeAttachment(attachment)"
+                      class="text-red-600 hover:text-red-900 text-sm font-medium"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Tax Amount</span>
-                <span class="text-sm font-medium text-gray-900"
-                  >${{ formatCurrency(taxAmount) }}</span
-                >
-              </div>
             </div>
 
-            <!-- Total -->
-            <div class="border-t border-gray-200 pt-3">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-900">Total</span>
-                <span class="text-sm font-bold text-gray-900"
-                  >${{ formatCurrency(total) }}</span
-                >
-              </div>
-            </div>
-
-            <!-- Paid to Date -->
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">Paid to Date</span>
-              <span class="text-sm font-medium text-gray-900"
-                >${{ formatCurrency(paidToDate) }}</span
+            <!-- Empty State -->
+            <div v-else class="text-center py-8">
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">
+                No documents
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                Get started by uploading a document.
+              </p>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- Balance Due -->
-            <div class="border-t border-gray-200 pt-3">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-900"
-                  >Balance Due</span
-                >
-                <span class="text-sm font-bold text-gray-900"
-                  >${{ formatCurrency(balanceDue) }}</span
+      <!-- Tabs and Total Panel Section -->
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Section: Tabs and Rich Text Editor -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow">
+          <!-- Tabs -->
+          <div class="bg-gray-100 border-b border-gray-200 rounded-t-lg">
+            <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+              <button
+                v-for="tab in tabs"
+                :key="tab.id"
+                @click="activeTab = tab.id"
+                :class="[
+                  activeTab === tab.id
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
+                ]"
+              >
+                {{ tab.name }}
+              </button>
+            </nav>
+          </div>
+
+          <!-- Tab Content -->
+          <div class="p-6">
+            <!-- Rich Text Editor -->
+            <div class="border border-gray-300 rounded-lg">
+              <!-- Toolbar -->
+              <div class="border-b border-gray-200 p-3 bg-gray-50">
+                <div class="flex flex-wrap gap-2">
+                  <!-- Formatting buttons -->
+                  <div class="flex items-center space-x-1">
+                    <select
+                      v-model="selectedFormat"
+                      @change="formatBlock(selectedFormat)"
+                      class="text-sm border border-gray-300 rounded px-2 py-1"
+                    >
+                      <option value="p">Paragraph</option>
+                      <option value="h1">Heading 1</option>
+                      <option value="h2">Heading 2</option>
+                      <option value="h3">Heading 3</option>
+                    </select>
+                    <select
+                      v-model="selectedFont"
+                      @change="formatText('fontName', selectedFont)"
+                      class="text-sm border border-gray-300 rounded px-2 py-1"
+                    >
+                      <option value="Helvetica">Helvetica</option>
+                      <option value="Arial">Arial</option>
+                      <option value="Times New Roman">Times New Roman</option>
+                      <option value="Georgia">Georgia</option>
+                    </select>
+                    <select
+                      v-model="selectedSize"
+                      @change="formatText('fontSize', selectedSize)"
+                      class="text-sm border border-gray-300 rounded px-2 py-1"
+                    >
+                      <option value="3">12px</option>
+                      <option value="4">14px</option>
+                      <option value="5">16px</option>
+                      <option value="6">18px</option>
+                      <option value="7">24px</option>
+                    </select>
+                  </div>
+
+                  <div class="flex items-center space-x-1">
+                    <button
+                      @click="formatText('bold')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('bold')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Bold"
+                    >
+                      <span class="font-bold text-sm">B</span>
+                    </button>
+                    <button
+                      @click="formatText('italic')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('italic')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Italic"
+                    >
+                      <span class="italic text-sm">I</span>
+                    </button>
+                    <button
+                      @click="formatText('underline')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('underline')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Underline"
+                    >
+                      <span class="underline text-sm">U</span>
+                    </button>
+                    <button
+                      @click="formatText('strikeThrough')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('strikeThrough')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Strikethrough"
+                    >
+                      <span class="line-through text-sm">S</span>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center space-x-1">
+                    <input
+                      type="color"
+                      @change="handleForeColorChange"
+                      class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
+                      title="Text Color"
+                    />
+                    <input
+                      type="color"
+                      @change="handleBackColorChange"
+                      class="w-6 h-6 border border-gray-300 rounded cursor-pointer"
+                      title="Highlight Color"
+                    />
+                    <button
+                      @click="createLink"
+                      class="p-1 hover:bg-gray-200 rounded"
+                      title="Link"
+                    >
+                      <span class="text-sm">🔗</span>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center space-x-1">
+                    <button
+                      @click="formatText('justifyLeft')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('justifyLeft')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Align Left"
+                    >
+                      <span class="text-sm">⬅️</span>
+                    </button>
+                    <button
+                      @click="formatText('justifyCenter')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('justifyCenter')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Align Center"
+                    >
+                      <span class="text-sm">↔️</span>
+                    </button>
+                    <button
+                      @click="formatText('justifyRight')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('justifyRight')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Align Right"
+                    >
+                      <span class="text-sm">➡️</span>
+                    </button>
+                    <button
+                      @click="formatText('justifyFull')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('justifyFull')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Justify"
+                    >
+                      <span class="text-sm">⬌</span>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center space-x-1">
+                    <button
+                      @click="formatText('insertUnorderedList')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('insertUnorderedList')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Bullet List"
+                    >
+                      <span class="text-sm">•</span>
+                    </button>
+                    <button
+                      @click="formatText('insertOrderedList')"
+                      :class="[
+                        'p-1 rounded',
+                        isFormatActive('insertOrderedList')
+                          ? 'bg-blue-200'
+                          : 'hover:bg-gray-200',
+                      ]"
+                      title="Numbered List"
+                    >
+                      <span class="text-sm">1.</span>
+                    </button>
+                    <button
+                      @click="insertTable"
+                      class="p-1 hover:bg-gray-200 rounded"
+                      title="Table"
+                    >
+                      <span class="text-sm">⊞</span>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center space-x-1">
+                    <button
+                      @click="formatText('removeFormat')"
+                      class="p-1 hover:bg-gray-200 rounded"
+                      title="Clear Formatting"
+                    >
+                      <span class="text-sm">Tx</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Editor Content Area -->
+              <div class="p-4 h-48 overflow-y-auto">
+                <div
+                  ref="editorRef"
+                  contenteditable="true"
+                  @input="updateContent"
+                  @keyup="updateFormatState"
+                  @mouseup="updateFormatState"
+                  class="rich-text-editor w-full border-0 outline-none resize-none text-sm focus:outline-none"
+                  :placeholder="getTabPlaceholder(activeTab)"
+                ></div>
+              </div>
+
+              <!-- Status Bar -->
+              <div
+                class="border-t border-gray-200 px-4 py-2 bg-gray-50 flex justify-between items-center text-xs text-gray-500"
+              >
+                <span>{{ getCurrentTag() }}</span>
+                <span
+                  >{{
+                    getWordCount(getPlainText(getCurrentTabContent()))
+                  }}
+                  words</span
                 >
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Action Buttons -->
-    <div class="mt-8 flex justify-end space-x-4">
-      <button
-        type="button"
-        @click.prevent="handleCancel"
-        class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
-      >
-        Cancel
-      </button>
-      <button
-        type="button"
-        @click="handleSubmit"
-        :disabled="isSubmitting"
-        class="px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span v-if="isSubmitting" class="flex items-center">
-          <svg
-            class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          {{ isEditMode ? 'Saving...' : 'Creating...' }}
-        </span>
-        <span v-else>{{ isEditMode ? 'Save Changes' : 'Create Invoice' }}</span>
-      </button>
-    </div>
-  </div>
-  <!-- PDF Preview Panel -->
-  <div v-if="showPreview" class="max-w-7xl bg-white rounded-lg shadow p-6 mt-6">
-    <!-- Card Title with Action Buttons -->
-    <div
-      class="bg-gray-300 px-6 py-3 rounded-t-lg -m-6 mb-6 flex justify-between items-center"
-    >
-      <div class="flex items-center space-x-4">
-        <h3 class="text-lg font-medium text-gray-900">Invoice Preview</h3>
+        <!-- Right Section: Total Panel -->
+        <div class="bg-white rounded-lg shadow">
+          <!-- Card Title -->
+          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+            <h3 class="text-lg font-medium text-gray-900">Invoice Summary</h3>
+          </div>
 
-        <!-- Unit Selector Dropdown (only show if multiple units) -->
-        <div
-          v-if="form.unit_ids.length > 1"
-          class="flex items-center space-x-2"
-        >
-          <label class="text-sm font-medium text-gray-700">Unit:</label>
-          <select
-            v-model="selectedPreviewUnitId"
-            class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white"
-          >
-            <option
-              v-for="unitId in form.unit_ids"
-              :key="unitId"
-              :value="unitId"
-            >
-              {{ getUnitTitle(unitId) }}
-            </option>
-          </select>
+          <!-- Card Content -->
+          <div class="p-6">
+            <div class="space-y-3">
+              <!-- Subtotal -->
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Subtotal</span>
+                <span class="text-sm font-medium text-gray-900"
+                  >${{ formatCurrency(subtotal) }}</span
+                >
+              </div>
+
+              <!-- Tax -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Tax</span>
+                  <div class="flex items-center space-x-2">
+                    <input
+                      v-model.number="taxRate"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary"
+                      placeholder="0"
+                    />
+                    <span class="text-sm text-gray-500">%</span>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Tax Amount</span>
+                  <span class="text-sm font-medium text-gray-900"
+                    >${{ formatCurrency(taxAmount) }}</span
+                  >
+                </div>
+              </div>
+
+              <!-- Total -->
+              <div class="border-t border-gray-200 pt-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-900">Total</span>
+                  <span class="text-sm font-bold text-gray-900"
+                    >${{ formatCurrency(total) }}</span
+                  >
+                </div>
+              </div>
+
+              <!-- Paid to Date -->
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Paid to Date</span>
+                <span class="text-sm font-medium text-gray-900"
+                  >${{ formatCurrency(paidToDate) }}</span
+                >
+              </div>
+
+              <!-- Balance Due -->
+              <div class="border-t border-gray-200 pt-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-900"
+                    >Balance Due</span
+                  >
+                  <span class="text-sm font-bold text-gray-900"
+                    >${{ formatCurrency(balanceDue) }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-        <p class="font-medium text-blue-800">PDF Generation</p>
-        <p>
-          PDFs are automatically generated on the server when invoices are
-          created. You can view and download them from the invoice detail page.
-        </p>
+      <!-- Action Buttons -->
+      <div class="mt-8 flex justify-end space-x-4">
+        <button
+          type="button"
+          @click.prevent="handleCancel"
+          class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          @click="handleSubmit"
+          :disabled="isSubmitting"
+          class="px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="isSubmitting" class="flex items-center">
+            <svg
+              class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            {{ isEditMode ? 'Saving...' : 'Creating...' }}
+          </span>
+          <span v-else>{{
+            isEditMode ? 'Save Changes' : 'Create Invoice'
+          }}</span>
+        </button>
       </div>
     </div>
+    <!-- PDF Preview Panel -->
+    <div
+      v-if="showPreview"
+      class="max-w-7xl bg-white rounded-lg shadow p-6 mt-6"
+    >
+      <!-- Card Title with Action Buttons -->
+      <div
+        class="bg-gray-300 px-6 py-3 rounded-t-lg -m-6 mb-6 flex justify-between items-center"
+      >
+        <div class="flex items-center space-x-4">
+          <h3 class="text-lg font-medium text-gray-900">Invoice Preview</h3>
 
-    <!-- Invoice Template Preview -->
-    <div class="preview-container">
-      <InvoiceTemplate
-        :form="previewForm"
-        :invoice-items="invoiceItems"
-        :subtotal="subtotal"
-        :tax-rate="taxRate"
-        :tax-amount="taxAmount"
-        :total="total"
-        :paid-to-date="paidToDate"
-        :balance-due="balanceDue"
-        :tab-content="tabContent"
-        :units="units"
-      />
+          <!-- Unit Selector Dropdown (only show if multiple units) -->
+          <div
+            v-if="form.unit_ids.length > 1"
+            class="flex items-center space-x-2"
+          >
+            <label class="text-sm font-medium text-gray-700">Unit:</label>
+            <select
+              v-model="selectedPreviewUnitId"
+              class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+            >
+              <option
+                v-for="unitId in form.unit_ids"
+                :key="unitId"
+                :value="unitId"
+              >
+                {{ getUnitTitle(unitId) }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+          <p class="font-medium text-blue-800">PDF Generation</p>
+          <p>
+            PDFs are automatically generated on the server when invoices are
+            created. You can view and download them from the invoice detail
+            page.
+          </p>
+        </div>
+      </div>
+
+      <!-- Invoice Template Preview -->
+      <div class="preview-container">
+        <InvoiceTemplate
+          :form="previewForm"
+          :invoice-items="invoiceItems"
+          :subtotal="subtotal"
+          :tax-rate="taxRate"
+          :tax-amount="taxAmount"
+          :total="total"
+          :paid-to-date="paidToDate"
+          :balance-due="balanceDue"
+          :tab-content="tabContent"
+          :units="units"
+        />
+      </div>
     </div>
   </div>
 </template>
