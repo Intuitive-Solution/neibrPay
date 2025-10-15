@@ -402,6 +402,10 @@
             </label>
             <div
               class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors"
+              :class="{ 'border-blue-400 bg-blue-50': isDragOver }"
+              @dragover.prevent="handleDragOver"
+              @dragleave.prevent="handleDragLeave"
+              @drop.prevent="handleDrop"
             >
               <div class="space-y-1 text-center">
                 <svg
@@ -572,6 +576,7 @@ const form = ref<CreateExpenseDto & { paid_amount?: number }>({
 // File upload
 const uploadedFiles = ref<File[]>([]);
 const fileInput = ref<HTMLInputElement>();
+const isDragOver = ref(false);
 
 // Form state
 const isSubmitting = ref(false);
@@ -678,6 +683,35 @@ const handleFileSelect = (event: Event) => {
 
 const removeFile = (index: number) => {
   uploadedFiles.value.splice(index, 1);
+};
+
+// Drag and drop handlers
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault();
+  isDragOver.value = true;
+};
+
+const handleDragLeave = (event: DragEvent) => {
+  event.preventDefault();
+  // Only set isDragOver to false if we're leaving the drop zone entirely
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const x = event.clientX;
+  const y = event.clientY;
+
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    isDragOver.value = false;
+  }
+};
+
+const handleDrop = (event: DragEvent) => {
+  event.preventDefault();
+  isDragOver.value = false;
+
+  const files = event.dataTransfer?.files;
+  if (files && files.length > 0) {
+    const newFiles = Array.from(files);
+    uploadedFiles.value.push(...newFiles);
+  }
 };
 
 const formatFileSize = (bytes: number): string => {
