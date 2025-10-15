@@ -463,7 +463,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { vendorsApi, queryKeys } from '@neibrpay/api-client';
@@ -517,23 +517,32 @@ const { data: vendorData } = useQuery({
 });
 
 // Populate form when vendor data is loaded
-onMounted(() => {
-  if (isEdit.value && vendorData.value) {
-    form.name = vendorData.value.name;
-    form.description = vendorData.value.description || '';
-    form.category = vendorData.value.category;
-    form.ein = vendorData.value.ein || '';
-    form.street_address = vendorData.value.street_address;
-    form.city = vendorData.value.city;
-    form.state = vendorData.value.state;
-    form.zip_code = vendorData.value.zip_code;
-    form.website = vendorData.value.website || '';
-    form.notes = vendorData.value.notes || '';
-    form.contact_name = vendorData.value.contact_name;
-    form.contact_email = vendorData.value.contact_email;
-    form.contact_phone = vendorData.value.contact_phone;
-  }
-});
+const populateForm = (vendor: any) => {
+  form.name = vendor.name;
+  form.description = vendor.description || '';
+  form.category = vendor.category;
+  form.ein = vendor.ein || '';
+  form.street_address = vendor.street_address;
+  form.city = vendor.city;
+  form.state = vendor.state;
+  form.zip_code = vendor.zip_code;
+  form.website = vendor.website || '';
+  form.notes = vendor.notes || '';
+  form.contact_name = vendor.contact_name;
+  form.contact_email = vendor.contact_email;
+  form.contact_phone = vendor.contact_phone;
+};
+
+// Watch for vendor data changes and populate form
+watch(
+  vendorData,
+  newVendorData => {
+    if (isEdit.value && newVendorData) {
+      populateForm(newVendorData);
+    }
+  },
+  { immediate: true }
+);
 
 // Create mutation
 const { mutate: createVendor, isPending: isCreating } = useMutation({
