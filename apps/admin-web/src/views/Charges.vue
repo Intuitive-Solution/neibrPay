@@ -1,13 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Charges</h1>
-        <p class="text-sm text-gray-600 mt-1">
-          Manage standard charges and fees for your community
-        </p>
-      </div>
+    <div class="flex items-right justify-end">
       <router-link
         to="/charges/create"
         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
