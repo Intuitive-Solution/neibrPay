@@ -5,4 +5,5 @@ export * from './charge';
 export * from './resident';
 export * from './unit';
 export * from './invoice';
+export * from './vendor';
 export * from './validation';

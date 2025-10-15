@@ -28,8 +28,18 @@ export const chargeKeys = {
   detail: (id: number) => [...chargeKeys.details(), id] as const,
 } as const;
 
+export const vendorKeys = {
+  all: ['vendors'] as const,
+  lists: () => [...vendorKeys.all, 'list'] as const,
+  list: (filters: Record<string, any> = {}) =>
+    [...vendorKeys.lists(), { filters }] as const,
+  details: () => [...vendorKeys.all, 'detail'] as const,
+  detail: (id: number) => [...vendorKeys.details(), id] as const,
+} as const;
+
 export const queryKeys = {
   residents: residentKeys,
   units: unitKeys,
   charges: chargeKeys,
+  vendors: vendorKeys,
 } as const;

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\InvoicePdfController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\Api\UnitDocumentController;
+use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -105,6 +106,10 @@ Route::middleware('firebase.auth')->group(function () {
     // Charge management routes
     Route::apiResource('charges', ChargeController::class);
     Route::post('charges/{charge}/restore', [ChargeController::class, 'restore']);
+    
+    // Vendor management routes
+    Route::apiResource('vendors', VendorController::class);
+    Route::post('vendors/{vendor}/restore', [VendorController::class, 'restore']);
 });
 
 // Legacy route for backward compatibility

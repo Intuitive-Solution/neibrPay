@@ -17,6 +17,7 @@ import Units from '../views/Units.vue';
 import AddUnit from '../views/AddUnit.vue';
 import Payments from '../views/Payments.vue';
 import Vendors from '../views/Vendors.vue';
+import AddVendor from '../views/AddVendor.vue';
 import Settings from '../views/Settings.vue';
 import { setupAuthGuards } from './guards';
 
@@ -145,6 +146,18 @@ const router = createRouter({
       path: '/vendors',
       name: 'Vendors',
       component: Vendors,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/vendors/create',
+      name: 'AddVendor',
+      component: AddVendor,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/vendors/:id/edit',
+      name: 'EditVendor',
+      component: AddVendor,
       meta: { requiresAuth: true },
     },
     {
