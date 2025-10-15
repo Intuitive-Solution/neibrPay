@@ -446,9 +446,77 @@
             </div>
           </div>
 
+          <!-- Existing Attachments (Edit Mode) -->
+          <div
+            v-if="
+              isEditMode &&
+              existingAttachments &&
+              existingAttachments.length > 0
+            "
+            class="space-y-2 mb-4"
+          >
+            <h4 class="text-sm font-medium text-gray-700">
+              Existing Documents
+            </h4>
+            <div
+              v-for="attachment in existingAttachments"
+              :key="attachment.id"
+              class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200"
+            >
+              <div class="flex items-center">
+                <svg
+                  class="h-5 w-5 text-blue-400 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <div>
+                  <p class="text-sm font-medium text-gray-900">
+                    {{ attachment.file_name }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    {{ formatFileSize(attachment.file_size) }} •
+                    {{ formatDate(attachment.created_at) }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button
+                  type="button"
+                  @click="downloadExistingAttachment(attachment)"
+                  class="text-blue-600 hover:text-blue-900"
+                  title="Download"
+                >
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Uploaded Files List -->
           <div v-if="uploadedFiles.length > 0" class="space-y-2">
-            <h4 class="text-sm font-medium text-gray-700">Uploaded Files</h4>
+            <h4 class="text-sm font-medium text-gray-700">
+              New Files to Upload
+            </h4>
             <div
               v-for="(file, index) in uploadedFiles"
               :key="index"
@@ -537,8 +605,9 @@ import {
   useCreateExpense,
   useUpdateExpense,
   useUploadAttachment,
+  useExpenseAttachments,
 } from '../composables/useExpenses';
-import { vendorsApi, queryKeys } from '@neibrpay/api-client';
+import { vendorsApi, queryKeys, expensesApi } from '@neibrpay/api-client';
 import {
   getExpenseCategoryOptions,
   getExpenseStatusOptions,
@@ -593,6 +662,11 @@ const vendors = computed(() => vendorsData.value || []);
 
 // Get expense data if in edit mode
 const { data: expenseData } = useExpense(expenseId.value || 0);
+
+// Get existing attachments if in edit mode
+const { data: existingAttachments } = useExpenseAttachments(
+  expenseId.value || 0
+);
 
 // Options for dropdowns
 const categoryOptions = getExpenseCategoryOptions();
@@ -720,6 +794,35 @@ const formatFileSize = (bytes: number): string => {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const formatDate = (dateString: string): string => {
+  if (!dateString) return 'N/A';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+const downloadExistingAttachment = async (attachment: any) => {
+  try {
+    const blob = await expensesApi.downloadAttachment(
+      expenseId.value!,
+      attachment.id
+    );
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = attachment.file_name;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('Error downloading attachment:', error);
+    alert('Failed to download file');
+  }
 };
 
 // Form validation
