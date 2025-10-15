@@ -923,7 +923,11 @@ import {
   validateResidentForm,
   validateUpdateResidentForm,
 } from '@neibrpay/models';
-import type { ResidentFormData, ResidentFormErrors } from '@neibrpay/models';
+import type {
+  ResidentFormData,
+  ResidentFormErrors,
+  CreateResidentRequest,
+} from '@neibrpay/models';
 
 const route = useRoute();
 const router = useRouter();
@@ -1228,7 +1232,9 @@ const handleSubmit = async () => {
         data: validation.data as any,
       });
     } else {
-      await createResidentMutation.mutateAsync(validation.data as any);
+      await createResidentMutation.mutateAsync(
+        validation.data! as CreateResidentRequest
+      );
     }
 
     // Success - redirect back to people page

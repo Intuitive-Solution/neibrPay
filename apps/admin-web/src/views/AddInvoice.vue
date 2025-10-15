@@ -698,36 +698,8 @@
                     v-if="itemDropdowns[index]"
                     class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
                   >
-                    <!-- Free Text Option -->
-                    <div
-                      class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer border-b border-gray-200"
-                      @mousedown="selectFreeText(index)"
-                    >
-                      <div class="flex items-center">
-                        <svg
-                          class="w-4 h-4 mr-2 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                        <span class="font-medium">Free text</span>
-                      </div>
-                    </div>
-
                     <!-- Charges List -->
                     <div v-if="filteredCharges.length > 0">
-                      <div
-                        class="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-200"
-                      >
-                        Load from Charges
-                      </div>
                       <div
                         v-for="charge in filteredCharges"
                         :key="charge.id"
@@ -1463,6 +1435,15 @@ import type {
   UpdateInvoiceRequest,
   Charge,
 } from '@neibrpay/models';
+
+// Define invoice item type
+interface InvoiceItem {
+  name: string;
+  description: string;
+  unitCost: number;
+  quantity: number;
+  lineTotal: number;
+}
 import { chargesApi, queryKeys } from '@neibrpay/api-client';
 import { useQuery } from '@tanstack/vue-query';
 import { getChargeCategoryDisplayName } from '@neibrpay/models';
@@ -1567,7 +1548,7 @@ const highlightedIndex = ref(-1);
 const dropdownRef = ref<HTMLElement | null>(null);
 
 // Charge dropdown state
-const showChargeDropdown = ref(false);
+// const showChargeDropdown = ref(false); // Unused variable
 const chargeSearchQuery = ref('');
 
 // Item dropdown state
@@ -1575,23 +1556,7 @@ const itemDropdowns = ref<Record<number, boolean>>({});
 const itemSearchQueries = ref<Record<number, string>>({});
 
 // Invoice items
-const invoiceItems = ref([
-  // Sample data for demonstration
-  {
-    name: 'Monthly HOA Fee',
-    description: 'Homeowners Association monthly maintenance fee',
-    unitCost: 150.0,
-    quantity: 1,
-    lineTotal: 150.0,
-  },
-  {
-    name: 'Landscaping Service',
-    description: 'Monthly lawn care and garden maintenance',
-    unitCost: 75.0,
-    quantity: 1,
-    lineTotal: 75.0,
-  },
-]);
+const invoiceItems = ref<InvoiceItem[]>([]);
 
 // Tabs data
 const tabs = ref([
@@ -2028,10 +1993,10 @@ const onItemNameInput = (index: number, event: Event) => {
   chargeSearchQuery.value = target.value;
 };
 
-const selectFreeText = (index: number) => {
-  // Keep the current input value and close dropdown
-  itemDropdowns.value[index] = false;
-};
+// const selectFreeText = (index: number) => {
+//   // Keep the current input value and close dropdown
+//   itemDropdowns.value[index] = false;
+// }; // Unused function
 
 const loadCharge = (index: number, charge: Charge) => {
   const item = invoiceItems.value[index];

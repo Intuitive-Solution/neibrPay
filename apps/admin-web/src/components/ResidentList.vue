@@ -95,7 +95,7 @@
       </div>
     </div>
 
-    <div v-else-if="!residents || residents.length === 0" class="p-6">
+    <div v-else-if="!residents || residents?.length === 0" class="p-6">
       <div class="text-center py-12">
         <svg
           class="mx-auto h-12 w-12 text-gray-400"
@@ -371,7 +371,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, type Ref } from 'vue';
 import {
   useResidents,
   useDeleteResident,
@@ -403,7 +403,7 @@ const {
   isLoading,
   error,
   refetch,
-} = useResidents(includeDeleted.value);
+} = useResidents(includeDeleted as Ref<boolean>);
 const deleteResidentMutation = useDeleteResident();
 const restoreResidentMutation = useRestoreResident();
 
