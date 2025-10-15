@@ -16,6 +16,9 @@ import AddResident from '../views/AddResident.vue';
 import Units from '../views/Units.vue';
 import AddUnit from '../views/AddUnit.vue';
 import Payments from '../views/Payments.vue';
+import Expenses from '../views/Expenses.vue';
+import AddExpense from '../views/AddExpense.vue';
+import ExpenseDetail from '../views/ExpenseDetail.vue';
 import Vendors from '../views/Vendors.vue';
 import AddVendor from '../views/AddVendor.vue';
 import Settings from '../views/Settings.vue';
@@ -140,6 +143,30 @@ const router = createRouter({
       path: '/payments',
       name: 'Payments',
       component: Payments,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/expenses',
+      name: 'Expenses',
+      component: Expenses,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/expenses/create',
+      name: 'AddExpense',
+      component: AddExpense,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/expenses/:id',
+      name: 'ExpenseDetail',
+      component: ExpenseDetail,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/expenses/:id/edit',
+      name: 'EditExpense',
+      component: AddExpense,
       meta: { requiresAuth: true },
     },
     {

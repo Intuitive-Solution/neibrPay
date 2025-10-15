@@ -267,6 +267,38 @@
 
           <li>
             <router-link
+              to="/expenses"
+              :class="[
+                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
+                $route.name === 'Expenses' ||
+                $route.name === 'AddExpense' ||
+                $route.name === 'EditExpense' ||
+                $route.name === 'ExpenseDetail'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-700 hover:bg-gray-100',
+                isCollapsed ? 'justify-center px-2' : 'px-4',
+              ]"
+              :title="isCollapsed ? 'Expenses' : ''"
+            >
+              <svg
+                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              <span v-if="!isCollapsed">Expenses</span>
+            </router-link>
+          </li>
+
+          <li>
+            <router-link
               to="/vendors"
               :class="[
                 'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
@@ -541,6 +573,14 @@ const pageTitle = computed(() => {
       return 'Edit Unit';
     case 'Payments':
       return 'Payments';
+    case 'Expenses':
+      return 'Expenses';
+    case 'AddExpense':
+      return 'Add New Expense';
+    case 'EditExpense':
+      return 'Edit Expense';
+    case 'ExpenseDetail':
+      return 'Expense Details';
     case 'Vendors':
       return 'Vendors';
     case 'AddVendor':
@@ -584,6 +624,14 @@ const pageDescription = computed(() => {
       return 'Update unit information';
     case 'Payments':
       return 'Track payments and financial transactions';
+    case 'Expenses':
+      return 'Manage vendor expenses and invoices';
+    case 'AddExpense':
+      return 'Add a new expense for vendor invoice tracking';
+    case 'EditExpense':
+      return 'Update expense information';
+    case 'ExpenseDetail':
+      return 'View expense details and documents';
     case 'Vendors':
       return 'Manage vendors and service providers';
     case 'AddVendor':

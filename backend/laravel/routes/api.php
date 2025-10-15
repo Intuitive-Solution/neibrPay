@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChargeController;
+use App\Http\Controllers\Api\ExpenseAttachmentController;
+use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InvoiceAttachmentController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoicePdfController;
@@ -110,6 +112,16 @@ Route::middleware('firebase.auth')->group(function () {
     // Vendor management routes
     Route::apiResource('vendors', VendorController::class);
     Route::post('vendors/{vendor}/restore', [VendorController::class, 'restore']);
+    
+    // Expense management routes
+    Route::apiResource('expenses', ExpenseController::class);
+    Route::post('expenses/{expense}/restore', [ExpenseController::class, 'restore']);
+    
+    // Expense attachment routes
+    Route::get('expenses/{expense}/attachments', [ExpenseAttachmentController::class, 'index']);
+    Route::post('expenses/{expense}/attachments', [ExpenseAttachmentController::class, 'store']);
+    Route::get('expenses/{expense}/attachments/{attachment}/download', [ExpenseAttachmentController::class, 'download']);
+    Route::delete('expenses/{expense}/attachments/{attachment}', [ExpenseAttachmentController::class, 'destroy']);
 });
 
 // Legacy route for backward compatibility
