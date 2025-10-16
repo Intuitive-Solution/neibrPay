@@ -434,7 +434,7 @@
                           }
                         "
                         :disabled="deletingInvoiceId === invoice.id"
-                        class="dropdown-item-danger"
+                        class="dropdown-item dropdown-item-danger"
                       >
                         <svg
                           class="w-4 h-4 mr-2"

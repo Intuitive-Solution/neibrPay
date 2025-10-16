@@ -31,7 +31,7 @@
         <div
           v-if="isOpen"
           ref="menuRef"
-          class="fixed bg-white rounded-lg shadow-2xl border-2 border-gray-300 py-1 min-w-max w-56"
+          class="fixed bg-white rounded-lg shadow-2xl border-2 border-gray-300 py-1 min-w-max w-44"
           :style="menuStyle"
           style="z-index: 9999"
         >
