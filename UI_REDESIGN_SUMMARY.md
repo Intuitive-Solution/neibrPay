@@ -51,6 +51,7 @@ Successfully implemented Bonsai-inspired UI redesign across the NeibrPay admin a
   - White background with green accents for active items
   - Clean spacing and typography
   - Smooth transitions
+  - Community name positioned below logo for better hierarchy
 
 #### DropdownMenu (`apps/admin-web/src/components/DropdownMenu.vue`) ✅ NEW
 
