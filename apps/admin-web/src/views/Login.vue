@@ -7,17 +7,7 @@
       <div class="mx-auto w-full max-w-sm lg:w-96">
         <!-- Logo -->
         <div class="mb-8">
-          <div class="flex items-center space-x-3">
-            <img
-              src="/owner-logo.png"
-              alt="NeibrPay Logo"
-              class="h-10 w-10 object-contain rounded-lg"
-            />
-            <h1 class="text-2xl font-bold">
-              <span class="text-primary">Neibr</span>
-              <span style="color: #2ee9b6">Pay</span>
-            </h1>
-          </div>
+          <NeibrPayLogo size="lg" />
         </div>
 
         <!-- Welcome Message -->
@@ -405,6 +395,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import NeibrPayLogo from '../components/NeibrPayLogo.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();

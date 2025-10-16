@@ -13,7 +13,8 @@
         'bg-white shadow-lg flex flex-col transition-all duration-300 ease-in-out',
         // Desktop responsive behavior
         'hidden md:flex',
-        isCollapsed ? 'md:w-16 xl:w-64' : 'w-64',
+        // Width logic: collapsed shows icons only (w-16), expanded shows full width (w-64)
+        isCollapsedView ? 'w-16' : 'w-64',
         // Mobile drawer
         'md:relative fixed inset-y-0 left-0 z-50',
         isMobileMenuOpen
@@ -22,19 +23,11 @@
       ]"
     >
       <!-- Community Header -->
-      <div class="p-6 px-2">
+      <div :class="isCollapsedView ? 'p-4' : 'p-6'">
         <div v-if="!isCollapsedView" class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
-            <img
-              src="/owner-logo.png"
-              alt="NeibrPay Logo"
-              class="h-10 w-10 object-contain rounded-lg"
-            />
+            <NeibrPayLogo />
             <div>
-              <h1 class="text-xl font-bold">
-                <span class="text-primary">Neibr</span>
-                <span class="text-primary">Pay</span>
-              </h1>
               <p class="text-sm text-gray-600 mt-1">{{ communityName }}</p>
             </div>
           </div>
@@ -62,12 +55,8 @@
         </div>
 
         <div v-else class="flex flex-col items-center space-y-4">
-          <!-- Logo -->
-          <img
-            src="/owner-logo.png"
-            alt="NeibrPay Logo"
-            class="h-10 w-10 object-contain rounded-lg"
-          />
+          <!-- Logo Icon Only -->
+          <NeibrPayLogo icon-only size="md" />
 
           <!-- Expand Button -->
           <button
@@ -95,8 +84,8 @@
       <!-- Navigation Links -->
       <nav
         :class="[
-          'flex-1 py-6 overflow-y-auto',
-          isCollapsedView ? 'px-2' : 'px-4',
+          'flex-1 overflow-y-auto',
+          isCollapsedView ? 'py-4 px-2' : 'py-6 px-4',
         ]"
       >
         <ul class="space-y-1">
@@ -324,7 +313,7 @@
 
       <!-- User Info & Logout -->
       <div
-        :class="['border-t border-gray-200', isCollapsedView ? 'p-2' : 'p-4']"
+        :class="['border-t border-gray-200', isCollapsedView ? 'p-3' : 'p-4']"
       >
         <div v-if="!isCollapsedView" class="flex items-center space-x-3 mb-4">
           <div
@@ -667,6 +656,7 @@
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import NeibrPayLogo from './NeibrPayLogo.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -712,7 +702,7 @@ const userInitials = computed(() => {
   const name = userDisplayName.value;
   return name
     .split(' ')
-    .map(n => n[0])
+    .map((n: string) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);

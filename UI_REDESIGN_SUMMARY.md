@@ -6,6 +6,18 @@ Successfully implemented Bonsai-inspired UI redesign across the NeibrPay admin a
 
 ## Completed Components
 
+### 0. **Brand Logo Update** ✅
+
+- **NeibrPayLogo Component** (`apps/admin-web/src/components/NeibrPayLogo.vue`)
+  - SVG-based logo replacing old PNG
+  - Bonsai green (#00C27A) as primary brand color
+  - Responsive variants (full logo + icon-only)
+  - Multiple size options (sm, md, lg)
+  - Clean house icon with wave element
+  - Hover effects and smooth transitions
+  - Integrated into AppSidebar for both expanded and collapsed states
+  - Export utility available at `/public/logo-export.html`
+
 ### 1. **Design System Foundation** ✅
 
 - **Tailwind Config** (`apps/admin-web/tailwind.config.js`)
@@ -195,3 +207,37 @@ The following pages still need the Bonsai redesign applied:
 - All custom utility classes are defined in `/apps/admin-web/src/style.css`
 - Mobile drawer animations use Tailwind transitions
 - Create (+) dropdown includes all main entity types for the HOA system
+
+## Logo Update Details
+
+### New SVG Logo Implementation
+
+✅ **Created NeibrPayLogo.vue component** with:
+
+- SVG-based scalable logo
+- Bonsai green (#00C27A) brand color
+- Icon-only and full logo variants
+- Multiple size options (sm, md, lg)
+- Hover effects and smooth transitions
+
+✅ **Updated all views to use new logo**:
+
+- AppSidebar (expanded and collapsed states)
+- Login page
+- Signup page
+- ForgotPassword page
+- ResetPassword page
+
+✅ **Export utility created**: `/apps/admin-web/public/logo-export.html`
+
+- Preview different logo variants
+- Instructions for exporting as PNG
+- Multiple backgrounds for testing
+
+### Logo Design Principles
+
+- Clean house icon representing HOA/community
+- Wave element representing payments/flow
+- Transparent background for versatility
+- Consistent with Bonsai design system
+- Professional and modern aesthetic

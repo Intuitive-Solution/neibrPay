@@ -39,15 +39,16 @@ Successfully implementing Bonsai-inspired UI redesign across the NeibrPay HOA ma
 #### AppSidebar Component (UPDATED)
 
 - Responsive behavior:
-  - XL screens: Expanded (w-64)
-  - Other screens: Collapsed (w-16) with icons
+  - Collapsed state: Icons only (w-16) with proper padding
+  - Expanded state: Full width (w-64) with text labels
   - Mobile: Drawer/overlay concept
 - New top header section with:
   - Search button
   - Notification button
   - Create (+) dropdown with options: Unit, Invoice, Resident, Expenses, Vendor
 - Green accent for active navigation items
-- Smooth transitions
+- Smooth transitions between collapsed/expanded states
+- Proper padding adjustments for collapsed view
 
 ### 3. Page Redesigns
 
