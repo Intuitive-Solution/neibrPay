@@ -87,11 +87,11 @@
       </div>
 
       <!-- Notification Settings -->
-      <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">Notifications</h2>
-        </div>
-        <div class="p-6 space-y-4">
+      <div class="card">
+        <h2 class="text-base font-semibold text-gray-900 mb-4">
+          Notifications
+        </h2>
+        <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-sm font-medium text-gray-900">
@@ -136,11 +136,9 @@
       </div>
 
       <!-- Security Settings -->
-      <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">Security</h2>
-        </div>
-        <div class="p-6 space-y-4">
+      <div class="card">
+        <h2 class="text-base font-semibold text-gray-900 mb-4">Security</h2>
+        <div class="space-y-4">
           <button
             class="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
@@ -201,11 +199,7 @@
 
     <!-- Save Button -->
     <div class="flex justify-end">
-      <button
-        class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
-      >
-        Save Changes
-      </button>
+      <button class="btn-primary">Save Changes</button>
     </div>
   </div>
 </template>
