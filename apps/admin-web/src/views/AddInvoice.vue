@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-7xl">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="card mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -18,10 +18,7 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <button
-            @click="handleCancel"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-          >
+          <button @click="handleCancel" class="btn-outline">
             <svg
               class="w-4 h-4 mr-2"
               fill="none"
@@ -71,7 +68,7 @@
       <!-- Three Column Layout -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Column 1: Units -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="card">
           <!-- Card Title -->
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Units</h3>
@@ -275,7 +272,7 @@
         </div>
 
         <!-- Column 2: Scheduling/Frequency -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="card">
           <!-- Card Title -->
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Scheduling</h3>
@@ -480,7 +477,7 @@
         </div>
 
         <!-- Column 3: Invoice Details -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="card">
           <!-- Card Title -->
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
@@ -641,7 +638,7 @@
       </div>
 
       <!-- Invoice Items Section with Tabs -->
-      <div class="mt-8 bg-white rounded-lg shadow">
+      <div class="mt-8 card">
         <!-- Tab Navigation -->
         <div class="bg-gray-100 rounded-t-lg">
           <nav class="flex space-x-8 px-6" aria-label="Tabs">
@@ -1287,7 +1284,7 @@
         </div>
 
         <!-- Right Section: Total Panel -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="card">
           <!-- Card Title -->
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Invoice Summary</h3>
@@ -1368,7 +1365,7 @@
         <button
           type="button"
           @click.prevent="handleCancel"
-          class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+          class="btn-secondary"
         >
           Cancel
         </button>
@@ -1376,7 +1373,7 @@
           type="button"
           @click="handleSubmit"
           :disabled="isSubmitting"
-          class="px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="btn-primary"
         >
           <span v-if="isSubmitting" class="flex items-center">
             <svg

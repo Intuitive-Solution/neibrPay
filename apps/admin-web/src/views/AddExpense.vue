@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="card mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="bg-white p-6 rounded-lg shadow">
+    <div class="card">
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Basic Information Section -->
         <div class="border-b border-gray-200 pb-6">
@@ -577,11 +577,7 @@
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            :disabled="isSubmitting"
-            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" :disabled="isSubmitting" class="btn-primary">
             {{
               isSubmitting
                 ? 'Saving...'

@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-6xl mx-auto">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="card mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -131,7 +131,7 @@
       <!-- Main Information -->
       <div class="lg:col-span-2 space-y-6">
         <!-- Basic Information Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Basic Information
           </h3>
@@ -194,7 +194,7 @@
         </div>
 
         <!-- Payment Information Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Payment Information
           </h3>
@@ -246,7 +246,7 @@
         </div>
 
         <!-- Documents Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <div class="mb-4">
             <h3 class="text-lg font-medium text-gray-900">Documents</h3>
           </div>
@@ -341,7 +341,7 @@
       <!-- Sidebar -->
       <div class="space-y-6">
         <!-- Vendor Information Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Vendor Information
           </h3>
@@ -397,7 +397,7 @@
         </div>
 
         <!-- Expense Summary Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Expense Summary
           </h3>
@@ -430,7 +430,7 @@
         </div>
 
         <!-- Created Information Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Created Information
           </h3>

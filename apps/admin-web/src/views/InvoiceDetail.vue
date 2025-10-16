@@ -115,10 +115,7 @@
       <p class="text-gray-600 mb-4">
         {{ error.message || 'Failed to load invoice details' }}
       </p>
-      <button
-        @click="router.push('/invoices')"
-        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600"
-      >
+      <button @click="router.push('/invoices')" class="btn-primary">
         Back to Invoices
       </button>
     </div>
@@ -126,7 +123,7 @@
     <!-- Invoice Details Content -->
     <div v-else-if="invoice" class="space-y-6">
       <!-- Header Section -->
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="card">
         <div
           class="flex flex-col lg:flex-row lg:items-start lg:justify-between"
         >
@@ -138,7 +135,7 @@
               <!-- Enhanced Status Badge -->
               <span
                 :class="getStatusBadgeClass(invoice.status)"
-                class="inline-flex items-center px-4 py-2 rounded-lg text-base font-semibold shadow-sm"
+                class="badge text-base"
               >
                 <svg
                   v-if="invoice.status === 'paid'"
@@ -222,7 +219,7 @@
           <button
             @click="emailInvoice"
             :disabled="isEmailing || invoice.status === 'paid'"
-            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            class="btn-primary"
           >
             <svg
               class="w-4 h-4 mr-2"
@@ -348,7 +345,7 @@
       <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column - Invoice Information -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="card">
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
           </div>
@@ -427,7 +424,7 @@
         </div>
 
         <!-- Middle Column - Unit & Owner Information -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="card">
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Unit & Owner</h3>
           </div>
@@ -475,7 +472,7 @@
         </div>
 
         <!-- Right Column - Financial Summary -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="card">
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Financial Summary</h3>
           </div>
@@ -535,7 +532,7 @@
       </div>
 
       <!-- Documents and Activity Tabs Section -->
-      <div class="bg-white rounded-lg shadow">
+      <div class="card">
         <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
@@ -940,7 +937,7 @@
       </div>
 
       <!-- Invoice PDF Section -->
-      <div class="bg-white rounded-lg shadow">
+      <div class="card">
         <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-medium text-gray-900">Invoice PDF</h3>
@@ -1159,16 +1156,14 @@ const getStatusText = (status: string) => {
 
 const getStatusBadgeClass = (status: string) => {
   const statusClasses: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-800 border border-gray-200',
-    sent: 'bg-blue-100 text-blue-800 border border-blue-200',
-    paid: 'bg-green-100 text-green-800 border border-green-200',
-    partial: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-    overdue: 'bg-red-100 text-red-800 border border-red-200',
-    cancelled: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+    draft: 'badge-draft',
+    sent: 'badge-sent',
+    paid: 'badge-paid',
+    partial: 'badge-partial',
+    overdue: 'badge-overdue',
+    cancelled: 'badge-partial',
   };
-  return (
-    statusClasses[status] || 'bg-gray-100 text-gray-800 border border-gray-200'
-  );
+  return statusClasses[status] || 'badge-draft';
 };
 
 const formatFrequency = (frequency: string) => {
