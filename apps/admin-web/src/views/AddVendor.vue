@@ -500,7 +500,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { vendorsApi, queryKeys } from '@neibrpay/api-client';

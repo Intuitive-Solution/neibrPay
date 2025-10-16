@@ -7,10 +7,18 @@
           <div class="flex items-center gap-4 mb-2">
             <h1 class="text-2xl font-bold text-gray-900">Expense Details</h1>
             <span
-              :class="getExpenseStatusBadgeClass(expense?.status || 'unpaid')"
+              :class="
+                getExpenseStatusBadgeClass(
+                  expense?.status || ExpenseStatus.UNPAID
+                )
+              "
               class="inline-flex px-3 py-1 text-sm font-semibold rounded-full"
             >
-              {{ getExpenseStatusDisplayName(expense?.status || 'unpaid') }}
+              {{
+                getExpenseStatusDisplayName(
+                  expense?.status || ExpenseStatus.UNPAID
+                )
+              }}
             </span>
           </div>
           <p class="text-gray-600">
@@ -351,7 +359,11 @@
                 >Category</label
               >
               <p class="mt-1 text-sm text-gray-900">
-                {{ getVendorCategoryDisplayName(expense.vendor.category) }}
+                {{
+                  getVendorCategoryDisplayName(
+                    expense.vendor.category as VendorCategory
+                  )
+                }}
               </p>
             </div>
             <div>
@@ -482,6 +494,8 @@ import {
   getExpenseStatusBadgeClass,
   getPaymentMethodDisplayName,
   getVendorCategoryDisplayName,
+  ExpenseStatus,
+  VendorCategory,
 } from '@neibrpay/models';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 

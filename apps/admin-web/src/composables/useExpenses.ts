@@ -1,11 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { computed, unref, type Ref } from 'vue';
 import { expensesApi, queryKeys } from '@neibrpay/api-client';
-import type {
-  CreateExpenseDto,
-  UpdateExpenseDto,
-  ExpenseFilters,
-} from '@neibrpay/models';
+import type { CreateExpenseDto, UpdateExpenseDto } from '@neibrpay/models';
 
 // Get all expenses with optional filters
 export function useExpenses(

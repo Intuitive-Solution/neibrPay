@@ -655,21 +655,6 @@ const handleLogout = async () => {
     router.push('/login');
   }
 };
-
-// Handle back navigation
-const goBack = () => {
-  if (route.name === 'AddResident' || route.name === 'EditResident') {
-    router.push('/people');
-  } else if (route.name === 'AddUnit' || route.name === 'EditUnit') {
-    router.push('/units');
-  } else if (route.name === 'AddInvoice' || route.name === 'InvoiceDetail') {
-    router.push('/invoices');
-  } else if (route.name === 'AddCharge' || route.name === 'EditCharge') {
-    router.push('/charges');
-  } else if (route.name === 'AddVendor' || route.name === 'EditVendor') {
-    router.push('/vendors');
-  }
-};
 </script>
 
 <style scoped>

@@ -615,6 +615,8 @@ import {
   type CreateExpenseDto,
   type UpdateExpenseDto,
   type ExpenseStatus,
+  ExpenseCategory,
+  ExpenseStatus as ExpenseStatusEnum,
 } from '@neibrpay/models';
 
 const router = useRouter();
@@ -633,9 +635,9 @@ const form = ref<CreateExpenseDto & { paid_amount?: number }>({
   invoice_date: '',
   invoice_due_date: '',
   invoice_amount: 0,
-  category: 'other',
+  category: ExpenseCategory.OTHER,
   note: '',
-  status: 'unpaid',
+  status: ExpenseStatusEnum.UNPAID,
   payment_details: '',
   payment_method: undefined,
   paid_amount: 0,
@@ -731,9 +733,9 @@ watch(
 watch(
   () => form.value.status,
   (newStatus: ExpenseStatus) => {
-    if (newStatus === 'paid') {
+    if (newStatus === ExpenseStatusEnum.PAID) {
       form.value.paid_amount = form.value.invoice_amount;
-    } else if (newStatus === 'unpaid') {
+    } else if (newStatus === ExpenseStatusEnum.UNPAID) {
       form.value.paid_amount = 0;
       form.value.payment_method = undefined;
       form.value.paid_date = '';
