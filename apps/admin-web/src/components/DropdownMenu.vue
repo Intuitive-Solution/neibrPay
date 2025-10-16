@@ -7,7 +7,7 @@
       :class="triggerClass"
     >
       <svg
-        class="w-5 h-5 text-gray-600"
+        class="w-5 h-5 text-gray-700 hover:text-gray-900 transition-colors duration-200"
         fill="currentColor"
         viewBox="0 0 20 20"
       >

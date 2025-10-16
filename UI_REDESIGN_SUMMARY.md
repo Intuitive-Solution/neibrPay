@@ -76,7 +76,10 @@ Successfully implemented Bonsai-inspired UI redesign across the NeibrPay admin a
 - Removed payment methods banner (per user request)
 - Green "New Invoice" button (desktop top-right, mobile fixed bottom)
 - Updated status badges with softer colors (using badge utility classes)
-- Clean table with three-dot dropdown actions
+- **Enhanced Kebab Menu**: More visible three-dot dropdown with border, shadow, and better hover effects
+- All actions organized in dropdown with icons and clear labels
+- "Record Payment" option appears for unpaid invoices
+- Visual separator between primary and destructive actions
 - Improved search and filter UI
 - Mobile-responsive with card view and fixed bottom button
 

@@ -314,66 +314,180 @@
 
               <!-- Actions Column -->
               <td class="px-6 py-4 whitespace-nowrap text-right">
-                <DropdownMenu>
-                  <template #default="{ close }">
-                    <button
-                      @click="
-                        () => {
-                          viewInvoice(invoice.id);
-                          close();
-                        }
-                      "
-                      class="dropdown-item"
-                    >
-                      View Preview
-                    </button>
-                    <button
-                      @click="
-                        () => {
-                          editInvoice(invoice.id);
-                          close();
-                        }
-                      "
-                      class="dropdown-item"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      v-if="!invoice.deleted_at"
-                      @click="
-                        () => {
-                          deleteInvoice(invoice);
-                          close();
-                        }
-                      "
-                      :disabled="deletingInvoiceId === invoice.id"
-                      class="dropdown-item-danger"
-                    >
-                      {{
-                        deletingInvoiceId === invoice.id
-                          ? 'Deleting...'
-                          : 'Delete'
-                      }}
-                    </button>
-                    <button
-                      v-else
-                      @click="
-                        () => {
-                          showRestoreConfirmation(invoice);
-                          close();
-                        }
-                      "
-                      :disabled="restoringInvoiceId === invoice.id"
-                      class="dropdown-item"
-                    >
-                      {{
-                        restoringInvoiceId === invoice.id
-                          ? 'Restoring...'
-                          : 'Restore'
-                      }}
-                    </button>
-                  </template>
-                </DropdownMenu>
+                <div class="flex items-center justify-end">
+                  <!-- Enhanced Kebab Menu - More Visible -->
+                  <DropdownMenu
+                    trigger-class="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <template #default="{ close }">
+                      <button
+                        @click="
+                          () => {
+                            viewInvoice(invoice.id);
+                            close();
+                          }
+                        "
+                        class="dropdown-item"
+                      >
+                        <svg
+                          class="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                        View Preview
+                      </button>
+                      <button
+                        @click="
+                          () => {
+                            editInvoice(invoice.id);
+                            close();
+                          }
+                        "
+                        class="dropdown-item"
+                      >
+                        <svg
+                          class="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                        Edit
+                      </button>
+                      <button
+                        v-if="invoice.status !== 'paid' && !invoice.deleted_at"
+                        @click="
+                          () => {
+                            recordPayment(invoice.id);
+                            close();
+                          }
+                        "
+                        class="dropdown-item"
+                      >
+                        <svg
+                          class="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                          />
+                        </svg>
+                        Record Payment
+                      </button>
+                      <button
+                        @click="
+                          () => {
+                            // Add duplicate functionality here
+                            console.log('Duplicate invoice:', invoice.id);
+                            close();
+                          }
+                        "
+                        class="dropdown-item"
+                      >
+                        <svg
+                          class="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Duplicate
+                      </button>
+                      <div class="border-t border-gray-200 my-1"></div>
+                      <button
+                        v-if="!invoice.deleted_at"
+                        @click="
+                          () => {
+                            deleteInvoice(invoice);
+                            close();
+                          }
+                        "
+                        :disabled="deletingInvoiceId === invoice.id"
+                        class="dropdown-item-danger"
+                      >
+                        <svg
+                          class="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                        {{
+                          deletingInvoiceId === invoice.id
+                            ? 'Deleting...'
+                            : 'Delete'
+                        }}
+                      </button>
+                      <button
+                        v-else
+                        @click="
+                          () => {
+                            showRestoreConfirmation(invoice);
+                            close();
+                          }
+                        "
+                        :disabled="restoringInvoiceId === invoice.id"
+                        class="dropdown-item"
+                      >
+                        <svg
+                          class="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                        {{
+                          restoringInvoiceId === invoice.id
+                            ? 'Restoring...'
+                            : 'Restore'
+                        }}
+                      </button>
+                    </template>
+                  </DropdownMenu>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -536,6 +650,10 @@ const viewInvoice = (invoiceId: number) => {
 
 const editInvoice = (invoiceId: number) => {
   router.push(`/invoices/${invoiceId}/edit`);
+};
+
+const recordPayment = (invoiceId: number) => {
+  router.push(`/invoices/${invoiceId}/payment`);
 };
 
 const deleteInvoice = (invoice: any) => {
