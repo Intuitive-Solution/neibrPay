@@ -1032,9 +1032,17 @@
     <!-- Payment Entry Modal -->
     <PaymentEntryModal
       :is-open="showPaymentModal"
-      :invoice="invoice"
+      :invoice="invoice || null"
       @close="showPaymentModal = false"
       @success="handlePaymentSuccess"
+    />
+
+    <!-- Payment Update Modal -->
+    <PaymentUpdateModal
+      :is-open="showPaymentUpdateModal"
+      :payment="selectedPayment"
+      @close="showPaymentUpdateModal = false"
+      @success="handlePaymentUpdateSuccess"
     />
   </div>
 </template>
@@ -1045,7 +1053,6 @@ import { useRoute, useRouter } from 'vue-router';
 import {
   useInvoice,
   useDeleteInvoice,
-  useMarkInvoiceAsPaid,
   useEmailInvoice,
 } from '../composables/useInvoices';
 import { useLatestInvoicePdf } from '../composables/useInvoicePdf';
@@ -1056,6 +1063,7 @@ import {
 import { usePayments, useDeletePayment } from '../composables/usePayments';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
+import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -1087,17 +1095,17 @@ const {
 
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
-const markAsPaidMutation = useMarkInvoiceAsPaid();
 const emailInvoiceMutation = useEmailInvoice();
 const downloadAttachmentMutation = useDownloadInvoiceAttachment();
 const deletePaymentMutation = useDeletePayment();
 
 // Loading states
 const isDeleting = computed(() => deleteInvoiceMutation.isPending.value);
-const isMarkingPaid = computed(() => markAsPaidMutation.isPending.value);
 const isEmailing = computed(() => emailInvoiceMutation.isPending.value);
 const showDeleteModal = ref(false);
 const showPaymentModal = ref(false);
+const showPaymentUpdateModal = ref(false);
+const selectedPayment = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
 
 // Success/Error messages
@@ -1262,6 +1270,12 @@ const handlePaymentSuccess = () => {
   pdfRefreshKey.value = Date.now();
 };
 
+const handlePaymentUpdateSuccess = () => {
+  showSuccess('Payment updated successfully!');
+  // Force refresh of PDF viewer by updating the refresh key
+  pdfRefreshKey.value = Date.now();
+};
+
 const formatPaymentMethod = (method: string) => {
   const methodMap: Record<string, string> = {
     cash: 'Cash',
@@ -1285,8 +1299,8 @@ const getPaymentMethodBadgeClass = (method: string) => {
 };
 
 const viewPayment = (payment: any) => {
-  // TODO: Implement payment detail view
-  console.log('View payment:', payment);
+  selectedPayment.value = payment;
+  showPaymentUpdateModal.value = true;
 };
 
 const deletePayment = async (payment: any) => {

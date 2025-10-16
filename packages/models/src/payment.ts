@@ -73,7 +73,15 @@ export const PaymentListResponseSchema = z.object({
 });
 
 // TypeScript Types
-export type PaymentMethod = z.infer<typeof PaymentMethodSchema>;
+export type PaymentMethodType = z.infer<typeof PaymentMethodSchema>;
+
+// Payment Filters Type
+export interface PaymentFilters {
+  invoice_id?: number;
+  start_date?: string;
+  end_date?: string;
+  payment_method?: PaymentMethodType;
+}
 export type CreatePaymentRequest = z.infer<typeof CreatePaymentRequestSchema>;
 export type UpdatePaymentRequest = z.infer<typeof UpdatePaymentRequestSchema>;
 export type Payment = z.infer<typeof PaymentSchema>;

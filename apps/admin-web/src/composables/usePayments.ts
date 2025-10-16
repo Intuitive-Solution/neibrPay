@@ -3,7 +3,6 @@ import { paymentsApi, paymentKeys, invoiceKeys } from '@neibrpay/api-client';
 import type {
   CreatePaymentRequest,
   UpdatePaymentRequest,
-  Payment,
   PaymentFilters,
 } from '@neibrpay/models';
 

@@ -145,7 +145,7 @@
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold text-gray-900">All Payments</h2>
           <button
-            @click="refetch"
+            @click="() => refetch()"
             :disabled="isLoading"
             class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
           >
@@ -216,7 +216,7 @@
             <p class="mt-1 text-sm text-gray-500">{{ error }}</p>
             <div class="mt-4">
               <button
-                @click="refetch"
+                @click="() => refetch()"
                 class="text-sm text-primary hover:text-primary-600"
               >
                 Try again
@@ -394,17 +394,14 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import { usePayments, useDeletePayment } from '../composables/usePayments';
-import type { PaymentFilters } from '@neibrpay/api-client';
-
-const router = useRouter();
+import type { PaymentFilters } from '@neibrpay/models';
 
 // Local state
 const filters = ref<PaymentFilters>({
   start_date: '',
   end_date: '',
-  payment_method: '',
+  payment_method: undefined,
 });
 
 const deletingPaymentId = ref<number | null>(null);
@@ -423,7 +420,10 @@ const deletePaymentMutation = useDeletePayment();
 // Computed properties
 const totalAmount = computed(() => {
   if (!payments.value) return 0;
-  return payments.value.reduce((sum, payment) => sum + payment.amount, 0);
+  return payments.value.reduce(
+    (sum: number, payment: any) => sum + payment.amount,
+    0
+  );
 });
 
 const monthlyAmount = computed(() => {
@@ -432,8 +432,8 @@ const monthlyAmount = computed(() => {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
   return payments.value
-    .filter(payment => new Date(payment.payment_date) >= startOfMonth)
-    .reduce((sum, payment) => sum + payment.amount, 0);
+    .filter((payment: any) => new Date(payment.payment_date) >= startOfMonth)
+    .reduce((sum: number, payment: any) => sum + payment.amount, 0);
 });
 
 // Methods
@@ -478,7 +478,7 @@ const clearFilters = () => {
   filters.value = {
     start_date: '',
     end_date: '',
-    payment_method: '',
+    payment_method: undefined,
   };
 };
 
