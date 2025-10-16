@@ -81,7 +81,12 @@
 
   /* Dropdown Menu */
   .dropdown-menu {
-    @apply absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-2xl border-2 border-gray-300 py-1 z-[9999] min-w-max;
+    @apply absolute right-0 w-56 bg-white rounded-lg shadow-2xl border-2 border-gray-300 py-1 min-w-max;
+    top: 100%;
+    margin-top: 0.5rem;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 9999;
   }
 
   .dropdown-item {

@@ -313,8 +313,8 @@
               </td>
 
               <!-- Actions Column -->
-              <td class="px-6 py-4 whitespace-nowrap text-right relative">
-                <div class="flex items-center justify-end">
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <div class="flex items-center justify-end relative">
                   <!-- Enhanced Kebab Menu - More Visible -->
                   <DropdownMenu
                     trigger-class="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
