@@ -4,6 +4,7 @@
 export * from './residents';
 export { unitsApi } from './units';
 export { invoicesApi } from './invoices';
+export { paymentsApi } from './payments';
 export { chargesApi } from './charges';
 export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';

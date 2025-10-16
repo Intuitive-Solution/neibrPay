@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ExpenseAttachmentController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InvoiceAttachmentController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\InvoicePdfController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\UnitsController;
@@ -104,6 +105,13 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('invoices/{invoice}/pdf/download', [InvoicePdfController::class, 'download']);
     Route::get('invoices/{invoice}/pdf/versions', [InvoicePdfController::class, 'versions']);
     Route::get('invoices/{invoice}/pdf/versions/{version}/download', [InvoicePdfController::class, 'downloadVersion']);
+    
+    // Invoice payment management routes
+    Route::get('payments', [InvoicePaymentController::class, 'index']);
+    Route::post('invoices/{id}/payments', [InvoicePaymentController::class, 'store']);
+    Route::get('payments/{id}', [InvoicePaymentController::class, 'show']);
+    Route::put('payments/{id}', [InvoicePaymentController::class, 'update']);
+    Route::delete('payments/{id}', [InvoicePaymentController::class, 'destroy']);
     
     // Charge management routes
     Route::apiResource('charges', ChargeController::class);

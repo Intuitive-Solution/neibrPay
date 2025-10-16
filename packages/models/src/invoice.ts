@@ -122,7 +122,7 @@ export const InvoiceUnitSchema = z.object({
   total: z.number(),
   paid_to_date: z.number(),
   balance_due: z.number(),
-  status: z.enum(['draft', 'sent', 'paid', 'overdue', 'cancelled']),
+  status: z.enum(['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled']),
   parent_invoice_id: z.number().int().positive().nullable(),
   created_by: z.number().int().positive(),
   created_at: z.string(),

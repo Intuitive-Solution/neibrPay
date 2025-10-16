@@ -283,9 +283,8 @@
 
           <button
             v-if="invoice.status !== 'paid'"
-            @click="markAsPaid"
-            :disabled="isMarkingPaid"
-            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            @click="showPaymentModal = true"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
           >
             <svg
               class="w-4 h-4 mr-2"
@@ -297,10 +296,10 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
               />
             </svg>
-            {{ isMarkingPaid ? 'Marking...' : 'Mark Paid' }}
+            Record Payment
           </button>
 
           <button
@@ -558,6 +557,17 @@
               Documents
             </button>
             <button
+              @click="activeTab = 'payments'"
+              :class="[
+                activeTab === 'payments'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+              ]"
+            >
+              Payments
+            </button>
+            <button
               @click="activeTab = 'activity'"
               :class="[
                 activeTab === 'activity'
@@ -743,6 +753,164 @@
             </div>
           </div>
 
+          <!-- Payments Tab -->
+          <div v-if="activeTab === 'payments'">
+            <div v-if="isLoadingPayments" class="text-center py-8">
+              <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
+              ></div>
+              <p class="mt-2 text-sm text-gray-600">Loading payments...</p>
+            </div>
+
+            <div
+              v-else-if="paymentsError"
+              class="text-center py-8 text-red-500"
+            >
+              <svg
+                class="mx-auto h-12 w-12 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">
+                Error Loading Payments
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                Failed to load payment history
+              </p>
+            </div>
+
+            <div
+              v-else-if="!payments || payments.length === 0"
+              class="text-center py-8 text-gray-500"
+            >
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">
+                No Payments Yet
+              </h3>
+              <p class="mt-1 text-sm text-gray-500">
+                No payments have been recorded for this invoice yet.
+              </p>
+            </div>
+
+            <div v-else class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Payment Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Amount
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Method
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Reference
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Recorded By
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr
+                    v-for="payment in payments"
+                    :key="payment.id"
+                    class="hover:bg-gray-50"
+                  >
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ formatDate(payment.payment_date) }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      ${{ formatCurrency(payment.amount) }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        :class="
+                          getPaymentMethodBadgeClass(payment.payment_method)
+                        "
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                      >
+                        {{ formatPaymentMethod(payment.payment_method) }}
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ payment.payment_reference || '-' }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ payment.recorder?.name || 'Unknown' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button
+                          @click="viewPayment(payment)"
+                          class="text-primary hover:text-primary-600"
+                        >
+                          View
+                        </button>
+                        <button
+                          @click="deletePayment(payment)"
+                          :disabled="deletingPaymentId === payment.id"
+                          class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {{
+                            deletingPaymentId === payment.id
+                              ? 'Deleting...'
+                              : 'Delete'
+                          }}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <!-- Activity Tab -->
           <div
             v-if="activeTab === 'activity'"
@@ -860,6 +1028,14 @@
       @confirm="confirmDelete"
       @cancel="cancelDelete"
     />
+
+    <!-- Payment Entry Modal -->
+    <PaymentEntryModal
+      :is-open="showPaymentModal"
+      :invoice="invoice"
+      @close="showPaymentModal = false"
+      @success="handlePaymentSuccess"
+    />
   </div>
 </template>
 
@@ -877,7 +1053,9 @@ import {
   useInvoiceAttachments,
   useDownloadInvoiceAttachment,
 } from '../composables/useInvoiceAttachments';
+import { usePayments, useDeletePayment } from '../composables/usePayments';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
+import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -900,17 +1078,27 @@ const {
   error: attachmentsError,
 } = useInvoiceAttachments(invoiceId.value);
 
+// Fetch payments for this invoice
+const {
+  data: payments,
+  isLoading: isLoadingPayments,
+  error: paymentsError,
+} = usePayments({ invoice_id: invoiceId.value });
+
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
 const markAsPaidMutation = useMarkInvoiceAsPaid();
 const emailInvoiceMutation = useEmailInvoice();
 const downloadAttachmentMutation = useDownloadInvoiceAttachment();
+const deletePaymentMutation = useDeletePayment();
 
 // Loading states
 const isDeleting = computed(() => deleteInvoiceMutation.isPending.value);
 const isMarkingPaid = computed(() => markAsPaidMutation.isPending.value);
 const isEmailing = computed(() => emailInvoiceMutation.isPending.value);
 const showDeleteModal = ref(false);
+const showPaymentModal = ref(false);
+const deletingPaymentId = ref<number | null>(null);
 
 // Success/Error messages
 const successMessage = ref('');
@@ -954,6 +1142,7 @@ const getStatusText = (status: string) => {
     draft: 'Draft',
     sent: 'Sent',
     paid: 'Paid',
+    partial: 'Partial',
     overdue: 'Overdue',
     cancelled: 'Cancelled',
   };
@@ -965,6 +1154,7 @@ const getStatusBadgeClass = (status: string) => {
     draft: 'bg-gray-100 text-gray-800 border border-gray-200',
     sent: 'bg-blue-100 text-blue-800 border border-blue-200',
     paid: 'bg-green-100 text-green-800 border border-green-200',
+    partial: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
     overdue: 'bg-red-100 text-red-800 border border-red-200',
     cancelled: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
   };
@@ -1066,19 +1256,60 @@ const editInvoice = () => {
   router.push(`/invoices/${invoice.value.id}/edit`);
 };
 
-const markAsPaid = async () => {
-  if (!invoice.value) return;
+const handlePaymentSuccess = () => {
+  showSuccess('Payment recorded successfully!');
+  // Force refresh of PDF viewer by updating the refresh key
+  pdfRefreshKey.value = Date.now();
+};
+
+const formatPaymentMethod = (method: string) => {
+  const methodMap: Record<string, string> = {
+    cash: 'Cash',
+    check: 'Check',
+    credit_card: 'Credit Card',
+    bank_transfer: 'Bank Transfer',
+    other: 'Other',
+  };
+  return methodMap[method] || method;
+};
+
+const getPaymentMethodBadgeClass = (method: string) => {
+  const methodClasses: Record<string, string> = {
+    cash: 'bg-green-100 text-green-800',
+    check: 'bg-blue-100 text-blue-800',
+    credit_card: 'bg-purple-100 text-purple-800',
+    bank_transfer: 'bg-indigo-100 text-indigo-800',
+    other: 'bg-gray-100 text-gray-800',
+  };
+  return methodClasses[method] || 'bg-gray-100 text-gray-800';
+};
+
+const viewPayment = (payment: any) => {
+  // TODO: Implement payment detail view
+  console.log('View payment:', payment);
+};
+
+const deletePayment = async (payment: any) => {
+  if (
+    !confirm(
+      `Are you sure you want to delete this payment of $${formatCurrency(payment.amount)}?`
+    )
+  ) {
+    return;
+  }
+
+  deletingPaymentId.value = payment.id;
 
   try {
-    await markAsPaidMutation.mutateAsync(invoice.value.id);
-
+    await deletePaymentMutation.mutateAsync(payment.id);
+    showSuccess('Payment deleted successfully!');
     // Force refresh of PDF viewer by updating the refresh key
     pdfRefreshKey.value = Date.now();
-
-    showSuccess('Invoice marked as paid successfully!');
   } catch (error: any) {
-    console.error('Error marking as paid:', error);
-    showError(error.message || 'Failed to mark as paid');
+    console.error('Error deleting payment:', error);
+    showError(error.message || 'Failed to delete payment');
+  } finally {
+    deletingPaymentId.value = null;
   }
 };
 
