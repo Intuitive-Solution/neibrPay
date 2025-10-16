@@ -1,30 +1,30 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-right justify-end">
-      <router-link
-        to="/vendors/create"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-      >
-        <svg
-          class="-ml-1 mr-2 h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          />
-        </svg>
-        Add Vendor
+    <div class="flex justify-end">
+      <router-link to="/vendors/create" class="hidden md:inline-flex">
+        <button class="btn-primary">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Add Vendor
+        </button>
       </router-link>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white p-4 rounded-lg shadow">
+    <div class="card">
+      <h3 class="text-base font-semibold text-gray-900 mb-4">Filters</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Search -->
         <div>
@@ -36,7 +36,7 @@
             v-model="filters.search"
             type="text"
             placeholder="Search by name..."
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            class="input-field mt-1"
             @input="debouncedSearch"
           />
         </div>
@@ -49,7 +49,7 @@
           <select
             id="category"
             v-model="filters.category"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            class="input-field mt-1"
             @change="applyFilters"
           >
             <option value="">All Categories</option>
@@ -118,7 +118,7 @@
     </div>
 
     <!-- Vendors Table -->
-    <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
+    <div v-else class="card">
       <div v-if="vendors.length === 0" class="text-center py-12">
         <svg
           class="mx-auto h-12 w-12 text-gray-400"
@@ -160,7 +160,7 @@
         </div>
       </div>
 
-      <div v-else class="overflow-x-auto">
+      <div v-else class="overflow-x-auto -mx-6">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
@@ -200,7 +200,7 @@
             <tr
               v-for="vendor in vendors"
               :key="vendor.id"
-              class="hover:bg-gray-50"
+              class="table-row-hover"
             >
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex flex-col">
@@ -232,46 +232,82 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
-                  :class="[
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                  :class="
                     vendor.deleted_at
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-green-100 text-green-800',
-                  ]"
+                      ? 'badge badge-overdue'
+                      : 'badge badge-paid'
+                  "
                 >
                   {{ vendor.deleted_at ? 'Deleted' : 'Active' }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex items-center space-x-3">
-                  <router-link
-                    :to="`/vendors/${vendor.id}/edit`"
-                    class="text-primary hover:text-primary-dark"
-                  >
-                    Edit
-                  </router-link>
-                  <button
-                    v-if="!vendor.deleted_at"
-                    @click="deleteVendor(vendor.id)"
-                    class="text-red-600 hover:text-red-900"
-                    :disabled="isDeleting"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    v-else
-                    @click="restoreVendor(vendor.id)"
-                    class="text-green-600 hover:text-green-900"
-                    :disabled="isRestoring"
-                  >
-                    Restore
-                  </button>
-                </div>
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <DropdownMenu>
+                  <template #default="{ close }">
+                    <router-link
+                      :to="`/vendors/${vendor.id}/edit`"
+                      @click="close"
+                      class="dropdown-item block"
+                    >
+                      Edit
+                    </router-link>
+                    <button
+                      v-if="!vendor.deleted_at"
+                      @click="
+                        () => {
+                          deleteVendor(vendor.id);
+                          close();
+                        }
+                      "
+                      :disabled="isDeleting"
+                      class="dropdown-item-danger"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      v-else
+                      @click="
+                        () => {
+                          restoreVendor(vendor.id);
+                          close();
+                        }
+                      "
+                      :disabled="isRestoring"
+                      class="dropdown-item"
+                    >
+                      Restore
+                    </button>
+                  </template>
+                </DropdownMenu>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Mobile Fixed Bottom Button -->
+    <div
+      class="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 safe-area-inset-bottom"
+    >
+      <router-link to="/vendors/create" class="block">
+        <button class="btn-primary w-full">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Add Vendor
+        </button>
+      </router-link>
     </div>
   </div>
 </template>
@@ -285,6 +321,7 @@ import {
   getVendorCategoryDisplayName,
   getVendorCategoryOptions,
 } from '@neibrpay/models';
+import DropdownMenu from '../components/DropdownMenu.vue';
 
 // Reactive data
 const filters = ref<VendorFilters>({

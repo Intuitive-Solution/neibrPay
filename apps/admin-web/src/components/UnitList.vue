@@ -1,38 +1,36 @@
 <template>
-  <div class="bg-white shadow rounded-lg">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-900">Unit Directory</h2>
-        <div class="flex items-center space-x-3">
-          <label class="flex items-center">
-            <input
-              v-model="includeDeleted"
-              type="checkbox"
-              class="rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <span class="ml-2 text-sm text-gray-600">Show deleted</span>
-          </label>
-          <button
-            @click="refreshUnits"
-            :disabled="isLoading"
-            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-900">Unit Directory</h2>
+      <div class="flex items-center space-x-3">
+        <label class="flex items-center">
+          <input
+            v-model="includeDeleted"
+            type="checkbox"
+            class="rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span class="ml-2 text-sm text-gray-600">Show deleted</span>
+        </label>
+        <button
+          @click="refreshUnits"
+          :disabled="isLoading"
+          class="btn-outline btn-sm"
+        >
+          <svg
+            class="h-4 w-4"
+            :class="{ 'animate-spin': isLoading }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              class="h-4 w-4"
-              :class="{ 'animate-spin': isLoading }"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </button>
-        </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -143,7 +141,7 @@
       </div>
     </div>
 
-    <div v-else class="overflow-hidden">
+    <div v-else class="overflow-x-auto -mx-6">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -195,7 +193,7 @@
           <tr
             v-for="unit in units"
             :key="unit.id"
-            class="hover:bg-gray-50"
+            class="table-row-hover"
             :class="{ 'opacity-50': unit.deleted_at }"
           >
             <td class="px-6 py-4 whitespace-nowrap">
@@ -235,43 +233,52 @@
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                v-if="unit.deleted_at"
-                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"
-              >
+              <span v-if="unit.deleted_at" class="badge badge-overdue">
                 Deleted
               </span>
-              <span
-                v-else
-                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"
-              >
-                Active
-              </span>
+              <span v-else class="badge badge-paid"> Active </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <div class="flex space-x-2">
-                <button
-                  v-if="!unit.deleted_at"
-                  @click="$emit('edit-unit', unit)"
-                  class="text-primary hover:text-primary-600"
-                >
-                  Edit
-                </button>
-                <button
-                  v-if="!unit.deleted_at"
-                  @click="confirmDelete(unit)"
-                  class="text-red-600 hover:text-red-900"
-                >
-                  Delete
-                </button>
-                <button
-                  v-if="unit.deleted_at"
-                  @click="confirmRestore(unit)"
-                  class="text-green-600 hover:text-green-900"
-                >
-                  Restore
-                </button>
-              </div>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+              <DropdownMenu>
+                <template #default="{ close }">
+                  <button
+                    v-if="!unit.deleted_at"
+                    @click="
+                      () => {
+                        $emit('edit-unit', unit);
+                        close();
+                      }
+                    "
+                    class="dropdown-item"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    v-if="!unit.deleted_at"
+                    @click="
+                      () => {
+                        confirmDelete(unit);
+                        close();
+                      }
+                    "
+                    class="dropdown-item-danger"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    v-if="unit.deleted_at"
+                    @click="
+                      () => {
+                        confirmRestore(unit);
+                        close();
+                      }
+                    "
+                    class="dropdown-item"
+                  >
+                    Restore
+                  </button>
+                </template>
+              </DropdownMenu>
             </td>
           </tr>
         </tbody>
@@ -396,6 +403,7 @@ import {
   useRestoreUnit,
 } from '../composables/useUnits';
 import type { Unit } from '@neibrpay/models';
+import DropdownMenu from './DropdownMenu.vue';
 
 // Props
 defineProps<{

@@ -4,19 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Geninvoices-inspired Professional Color Scheme
+        // Bonsai-inspired Professional Color Scheme
         primary: {
-          DEFAULT: '#2563EB', // Professional Blue
-          50: '#EFF6FF',
-          100: '#DBEAFE',
-          200: '#BFDBFE',
-          300: '#93C5FD',
-          400: '#60A5FA',
-          500: '#2563EB',
-          600: '#1D4ED8',
-          700: '#1E40AF',
-          800: '#1E3A8A',
-          900: '#1E3A8A',
+          DEFAULT: '#00C27A', // Bonsai Green
+          50: '#E6FAF2',
+          100: '#C2F4E0',
+          200: '#85E9C0',
+          300: '#47DEA0',
+          400: '#0AD380',
+          500: '#00C27A',
+          600: '#009B61',
+          700: '#007449',
+          800: '#004D30',
+          900: '#002618',
         },
         secondary: {
           DEFAULT: '#64748B', // Slate Gray
@@ -45,24 +45,24 @@ export default {
           900: '#78350F',
         },
         neutral: {
-          DEFAULT: '#F8FAFC', // Clean White
-          50: '#F8FAFC',
-          100: '#F1F5F9',
-          200: '#E2E8F0',
-          300: '#CBD5E1',
-          400: '#94A3B8',
-          500: '#64748B',
-          600: '#475569',
-          700: '#334155',
-          800: '#1E293B',
-          900: '#0F172A',
+          DEFAULT: '#F9FAFB', // Clean White Background
+          50: '#F9FAFB',
+          100: '#F3F4F6',
+          200: '#E5E7EB',
+          300: '#D1D5DB',
+          400: '#9CA3AF',
+          500: '#6B7280',
+          600: '#4B5563',
+          700: '#374151',
+          800: '#1F2937',
+          900: '#111827',
         },
         text: {
-          primary: '#1E293B', // Dark Slate
-          secondary: '#64748B', // Slate Gray
+          primary: '#1F2937', // Dark Charcoal
+          secondary: '#6B7280', // Slate Gray
         },
         error: '#DC2626', // Red
-        success: '#059669', // Emerald
+        success: '#00C27A', // Bonsai Green
         warning: '#D97706', // Amber
       },
       fontFamily: {

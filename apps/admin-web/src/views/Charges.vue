@@ -2,29 +2,28 @@
   <div class="space-y-6">
     <!-- Header -->
     <div class="flex items-right justify-end">
-      <router-link
-        to="/charges/create"
-        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-      >
-        <svg
-          class="-ml-1 mr-2 h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          />
-        </svg>
-        Add Charge
+      <router-link to="/charges/create" class="hidden md:inline-flex">
+        <button class="btn-primary">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Add Charge
+        </button>
       </router-link>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white p-4 rounded-lg shadow">
+    <div class="card">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <!-- Search -->
         <div>
@@ -36,7 +35,7 @@
             v-model="filters.search"
             type="text"
             placeholder="Search by title..."
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            class="input-field mt-1"
             @input="debouncedSearch"
           />
         </div>
@@ -49,7 +48,7 @@
           <select
             id="category"
             v-model="filters.category"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            class="input-field mt-1"
             @change="applyFilters"
           >
             <option value="">All Categories</option>
@@ -71,7 +70,7 @@
           <select
             id="status"
             v-model="filters.is_active"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            class="input-field mt-1"
             @change="applyFilters"
           >
             <option value="">All Status</option>
@@ -135,7 +134,7 @@
     </div>
 
     <!-- Charges Table -->
-    <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
+    <div v-else class="card">
       <div v-if="charges.length === 0" class="text-center py-12">
         <svg
           class="mx-auto h-12 w-12 text-gray-400"
@@ -217,7 +216,7 @@
             <tr
               v-for="charge in charges"
               :key="charge.id"
-              class="hover:bg-gray-50"
+              class="table-row-hover"
             >
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex flex-col">
@@ -292,6 +291,30 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Mobile Fixed Bottom Button -->
+    <div
+      class="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 safe-area-inset-bottom"
+    >
+      <router-link to="/charges/create" class="block">
+        <button class="btn-primary w-full">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Add Charge
+        </button>
+      </router-link>
     </div>
   </div>
 </template>

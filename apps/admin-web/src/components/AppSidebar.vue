@@ -1,15 +1,29 @@
 <template>
-  <div class="flex h-screen bg-gray-50">
+  <div class="flex h-screen bg-neutral-50">
+    <!-- Mobile Backdrop -->
+    <div
+      v-if="isMobileMenuOpen"
+      class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+      @click="closeMobileMenu"
+    ></div>
+
     <!-- Sidebar -->
     <div
       :class="[
         'bg-white shadow-lg flex flex-col transition-all duration-300 ease-in-out',
-        isCollapsed ? 'w-16' : 'w-64',
+        // Desktop responsive behavior
+        'hidden md:flex',
+        isCollapsed ? 'md:w-16 xl:w-64' : 'w-64',
+        // Mobile drawer
+        'md:relative fixed inset-y-0 left-0 z-50',
+        isMobileMenuOpen
+          ? 'translate-x-0'
+          : '-translate-x-full md:translate-x-0',
       ]"
     >
       <!-- Community Header -->
       <div class="p-6 px-2">
-        <div v-if="!isCollapsed" class="flex items-center justify-between">
+        <div v-if="!isCollapsedView" class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
             <img
               src="/owner-logo.png"
@@ -19,16 +33,16 @@
             <div>
               <h1 class="text-xl font-bold">
                 <span class="text-primary">Neibr</span>
-                <span style="color: #2ee9b6">Pay</span>
+                <span class="text-primary">Pay</span>
               </h1>
               <p class="text-sm text-gray-600 mt-1">{{ communityName }}</p>
             </div>
           </div>
 
-          <!-- Collapse Button -->
+          <!-- Collapse Button (Desktop only) -->
           <button
             @click="toggleCollapse"
-            class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+            class="hidden xl:block p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
             title="Collapse sidebar"
           >
             <svg
@@ -55,7 +69,7 @@
             class="h-10 w-10 object-contain rounded-lg"
           />
 
-          <!-- Collapse Button -->
+          <!-- Expand Button -->
           <button
             @click="toggleCollapse"
             class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
@@ -79,22 +93,21 @@
       </div>
 
       <!-- Navigation Links -->
-      <nav :class="['flex-1 py-6', isCollapsed ? 'px-2' : 'px-4']">
-        <ul class="space-y-2">
+      <nav
+        :class="[
+          'flex-1 py-6 overflow-y-auto',
+          isCollapsedView ? 'px-2' : 'px-4',
+        ]"
+      >
+        <ul class="space-y-1">
           <li>
             <router-link
               to="/"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'Dashboard'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'Dashboard' : ''"
+              :class="getNavLinkClass('Dashboard')"
+              :title="isCollapsedView ? 'Dashboard' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -103,33 +116,21 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                 />
               </svg>
-              <span v-if="!isCollapsed">Dashboard</span>
+              <span v-if="!isCollapsedView">Dashboard</span>
             </router-link>
           </li>
 
           <li>
             <router-link
               to="/invoices"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'Invoices'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'Invoices' : ''"
+              :class="getNavLinkClass('Invoices')"
+              :title="isCollapsedView ? 'Invoices' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -141,26 +142,18 @@
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span v-if="!isCollapsed">Invoices</span>
+              <span v-if="!isCollapsedView">Invoices</span>
             </router-link>
           </li>
 
           <li>
             <router-link
               to="/charges"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'Charges' ||
-                $route.name === 'AddCharge' ||
-                $route.name === 'EditCharge'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'Charges' : ''"
+              :class="getNavLinkClass(['Charges', 'AddCharge', 'EditCharge'])"
+              :title="isCollapsedView ? 'Charges' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -172,24 +165,18 @@
                   d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                 />
               </svg>
-              <span v-if="!isCollapsed">Charges</span>
+              <span v-if="!isCollapsedView">Charges</span>
             </router-link>
           </li>
 
           <li>
             <router-link
               to="/people"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'People'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'People' : ''"
+              :class="getNavLinkClass('People')"
+              :title="isCollapsedView ? 'People' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -201,26 +188,18 @@
                   d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
                 />
               </svg>
-              <span v-if="!isCollapsed">People</span>
+              <span v-if="!isCollapsedView">People</span>
             </router-link>
           </li>
 
           <li>
             <router-link
               to="/units"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'Units' ||
-                $route.name === 'AddUnit' ||
-                $route.name === 'EditUnit'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'Units' : ''"
+              :class="getNavLinkClass(['Units', 'AddUnit', 'EditUnit'])"
+              :title="isCollapsedView ? 'Units' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -232,24 +211,18 @@
                   d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 />
               </svg>
-              <span v-if="!isCollapsed">Units</span>
+              <span v-if="!isCollapsedView">Units</span>
             </router-link>
           </li>
 
           <li>
             <router-link
               to="/payments"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'Payments'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'Payments' : ''"
+              :class="getNavLinkClass('Payments')"
+              :title="isCollapsedView ? 'Payments' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -261,27 +234,25 @@
                   d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                 />
               </svg>
-              <span v-if="!isCollapsed">Payments</span>
+              <span v-if="!isCollapsedView">Payments</span>
             </router-link>
           </li>
 
           <li>
             <router-link
               to="/expenses"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'Expenses' ||
-                $route.name === 'AddExpense' ||
-                $route.name === 'EditExpense' ||
-                $route.name === 'ExpenseDetail'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'Expenses' : ''"
+              :class="
+                getNavLinkClass([
+                  'Expenses',
+                  'AddExpense',
+                  'EditExpense',
+                  'ExpenseDetail',
+                ])
+              "
+              :title="isCollapsedView ? 'Expenses' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -293,24 +264,18 @@
                   d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span v-if="!isCollapsed">Expenses</span>
+              <span v-if="!isCollapsedView">Expenses</span>
             </router-link>
           </li>
 
           <li>
             <router-link
               to="/vendors"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'Vendors'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'Vendors' : ''"
+              :class="getNavLinkClass('Vendors')"
+              :title="isCollapsedView ? 'Vendors' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -322,24 +287,18 @@
                   d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 />
               </svg>
-              <span v-if="!isCollapsed">Vendors</span>
+              <span v-if="!isCollapsedView">Vendors</span>
             </router-link>
           </li>
 
           <li>
             <router-link
               to="/settings"
-              :class="[
-                'flex items-center py-3 text-sm font-medium rounded-lg transition-colors duration-200',
-                $route.name === 'Settings'
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100',
-                isCollapsed ? 'justify-center px-2' : 'px-4',
-              ]"
-              :title="isCollapsed ? 'Settings' : ''"
+              :class="getNavLinkClass('Settings')"
+              :title="isCollapsedView ? 'Settings' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsed ? '' : 'mr-3']"
+                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -357,15 +316,17 @@
                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span v-if="!isCollapsed">Settings</span>
+              <span v-if="!isCollapsedView">Settings</span>
             </router-link>
           </li>
         </ul>
       </nav>
 
       <!-- User Info & Logout -->
-      <div :class="['border-t border-gray-200', isCollapsed ? 'p-2' : 'p-4']">
-        <div v-if="!isCollapsed" class="flex items-center space-x-3 mb-4">
+      <div
+        :class="['border-t border-gray-200', isCollapsedView ? 'p-2' : 'p-4']"
+      >
+        <div v-if="!isCollapsedView" class="flex items-center space-x-3 mb-4">
           <div
             class="w-8 h-8 bg-primary rounded-full flex items-center justify-center"
           >
@@ -396,15 +357,15 @@
           :disabled="isLoading"
           :class="[
             'flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed',
-            isCollapsed ? 'w-full' : 'w-full',
+            isCollapsedView ? 'w-full' : 'w-full',
           ]"
-          :title="isCollapsed ? 'Sign Out' : ''"
+          :title="isCollapsedView ? 'Sign Out' : ''"
         >
           <svg
             v-if="isLoading"
             :class="[
               'animate-spin h-4 w-4 text-gray-500',
-              isCollapsed ? '' : '-ml-1 mr-2',
+              isCollapsedView ? '' : '-ml-1 mr-2',
             ]"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -426,7 +387,7 @@
           </svg>
           <svg
             v-else
-            :class="['w-4 h-4', isCollapsed ? '' : 'mr-2']"
+            :class="['w-4 h-4', isCollapsedView ? '' : 'mr-2']"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -438,7 +399,7 @@
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-          <span v-if="!isCollapsed">{{
+          <span v-if="!isCollapsedView">{{
             isLoading ? 'Signing out...' : 'Sign Out'
           }}</span>
         </button>
@@ -446,12 +407,91 @@
     </div>
 
     <!-- Main Content Area -->
-    <div
-      class="flex-1 flex flex-col overflow-hidden"
-      style="background-color: #f3f8fd"
-    >
-      <!-- Top Header - Hidden for Add/Edit pages -->
-      <header v-if="!isAddEditPage" class="px-6 py-4">
+    <div class="flex-1 flex flex-col overflow-hidden bg-neutral-50">
+      <!-- Mobile Top Bar -->
+      <header
+        class="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between"
+      >
+        <div class="flex items-center space-x-3">
+          <!-- Hamburger Menu -->
+          <button
+            @click="toggleMobileMenu"
+            class="p-2 rounded-lg hover:bg-gray-100"
+          >
+            <svg
+              class="w-6 h-6 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+
+          <!-- Page Title -->
+          <h2 class="text-lg font-semibold text-gray-900">{{ pageTitle }}</h2>
+        </div>
+
+        <!-- Mobile Action Icons -->
+        <div class="flex items-center space-x-2">
+          <button class="p-2 rounded-lg hover:bg-gray-100">
+            <svg
+              class="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </button>
+          <button class="p-2 rounded-lg hover:bg-gray-100">
+            <svg
+              class="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+          </button>
+          <button class="p-2 rounded-lg hover:bg-gray-100">
+            <svg
+              class="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Desktop Top Header -->
+      <header
+        v-if="!isAddEditPage"
+        class="hidden md:block bg-white border-b border-gray-200 px-6 py-4"
+      >
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-2xl font-semibold text-gray-900">
@@ -460,16 +500,11 @@
             <p class="text-sm text-gray-600 mt-1">{{ pageDescription }}</p>
           </div>
 
-          <!-- Search Bar -->
-          <div class="flex items-center space-x-4">
-            <div class="relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
-              />
+          <!-- Desktop Action Icons -->
+          <div class="flex items-center space-x-3">
+            <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
               <svg
-                class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                class="w-5 h-5 text-gray-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -481,13 +516,147 @@
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
+            </button>
+            <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+              <svg
+                class="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+            </button>
+
+            <!-- Create Dropdown -->
+            <div class="relative">
+              <button
+                @click="toggleCreateDropdown"
+                class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <svg
+                  class="w-5 h-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </button>
+
+              <!-- Create Dropdown Menu -->
+              <Transition
+                enter-active-class="transition ease-out duration-100"
+                enter-from-class="transform opacity-0 scale-95"
+                enter-to-class="transform opacity-100 scale-100"
+                leave-active-class="transition ease-in duration-75"
+                leave-from-class="transform opacity-100 scale-100"
+                leave-to-class="transform opacity-0 scale-95"
+              >
+                <div
+                  v-if="isCreateDropdownOpen"
+                  class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                  @click="closeCreateDropdown"
+                >
+                  <router-link to="/units/add" class="dropdown-item">
+                    <svg
+                      class="w-5 h-5 text-primary mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                    Unit
+                  </router-link>
+                  <router-link to="/invoices/create" class="dropdown-item">
+                    <svg
+                      class="w-5 h-5 text-primary mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Invoice
+                  </router-link>
+                  <router-link to="/people/add" class="dropdown-item">
+                    <svg
+                      class="w-5 h-5 text-primary mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                    Resident
+                  </router-link>
+                  <router-link to="/expenses/add" class="dropdown-item">
+                    <svg
+                      class="w-5 h-5 text-primary mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    Expense
+                  </router-link>
+                  <router-link to="/vendors/add" class="dropdown-item">
+                    <svg
+                      class="w-5 h-5 text-primary mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"
+                      />
+                    </svg>
+                    Vendor
+                  </router-link>
+                </div>
+              </Transition>
             </div>
           </div>
         </div>
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 overflow-auto p-6" style="background-color: #f3f8fd">
+      <main class="flex-1 overflow-auto p-4 md:p-6">
         <slot />
       </main>
     </div>
@@ -503,12 +672,36 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-// Collapse state
+// Collapse state - default expanded on XL, collapsed on smaller
 const isCollapsed = ref(false);
+const isMobileMenuOpen = ref(false);
+const isCreateDropdownOpen = ref(false);
 
-// Toggle collapse function
+// Computed property for collapsed view (takes into account screen size)
+const isCollapsedView = computed(() => {
+  // On XL screens, use the isCollapsed state; on smaller screens, always show collapsed icons
+  return isCollapsed.value;
+});
+
+// Toggle functions
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
+};
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false;
+};
+
+const toggleCreateDropdown = () => {
+  isCreateDropdownOpen.value = !isCreateDropdownOpen.value;
+};
+
+const closeCreateDropdown = () => {
+  isCreateDropdownOpen.value = false;
 };
 
 // Computed properties
@@ -539,6 +732,8 @@ const isAddEditPage = computed(() => {
     'EditCharge',
     'AddVendor',
     'EditVendor',
+    'AddExpense',
+    'EditExpense',
   ].includes(route.name as string);
 });
 
@@ -549,44 +744,18 @@ const pageTitle = computed(() => {
       return 'Dashboard';
     case 'Invoices':
       return 'Invoices';
-    case 'AddInvoice':
-      return 'Create Invoice';
-    case 'InvoiceDetail':
-      return 'View Invoice';
     case 'Charges':
       return 'Charges';
-    case 'AddCharge':
-      return 'Add New Charge';
-    case 'EditCharge':
-      return 'Edit Charge';
     case 'People':
       return 'People';
-    case 'AddResident':
-      return 'Add New Resident';
-    case 'EditResident':
-      return 'Edit Resident';
     case 'Units':
       return 'Units';
-    case 'AddUnit':
-      return 'Add New Unit';
-    case 'EditUnit':
-      return 'Edit Unit';
     case 'Payments':
       return 'Payments';
     case 'Expenses':
       return 'Expenses';
-    case 'AddExpense':
-      return 'Add New Expense';
-    case 'EditExpense':
-      return 'Edit Expense';
-    case 'ExpenseDetail':
-      return 'Expense Details';
     case 'Vendors':
       return 'Vendors';
-    case 'AddVendor':
-      return 'Add New Vendor';
-    case 'EditVendor':
-      return 'Edit Vendor';
     case 'Settings':
       return 'Settings';
     default:
@@ -600,50 +769,36 @@ const pageDescription = computed(() => {
       return 'Overview of your HOA community management';
     case 'Invoices':
       return 'Manage community invoices and billing';
-    case 'AddInvoice':
-      return 'Create a new invoice for your community';
-    case 'InvoiceDetail':
-      return 'View and manage invoice details';
     case 'Charges':
       return 'Manage standard charges and fees';
-    case 'AddCharge':
-      return 'Create a new charge template';
-    case 'EditCharge':
-      return 'Update charge information';
     case 'People':
       return 'Manage residents and community members';
-    case 'AddResident':
-      return 'Add a new resident to your community';
-    case 'EditResident':
-      return 'Update resident information';
     case 'Units':
       return 'Manage units and properties';
-    case 'AddUnit':
-      return 'Add a new unit to your community';
-    case 'EditUnit':
-      return 'Update unit information';
     case 'Payments':
       return 'Track payments and financial transactions';
     case 'Expenses':
       return 'Manage vendor expenses and invoices';
-    case 'AddExpense':
-      return 'Add a new expense for vendor invoice tracking';
-    case 'EditExpense':
-      return 'Update expense information';
-    case 'ExpenseDetail':
-      return 'View expense details and documents';
     case 'Vendors':
       return 'Manage vendors and service providers';
-    case 'AddVendor':
-      return 'Add a new vendor to your community';
-    case 'EditVendor':
-      return 'Update vendor information';
     case 'Settings':
       return 'Configure your community settings';
     default:
       return 'Overview of your HOA community management';
   }
 });
+
+// Get nav link classes
+const getNavLinkClass = (routeNames: string | string[]) => {
+  const names = Array.isArray(routeNames) ? routeNames : [routeNames];
+  const isActive = names.includes(route.name as string);
+
+  return [
+    'flex items-center py-2.5 text-sm font-medium rounded-lg transition-colors duration-200',
+    isActive ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100',
+    isCollapsedView.value ? 'justify-center px-2' : 'px-4',
+  ];
+};
 
 // Handle logout
 const handleLogout = async () => {
@@ -658,15 +813,7 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
-/* Custom styles for the sidebar */
-.router-link-active {
-  @apply bg-primary text-white;
-}
-
-/* Smooth transitions */
-.transition-colors {
-  transition-property: color, background-color, border-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
+.dropdown-item {
+  @apply flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150;
 }
 </style>

@@ -1,243 +1,161 @@
 <template>
   <div class="space-y-6">
-    <!-- Quick Action Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Add Expense Card -->
-      <router-link to="/expenses/create" class="block">
-        <div
-          class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-        >
-          <div class="flex items-center">
-            <div class="p-3 bg-blue-100 rounded-lg">
-              <svg
-                class="w-6 h-6 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-semibold text-gray-900">Add Expense</h3>
-              <p class="text-sm text-gray-600">Create new expense</p>
-            </div>
-          </div>
-        </div>
+    <!-- Header: Add Expense Button -->
+    <div class="flex justify-end">
+      <router-link to="/expenses/create" class="hidden md:inline-flex">
+        <button class="btn-primary">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Add Expense
+        </button>
       </router-link>
+    </div>
 
-      <!-- View All Expenses Card -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-          <div class="p-3 bg-green-100 rounded-lg">
-            <svg
-              class="w-6 h-6 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+    <!-- Filters -->
+    <div class="card">
+      <h3 class="text-base font-semibold text-gray-900 mb-4">Filters</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div>
+          <label for="search" class="block text-sm font-medium text-gray-700">
+            Search
+          </label>
+          <input
+            id="search"
+            v-model="filters.search"
+            type="text"
+            placeholder="Search by invoice number or note..."
+            class="input-field mt-1"
+            @input="debouncedSearch"
+          />
+        </div>
+
+        <!-- Vendor Filter -->
+        <div>
+          <label for="vendor" class="block text-sm font-medium text-gray-700">
+            Vendor
+          </label>
+          <select
+            id="vendor"
+            v-model="filters.vendor_id"
+            class="input-field mt-1"
+            @change="applyFilters"
+          >
+            <option value="">All Vendors</option>
+            <option
+              v-for="vendor in vendors"
+              :key="vendor.id"
+              :value="vendor.id"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </div>
-          <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">
-              View All Expenses
-            </h3>
-            <p class="text-sm text-gray-600">Browse expense directory</p>
-          </div>
+              {{ vendor.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Category Filter -->
+        <div>
+          <label for="category" class="block text-sm font-medium text-gray-700">
+            Category
+          </label>
+          <select
+            id="category"
+            v-model="filters.category"
+            class="input-field mt-1"
+            @change="applyFilters"
+          >
+            <option value="">All Categories</option>
+            <option
+              v-for="option in categoryOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div>
+          <label for="status" class="block text-sm font-medium text-gray-700">
+            Status
+          </label>
+          <select
+            id="status"
+            v-model="filters.status"
+            class="input-field mt-1"
+            @change="applyFilters"
+          >
+            <option value="">All Status</option>
+            <option
+              v-for="option in statusOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
         </div>
       </div>
 
-      <!-- Manage Reports Card -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-          <div class="p-3 bg-purple-100 rounded-lg">
-            <svg
-              class="w-6 h-6 text-purple-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-          </div>
-          <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">Manage Reports</h3>
-            <p class="text-sm text-gray-600">Generate financial reports</p>
-          </div>
-        </div>
+      <!-- Checkboxes -->
+      <div class="flex items-center space-x-4 mt-4">
+        <label class="flex items-center">
+          <input
+            v-model="includePaid"
+            type="checkbox"
+            class="rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span class="ml-2 text-sm text-gray-600">Show paid</span>
+        </label>
+        <label class="flex items-center">
+          <input
+            v-model="includeDeleted"
+            type="checkbox"
+            class="rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span class="ml-2 text-gray-600">Show deleted</span>
+        </label>
       </div>
     </div>
 
-    <!-- Expense Directory Section -->
-    <div class="bg-white rounded-lg shadow">
-      <!-- Header Section -->
-      <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-semibold text-gray-900">
-              Expense Directory
-            </h2>
-          </div>
-
-          <!-- Header Controls -->
-          <div class="flex items-center space-x-4">
-            <!-- Show Paid Checkbox -->
-            <div class="flex items-center">
-              <input
-                id="show-paid"
-                v-model="includePaid"
-                type="checkbox"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              />
-              <label for="show-paid" class="ml-2 text-sm text-gray-600">
-                Show paid
-              </label>
-            </div>
-            <!-- Show Deleted Checkbox -->
-            <div class="flex items-center">
-              <input
-                id="show-deleted"
-                v-model="includeDeleted"
-                type="checkbox"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              />
-              <label for="show-deleted" class="ml-2 text-sm text-gray-600">
-                Show deleted
-              </label>
-            </div>
-
-            <!-- Refresh Button -->
-            <button
-              @click="refetch"
-              :disabled="isLoading"
-              class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
-            >
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                :class="{ 'animate-spin': isLoading }"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters Section -->
-      <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <!-- Search -->
-          <div>
-            <label for="search" class="block text-sm font-medium text-gray-700">
-              Search
-            </label>
-            <input
-              id="search"
-              v-model="filters.search"
-              type="text"
-              placeholder="Search by invoice number or note..."
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              @input="debouncedSearch"
+    <!-- Expense Directory -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-gray-900">Expense Directory</h2>
+        <button
+          @click="refetch"
+          :disabled="isLoading"
+          class="btn-outline btn-sm"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            :class="{ 'animate-spin': isLoading }"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
-          </div>
-
-          <!-- Vendor Filter -->
-          <div>
-            <label for="vendor" class="block text-sm font-medium text-gray-700">
-              Vendor
-            </label>
-            <select
-              id="vendor"
-              v-model="filters.vendor_id"
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              @change="applyFilters"
-            >
-              <option value="">All Vendors</option>
-              <option
-                v-for="vendor in vendors"
-                :key="vendor.id"
-                :value="vendor.id"
-              >
-                {{ vendor.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Category Filter -->
-          <div>
-            <label
-              for="category"
-              class="block text-sm font-medium text-gray-700"
-            >
-              Category
-            </label>
-            <select
-              id="category"
-              v-model="filters.category"
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              @change="applyFilters"
-            >
-              <option value="">All Categories</option>
-              <option
-                v-for="option in categoryOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Status Filter -->
-          <div>
-            <label for="status" class="block text-sm font-medium text-gray-700">
-              Status
-            </label>
-            <select
-              id="status"
-              v-model="filters.status"
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              @change="applyFilters"
-            >
-              <option value="">All Status</option>
-              <option
-                v-for="option in statusOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </option>
-            </select>
-          </div>
-        </div>
+          </svg>
+        </button>
       </div>
 
-      <!-- Table Section -->
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto -mx-6">
         <!-- Loading State -->
         <div v-if="isLoading" class="flex items-center justify-center py-12">
           <div class="flex items-center space-x-2">
@@ -397,7 +315,7 @@
             <tr
               v-for="expense in filteredExpenses"
               :key="expense.id"
-              class="hover:bg-gray-50"
+              class="table-row-hover"
             >
               <!-- Invoice Column -->
               <td class="px-6 py-4 whitespace-nowrap">
@@ -463,57 +381,103 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   :class="getExpenseStatusBadgeClass(expense.status)"
-                  class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                  class="badge"
                 >
                   {{ getExpenseStatusDisplayName(expense.status) }}
                 </span>
               </td>
 
               <!-- Actions Column -->
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex space-x-2">
-                  <button
-                    @click="viewExpense(expense.id)"
-                    class="text-primary hover:text-primary-600"
-                  >
-                    View
-                  </button>
-                  <button
-                    @click="editExpense(expense.id)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    v-if="!expense.deleted_at"
-                    @click="deleteExpense(expense)"
-                    :disabled="deletingExpenseId === expense.id"
-                    class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {{
-                      deletingExpenseId === expense.id
-                        ? 'Deleting...'
-                        : 'Delete'
-                    }}
-                  </button>
-                  <button
-                    v-else
-                    @click="showRestoreConfirmation(expense)"
-                    :disabled="restoringExpenseId === expense.id"
-                    class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {{
-                      restoringExpenseId === expense.id
-                        ? 'Restoring...'
-                        : 'Restore'
-                    }}
-                  </button>
-                </div>
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <DropdownMenu>
+                  <template #default="{ close }">
+                    <button
+                      @click="
+                        () => {
+                          viewExpense(expense.id);
+                          close();
+                        }
+                      "
+                      class="dropdown-item"
+                    >
+                      View
+                    </button>
+                    <button
+                      @click="
+                        () => {
+                          editExpense(expense.id);
+                          close();
+                        }
+                      "
+                      class="dropdown-item"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      v-if="!expense.deleted_at"
+                      @click="
+                        () => {
+                          deleteExpense(expense);
+                          close();
+                        }
+                      "
+                      :disabled="deletingExpenseId === expense.id"
+                      class="dropdown-item-danger"
+                    >
+                      {{
+                        deletingExpenseId === expense.id
+                          ? 'Deleting...'
+                          : 'Delete'
+                      }}
+                    </button>
+                    <button
+                      v-else
+                      @click="
+                        () => {
+                          showRestoreConfirmation(expense);
+                          close();
+                        }
+                      "
+                      :disabled="restoringExpenseId === expense.id"
+                      class="dropdown-item"
+                    >
+                      {{
+                        restoringExpenseId === expense.id
+                          ? 'Restoring...'
+                          : 'Restore'
+                      }}
+                    </button>
+                  </template>
+                </DropdownMenu>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Mobile Fixed Bottom Button -->
+    <div
+      class="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 safe-area-inset-bottom"
+    >
+      <router-link to="/expenses/create" class="block">
+        <button class="btn-primary w-full">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Add Expense
+        </button>
+      </router-link>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -562,6 +526,7 @@ import {
   getExpenseStatusBadgeClass,
 } from '@neibrpay/models';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
+import DropdownMenu from '../components/DropdownMenu.vue';
 
 const router = useRouter();
 

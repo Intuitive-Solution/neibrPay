@@ -1,101 +1,12 @@
 <template>
   <div class="space-y-6">
-    <!-- Quick Action Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Add Invoice Card -->
-      <router-link to="/invoices/create" class="block">
-        <div
-          class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-        >
-          <div class="flex items-center">
-            <div class="p-3 bg-blue-100 rounded-lg">
-              <svg
-                class="w-6 h-6 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-semibold text-gray-900">Add Invoice</h3>
-              <p class="text-sm text-gray-600">Create new invoice</p>
-            </div>
-          </div>
-        </div>
-      </router-link>
-
-      <!-- View All Invoices Card -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-          <div class="p-3 bg-green-100 rounded-lg">
-            <svg
-              class="w-6 h-6 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </div>
-          <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">
-              View All Invoices
-            </h3>
-            <p class="text-sm text-gray-600">Browse invoice directory</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Manage Reports Card -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center">
-          <div class="p-3 bg-purple-100 rounded-lg">
-            <svg
-              class="w-6 h-6 text-purple-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-          </div>
-          <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">Manage Reports</h3>
-            <p class="text-sm text-gray-600">Generate financial reports</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Invoice Directory Section -->
-    <div class="bg-white rounded-lg shadow">
+    <div class="bg-white rounded-lg shadow-sm">
       <!-- Header Section -->
       <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-semibold text-gray-900">
-              Invoice Directory
-            </h2>
-          </div>
-
-          <!-- Header Controls -->
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
           <div class="flex items-center space-x-4">
             <!-- Show Paid Checkbox -->
             <div class="flex items-center">
@@ -121,12 +32,15 @@
                 Show deleted
               </label>
             </div>
+          </div>
 
+          <!-- Header Controls -->
+          <div class="flex items-center space-x-3">
             <!-- Refresh Button -->
             <button
               @click="refetch"
               :disabled="isLoading"
-              class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-colors duration-200"
             >
               <svg
                 class="h-4 w-4"
@@ -143,6 +57,26 @@
                 />
               </svg>
             </button>
+
+            <!-- New Invoice Button (Desktop) -->
+            <router-link to="/invoices/create" class="hidden md:inline-flex">
+              <button class="btn-primary btn-sm">
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                New Invoice
+              </button>
+            </router-link>
           </div>
         </div>
       </div>
@@ -308,7 +242,7 @@
             <tr
               v-for="invoice in filteredInvoices"
               :key="invoice.id"
-              class="hover:bg-gray-50"
+              class="table-row-hover"
             >
               <!-- Invoice Column -->
               <td class="px-6 py-4 whitespace-nowrap">
@@ -372,52 +306,74 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   :class="getStatusBadgeClass(invoice.status)"
-                  class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                  class="badge"
                 >
                   {{ getStatusText(invoice.status) }}
                 </span>
               </td>
 
               <!-- Actions Column -->
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex space-x-2">
-                  <button
-                    @click="viewInvoice(invoice.id)"
-                    class="text-primary hover:text-primary-600"
-                  >
-                    View
-                  </button>
-                  <button
-                    @click="editInvoice(invoice.id)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    v-if="!invoice.deleted_at"
-                    @click="deleteInvoice(invoice)"
-                    :disabled="deletingInvoiceId === invoice.id"
-                    class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {{
-                      deletingInvoiceId === invoice.id
-                        ? 'Deleting...'
-                        : 'Delete'
-                    }}
-                  </button>
-                  <button
-                    v-else
-                    @click="showRestoreConfirmation(invoice)"
-                    :disabled="restoringInvoiceId === invoice.id"
-                    class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {{
-                      restoringInvoiceId === invoice.id
-                        ? 'Restoring...'
-                        : 'Restore'
-                    }}
-                  </button>
-                </div>
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <DropdownMenu>
+                  <template #default="{ close }">
+                    <button
+                      @click="
+                        () => {
+                          viewInvoice(invoice.id);
+                          close();
+                        }
+                      "
+                      class="dropdown-item"
+                    >
+                      View Preview
+                    </button>
+                    <button
+                      @click="
+                        () => {
+                          editInvoice(invoice.id);
+                          close();
+                        }
+                      "
+                      class="dropdown-item"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      v-if="!invoice.deleted_at"
+                      @click="
+                        () => {
+                          deleteInvoice(invoice);
+                          close();
+                        }
+                      "
+                      :disabled="deletingInvoiceId === invoice.id"
+                      class="dropdown-item-danger"
+                    >
+                      {{
+                        deletingInvoiceId === invoice.id
+                          ? 'Deleting...'
+                          : 'Delete'
+                      }}
+                    </button>
+                    <button
+                      v-else
+                      @click="
+                        () => {
+                          showRestoreConfirmation(invoice);
+                          close();
+                        }
+                      "
+                      :disabled="restoringInvoiceId === invoice.id"
+                      class="dropdown-item"
+                    >
+                      {{
+                        restoringInvoiceId === invoice.id
+                          ? 'Restoring...'
+                          : 'Restore'
+                      }}
+                    </button>
+                  </template>
+                </DropdownMenu>
               </td>
             </tr>
           </tbody>
@@ -450,6 +406,30 @@
       @confirm="confirmRestore"
       @cancel="cancelRestore"
     />
+
+    <!-- Mobile Fixed Bottom Button -->
+    <div
+      class="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 safe-area-inset-bottom"
+    >
+      <router-link to="/invoices/create" class="block">
+        <button class="btn-primary w-full">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          New Invoice
+        </button>
+      </router-link>
+    </div>
   </div>
 </template>
 
@@ -462,6 +442,7 @@ import {
   useRestoreInvoice,
 } from '../composables/useInvoices';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
+import DropdownMenu from '../components/DropdownMenu.vue';
 
 const router = useRouter();
 
@@ -539,14 +520,14 @@ const getStatusText = (status: string) => {
 
 const getStatusBadgeClass = (status: string) => {
   const statusClasses: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-800',
-    sent: 'bg-blue-100 text-blue-800',
-    paid: 'bg-green-100 text-green-800',
-    partial: 'bg-yellow-100 text-yellow-800',
-    overdue: 'bg-red-100 text-red-800',
-    cancelled: 'bg-yellow-100 text-yellow-800',
+    draft: 'badge-draft',
+    sent: 'badge-sent',
+    paid: 'badge-paid',
+    partial: 'badge-partial',
+    overdue: 'badge-overdue',
+    cancelled: 'badge-partial',
   };
-  return statusClasses[status] || 'bg-gray-100 text-gray-800';
+  return statusClasses[status] || 'badge-draft';
 };
 
 const viewInvoice = (invoiceId: number) => {

@@ -62,7 +62,7 @@
                   </svg>
                   <svg
                     v-else
-                    class="h-6 w-6 text-blue-600"
+                    class="h-6 w-6 text-primary"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke-width="1.5"
@@ -162,7 +162,7 @@ const iconBgClass = computed(() => {
     case 'warning':
       return 'bg-yellow-100';
     default:
-      return 'bg-blue-100';
+      return 'bg-primary-100';
   }
 });
 
@@ -173,7 +173,7 @@ const confirmButtonClass = computed(() => {
     case 'warning':
       return 'bg-yellow-600 hover:bg-yellow-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-600';
     default:
-      return 'bg-blue-600 hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
+      return 'bg-primary hover:bg-primary-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
   }
 });
 

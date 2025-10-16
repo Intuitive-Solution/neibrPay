@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Page Header -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="card">
       <h1 class="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
       <p class="text-gray-600">Configure your community settings</p>
     </div>
@@ -9,20 +9,18 @@
     <!-- Settings Sections -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Community Settings -->
-      <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">
-            Community Settings
-          </h2>
-        </div>
-        <div class="p-6 space-y-4">
+      <div class="card">
+        <h2 class="text-base font-semibold text-gray-900 mb-4">
+          Community Settings
+        </h2>
+        <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2"
               >Community Name</label
             >
             <input
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              class="input-field"
               placeholder="Enter community name"
             />
           </div>
@@ -31,7 +29,7 @@
               >Address</label
             >
             <textarea
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              class="input-field"
               rows="3"
               placeholder="Enter community address"
             ></textarea>
@@ -42,7 +40,7 @@
             >
             <input
               type="tel"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              class="input-field"
               placeholder="Enter phone number"
             />
           </div>
@@ -50,18 +48,18 @@
       </div>
 
       <!-- User Settings -->
-      <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">User Settings</h2>
-        </div>
-        <div class="p-6 space-y-4">
+      <div class="card">
+        <h2 class="text-base font-semibold text-gray-900 mb-4">
+          User Settings
+        </h2>
+        <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2"
               >Full Name</label
             >
             <input
               type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              class="input-field"
               placeholder="Enter full name"
             />
           </div>
@@ -71,7 +69,7 @@
             >
             <input
               type="email"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              class="input-field"
               placeholder="Enter email address"
             />
           </div>
@@ -81,7 +79,7 @@
             >
             <input
               type="tel"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              class="input-field"
               placeholder="Enter phone number"
             />
           </div>
