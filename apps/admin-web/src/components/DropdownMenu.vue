@@ -1,5 +1,5 @@
 <template>
-  <div class="relative" ref="dropdownRef">
+  <div class="relative inline-block" ref="dropdownRef">
     <!-- Trigger Button -->
     <button
       @click="toggleDropdown"
@@ -30,6 +30,7 @@
         v-if="isOpen"
         class="dropdown-menu"
         :class="[position === 'left' ? 'left-0' : 'right-0', menuClass]"
+        style="z-index: 9999"
       >
         <slot :close="closeDropdown" />
       </div>

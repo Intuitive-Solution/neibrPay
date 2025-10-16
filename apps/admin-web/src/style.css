@@ -81,11 +81,11 @@
 
   /* Dropdown Menu */
   .dropdown-menu {
-    @apply absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50;
+    @apply absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-2xl border-2 border-gray-300 py-1 z-[9999] min-w-max;
   }
 
   .dropdown-item {
-    @apply block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 cursor-pointer;
+    @apply flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 cursor-pointer;
   }
 
   .dropdown-item-danger {
