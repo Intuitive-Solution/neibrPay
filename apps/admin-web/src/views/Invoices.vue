@@ -82,7 +82,7 @@
       </div>
 
       <!-- Table Section -->
-      <div class="overflow-x-auto">
+      <div class="overflow-hidden">
         <!-- Loading State -->
         <div v-if="isLoading" class="flex items-center justify-center py-12">
           <div class="flex items-center space-x-2">
@@ -203,7 +203,7 @@
         </div>
 
         <!-- Table with Data -->
-        <table v-else class="min-w-full divide-y divide-gray-200">
+        <table v-else class="w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
               <th
@@ -212,22 +212,22 @@
                 INVOICE
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
               >
                 UNIT
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell"
               >
                 AMOUNT
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell"
               >
                 DUE DATE
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
               >
                 STATUS
               </th>
@@ -244,39 +244,57 @@
             >
               <!-- Invoice Column -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10">
-                    <div
-                      class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center"
-                    >
-                      <svg
-                        class="h-5 w-5 text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                      <div
+                        class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center"
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
+                        <svg
+                          class="h-5 w-5 text-gray-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">
-                      {{ invoice.invoice_number || `#${invoice.id}` }}
-                    </div>
-                    <div class="text-sm text-gray-500">
-                      {{ formatDate(invoice.created_at) }}
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900">
+                        {{ invoice.invoice_number || `#${invoice.id}` }}
+                      </div>
+                      <div class="text-sm text-gray-500">
+                        {{ formatDate(invoice.created_at) }}
+                      </div>
+                      <!-- Mobile-only additional info -->
+                      <div class="sm:hidden mt-1">
+                        <div class="text-xs text-gray-500">
+                          {{ invoice.unit?.title || 'N/A' }} • ${{
+                            formatCurrency(invoice.total)
+                          }}
+                        </div>
+                        <div class="mt-1">
+                          <span
+                            :class="getStatusBadgeClass(invoice.status)"
+                            class="badge text-xs"
+                          >
+                            {{ getStatusText(invoice.status) }}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </td>
 
               <!-- Unit Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                 <div class="text-sm text-gray-900">
                   {{ invoice.unit?.title || 'N/A' }}
                 </div>
@@ -286,7 +304,7 @@
               </td>
 
               <!-- Amount Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap hidden xl:table-cell">
                 <div class="text-sm font-medium text-gray-900">
                   ${{ formatCurrency(invoice.total) }}
                 </div>
@@ -296,12 +314,14 @@
               </td>
 
               <!-- Due Date Column -->
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden lg:table-cell"
+              >
                 {{ formatDate(invoice.start_date) }}
               </td>
 
               <!-- Status Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                 <span
                   :class="getStatusBadgeClass(invoice.status)"
                   class="badge"
