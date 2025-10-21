@@ -347,29 +347,154 @@
           <thead class="bg-gray-100 border-b border-gray-200">
             <tr>
               <th
-                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                @click="sortBy('invoice')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                INVOICE
+                <div class="flex items-center space-x-1">
+                  <span>INVOICE</span>
+                  <svg
+                    v-if="sortColumn === 'invoice'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell"
+                @click="sortBy('unit')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                UNIT
+                <div class="flex items-center space-x-1">
+                  <span>UNIT</span>
+                  <svg
+                    v-if="sortColumn === 'unit'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden xl:table-cell"
+                @click="sortBy('amount')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden xl:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                AMOUNT
+                <div class="flex items-center space-x-1">
+                  <span>AMOUNT</span>
+                  <svg
+                    v-if="sortColumn === 'amount'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell"
+                @click="sortBy('dueDate')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                DUE DATE
+                <div class="flex items-center space-x-1">
+                  <span>DUE DATE</span>
+                  <svg
+                    v-if="sortColumn === 'dueDate'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell"
+                @click="sortBy('status')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                STATUS
+                <div class="flex items-center space-x-1">
+                  <span>STATUS</span>
+                  <svg
+                    v-if="sortColumn === 'status'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
                 class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
@@ -676,6 +801,10 @@ const deletingInvoiceId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const invoiceToDelete = ref<any>(null);
 const activeFilter = ref<'open' | 'overdue' | 'paid' | 'all' | null>('open'); // Default to 'open' filter
+const sortColumn = ref<
+  'invoice' | 'unit' | 'amount' | 'dueDate' | 'status' | null
+>(null);
+const sortDirection = ref<'asc' | 'desc'>('asc');
 
 // Queries and mutations
 const {
@@ -766,7 +895,7 @@ const allInvoicesAmount = computed(() => {
 const filteredInvoices = computed(() => {
   if (!invoices.value) return [];
 
-  return invoices.value.filter((invoice: any) => {
+  let filtered = invoices.value.filter((invoice: any) => {
     // Apply active filter from summary cards
     if (activeFilter.value === 'open' && !isInvoiceOpen(invoice)) {
       return false;
@@ -805,6 +934,47 @@ const filteredInvoices = computed(() => {
 
     return true;
   });
+
+  // Apply sorting
+  if (sortColumn.value) {
+    filtered = [...filtered].sort((a: any, b: any) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortColumn.value) {
+        case 'invoice':
+          aValue = a.invoice_number || `#${a.id}`;
+          bValue = b.invoice_number || `#${b.id}`;
+          break;
+        case 'unit':
+          aValue = a.unit?.title || '';
+          bValue = b.unit?.title || '';
+          break;
+        case 'amount':
+          aValue = a.total || 0;
+          bValue = b.total || 0;
+          break;
+        case 'dueDate':
+          aValue = a.start_date ? new Date(a.start_date).getTime() : 0;
+          bValue = b.start_date ? new Date(b.start_date).getTime() : 0;
+          break;
+        case 'status':
+          aValue = a.status || '';
+          bValue = b.status || '';
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortDirection.value === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+  }
+
+  return filtered;
 });
 
 // Methods
@@ -818,6 +988,19 @@ const filterByStatus = (status: 'open' | 'overdue' | 'paid' | 'all') => {
     activeFilter.value = null;
   } else {
     activeFilter.value = status;
+  }
+};
+
+const sortBy = (
+  column: 'invoice' | 'unit' | 'amount' | 'dueDate' | 'status'
+) => {
+  if (sortColumn.value === column) {
+    // Toggle direction if clicking the same column
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Set new column and default to ascending
+    sortColumn.value = column;
+    sortDirection.value = 'asc';
   }
 };
 
