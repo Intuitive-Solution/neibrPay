@@ -9,45 +9,28 @@
 
     <!-- Sidebar -->
     <div
+      @mouseenter="handleSidebarHover(true)"
+      @mouseleave="handleSidebarHover(false)"
       :class="[
         'bg-white shadow-lg flex flex-col transition-all duration-300 ease-in-out',
         // Desktop responsive behavior
         'hidden md:flex',
         // Width logic: collapsed shows icons only (w-16), expanded shows full width (w-64)
-        isCollapsedView ? 'w-16' : 'w-64',
-        // Mobile drawer
-        'md:relative fixed inset-y-0 left-0 z-50',
+        isExpanded ? 'w-64' : 'w-16',
+        // Position: fixed for desktop to overlap content, mobile drawer
+        'fixed inset-y-0 left-0',
+        // Z-index: higher when expanded to overlap content
+        isExpanded ? 'z-50' : 'z-40',
         isMobileMenuOpen
           ? 'translate-x-0'
           : '-translate-x-full md:translate-x-0',
       ]"
     >
       <!-- Community Header -->
-      <div :class="isCollapsedView ? 'p-4' : 'p-6'">
-        <div v-if="!isCollapsedView" class="flex flex-col">
+      <div :class="isExpanded ? 'p-6' : 'p-4'">
+        <div v-if="isExpanded" class="flex flex-col">
           <div class="flex items-center justify-between">
             <NeibrPayLogo />
-
-            <!-- Collapse Button (Desktop only) -->
-            <button
-              @click="toggleCollapse"
-              class="hidden xl:block p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-              title="Collapse sidebar"
-            >
-              <svg
-                class="w-5 h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                />
-              </svg>
-            </button>
           </div>
 
           <!-- Community Name -->
@@ -56,30 +39,9 @@
           </div>
         </div>
 
-        <div v-else class="flex flex-col items-center space-y-4">
+        <div v-else class="flex flex-col items-center">
           <!-- Logo Icon Only -->
           <NeibrPayLogo icon-only size="md" />
-
-          <!-- Expand Button -->
-          <button
-            @click="toggleCollapse"
-            class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-            title="Expand sidebar"
-          >
-            <svg
-              class="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 5l7 7-7 7M5 5l7 7-7 7"
-              />
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -87,7 +49,7 @@
       <nav
         :class="[
           'flex-1 overflow-y-auto',
-          isCollapsedView ? 'py-4 px-2' : 'py-6 px-4',
+          isExpanded ? 'py-6 px-4' : 'py-4 px-2',
         ]"
       >
         <ul class="space-y-1">
@@ -95,10 +57,10 @@
             <router-link
               to="/"
               :class="getNavLinkClass('Dashboard')"
-              :title="isCollapsedView ? 'Dashboard' : ''"
+              :title="!isExpanded ? 'Dashboard' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -110,7 +72,7 @@
                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                 />
               </svg>
-              <span v-if="!isCollapsedView">Dashboard</span>
+              <span v-if="isExpanded">Dashboard</span>
             </router-link>
           </li>
 
@@ -118,10 +80,10 @@
             <router-link
               to="/invoices"
               :class="getNavLinkClass('Invoices')"
-              :title="isCollapsedView ? 'Invoices' : ''"
+              :title="!isExpanded ? 'Invoices' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -133,7 +95,7 @@
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span v-if="!isCollapsedView">Invoices</span>
+              <span v-if="isExpanded">Invoices</span>
             </router-link>
           </li>
 
@@ -141,10 +103,10 @@
             <router-link
               to="/charges"
               :class="getNavLinkClass(['Charges', 'AddCharge', 'EditCharge'])"
-              :title="isCollapsedView ? 'Charges' : ''"
+              :title="!isExpanded ? 'Charges' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -156,7 +118,7 @@
                   d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                 />
               </svg>
-              <span v-if="!isCollapsedView">Charges</span>
+              <span v-if="isExpanded">Charges</span>
             </router-link>
           </li>
 
@@ -164,10 +126,10 @@
             <router-link
               to="/people"
               :class="getNavLinkClass('People')"
-              :title="isCollapsedView ? 'People' : ''"
+              :title="!isExpanded ? 'People' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -179,7 +141,7 @@
                   d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
                 />
               </svg>
-              <span v-if="!isCollapsedView">People</span>
+              <span v-if="isExpanded">People</span>
             </router-link>
           </li>
 
@@ -187,10 +149,10 @@
             <router-link
               to="/units"
               :class="getNavLinkClass(['Units', 'AddUnit', 'EditUnit'])"
-              :title="isCollapsedView ? 'Units' : ''"
+              :title="!isExpanded ? 'Units' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -202,7 +164,7 @@
                   d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 />
               </svg>
-              <span v-if="!isCollapsedView">Units</span>
+              <span v-if="isExpanded">Units</span>
             </router-link>
           </li>
 
@@ -210,10 +172,10 @@
             <router-link
               to="/payments"
               :class="getNavLinkClass('Payments')"
-              :title="isCollapsedView ? 'Payments' : ''"
+              :title="!isExpanded ? 'Payments' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -225,7 +187,7 @@
                   d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                 />
               </svg>
-              <span v-if="!isCollapsedView">Payments</span>
+              <span v-if="isExpanded">Payments</span>
             </router-link>
           </li>
 
@@ -240,10 +202,10 @@
                   'ExpenseDetail',
                 ])
               "
-              :title="isCollapsedView ? 'Expenses' : ''"
+              :title="!isExpanded ? 'Expenses' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -255,7 +217,7 @@
                   d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span v-if="!isCollapsedView">Expenses</span>
+              <span v-if="isExpanded">Expenses</span>
             </router-link>
           </li>
 
@@ -263,10 +225,10 @@
             <router-link
               to="/vendors"
               :class="getNavLinkClass('Vendors')"
-              :title="isCollapsedView ? 'Vendors' : ''"
+              :title="!isExpanded ? 'Vendors' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -278,7 +240,7 @@
                   d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 />
               </svg>
-              <span v-if="!isCollapsedView">Vendors</span>
+              <span v-if="isExpanded">Vendors</span>
             </router-link>
           </li>
 
@@ -286,10 +248,10 @@
             <router-link
               to="/settings"
               :class="getNavLinkClass('Settings')"
-              :title="isCollapsedView ? 'Settings' : ''"
+              :title="!isExpanded ? 'Settings' : ''"
             >
               <svg
-                :class="['w-5 h-5', isCollapsedView ? '' : 'mr-3']"
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -307,17 +269,15 @@
                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span v-if="!isCollapsedView">Settings</span>
+              <span v-if="isExpanded">Settings</span>
             </router-link>
           </li>
         </ul>
       </nav>
 
       <!-- User Info & Logout -->
-      <div
-        :class="['border-t border-gray-200', isCollapsedView ? 'p-3' : 'p-4']"
-      >
-        <div v-if="!isCollapsedView" class="flex items-center space-x-3 mb-4">
+      <div :class="['border-t border-gray-200', isExpanded ? 'p-4' : 'p-3']">
+        <div v-if="isExpanded" class="flex items-center space-x-3 mb-4">
           <div
             class="w-8 h-8 bg-primary rounded-full flex items-center justify-center"
           >
@@ -348,15 +308,15 @@
           :disabled="isLoading"
           :class="[
             'flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed',
-            isCollapsedView ? 'w-full' : 'w-full',
+            'w-full',
           ]"
-          :title="isCollapsedView ? 'Sign Out' : ''"
+          :title="!isExpanded ? 'Sign Out' : ''"
         >
           <svg
             v-if="isLoading"
             :class="[
               'animate-spin h-4 w-4 text-gray-500',
-              isCollapsedView ? '' : '-ml-1 mr-2',
+              isExpanded ? '-ml-1 mr-2' : '',
             ]"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -378,7 +338,7 @@
           </svg>
           <svg
             v-else
-            :class="['w-4 h-4', isCollapsedView ? '' : 'mr-2']"
+            :class="['w-4 h-4', isExpanded ? 'mr-2' : '']"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -390,7 +350,7 @@
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-          <span v-if="!isCollapsedView">{{
+          <span v-if="isExpanded">{{
             isLoading ? 'Signing out...' : 'Sign Out'
           }}</span>
         </button>
@@ -398,7 +358,7 @@
     </div>
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col overflow-hidden bg-neutral-50">
+    <div class="flex-1 flex flex-col overflow-hidden bg-neutral-50 md:ml-16">
       <!-- Mobile Top Bar -->
       <header
         class="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between"
@@ -664,22 +624,17 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-// Collapse state - default expanded on XL, collapsed on smaller
-const isCollapsed = ref(false);
+// Hover state for sidebar expansion
+const isExpanded = ref(false);
 const isMobileMenuOpen = ref(false);
 const isCreateDropdownOpen = ref(false);
 
-// Computed property for collapsed view (takes into account screen size)
-const isCollapsedView = computed(() => {
-  // On XL screens, use the isCollapsed state; on smaller screens, always show collapsed icons
-  return isCollapsed.value;
-});
-
-// Toggle functions
-const toggleCollapse = () => {
-  isCollapsed.value = !isCollapsed.value;
+// Handle sidebar hover
+const handleSidebarHover = (hovered: boolean) => {
+  isExpanded.value = hovered;
 };
 
+// Toggle functions
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
 };
@@ -788,7 +743,7 @@ const getNavLinkClass = (routeNames: string | string[]) => {
   return [
     'flex items-center py-2.5 text-sm font-medium rounded-lg transition-colors duration-200',
     isActive ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100',
-    isCollapsedView.value ? 'justify-center px-2' : 'px-4',
+    isExpanded.value ? 'px-4' : 'justify-center px-2',
   ];
 };
 
