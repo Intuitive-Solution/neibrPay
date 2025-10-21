@@ -602,6 +602,16 @@
                 </div>
               </Transition>
             </div>
+
+            <!-- Community Initials Badge -->
+            <div
+              class="w-9 h-9 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+              :title="communityName"
+            >
+              <span class="text-white font-medium text-sm">
+                {{ communityInitials }}
+              </span>
+            </div>
           </div>
         </div>
       </header>
@@ -657,6 +667,15 @@ const userDisplayName = computed(() => authStore.userDisplayName || 'User');
 const userEmail = computed(() => authStore.user?.email || '');
 const userInitials = computed(() => {
   const name = userDisplayName.value;
+  return name
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+});
+const communityInitials = computed(() => {
+  const name = communityName.value;
   return name
     .split(' ')
     .map((n: string) => n[0])

@@ -1,5 +1,116 @@
 <template>
   <div class="space-y-6">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Open Invoices Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200"
+        :class="{
+          'ring-2 ring-primary': activeFilter === 'open',
+        }"
+        @click="filterByStatus('open')"
+      >
+        <div class="flex items-center">
+          <div class="p-3 bg-blue-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">Open Invoices</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ openInvoicesCount }}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ formatCurrency(openInvoicesAmount) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overdue Invoices Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200"
+        :class="{
+          'ring-2 ring-red-500': activeFilter === 'overdue',
+        }"
+        @click="filterByStatus('overdue')"
+      >
+        <div class="flex items-center">
+          <div class="p-3 bg-red-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">Overdue Invoices</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ overdueInvoicesCount }}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ formatCurrency(overdueInvoicesAmount) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paid Invoices Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200"
+        :class="{
+          'ring-2 ring-green-500': activeFilter === 'paid',
+        }"
+        @click="filterByStatus('paid')"
+      >
+        <div class="flex items-center">
+          <div class="p-3 bg-green-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">Paid Invoices</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ paidInvoicesCount }}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ formatCurrency(paidInvoicesAmount) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Invoice Directory Section -->
     <div class="bg-white rounded-lg shadow-sm">
       <!-- Header Section -->
@@ -587,6 +698,7 @@ const showDeleteModal = ref(false);
 const showRestoreModal = ref(false);
 const invoiceToDelete = ref<any>(null);
 const invoiceToRestore = ref<any>(null);
+const activeFilter = ref<'open' | 'overdue' | 'paid' | null>(null);
 
 // Queries and mutations
 const {
@@ -599,19 +711,98 @@ const {
 const deleteInvoiceMutation = useDeleteInvoice();
 const restoreInvoiceMutation = useRestoreInvoice();
 
-// Computed properties - filter invoices based on includePaid and includeDeleted
+// Helper function to check if invoice is overdue
+const isInvoiceOverdue = (invoice: any): boolean => {
+  if (
+    !invoice.start_date ||
+    invoice.status === 'paid' ||
+    invoice.status === 'cancelled'
+  ) {
+    return false;
+  }
+  const dueDate = new Date(invoice.start_date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return dueDate < today;
+};
+
+// Helper function to check if invoice is open
+const isInvoiceOpen = (invoice: any): boolean => {
+  return invoice.status !== 'paid' && invoice.status !== 'cancelled';
+};
+
+// Computed properties for summary cards
+const openInvoicesCount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value.filter(
+    (invoice: any) => !invoice.deleted_at && isInvoiceOpen(invoice)
+  ).length;
+});
+
+const openInvoicesAmount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value
+    .filter((invoice: any) => !invoice.deleted_at && isInvoiceOpen(invoice))
+    .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
+});
+
+const overdueInvoicesCount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value.filter(
+    (invoice: any) => !invoice.deleted_at && isInvoiceOverdue(invoice)
+  ).length;
+});
+
+const overdueInvoicesAmount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value
+    .filter((invoice: any) => !invoice.deleted_at && isInvoiceOverdue(invoice))
+    .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
+});
+
+const paidInvoicesCount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value.filter(
+    (invoice: any) => !invoice.deleted_at && invoice.status === 'paid'
+  ).length;
+});
+
+const paidInvoicesAmount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value
+    .filter((invoice: any) => !invoice.deleted_at && invoice.status === 'paid')
+    .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
+});
+
+// Computed properties - filter invoices based on includePaid, includeDeleted, and activeFilter
 const filteredInvoices = computed(() => {
   if (!invoices.value) return [];
 
   return invoices.value.filter((invoice: any) => {
-    // Filter out paid invoices unless includePaid is true
-    if (invoice.status === 'paid' && !includePaid.value) {
-      return false;
-    }
-
     // Filter out deleted invoices unless includeDeleted is true
     if (invoice.deleted_at && !includeDeleted.value) {
       return false;
+    }
+
+    // Apply active filter from summary cards
+    if (activeFilter.value === 'open' && !isInvoiceOpen(invoice)) {
+      return false;
+    }
+
+    if (activeFilter.value === 'overdue' && !isInvoiceOverdue(invoice)) {
+      return false;
+    }
+
+    if (activeFilter.value === 'paid' && invoice.status !== 'paid') {
+      return false;
+    }
+
+    // If no active filter, apply the old includePaid logic
+    if (!activeFilter.value) {
+      // Filter out paid invoices unless includePaid is true
+      if (invoice.status === 'paid' && !includePaid.value) {
+        return false;
+      }
     }
 
     return true;
@@ -621,6 +812,23 @@ const filteredInvoices = computed(() => {
 // Methods
 const refetch = () => {
   refetchInvoices();
+};
+
+const filterByStatus = (status: 'open' | 'overdue' | 'paid') => {
+  // Toggle filter: if already active, clear it; otherwise, set it
+  if (activeFilter.value === status) {
+    activeFilter.value = null;
+    // Reset checkboxes when clearing filter
+    includePaid.value = false;
+    includeDeleted.value = false;
+  } else {
+    activeFilter.value = status;
+    // Ensure the appropriate checkboxes are set
+    if (status === 'paid') {
+      includePaid.value = true;
+    }
+    includeDeleted.value = false; // Never show deleted when filtering by status
+  }
 };
 
 const formatDate = (dateString: string) => {
