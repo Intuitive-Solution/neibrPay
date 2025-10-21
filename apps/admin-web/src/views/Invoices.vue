@@ -211,7 +211,7 @@
             <router-link to="/invoices/create" class="hidden md:inline-flex">
               <button class="btn-primary btn-sm">
                 <svg
-                  class="w-4 h-4 mr-2"
+                  class="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -223,7 +223,6 @@
                     d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                   />
                 </svg>
-                New Invoice
               </button>
             </router-link>
           </div>
