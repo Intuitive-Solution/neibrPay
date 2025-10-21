@@ -675,7 +675,7 @@ const searchQuery = ref('');
 const deletingInvoiceId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const invoiceToDelete = ref<any>(null);
-const activeFilter = ref<'open' | 'overdue' | 'paid' | 'all' | null>(null);
+const activeFilter = ref<'open' | 'overdue' | 'paid' | 'all' | null>('open'); // Default to 'open' filter
 
 // Queries and mutations
 const {
