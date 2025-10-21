@@ -27,16 +27,16 @@
       ]"
     >
       <!-- Community Header -->
-      <div :class="isExpanded ? 'p-6' : 'p-4'">
+      <div :class="isExpanded ? 'p-4' : 'p-4'">
         <div v-if="isExpanded" class="flex flex-col">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center">
             <NeibrPayLogo />
           </div>
 
           <!-- Community Name -->
-          <div class="mt-3">
+          <!-- <div class="mt-3">
             <p class="text-sm text-gray-600">{{ communityName }}</p>
-          </div>
+          </div> -->
         </div>
 
         <div v-else class="flex flex-col items-center">
