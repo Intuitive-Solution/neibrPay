@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <!-- Open Invoices Card -->
       <div
         class="card card-hover cursor-pointer transition-all duration-200"
@@ -105,6 +105,42 @@
             </p>
             <p class="text-sm text-gray-500 mt-1">
               ${{ formatCurrency(paidInvoicesAmount) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Invoices Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200"
+        :class="{
+          'ring-2 ring-gray-500': activeFilter === 'all',
+        }"
+        @click="filterByStatus('all')"
+      >
+        <div class="flex items-center">
+          <div class="p-3 bg-gray-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+              />
+            </svg>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">All Invoices</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ allInvoicesCount }}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ formatCurrency(allInvoicesAmount) }}
             </p>
           </div>
         </div>
@@ -640,7 +676,7 @@ const searchQuery = ref('');
 const deletingInvoiceId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const invoiceToDelete = ref<any>(null);
-const activeFilter = ref<'open' | 'overdue' | 'paid' | null>(null);
+const activeFilter = ref<'open' | 'overdue' | 'paid' | 'all' | null>(null);
 
 // Queries and mutations
 const {
@@ -715,6 +751,18 @@ const paidInvoicesAmount = computed(() => {
     .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
 });
 
+const allInvoicesCount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value.filter((invoice: any) => !invoice.deleted_at).length;
+});
+
+const allInvoicesAmount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value
+    .filter((invoice: any) => !invoice.deleted_at)
+    .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
+});
+
 // Computed properties - filter invoices based on activeFilter and search
 const filteredInvoices = computed(() => {
   if (!invoices.value) return [];
@@ -732,6 +780,9 @@ const filteredInvoices = computed(() => {
     if (activeFilter.value === 'paid' && invoice.status !== 'paid') {
       return false;
     }
+
+    // 'all' filter shows all invoices (no additional filtering needed)
+    // If activeFilter is 'all', we don't filter by status
 
     // Apply search filter
     if (searchQuery.value.trim()) {
@@ -762,7 +813,7 @@ const refetch = () => {
   refetchInvoices();
 };
 
-const filterByStatus = (status: 'open' | 'overdue' | 'paid') => {
+const filterByStatus = (status: 'open' | 'overdue' | 'paid' | 'all') => {
   // Toggle filter: if already active, clear it; otherwise, set it
   if (activeFilter.value === status) {
     activeFilter.value = null;
