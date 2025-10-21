@@ -118,34 +118,36 @@
         <div
           class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
         >
-          <div class="flex items-center space-x-4">
-            <!-- Show Paid Checkbox -->
-            <div class="flex items-center">
+          <!-- Search Filter (Left) -->
+          <div class="flex-1 max-w-md">
+            <div class="relative">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <svg
+                  class="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
               <input
-                id="show-paid"
-                v-model="includePaid"
-                type="checkbox"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search invoices..."
+                class="input-field pl-10 w-full"
               />
-              <label for="show-paid" class="ml-2 text-sm text-gray-600">
-                Show paid
-              </label>
-            </div>
-            <!-- Show Deleted Checkbox -->
-            <div class="flex items-center">
-              <input
-                id="show-deleted"
-                v-model="includeDeleted"
-                type="checkbox"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              />
-              <label for="show-deleted" class="ml-2 text-sm text-gray-600">
-                Show deleted
-              </label>
             </div>
           </div>
 
-          <!-- Header Controls -->
+          <!-- Header Controls (Right) -->
           <div class="flex items-center space-x-3">
             <!-- Refresh Button -->
             <button
@@ -271,24 +273,16 @@
               />
             </svg>
             <h3 class="mt-2 text-sm font-medium text-gray-900">
-              {{
-                includeDeleted
-                  ? 'No deleted invoices found'
-                  : includePaid
-                    ? 'No invoices found'
-                    : 'No unpaid invoices found'
-              }}
+              No invoices found
             </h3>
             <p class="mt-1 text-sm text-gray-500">
               {{
-                includeDeleted
-                  ? 'No deleted invoices found.'
-                  : includePaid
-                    ? 'No invoices found.'
-                    : 'No unpaid invoices found. Toggle "Show paid" to see all invoices.'
+                searchQuery
+                  ? 'Try adjusting your search query.'
+                  : 'Get started by creating your first invoice.'
               }}
             </p>
-            <div v-if="!includeDeleted" class="mt-4">
+            <div v-if="!searchQuery" class="mt-4">
               <router-link to="/invoices/create">
                 <button
                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -504,7 +498,7 @@
                         Edit
                       </button>
                       <button
-                        v-if="invoice.status !== 'paid' && !invoice.deleted_at"
+                        v-if="invoice.status !== 'paid'"
                         @click="
                           () => {
                             recordPayment(invoice.id);
@@ -555,7 +549,6 @@
                       </button>
                       <div class="border-t border-gray-200 my-1"></div>
                       <button
-                        v-if="!invoice.deleted_at"
                         @click="
                           () => {
                             deleteInvoice(invoice);
@@ -584,36 +577,6 @@
                             : 'Delete'
                         }}
                       </button>
-                      <button
-                        v-else
-                        @click="
-                          () => {
-                            showRestoreConfirmation(invoice);
-                            close();
-                          }
-                        "
-                        :disabled="restoringInvoiceId === invoice.id"
-                        class="dropdown-item"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                          />
-                        </svg>
-                        {{
-                          restoringInvoiceId === invoice.id
-                            ? 'Restoring...'
-                            : 'Restore'
-                        }}
-                      </button>
                     </template>
                   </DropdownMenu>
                 </div>
@@ -628,26 +591,13 @@
     <ConfirmDialog
       :is-open="showDeleteModal"
       title="Delete Invoice"
-      :message="`Are you sure you want to delete ${invoiceToDelete?.invoice_number || 'this invoice'}? This action can be undone by restoring the invoice.`"
+      :message="`Are you sure you want to delete ${invoiceToDelete?.invoice_number || 'this invoice'}?`"
       confirm-text="Delete"
       cancel-text="Cancel"
       type="danger"
       :is-loading="deletingInvoiceId === invoiceToDelete?.id"
       @confirm="confirmDelete"
       @cancel="cancelDelete"
-    />
-
-    <!-- Restore Confirmation Modal -->
-    <ConfirmDialog
-      :is-open="showRestoreModal"
-      title="Restore Invoice"
-      :message="`Are you sure you want to restore ${invoiceToRestore?.invoice_number || 'this invoice'}? This will make the invoice active again.`"
-      confirm-text="Restore"
-      cancel-text="Cancel"
-      type="info"
-      :is-loading="restoringInvoiceId === invoiceToRestore?.id"
-      @confirm="confirmRestore"
-      @cancel="cancelRestore"
     />
 
     <!-- Mobile Fixed Bottom Button -->
@@ -679,25 +629,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import {
-  useInvoices,
-  useDeleteInvoice,
-  useRestoreInvoice,
-} from '../composables/useInvoices';
+import { useInvoices, useDeleteInvoice } from '../composables/useInvoices';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DropdownMenu from '../components/DropdownMenu.vue';
 
 const router = useRouter();
 
 // Local state
-const includeDeleted = ref(false);
-const includePaid = ref(false);
+const searchQuery = ref('');
 const deletingInvoiceId = ref<number | null>(null);
-const restoringInvoiceId = ref<number | null>(null);
 const showDeleteModal = ref(false);
-const showRestoreModal = ref(false);
 const invoiceToDelete = ref<any>(null);
-const invoiceToRestore = ref<any>(null);
 const activeFilter = ref<'open' | 'overdue' | 'paid' | null>(null);
 
 // Queries and mutations
@@ -706,10 +648,9 @@ const {
   isLoading,
   error,
   refetch: refetchInvoices,
-} = useInvoices({ include_deleted: true }); // Always fetch all invoices including deleted ones
+} = useInvoices(); // Fetch active invoices only
 
 const deleteInvoiceMutation = useDeleteInvoice();
-const restoreInvoiceMutation = useRestoreInvoice();
 
 // Helper function to check if invoice is overdue
 const isInvoiceOverdue = (invoice: any): boolean => {
@@ -774,16 +715,11 @@ const paidInvoicesAmount = computed(() => {
     .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
 });
 
-// Computed properties - filter invoices based on includePaid, includeDeleted, and activeFilter
+// Computed properties - filter invoices based on activeFilter and search
 const filteredInvoices = computed(() => {
   if (!invoices.value) return [];
 
   return invoices.value.filter((invoice: any) => {
-    // Filter out deleted invoices unless includeDeleted is true
-    if (invoice.deleted_at && !includeDeleted.value) {
-      return false;
-    }
-
     // Apply active filter from summary cards
     if (activeFilter.value === 'open' && !isInvoiceOpen(invoice)) {
       return false;
@@ -797,12 +733,24 @@ const filteredInvoices = computed(() => {
       return false;
     }
 
-    // If no active filter, apply the old includePaid logic
-    if (!activeFilter.value) {
-      // Filter out paid invoices unless includePaid is true
-      if (invoice.status === 'paid' && !includePaid.value) {
-        return false;
-      }
+    // Apply search filter
+    if (searchQuery.value.trim()) {
+      const query = searchQuery.value.toLowerCase().trim();
+      const invoiceNumber = (
+        invoice.invoice_number || `#${invoice.id}`
+      ).toLowerCase();
+      const unitTitle = (invoice.unit?.title || '').toLowerCase();
+      const unitAddress = (invoice.unit?.address || '').toLowerCase();
+      const status = (invoice.status || '').toLowerCase();
+      const total = String(invoice.total || '');
+
+      return (
+        invoiceNumber.includes(query) ||
+        unitTitle.includes(query) ||
+        unitAddress.includes(query) ||
+        status.includes(query) ||
+        total.includes(query)
+      );
     }
 
     return true;
@@ -818,16 +766,8 @@ const filterByStatus = (status: 'open' | 'overdue' | 'paid') => {
   // Toggle filter: if already active, clear it; otherwise, set it
   if (activeFilter.value === status) {
     activeFilter.value = null;
-    // Reset checkboxes when clearing filter
-    includePaid.value = false;
-    includeDeleted.value = false;
   } else {
     activeFilter.value = status;
-    // Ensure the appropriate checkboxes are set
-    if (status === 'paid') {
-      includePaid.value = true;
-    }
-    includeDeleted.value = false; // Never show deleted when filtering by status
   }
 };
 
@@ -928,67 +868,15 @@ const cancelDelete = () => {
   invoiceToDelete.value = null;
 };
 
-const showRestoreConfirmation = (invoice: any) => {
-  invoiceToRestore.value = invoice;
-  showRestoreModal.value = true;
-};
-
-const confirmRestore = async () => {
-  if (!invoiceToRestore.value) return;
-
-  const invoiceId = invoiceToRestore.value.id;
-  restoringInvoiceId.value = invoiceId;
-
-  try {
-    console.log('Starting restore for invoice:', invoiceId);
-    const result = await restoreInvoiceMutation.mutateAsync(invoiceId);
-    console.log('Restore result:', result);
-    // Show success message
-    console.log('Invoice restored successfully');
-    // Close modal
-    showRestoreModal.value = false;
-    invoiceToRestore.value = null;
-    // Refetch data to update the list
-    refetch();
-  } catch (error: any) {
-    console.error('Error restoring invoice:', error);
-
-    // Check if it's an authentication error or invoice not found
-    if (error.message && error.message.includes('Invoice not found')) {
-      // This might be an authentication issue or the invoice was already restored
-      alert(
-        'Invoice not found. It may have already been restored or deleted permanently.'
-      );
-    } else {
-      // Show error message to user
-      alert(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
-    }
-  } finally {
-    // Always reset the loading state
-    restoringInvoiceId.value = null;
-    restoreInvoiceMutation.reset();
-  }
-};
-
-const cancelRestore = () => {
-  showRestoreModal.value = false;
-  invoiceToRestore.value = null;
-};
-
-// Note: No need to watch includeDeleted as the query automatically refetches when reactive filters change
-
 // Reset mutation states on component mount to clear any stuck states
 onMounted(() => {
   deleteInvoiceMutation.reset();
-  restoreInvoiceMutation.reset();
 });
 
 // Global reset function for debugging (can be called from browser console)
 (window as any).resetInvoiceMutations = () => {
   deleteInvoiceMutation.reset();
-  restoreInvoiceMutation.reset();
   deletingInvoiceId.value = null;
-  restoringInvoiceId.value = null;
   console.log('Invoice mutations and local state reset');
 };
 </script>
