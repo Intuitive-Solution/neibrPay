@@ -82,7 +82,11 @@ Route::middleware('firebase.auth')->group(function () {
     Route::delete('units/{unit}/documents/{document}/force', [UnitDocumentController::class, 'forceDelete']);
     
     // Invoice management routes
-    Route::apiResource('invoices', InvoiceController::class);
+    Route::get('invoices', [InvoiceController::class, 'index']);
+    Route::post('invoices', [InvoiceController::class, 'store']);
+    Route::get('invoices/{id}', [InvoiceController::class, 'show']); // Custom route to handle deleted invoices
+    Route::put('invoices/{invoice}', [InvoiceController::class, 'update']);
+    Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy']);
     Route::post('invoices/{id}/restore', [InvoiceController::class, 'restore']);
     Route::delete('invoices/{id}/force', [InvoiceController::class, 'forceDelete']);
     Route::post('invoices/{invoice}/mark-sent', [InvoiceController::class, 'markAsSent']);

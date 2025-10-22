@@ -689,140 +689,224 @@
                     trigger-class="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <template #default="{ close }">
-                      <button
-                        @click="
-                          () => {
-                            viewInvoice(invoice.id);
-                            close();
-                          }
-                        "
-                        class="dropdown-item"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      <!-- Actions for deleted invoices -->
+                      <template v-if="invoice.deleted_at">
+                        <button
+                          @click="
+                            () => {
+                              viewInvoice(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                        View Preview
-                      </button>
-                      <button
-                        @click="
-                          () => {
-                            editInvoice(invoice.id);
-                            close();
-                          }
-                        "
-                        class="dropdown-item"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          View Preview
+                        </button>
+                        <button
+                          @click="
+                            () => {
+                              restoreInvoice(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                        Edit
-                      </button>
-                      <button
-                        v-if="invoice.status !== 'paid'"
-                        @click="
-                          () => {
-                            recordPayment(invoice.id);
-                            close();
-                          }
-                        "
-                        class="dropdown-item"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                            />
+                          </svg>
+                          Restore
+                        </button>
+                        <button
+                          @click="
+                            () => {
+                              duplicateInvoice(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                          />
-                        </svg>
-                        Record Payment
-                      </button>
-                      <button
-                        @click="
-                          () => {
-                            // Add duplicate functionality here
-                            console.log('Duplicate invoice:', invoice.id);
-                            close();
-                          }
-                        "
-                        class="dropdown-item"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                          Duplicate
+                        </button>
+                      </template>
+
+                      <!-- Actions for active invoices -->
+                      <template v-else>
+                        <button
+                          @click="
+                            () => {
+                              viewInvoice(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          />
-                        </svg>
-                        Duplicate
-                      </button>
-                      <div class="border-t border-gray-200 my-1"></div>
-                      <button
-                        @click="
-                          () => {
-                            deleteInvoice(invoice);
-                            close();
-                          }
-                        "
-                        :disabled="deletingInvoiceId === invoice.id"
-                        class="dropdown-item dropdown-item-danger"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          View Preview
+                        </button>
+                        <button
+                          @click="
+                            () => {
+                              editInvoice(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                        {{
-                          deletingInvoiceId === invoice.id
-                            ? 'Deleting...'
-                            : 'Delete'
-                        }}
-                      </button>
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                          Edit
+                        </button>
+                        <button
+                          v-if="invoice.status !== 'paid'"
+                          @click="
+                            () => {
+                              recordPayment(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                            />
+                          </svg>
+                          Record Payment
+                        </button>
+                        <button
+                          @click="
+                            () => {
+                              duplicateInvoice(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                          Duplicate
+                        </button>
+                        <div class="border-t border-gray-200 my-1"></div>
+                        <button
+                          @click="
+                            () => {
+                              deleteInvoice(invoice);
+                              close();
+                            }
+                          "
+                          :disabled="deletingInvoiceId === invoice.id"
+                          class="dropdown-item dropdown-item-danger"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                          {{
+                            deletingInvoiceId === invoice.id
+                              ? 'Deleting...'
+                              : 'Delete'
+                          }}
+                        </button>
+                      </template>
                     </template>
                   </DropdownMenu>
                 </div>
@@ -875,7 +959,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useInvoices, useDeleteInvoice } from '../composables/useInvoices';
+import {
+  useInvoices,
+  useDeleteInvoice,
+  useRestoreInvoice,
+  useCloneInvoice,
+} from '../composables/useInvoices';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DropdownMenu from '../components/DropdownMenu.vue';
 
@@ -904,6 +993,8 @@ const {
 });
 
 const deleteInvoiceMutation = useDeleteInvoice();
+const restoreInvoiceMutation = useRestoreInvoice();
+const cloneInvoiceMutation = useCloneInvoice();
 
 // Helper function to check if invoice is overdue
 const isInvoiceOverdue = (invoice: any): boolean => {
@@ -1150,6 +1241,28 @@ const recordPayment = (invoiceId: number) => {
   router.push(`/invoices/${invoiceId}/payment`);
 };
 
+const restoreInvoice = async (invoiceId: number) => {
+  try {
+    await restoreInvoiceMutation.mutateAsync(invoiceId);
+    console.log('Invoice restored successfully');
+    refetch();
+  } catch (error: any) {
+    console.error('Error restoring invoice:', error);
+    alert(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
+  }
+};
+
+const duplicateInvoice = async (invoiceId: number) => {
+  try {
+    await cloneInvoiceMutation.mutateAsync(invoiceId);
+    console.log('Invoice duplicated successfully');
+    refetch();
+  } catch (error: any) {
+    console.error('Error duplicating invoice:', error);
+    alert(`Failed to duplicate invoice: ${error.message || 'Unknown error'}`);
+  }
+};
+
 const deleteInvoice = (invoice: any) => {
   // Store the invoice to delete and show the modal
   invoiceToDelete.value = invoice;
@@ -1209,11 +1322,15 @@ watch(showDeleted, newValue => {
 // Reset mutation states on component mount to clear any stuck states
 onMounted(() => {
   deleteInvoiceMutation.reset();
+  restoreInvoiceMutation.reset();
+  cloneInvoiceMutation.reset();
 });
 
 // Global reset function for debugging (can be called from browser console)
 (window as any).resetInvoiceMutations = () => {
   deleteInvoiceMutation.reset();
+  restoreInvoiceMutation.reset();
+  cloneInvoiceMutation.reset();
   deletingInvoiceId.value = null;
   console.log('Invoice mutations and local state reset');
 };

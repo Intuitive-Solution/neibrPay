@@ -134,11 +134,30 @@
               </h1>
               <!-- Enhanced Status Badge -->
               <span
-                :class="getStatusBadgeClass(invoice.status)"
+                :class="
+                  getStatusBadgeClass(
+                    invoice.status,
+                    invoice.deleted_at || undefined
+                  )
+                "
                 class="badge text-base"
               >
                 <svg
-                  v-if="invoice.status === 'paid'"
+                  v-if="invoice.deleted_at"
+                  class="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                <svg
+                  v-else-if="invoice.status === 'paid'"
                   class="w-5 h-5 mr-2"
                   fill="currentColor"
                   viewBox="0 0 20 20"
@@ -205,7 +224,9 @@
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                {{ getStatusText(invoice.status) }}
+                {{
+                  getStatusText(invoice.status, invoice.deleted_at || undefined)
+                }}
               </span>
             </div>
             <p class="text-gray-600">
@@ -216,109 +237,156 @@
 
         <!-- Quick Action Buttons -->
         <div class="flex flex-wrap gap-3 mt-6">
-          <button
-            @click="emailInvoice"
-            :disabled="isEmailing || invoice.status === 'paid'"
-            class="btn-primary"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <!-- Actions for deleted invoices -->
+          <template v-if="invoice.deleted_at">
+            <button
+              @click="restoreInvoice"
+              :disabled="isRestoring"
+              class="btn-primary"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-            {{ isEmailing ? 'Sending...' : 'Email Invoice' }}
-          </button>
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                />
+              </svg>
+              {{ isRestoring ? 'Restoring...' : 'Restore' }}
+            </button>
 
-          <button
-            @click="cloneInvoice"
-            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <button
+              @click="cloneInvoice"
+              class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-            Clone
-          </button>
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              Clone
+            </button>
+          </template>
 
-          <button
-            @click="editInvoice"
-            :disabled="invoice.status === 'paid'"
-            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <!-- Actions for active invoices -->
+          <template v-else>
+            <button
+              @click="emailInvoice"
+              :disabled="isEmailing || invoice.status === 'paid'"
+              class="btn-primary"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            Edit
-          </button>
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+              {{ isEmailing ? 'Sending...' : 'Email Invoice' }}
+            </button>
 
-          <button
-            v-if="invoice.status !== 'paid'"
-            @click="showPaymentModal = true"
-            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <button
+              @click="cloneInvoice"
+              class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-              />
-            </svg>
-            Record Payment
-          </button>
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              Clone
+            </button>
 
-          <button
-            @click="deleteInvoice"
-            :disabled="isDeleting || invoice.status === 'paid'"
-            class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <button
+              @click="editInvoice"
+              :disabled="invoice.status === 'paid'"
+              class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-            {{ isDeleting ? 'Deleting...' : 'Delete' }}
-          </button>
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+              Edit
+            </button>
+
+            <button
+              v-if="invoice.status !== 'paid'"
+              @click="showPaymentModal = true"
+              class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+              Record Payment
+            </button>
+
+            <button
+              @click="deleteInvoice"
+              :disabled="isDeleting || invoice.status === 'paid'"
+              class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+            </button>
+          </template>
 
           <button
             @click="goBack"
@@ -1051,6 +1119,8 @@ import {
   useInvoice,
   useDeleteInvoice,
   useEmailInvoice,
+  useRestoreInvoice,
+  useCloneInvoice,
 } from '../composables/useInvoices';
 import { useLatestInvoicePdf } from '../composables/useInvoicePdf';
 import {
@@ -1093,12 +1163,15 @@ const {
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
 const emailInvoiceMutation = useEmailInvoice();
+const restoreInvoiceMutation = useRestoreInvoice();
+const cloneInvoiceMutation = useCloneInvoice();
 const downloadAttachmentMutation = useDownloadInvoiceAttachment();
 const deletePaymentMutation = useDeletePayment();
 
 // Loading states
 const isDeleting = computed(() => deleteInvoiceMutation.isPending.value);
 const isEmailing = computed(() => emailInvoiceMutation.isPending.value);
+const isRestoring = computed(() => restoreInvoiceMutation.isPending.value);
 const showDeleteModal = ref(false);
 const showPaymentModal = ref(false);
 const showPaymentUpdateModal = ref(false);
@@ -1142,7 +1215,10 @@ const formatCurrency = (amount: number | string) => {
   return numAmount.toFixed(2);
 };
 
-const getStatusText = (status: string) => {
+const getStatusText = (status: string, deletedAt?: string) => {
+  if (deletedAt) {
+    return 'Deleted';
+  }
   const statusMap: Record<string, string> = {
     draft: 'Draft',
     sent: 'Sent',
@@ -1154,7 +1230,10 @@ const getStatusText = (status: string) => {
   return statusMap[status] || 'Unknown';
 };
 
-const getStatusBadgeClass = (status: string) => {
+const getStatusBadgeClass = (status: string, deletedAt?: string) => {
+  if (deletedAt) {
+    return 'badge-overdue'; // Use red styling for deleted
+  }
   const statusClasses: Record<string, string> = {
     draft: 'badge-draft',
     sent: 'badge-sent',
@@ -1220,6 +1299,19 @@ const emailInvoice = async () => {
   } catch (error: any) {
     console.error('Error sending email:', error);
     showError(error.message || 'Failed to send email');
+  }
+};
+
+const restoreInvoice = async () => {
+  if (!invoice.value) return;
+
+  try {
+    await restoreInvoiceMutation.mutateAsync(invoice.value.id);
+    showSuccess('Invoice restored successfully!');
+    router.push('/invoices');
+  } catch (error: any) {
+    console.error('Error restoring invoice:', error);
+    showError(error.message || 'Failed to restore invoice');
   }
 };
 

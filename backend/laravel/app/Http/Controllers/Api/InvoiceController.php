@@ -162,12 +162,17 @@ class InvoiceController extends Controller
     /**
      * Display the specified invoice.
      */
-    public function show(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $user = $request->get('firebase_user');
         
-        // Ensure the invoice belongs to the user's tenant
-        if ($invoiceUnit->tenant_id !== $user->tenant_id) {
+        // Fetch invoice with trashed (deleted) invoices included
+        $invoiceUnit = InvoiceUnit::withTrashed()
+            ->where('id', $id)
+            ->where('tenant_id', $user->tenant_id)
+            ->first();
+
+        if (!$invoiceUnit) {
             return response()->json(['message' => 'Invoice not found'], 404);
         }
 
