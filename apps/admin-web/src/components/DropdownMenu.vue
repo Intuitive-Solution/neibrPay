@@ -49,12 +49,14 @@ interface Props {
   position?: 'left' | 'right';
   triggerClass?: string;
   menuClass?: string;
+  preferAbove?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   position: 'right',
   triggerClass: '',
   menuClass: '',
+  preferAbove: false,
 });
 
 const isOpen = ref(false);
@@ -69,9 +71,26 @@ const menuStyle = computed(() => {
   const scrollY = window.scrollY || window.pageYOffset;
   const scrollX = window.scrollX || window.pageXOffset;
 
-  const style: any = {
-    top: `${rect.bottom + scrollY + 8}px`, // 8px margin below trigger
-  };
+  // Estimate menu height (approximately 200px for typical dropdown)
+  const estimatedMenuHeight = 200;
+  const viewportHeight = window.innerHeight;
+  const spaceBelow = viewportHeight - rect.bottom;
+  const spaceAbove = rect.top;
+
+  // Determine if we should show menu above or below
+  const showAbove =
+    props.preferAbove ||
+    (spaceBelow < estimatedMenuHeight && spaceAbove > estimatedMenuHeight);
+
+  const style: any = {};
+
+  if (showAbove) {
+    // Show menu above the trigger
+    style.bottom = `${viewportHeight - rect.top - scrollY + 8}px`;
+  } else {
+    // Show menu below the trigger (default)
+    style.top = `${rect.bottom + scrollY + 8}px`;
+  }
 
   if (props.position === 'left') {
     style.left = `${rect.left + scrollX}px`;

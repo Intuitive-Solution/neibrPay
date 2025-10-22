@@ -1310,7 +1310,7 @@ const cancelDelete = () => {
 };
 
 // Watch for changes in showDeleted to refetch data and update filter
-watch(showDeleted, newValue => {
+watch(showDeleted, (newValue: boolean) => {
   refetchInvoices();
 
   // When showing deleted invoices, automatically set filter to 'all'
