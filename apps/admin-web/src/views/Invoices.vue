@@ -194,7 +194,7 @@
                 class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
               />
               <label for="show-deleted" class="ml-2 text-sm text-gray-700">
-                Show Deleted
+                Include Deleted
               </label>
             </div>
 
