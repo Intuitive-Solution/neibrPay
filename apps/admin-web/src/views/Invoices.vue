@@ -185,6 +185,19 @@
 
           <!-- Header Controls (Right) -->
           <div class="flex items-center space-x-3">
+            <!-- Show Deleted Checkbox -->
+            <div class="flex items-center">
+              <input
+                id="show-deleted"
+                v-model="showDeleted"
+                type="checkbox"
+                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+              />
+              <label for="show-deleted" class="ml-2 text-sm text-gray-700">
+                Show Deleted
+              </label>
+            </div>
+
             <!-- Refresh Button -->
             <button
               @click="refetch"
@@ -513,10 +526,18 @@
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
                       <div
-                        class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center"
+                        :class="[
+                          'h-10 w-10 rounded-full flex items-center justify-center',
+                          invoice.deleted_at ? 'bg-red-100' : 'bg-gray-100',
+                        ]"
                       >
                         <svg
-                          class="h-5 w-5 text-gray-600"
+                          :class="[
+                            'h-5 w-5',
+                            invoice.deleted_at
+                              ? 'text-red-600'
+                              : 'text-gray-600',
+                          ]"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -531,21 +552,55 @@
                       </div>
                     </div>
                     <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ invoice.invoice_number || `#${invoice.id}` }}
+                      <div class="flex items-center space-x-2">
+                        <div
+                          :class="[
+                            'text-sm font-medium',
+                            invoice.deleted_at
+                              ? 'text-red-600 line-through'
+                              : 'text-gray-900',
+                          ]"
+                        >
+                          {{ invoice.invoice_number || `#${invoice.id}` }}
+                        </div>
+                        <span
+                          v-if="invoice.deleted_at"
+                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+                        >
+                          Deleted
+                        </span>
                       </div>
-                      <div class="text-sm text-gray-500">
+                      <div
+                        :class="[
+                          'text-sm',
+                          invoice.deleted_at ? 'text-red-400' : 'text-gray-500',
+                        ]"
+                      >
                         {{ formatDate(invoice.created_at) }}
                       </div>
                       <!-- Mobile-only additional info -->
                       <div class="sm:hidden mt-1">
-                        <div class="text-xs text-gray-500">
+                        <div
+                          :class="[
+                            'text-xs',
+                            invoice.deleted_at
+                              ? 'text-red-400'
+                              : 'text-gray-500',
+                          ]"
+                        >
                           {{ invoice.unit?.title || 'N/A' }} • ${{
                             formatCurrency(invoice.total)
                           }}
                         </div>
                         <div class="mt-1">
                           <span
+                            v-if="invoice.deleted_at"
+                            class="badge badge-overdue text-xs"
+                          >
+                            Deleted
+                          </span>
+                          <span
+                            v-else
                             :class="getStatusBadgeClass(invoice.status)"
                             class="badge text-xs"
                           >
@@ -560,34 +615,65 @@
 
               <!-- Unit Column -->
               <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                <div class="text-sm text-gray-900">
+                <div
+                  :class="[
+                    'text-sm',
+                    invoice.deleted_at
+                      ? 'text-red-600 line-through'
+                      : 'text-gray-900',
+                  ]"
+                >
                   {{ invoice.unit?.title || 'N/A' }}
                 </div>
-                <div class="text-sm text-gray-500">
+                <div
+                  :class="[
+                    'text-sm',
+                    invoice.deleted_at ? 'text-red-400' : 'text-gray-500',
+                  ]"
+                >
                   {{ invoice.unit?.address || '' }}
                 </div>
               </td>
 
               <!-- Amount Column -->
               <td class="px-6 py-4 whitespace-nowrap hidden xl:table-cell">
-                <div class="text-sm font-medium text-gray-900">
+                <div
+                  :class="[
+                    'text-sm font-medium',
+                    invoice.deleted_at
+                      ? 'text-red-600 line-through'
+                      : 'text-gray-900',
+                  ]"
+                >
                   ${{ formatCurrency(invoice.total) }}
                 </div>
-                <div class="text-sm text-gray-500">
+                <div
+                  :class="[
+                    'text-sm',
+                    invoice.deleted_at ? 'text-red-400' : 'text-gray-500',
+                  ]"
+                >
                   Balance: ${{ formatCurrency(invoice.balance_due) }}
                 </div>
               </td>
 
               <!-- Due Date Column -->
               <td
-                class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden lg:table-cell"
+                :class="[
+                  'px-6 py-4 whitespace-nowrap text-sm hidden lg:table-cell',
+                  invoice.deleted_at ? 'text-red-400' : 'text-gray-900',
+                ]"
               >
                 {{ formatDate(invoice.start_date) }}
               </td>
 
               <!-- Status Column -->
               <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                <span v-if="invoice.deleted_at" class="badge badge-overdue">
+                  Deleted
+                </span>
                 <span
+                  v-else
                   :class="getStatusBadgeClass(invoice.status)"
                   class="badge"
                 >
@@ -787,7 +873,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useInvoices, useDeleteInvoice } from '../composables/useInvoices';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -805,6 +891,7 @@ const sortColumn = ref<
   'invoice' | 'unit' | 'amount' | 'dueDate' | 'status' | null
 >(null);
 const sortDirection = ref<'asc' | 'desc'>('asc');
+const showDeleted = ref(false);
 
 // Queries and mutations
 const {
@@ -812,7 +899,9 @@ const {
   isLoading,
   error,
   refetch: refetchInvoices,
-} = useInvoices(); // Fetch active invoices only
+} = useInvoices({
+  include_deleted: showDeleted, // Pass the showDeleted ref to include deleted invoices
+});
 
 const deleteInvoiceMutation = useDeleteInvoice();
 
@@ -840,55 +929,55 @@ const isInvoiceOpen = (invoice: any): boolean => {
 const openInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
   return invoices.value.filter(
-    (invoice: any) => !invoice.deleted_at && isInvoiceOpen(invoice)
+    (invoice: any) => isInvoiceOpen(invoice) && !invoice.deleted_at
   ).length;
 });
 
 const openInvoicesAmount = computed(() => {
   if (!invoices.value) return 0;
   return invoices.value
-    .filter((invoice: any) => !invoice.deleted_at && isInvoiceOpen(invoice))
+    .filter((invoice: any) => isInvoiceOpen(invoice) && !invoice.deleted_at)
     .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
 });
 
 const overdueInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
   return invoices.value.filter(
-    (invoice: any) => !invoice.deleted_at && isInvoiceOverdue(invoice)
+    (invoice: any) => isInvoiceOverdue(invoice) && !invoice.deleted_at
   ).length;
 });
 
 const overdueInvoicesAmount = computed(() => {
   if (!invoices.value) return 0;
   return invoices.value
-    .filter((invoice: any) => !invoice.deleted_at && isInvoiceOverdue(invoice))
+    .filter((invoice: any) => isInvoiceOverdue(invoice) && !invoice.deleted_at)
     .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
 });
 
 const paidInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
-  return invoices.value.filter(
-    (invoice: any) => !invoice.deleted_at && invoice.status === 'paid'
-  ).length;
+  return invoices.value.filter((invoice: any) => invoice.status === 'paid')
+    .length;
 });
 
 const paidInvoicesAmount = computed(() => {
   if (!invoices.value) return 0;
   return invoices.value
-    .filter((invoice: any) => !invoice.deleted_at && invoice.status === 'paid')
+    .filter((invoice: any) => invoice.status === 'paid')
     .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
 });
 
 const allInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
-  return invoices.value.filter((invoice: any) => !invoice.deleted_at).length;
+  return invoices.value.length;
 });
 
 const allInvoicesAmount = computed(() => {
   if (!invoices.value) return 0;
-  return invoices.value
-    .filter((invoice: any) => !invoice.deleted_at)
-    .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
+  return invoices.value.reduce(
+    (sum: number, invoice: any) => sum + (invoice.total || 0),
+    0
+  );
 });
 
 // Computed properties - filter invoices based on activeFilter and search
@@ -897,11 +986,17 @@ const filteredInvoices = computed(() => {
 
   let filtered = invoices.value.filter((invoice: any) => {
     // Apply active filter from summary cards
-    if (activeFilter.value === 'open' && !isInvoiceOpen(invoice)) {
+    if (
+      activeFilter.value === 'open' &&
+      (!isInvoiceOpen(invoice) || invoice.deleted_at)
+    ) {
       return false;
     }
 
-    if (activeFilter.value === 'overdue' && !isInvoiceOverdue(invoice)) {
+    if (
+      activeFilter.value === 'overdue' &&
+      (!isInvoiceOverdue(invoice) || invoice.deleted_at)
+    ) {
       return false;
     }
 
@@ -1100,6 +1195,16 @@ const cancelDelete = () => {
   showDeleteModal.value = false;
   invoiceToDelete.value = null;
 };
+
+// Watch for changes in showDeleted to refetch data and update filter
+watch(showDeleted, newValue => {
+  refetchInvoices();
+
+  // When showing deleted invoices, automatically set filter to 'all'
+  if (newValue) {
+    activeFilter.value = 'all';
+  }
+});
 
 // Reset mutation states on component mount to clear any stuck states
 onMounted(() => {
