@@ -11,7 +11,7 @@
     <!-- Dashboard Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <!-- Total Units -->
-      <div class="card card-hover">
+      <div class="card card-hover cursor-pointer" @click="navigateToUnits">
         <div class="flex items-center">
           <div class="p-3 bg-primary-100 rounded-lg">
             <svg
@@ -30,13 +30,15 @@
           </div>
           <div class="ml-4">
             <h3 class="text-sm font-medium text-gray-600">Total Units</h3>
-            <p class="text-2xl font-bold text-gray-900 mt-1">-</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ isLoading && !units ? '-' : activeUnitsCount }}
+            </p>
           </div>
         </div>
       </div>
 
       <!-- Active Invoices -->
-      <div class="card card-hover">
+      <div class="card card-hover cursor-pointer" @click="navigateToInvoices">
         <div class="flex items-center">
           <div class="p-3 bg-primary-100 rounded-lg">
             <svg
@@ -55,38 +57,92 @@
           </div>
           <div class="ml-4">
             <h3 class="text-sm font-medium text-gray-600">Active Invoices</h3>
-            <p class="text-2xl font-bold text-gray-900 mt-1">-</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ isLoading && !invoices ? '-' : activeInvoicesCount }}
+            </p>
+            <p v-if="!isLoading" class="text-sm text-gray-500 mt-1">
+              {{ formatCurrency(activeInvoicesAmount) }}
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Total Payments -->
-      <div class="card card-hover">
-        <div class="flex items-center">
-          <div class="p-3 bg-primary-100 rounded-lg">
-            <svg
-              class="w-6 h-6 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-              />
-            </svg>
+      <!-- Total Collected Chart -->
+      <div class="card card-hover cursor-pointer" @click="navigateToPayments">
+        <div class="flex flex-col h-full">
+          <div class="flex items-center mb-4">
+            <div class="p-3 bg-primary-100 rounded-lg">
+              <svg
+                class="w-6 h-6 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                />
+              </svg>
+            </div>
+            <div class="ml-4 flex-1">
+              <h3 class="text-sm font-medium text-gray-600">
+                Total Collected (6M)
+              </h3>
+              <p
+                v-if="!isLoading"
+                class="text-2xl font-bold text-gray-900 mt-1"
+              >
+                {{ formatCurrency(totalCollectedAmount) }}
+              </p>
+              <p v-else class="text-2xl font-bold text-gray-900 mt-1">-</p>
+            </div>
           </div>
-          <div class="ml-4">
-            <h3 class="text-sm font-medium text-gray-600">Total Collected</h3>
-            <p class="text-2xl font-bold text-gray-900 mt-1">$-</p>
+          <div
+            v-if="isLoading && !payments"
+            class="flex items-end justify-center gap-1.5 h-24 mt-2"
+          >
+            <div
+              v-for="i in 6"
+              :key="i"
+              class="w-10 bg-gray-200 rounded-t"
+              :style="`height: ${20 + Math.random() * 40}px`"
+            ></div>
+          </div>
+          <div
+            v-else
+            class="flex items-end justify-center gap-1.5 h-24 mt-2 relative"
+          >
+            <div
+              v-for="(monthData, index) in monthlyPaymentData"
+              :key="index"
+              class="relative group"
+            >
+              <div
+                class="w-10 bg-gray-900 rounded-t transition-all duration-300 hover:bg-gray-700"
+                :style="`height: ${getBarHeight(monthData.Collections)}px`"
+              ></div>
+              <!-- Tooltip -->
+              <div
+                class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10"
+              >
+                <div class="font-medium">{{ monthData.month }}</div>
+                <div class="mt-0.5">
+                  {{ formatCurrency(monthData.Collections) }}
+                </div>
+                <!-- Tooltip arrow -->
+                <div
+                  class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"
+                ></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Residents -->
-      <div class="card card-hover">
+      <div class="card card-hover cursor-pointer" @click="navigateToPeople">
         <div class="flex items-center">
           <div class="p-3 bg-primary-100 rounded-lg">
             <svg
@@ -105,7 +161,9 @@
           </div>
           <div class="ml-4">
             <h3 class="text-sm font-medium text-gray-600">Residents</h3>
-            <p class="text-2xl font-bold text-gray-900 mt-1">-</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ isLoading && !residents ? '-' : activeResidentsCount }}
+            </p>
           </div>
         </div>
       </div>
@@ -232,5 +290,201 @@
 </template>
 
 <script setup lang="ts">
-// Dashboard component - logout functionality is handled by AppSidebar
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUnits } from '../composables/useUnits';
+import { useInvoices } from '../composables/useInvoices';
+import { usePayments } from '../composables/usePayments';
+import { useResidents } from '../composables/useResidents';
+import type { Unit, InvoiceUnit, Payment, Resident } from '@neibrpay/models';
+
+const router = useRouter();
+
+// Query hooks
+const { data: units, isLoading: unitsLoading } = useUnits(false);
+const { data: invoices, isLoading: invoicesLoading } = useInvoices();
+const { data: payments, isLoading: paymentsLoading } = usePayments();
+const { data: residents, isLoading: residentsLoading } = useResidents(false);
+
+// Currency formatting helper
+const formatCurrency = (amount: number): string => {
+  // Handle NaN, null, or undefined
+  const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(safeAmount);
+};
+
+// Computed statistics
+const activeUnitsCount = computed(() => {
+  if (!units.value) return 0;
+  return units.value.filter(
+    (unit: Unit) => unit.is_active === true && !unit.deleted_at
+  ).length;
+});
+
+const activeInvoices = computed(() => {
+  if (!invoices.value) return [];
+  return invoices.value.filter(
+    (invoice: InvoiceUnit) =>
+      invoice.status !== 'paid' &&
+      invoice.status !== 'cancelled' &&
+      !invoice.deleted_at
+  );
+});
+
+const activeInvoicesCount = computed(() => {
+  return activeInvoices.value.length;
+});
+
+const activeInvoicesAmount = computed(() => {
+  if (!activeInvoices.value || activeInvoices.value.length === 0) return 0;
+
+  const total = activeInvoices.value.reduce(
+    (sum: number, invoice: InvoiceUnit) => {
+      // Get the total value - could be number, string, or null/undefined
+      const invoiceTotal = invoice?.total;
+
+      // Convert to number - handle runtime string values from API
+      let amount = 0;
+      if (invoiceTotal != null && invoiceTotal !== undefined) {
+        // API might return as string, so convert if needed
+        const numValue =
+          typeof invoiceTotal === 'string'
+            ? parseFloat(invoiceTotal)
+            : invoiceTotal;
+        amount =
+          typeof numValue === 'number' && !isNaN(numValue) ? numValue : 0;
+      }
+
+      return sum + amount;
+    },
+    0
+  );
+
+  return total;
+});
+
+const activeResidentsCount = computed(() => {
+  if (!residents.value) return 0;
+  return residents.value.filter(
+    (resident: Resident) => resident.is_active === true && !resident.deleted_at
+  ).length;
+});
+
+// Process payments for last 6 months chart
+const monthlyPaymentData = computed(() => {
+  if (!payments.value || payments.value.length === 0) {
+    // Return empty data for last 6 months
+    const months: string[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(date.toLocaleDateString('en-US', { month: 'short' }));
+    }
+    return months.map(month => ({
+      month,
+      Collections: 0,
+    }));
+  }
+
+  // Get last 6 months
+  const monthlyTotals: Record<string, number> = {};
+  const now = new Date();
+
+  // Initialize all months with 0
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+    monthlyTotals[monthKey] = 0;
+  }
+
+  // Group payments by month
+  payments.value.forEach((payment: Payment) => {
+    const paymentDate = new Date(payment.payment_date);
+    const monthKey = paymentDate.toLocaleDateString('en-US', {
+      month: 'short',
+    });
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    // Only include payments from last 6 months
+    if (paymentDate >= sixMonthsAgo) {
+      if (monthlyTotals[monthKey] !== undefined) {
+        // Handle amount as number or string
+        const amount =
+          typeof payment.amount === 'string'
+            ? parseFloat(payment.amount) || 0
+            : payment.amount || 0;
+        monthlyTotals[monthKey] += amount;
+      }
+    }
+  });
+
+  // Convert to array format for chart
+  const months: string[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(date.toLocaleDateString('en-US', { month: 'short' }));
+  }
+
+  return months.map(month => ({
+    month,
+    Collections: monthlyTotals[month] || 0,
+  }));
+});
+
+// Calculate total collected amount for the 6 months
+const totalCollectedAmount = computed(() => {
+  if (!monthlyPaymentData.value) return 0;
+  return monthlyPaymentData.value.reduce(
+    (sum: number, monthData: { month: string; Collections: number }) =>
+      sum + (monthData.Collections || 0),
+    0
+  );
+});
+
+// Calculate bar height (0-96px max, proportional to max value)
+const getBarHeight = (value: number): number => {
+  if (!monthlyPaymentData.value || monthlyPaymentData.value.length === 0)
+    return 0;
+  const maxValue = Math.max(
+    ...monthlyPaymentData.value.map(
+      (m: { month: string; Collections: number }) => m.Collections || 0
+    ),
+    1 // Prevent division by zero
+  );
+  if (maxValue === 0) return 0;
+  // Max height is 96px (h-24)
+  return Math.max(4, (value / maxValue) * 96);
+};
+
+// Navigation handlers
+const navigateToUnits = () => {
+  router.push('/units');
+};
+
+const navigateToInvoices = () => {
+  router.push('/invoices');
+};
+
+const navigateToPayments = () => {
+  router.push('/payments');
+};
+
+const navigateToPeople = () => {
+  router.push('/people');
+};
+
+// Loading state
+const isLoading = computed(() => {
+  return (
+    unitsLoading.value ||
+    invoicesLoading.value ||
+    paymentsLoading.value ||
+    residentsLoading.value
+  );
+});
 </script>

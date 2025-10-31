@@ -261,6 +261,14 @@ php artisan test
 
 See [TASKS.md](./md/TASKS.md) for detailed development roadmap.
 
+## 📚 Documentation
+
+- **[API Documentation](./md/INVOICE_API_DOCUMENTATION.md)** - Complete API reference
+- **[PDF Generation Guide](./md/INVOICE_PDF_GENERATION.md)** - PDF implementation details
+- **[Schema Documentation](./md/NeibrPay_Schema_PRD_MVP.md)** - Database schema and relationships
+- **[UI/UX Guide](./md/NeibrPay_UIUX_PRD.md)** - Design system and user experience
+- **[Codebase Improvements](./md/CODEBASE_IMPROVEMENTS.md)** - Technical debt and improvements
+
 ## 🌐 Deployment
 
 ### Current Infrastructure
