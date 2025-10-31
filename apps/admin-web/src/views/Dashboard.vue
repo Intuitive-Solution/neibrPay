@@ -57,12 +57,14 @@
           </div>
           <div class="ml-4">
             <h3 class="text-sm font-medium text-gray-600">Active Invoices</h3>
-            <p class="text-2xl font-bold text-gray-900 mt-1">
-              {{ isLoading && !invoices ? '-' : activeInvoicesCount }}
-            </p>
-            <p v-if="!isLoading" class="text-sm text-gray-500 mt-1">
-              {{ formatCurrency(activeInvoicesAmount) }}
-            </p>
+            <div class="flex items-baseline gap-2 mt-1">
+              <p class="text-2xl font-bold text-gray-900">
+                {{ isLoading && !invoices ? '-' : activeInvoicesCount }}
+              </p>
+              <p v-if="!isLoading" class="text-sm text-gray-500">
+                {{ formatCurrency(activeInvoicesAmount) }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
