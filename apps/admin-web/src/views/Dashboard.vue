@@ -54,10 +54,10 @@
               </h3>
               <div class="flex items-baseline gap-2 mt-1">
                 <p class="text-2xl font-bold text-gray-900">
-                  {{ isLoading && !invoices ? '-' : activeInvoicesCount }}
+                  {{ formatCurrency(activeInvoicesAmount) }}
                 </p>
                 <p v-if="!isLoading" class="text-sm text-gray-500">
-                  {{ formatCurrency(activeInvoicesAmount) }}
+                  {{ isLoading && !invoices ? '-' : activeInvoicesCount }}
                 </p>
               </div>
             </div>
