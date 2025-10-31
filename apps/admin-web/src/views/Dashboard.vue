@@ -1,13 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Welcome Section -->
-    <div class="card card-hover">
-      <h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome Back!</h2>
-      <p class="text-gray-600">
-        Here's an overview of your HOA community management
-      </p>
-    </div>
-
     <!-- Dashboard Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <!-- Total Units -->
@@ -37,33 +29,172 @@
         </div>
       </div>
 
-      <!-- Active Invoices -->
+      <!-- Active Invoices Chart -->
       <div class="card card-hover cursor-pointer" @click="navigateToInvoices">
-        <div class="flex items-center">
-          <div class="p-3 bg-primary-100 rounded-lg">
+        <div class="flex flex-col h-full">
+          <div class="flex items-center mb-4">
+            <div class="p-3 bg-primary-100 rounded-lg">
+              <svg
+                class="w-6 h-6 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <div class="ml-4 flex-1">
+              <h3 class="text-sm font-medium text-gray-600">
+                Active Invoices (6M)
+              </h3>
+              <div class="flex items-baseline gap-2 mt-1">
+                <p class="text-2xl font-bold text-gray-900">
+                  {{ isLoading && !invoices ? '-' : activeInvoicesCount }}
+                </p>
+                <p v-if="!isLoading" class="text-sm text-gray-500">
+                  {{ formatCurrency(activeInvoicesAmount) }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div v-if="isLoading && !invoices" class="relative w-full h-32 mt-2">
+            <!-- Loading grid lines -->
             <svg
-              class="w-6 h-6 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              class="absolute inset-0 w-full h-full"
+              preserveAspectRatio="none"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              <line
+                v-for="i in 5"
+                :key="`invoice-loading-grid-${i}`"
+                x1="40"
+                :y1="i * 20 + '%'"
+                x2="100%"
+                :y2="i * 20 + '%'"
+                stroke="#F3F4F6"
+                stroke-width="1"
               />
             </svg>
+            <div
+              class="flex items-end justify-center gap-1.5 h-full px-4 ml-10"
+            >
+              <div
+                v-for="i in 6"
+                :key="i"
+                class="w-10 bg-gray-200 rounded-t flex-1"
+                :style="`height: ${20 + Math.random() * 40}%`"
+              ></div>
+            </div>
           </div>
-          <div class="ml-4">
-            <h3 class="text-sm font-medium text-gray-600">Active Invoices</h3>
-            <div class="flex items-baseline gap-2 mt-1">
-              <p class="text-2xl font-bold text-gray-900">
-                {{ isLoading && !invoices ? '-' : activeInvoicesCount }}
-              </p>
-              <p v-if="!isLoading" class="text-sm text-gray-500">
-                {{ formatCurrency(activeInvoicesAmount) }}
-              </p>
+          <div v-else class="relative w-full h-32 mt-2">
+            <!-- SVG for grid lines and axes -->
+            <svg
+              class="absolute inset-0 w-full"
+              style="height: calc(100% - 1rem)"
+              preserveAspectRatio="none"
+            >
+              <!-- Very soft grid lines -->
+              <g class="grid-lines">
+                <line
+                  v-for="i in 5"
+                  :key="`invoice-grid-${i}`"
+                  x1="40"
+                  :y1="i * 20 + '%'"
+                  x2="100%"
+                  :y2="i * 20 + '%'"
+                  stroke="#F3F4F6"
+                  stroke-width="1"
+                />
+              </g>
+              <!-- Y-axis line -->
+              <line
+                x1="40"
+                y1="0"
+                x2="40"
+                y2="100%"
+                stroke="#E5E7EB"
+                stroke-width="1"
+              />
+              <!-- X-axis line - at the bottom of chart area -->
+              <line
+                x1="40"
+                y1="100%"
+                x2="100%"
+                y2="100%"
+                stroke="#E5E7EB"
+                stroke-width="1"
+              />
+            </svg>
+
+            <!-- Y-axis labels -->
+            <div
+              class="absolute left-0 top-0 w-10 flex flex-col justify-between pr-1"
+              style="height: calc(100% - 1rem)"
+            >
+              <div
+                v-for="(tick, index) in invoiceYAxisTicks"
+                :key="`invoice-y-tick-${index}`"
+                class="text-[10px] text-gray-500 text-right leading-tight"
+              >
+                {{ tick }}
+              </div>
+            </div>
+
+            <!-- Chart area with bars -->
+            <div
+              class="flex items-end justify-center gap-1.5 px-4 ml-10"
+              style="height: calc(100% - 1rem)"
+            >
+              <div
+                v-for="(monthData, index) in monthlyInvoiceData"
+                :key="index"
+                class="relative group flex-1 flex flex-col items-center"
+                style="height: 100%"
+              >
+                <!-- Bar container - full height, bars aligned to bottom -->
+                <div class="w-full flex items-end" style="height: 100%">
+                  <!-- Bar - percentage height, starts from bottom (x-axis) -->
+                  <div
+                    class="w-full bg-gray-900 rounded-t transition-all duration-300 hover:bg-gray-700"
+                    :style="`height: ${getInvoiceBarHeight(monthData.Amount)}%`"
+                  ></div>
+                </div>
+                <!-- Tooltip -->
+                <div
+                  class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10"
+                >
+                  <div class="font-medium">{{ monthData.month }}</div>
+                  <div class="mt-0.5">
+                    {{ formatCurrency(monthData.Amount) }}
+                  </div>
+                  <!-- Tooltip arrow -->
+                  <div
+                    class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- X-axis labels - positioned below the chart area -->
+            <div
+              class="flex justify-center gap-1.5 px-4 ml-10 mt-1"
+              style="height: 1rem"
+            >
+              <div
+                v-for="(monthData, index) in monthlyInvoiceData"
+                :key="`invoice-label-${index}`"
+                class="flex-1 text-center"
+              >
+                <div
+                  class="text-[10px] text-gray-500 leading-tight whitespace-nowrap"
+                >
+                  {{ monthData.month }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -489,6 +620,69 @@ const activeResidentsCount = computed(() => {
   ).length;
 });
 
+// Process active invoices for last 6 months chart
+const monthlyInvoiceData = computed(() => {
+  if (!activeInvoices.value || activeInvoices.value.length === 0) {
+    // Return empty data for last 6 months
+    const months: string[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(date.toLocaleDateString('en-US', { month: 'short' }));
+    }
+    return months.map(month => ({
+      month,
+      Amount: 0,
+    }));
+  }
+
+  // Get last 6 months
+  const monthlyTotals: Record<string, number> = {};
+  const now = new Date();
+
+  // Initialize all months with 0
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+    monthlyTotals[monthKey] = 0;
+  }
+
+  // Group active invoices by month based on created_at
+  activeInvoices.value.forEach((invoice: InvoiceUnit) => {
+    if (!invoice.created_at) return;
+
+    const invoiceDate = new Date(invoice.created_at);
+    const monthKey = invoiceDate.toLocaleDateString('en-US', {
+      month: 'short',
+    });
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    // Only include invoices from last 6 months
+    if (invoiceDate >= sixMonthsAgo) {
+      if (monthlyTotals[monthKey] !== undefined) {
+        // Handle total as number or string
+        const amount =
+          typeof invoice.total === 'string'
+            ? parseFloat(invoice.total) || 0
+            : invoice.total || 0;
+        monthlyTotals[monthKey] += amount;
+      }
+    }
+  });
+
+  // Convert to array format for chart
+  const months: string[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(date.toLocaleDateString('en-US', { month: 'short' }));
+  }
+
+  return months.map(month => ({
+    month,
+    Amount: monthlyTotals[month] || 0,
+  }));
+});
+
 // Process payments for last 6 months chart
 const monthlyPaymentData = computed(() => {
   if (!payments.value || payments.value.length === 0) {
@@ -560,7 +754,7 @@ const totalCollectedAmount = computed(() => {
   );
 });
 
-// Calculate Y-axis ticks for grid lines (formatted as compact numbers)
+// Calculate Y-axis ticks for grid lines (formatted as compact numbers) - Payments
 const yAxisTicks = computed(() => {
   if (!monthlyPaymentData.value || monthlyPaymentData.value.length === 0)
     return ['0', '0', '0', '0', '0'];
@@ -583,13 +777,52 @@ const yAxisTicks = computed(() => {
   return ticks;
 });
 
-// Calculate bar height as percentage (0-100%)
+// Calculate bar height as percentage (0-100%) - Payments
 const getBarHeight = (value: number): number => {
   if (!monthlyPaymentData.value || monthlyPaymentData.value.length === 0)
     return 0;
   const maxValue = Math.max(
     ...monthlyPaymentData.value.map(
       (m: { month: string; Collections: number }) => m.Collections || 0
+    ),
+    1 // Prevent division by zero
+  );
+  if (maxValue === 0) return 0;
+  if (value === 0) return 0;
+  // Return as percentage (0-100%) - allow 0 height for zero values
+  return (value / maxValue) * 100;
+};
+
+// Calculate Y-axis ticks for invoice chart (formatted as compact numbers)
+const invoiceYAxisTicks = computed(() => {
+  if (!monthlyInvoiceData.value || monthlyInvoiceData.value.length === 0)
+    return ['0', '0', '0', '0', '0'];
+
+  const maxValue = Math.max(
+    ...monthlyInvoiceData.value.map(
+      (m: { month: string; Amount: number }) => m.Amount || 0
+    ),
+    1
+  );
+
+  if (maxValue === 0) return ['0', '0', '0', '0', '0'];
+
+  // Generate 5 ticks from 0 to max
+  const ticks: string[] = [];
+  for (let i = 4; i >= 0; i--) {
+    const tickValue = (maxValue / 4) * i;
+    ticks.push(formatCompactNumber(tickValue));
+  }
+  return ticks;
+});
+
+// Calculate bar height as percentage (0-100%) - Invoices
+const getInvoiceBarHeight = (value: number): number => {
+  if (!monthlyInvoiceData.value || monthlyInvoiceData.value.length === 0)
+    return 0;
+  const maxValue = Math.max(
+    ...monthlyInvoiceData.value.map(
+      (m: { month: string; Amount: number }) => m.Amount || 0
     ),
     1 // Prevent division by zero
   );
