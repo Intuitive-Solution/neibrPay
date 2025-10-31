@@ -1,9 +1,70 @@
 <template>
   <div class="space-y-6">
     <!-- Dashboard Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <!-- Total Units -->
-      <div class="card card-hover cursor-pointer" @click="navigateToUnits">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Units and Residents Container - Stacked at lg, separate at md -->
+      <!-- Hidden at md (Units and Residents will be individual grid items) -->
+      <div class="hidden lg:flex lg:flex-col gap-6">
+        <!-- Units -->
+        <div class="card card-hover cursor-pointer" @click="navigateToUnits">
+          <div class="flex items-center">
+            <div class="p-3 bg-primary-100 rounded-lg">
+              <svg
+                class="w-6 h-6 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-sm font-medium text-gray-600">Units</h3>
+              <p class="text-2xl font-bold text-gray-900 mt-1">
+                {{ isLoading && !units ? '-' : activeUnitsCount }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Residents -->
+        <div class="card card-hover cursor-pointer" @click="navigateToPeople">
+          <div class="flex items-center">
+            <div class="p-3 bg-primary-100 rounded-lg">
+              <svg
+                class="w-6 h-6 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-sm font-medium text-gray-600">Residents</h3>
+              <p class="text-2xl font-bold text-gray-900 mt-1">
+                {{ isLoading && !residents ? '-' : activeResidentsCount }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Units - Individual at mobile and md, hidden at lg -->
+      <div
+        class="card card-hover cursor-pointer block lg:hidden"
+        @click="navigateToUnits"
+      >
         <div class="flex items-center">
           <div class="p-3 bg-primary-100 rounded-lg">
             <svg
@@ -21,9 +82,39 @@
             </svg>
           </div>
           <div class="ml-4">
-            <h3 class="text-sm font-medium text-gray-600">Total Units</h3>
+            <h3 class="text-sm font-medium text-gray-600">Units</h3>
             <p class="text-2xl font-bold text-gray-900 mt-1">
               {{ isLoading && !units ? '-' : activeUnitsCount }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Residents - Individual at mobile and md, hidden at lg -->
+      <div
+        class="card card-hover cursor-pointer block lg:hidden"
+        @click="navigateToPeople"
+      >
+        <div class="flex items-center">
+          <div class="p-3 bg-primary-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+              />
+            </svg>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-sm font-medium text-gray-600">Residents</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ isLoading && !residents ? '-' : activeResidentsCount }}
             </p>
           </div>
         </div>
@@ -49,9 +140,7 @@
               </svg>
             </div>
             <div class="ml-4 flex-1">
-              <h3 class="text-sm font-medium text-gray-600">
-                Active Invoices (6M)
-              </h3>
+              <h3 class="text-sm font-medium text-gray-600">Active Invoices</h3>
               <div class="flex items-baseline gap-2 mt-1">
                 <p class="text-2xl font-bold text-gray-900">
                   {{ formatCurrency(activeInvoicesAmount) }}
@@ -220,9 +309,7 @@
               </svg>
             </div>
             <div class="ml-4 flex-1">
-              <h3 class="text-sm font-medium text-gray-600">
-                Total Collected (6M)
-              </h3>
+              <h3 class="text-sm font-medium text-gray-600">Payments (6M)</h3>
               <p
                 v-if="!isLoading"
                 class="text-2xl font-bold text-gray-900 mt-1"
@@ -366,33 +453,6 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Residents -->
-      <div class="card card-hover cursor-pointer" @click="navigateToPeople">
-        <div class="flex items-center">
-          <div class="p-3 bg-primary-100 rounded-lg">
-            <svg
-              class="w-6 h-6 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-              />
-            </svg>
-          </div>
-          <div class="ml-4">
-            <h3 class="text-sm font-medium text-gray-600">Residents</h3>
-            <p class="text-2xl font-bold text-gray-900 mt-1">
-              {{ isLoading && !residents ? '-' : activeResidentsCount }}
-            </p>
           </div>
         </div>
       </div>
