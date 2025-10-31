@@ -99,42 +99,138 @@
               <p v-else class="text-2xl font-bold text-gray-900 mt-1">-</p>
             </div>
           </div>
-          <div
-            v-if="isLoading && !payments"
-            class="flex items-end justify-center gap-1.5 h-24 mt-2"
-          >
+          <div v-if="isLoading && !payments" class="relative w-full h-32 mt-2">
+            <!-- Loading grid lines -->
+            <svg
+              class="absolute inset-0 w-full h-full"
+              preserveAspectRatio="none"
+            >
+              <line
+                v-for="i in 5"
+                :key="`loading-grid-${i}`"
+                x1="40"
+                :y1="i * 20 + '%'"
+                x2="100%"
+                :y2="i * 20 + '%'"
+                stroke="#F3F4F6"
+                stroke-width="1"
+              />
+            </svg>
             <div
-              v-for="i in 6"
-              :key="i"
-              class="w-10 bg-gray-200 rounded-t"
-              :style="`height: ${20 + Math.random() * 40}px`"
-            ></div>
-          </div>
-          <div
-            v-else
-            class="flex items-end justify-center gap-1.5 h-24 mt-2 relative"
-          >
-            <div
-              v-for="(monthData, index) in monthlyPaymentData"
-              :key="index"
-              class="relative group"
+              class="flex items-end justify-center gap-1.5 h-full px-4 ml-10"
             >
               <div
-                class="w-10 bg-gray-900 rounded-t transition-all duration-300 hover:bg-gray-700"
-                :style="`height: ${getBarHeight(monthData.Collections)}px`"
+                v-for="i in 6"
+                :key="i"
+                class="w-10 bg-gray-200 rounded-t flex-1"
+                :style="`height: ${20 + Math.random() * 40}%`"
               ></div>
-              <!-- Tooltip -->
+            </div>
+          </div>
+          <div v-else class="relative w-full h-32 mt-2">
+            <!-- SVG for grid lines and axes -->
+            <svg
+              class="absolute inset-0 w-full"
+              style="height: calc(100% - 1rem)"
+              preserveAspectRatio="none"
+            >
+              <!-- Very soft grid lines -->
+              <g class="grid-lines">
+                <line
+                  v-for="i in 5"
+                  :key="`grid-${i}`"
+                  x1="40"
+                  :y1="i * 20 + '%'"
+                  x2="100%"
+                  :y2="i * 20 + '%'"
+                  stroke="#F3F4F6"
+                  stroke-width="1"
+                />
+              </g>
+              <!-- Y-axis line -->
+              <line
+                x1="40"
+                y1="0"
+                x2="40"
+                y2="100%"
+                stroke="#E5E7EB"
+                stroke-width="1"
+              />
+              <!-- X-axis line - at the bottom of chart area -->
+              <line
+                x1="40"
+                y1="100%"
+                x2="100%"
+                y2="100%"
+                stroke="#E5E7EB"
+                stroke-width="1"
+              />
+            </svg>
+
+            <!-- Y-axis labels -->
+            <div
+              class="absolute left-0 top-0 w-10 flex flex-col justify-between pr-1"
+              style="height: calc(100% - 1rem)"
+            >
               <div
-                class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10"
+                v-for="(tick, index) in yAxisTicks"
+                :key="`y-tick-${index}`"
+                class="text-[10px] text-gray-500 text-right leading-tight"
               >
-                <div class="font-medium">{{ monthData.month }}</div>
-                <div class="mt-0.5">
-                  {{ formatCurrency(monthData.Collections) }}
+                {{ tick }}
+              </div>
+            </div>
+
+            <!-- Chart area with bars -->
+            <div
+              class="flex items-end justify-center gap-1.5 px-4 ml-10"
+              style="height: calc(100% - 1rem)"
+            >
+              <div
+                v-for="(monthData, index) in monthlyPaymentData"
+                :key="index"
+                class="relative group flex-1 flex flex-col items-center"
+                style="height: 100%"
+              >
+                <!-- Bar container - full height, bars aligned to bottom -->
+                <div class="w-full flex items-end" style="height: 100%">
+                  <!-- Bar - percentage height, starts from bottom (x-axis) -->
+                  <div
+                    class="w-full bg-gray-900 rounded-t transition-all duration-300 hover:bg-gray-700"
+                    :style="`height: ${getBarHeight(monthData.Collections)}%`"
+                  ></div>
                 </div>
-                <!-- Tooltip arrow -->
+                <!-- Tooltip -->
                 <div
-                  class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"
-                ></div>
+                  class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10"
+                >
+                  <div class="font-medium">{{ monthData.month }}</div>
+                  <div class="mt-0.5">
+                    {{ formatCurrency(monthData.Collections) }}
+                  </div>
+                  <!-- Tooltip arrow -->
+                  <div
+                    class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- X-axis labels - positioned below the chart area -->
+            <div
+              class="flex justify-center gap-1.5 px-4 ml-10 mt-1"
+              style="height: 1rem"
+            >
+              <div
+                v-for="(monthData, index) in monthlyPaymentData"
+                :key="`label-${index}`"
+                class="flex-1 text-center"
+              >
+                <div
+                  class="text-[10px] text-gray-500 leading-tight whitespace-nowrap"
+                >
+                  {{ monthData.month }}
+                </div>
               </div>
             </div>
           </div>
@@ -318,6 +414,22 @@ const formatCurrency = (amount: number): string => {
   }).format(safeAmount);
 };
 
+// Format number for y-axis: "1.4k", "14k", "1.2M" (max 3-4 chars)
+const formatCompactNumber = (value: number): string => {
+  if (value === 0) return '0';
+  const absValue = Math.abs(value);
+
+  if (absValue >= 1000000) {
+    const millions = absValue / 1000000;
+    return millions % 1 === 0 ? `${millions}M` : `${millions.toFixed(1)}M`;
+  }
+  if (absValue >= 1000) {
+    const thousands = absValue / 1000;
+    return thousands % 1 === 0 ? `${thousands}k` : `${thousands.toFixed(1)}k`;
+  }
+  return absValue.toString();
+};
+
 // Computed statistics
 const activeUnitsCount = computed(() => {
   if (!units.value) return 0;
@@ -446,7 +558,30 @@ const totalCollectedAmount = computed(() => {
   );
 });
 
-// Calculate bar height (0-96px max, proportional to max value)
+// Calculate Y-axis ticks for grid lines (formatted as compact numbers)
+const yAxisTicks = computed(() => {
+  if (!monthlyPaymentData.value || monthlyPaymentData.value.length === 0)
+    return ['0', '0', '0', '0', '0'];
+
+  const maxValue = Math.max(
+    ...monthlyPaymentData.value.map(
+      (m: { month: string; Collections: number }) => m.Collections || 0
+    ),
+    1
+  );
+
+  if (maxValue === 0) return ['0', '0', '0', '0', '0'];
+
+  // Generate 5 ticks from 0 to max
+  const ticks: string[] = [];
+  for (let i = 4; i >= 0; i--) {
+    const tickValue = (maxValue / 4) * i;
+    ticks.push(formatCompactNumber(tickValue));
+  }
+  return ticks;
+});
+
+// Calculate bar height as percentage (0-100%)
 const getBarHeight = (value: number): number => {
   if (!monthlyPaymentData.value || monthlyPaymentData.value.length === 0)
     return 0;
@@ -457,8 +592,9 @@ const getBarHeight = (value: number): number => {
     1 // Prevent division by zero
   );
   if (maxValue === 0) return 0;
-  // Max height is 96px (h-24)
-  return Math.max(4, (value / maxValue) * 96);
+  if (value === 0) return 0;
+  // Return as percentage (0-100%) - allow 0 height for zero values
+  return (value / maxValue) * 100;
 };
 
 // Navigation handlers
