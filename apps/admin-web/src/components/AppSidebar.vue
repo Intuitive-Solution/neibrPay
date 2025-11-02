@@ -746,7 +746,7 @@ const pageTitle = computed(() => {
     case 'Vendors':
       return 'Vendors';
     case 'Documents':
-      return 'Documents';
+      return 'HOA Documents';
     case 'Settings':
       return 'Settings';
     default:
@@ -773,7 +773,7 @@ const pageDescription = computed(() => {
     case 'Vendors':
       return 'Manage vendors and service providers';
     case 'Documents':
-      return 'Manage HOA documents and files';
+      return 'Manage community documents and control resident visibility';
     case 'Settings':
       return 'Configure your community settings';
     default:
