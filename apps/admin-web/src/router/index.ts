@@ -21,6 +21,7 @@ import AddExpense from '../views/AddExpense.vue';
 import ExpenseDetail from '../views/ExpenseDetail.vue';
 import Vendors from '../views/Vendors.vue';
 import AddVendor from '../views/AddVendor.vue';
+import Documents from '../views/Documents.vue';
 import Settings from '../views/Settings.vue';
 import { setupAuthGuards } from './guards';
 
@@ -185,6 +186,12 @@ const router = createRouter({
       path: '/vendors/:id/edit',
       name: 'EditVendor',
       component: AddVendor,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/documents',
+      name: 'Documents',
+      component: Documents,
       meta: { requiresAuth: true },
     },
     {

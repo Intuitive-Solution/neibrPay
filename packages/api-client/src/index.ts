@@ -8,6 +8,12 @@ export { paymentsApi } from './payments';
 export { chargesApi } from './charges';
 export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';
+export { documentsApi } from './documents';
+export type {
+  HoaDocument,
+  CreateDocumentRequest,
+  UpdateDocumentRequest,
+} from './documents';
 export {
   settingsApi,
   useSettings,

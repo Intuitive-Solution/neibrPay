@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\Api\UnitDocumentController;
+use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
@@ -138,6 +139,15 @@ Route::middleware('firebase.auth')->group(function () {
     Route::post('expenses/{expense}/attachments', [ExpenseAttachmentController::class, 'store']);
     Route::get('expenses/{expense}/attachments/{attachment}/download', [ExpenseAttachmentController::class, 'download']);
     Route::delete('expenses/{expense}/attachments/{attachment}', [ExpenseAttachmentController::class, 'destroy']);
+    
+    // HOA Document management routes
+    Route::get('documents', [DocumentController::class, 'index']);
+    Route::post('documents', [DocumentController::class, 'store']);
+    Route::get('documents/{document}', [DocumentController::class, 'show']);
+    Route::put('documents/{document}', [DocumentController::class, 'update']);
+    Route::get('documents/{document}/download', [DocumentController::class, 'download']);
+    Route::delete('documents/{document}', [DocumentController::class, 'destroy']);
+    Route::delete('documents/{document}/force', [DocumentController::class, 'forceDelete']);
     
     // Settings routes
     Route::get('settings', [SettingsController::class, 'index']);

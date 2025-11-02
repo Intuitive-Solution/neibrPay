@@ -246,6 +246,29 @@
 
           <li>
             <router-link
+              to="/documents"
+              :class="getNavLinkClass('Documents')"
+              :title="!isExpanded ? 'Documents' : ''"
+            >
+              <svg
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+              </svg>
+              <span v-if="isExpanded">Documents</span>
+            </router-link>
+          </li>
+
+          <li>
+            <router-link
               to="/settings"
               :class="getNavLinkClass('Settings')"
               :title="!isExpanded ? 'Settings' : ''"
@@ -722,6 +745,8 @@ const pageTitle = computed(() => {
       return 'Expenses';
     case 'Vendors':
       return 'Vendors';
+    case 'Documents':
+      return 'Documents';
     case 'Settings':
       return 'Settings';
     default:
@@ -747,6 +772,8 @@ const pageDescription = computed(() => {
       return 'Manage vendor expenses and invoices';
     case 'Vendors':
       return 'Manage vendors and service providers';
+    case 'Documents':
+      return 'Manage HOA documents and files';
     case 'Settings':
       return 'Configure your community settings';
     default:

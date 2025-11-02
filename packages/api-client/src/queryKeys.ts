@@ -75,6 +75,15 @@ export const settingsKeys = {
   detail: () => [...settingsKeys.details()] as const,
 } as const;
 
+export const documentKeys = {
+  all: ['documents'] as const,
+  lists: () => [...documentKeys.all, 'list'] as const,
+  list: (filters: Record<string, any> = {}) =>
+    [...documentKeys.lists(), { filters }] as const,
+  details: () => [...documentKeys.all, 'detail'] as const,
+  detail: (id: number) => [...documentKeys.details(), id] as const,
+} as const;
+
 export const queryKeys = {
   residents: residentKeys,
   units: unitKeys,
@@ -84,4 +93,5 @@ export const queryKeys = {
   invoices: invoiceKeys,
   payments: paymentKeys,
   settings: settingsKeys,
+  documents: documentKeys,
 } as const;
