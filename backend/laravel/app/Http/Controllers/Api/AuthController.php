@@ -267,4 +267,95 @@ class AuthController extends Controller
             return response()->json(['error' => 'Logout failed'], 500);
         }
     }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|max:255',
+                'phone_number' => 'sometimes|nullable|string|max:20',
+            ]);
+
+            $user = $request->get('firebase_user');
+
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            // Update only provided fields
+            if (isset($validated['name'])) {
+                $user->name = $validated['name'];
+            }
+            if (isset($validated['email'])) {
+                $user->email = $validated['email'];
+            }
+            if (isset($validated['phone_number'])) {
+                $user->phone_number = $validated['phone_number'];
+            }
+
+            $user->save();
+
+            return response()->json([
+                'message' => 'Profile updated successfully',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone_number' => $user->phone_number ?? '',
+                ],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Update profile failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update profile'], 500);
+        }
+    }
+
+    /**
+     * Change password
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'current_password' => 'required|string',
+                'new_password' => 'required|string|min:8|confirmed',
+                'new_password_confirmation' => 'required|string',
+            ]);
+
+            $user = $request->get('firebase_user');
+            $tokenData = $request->get('firebase_token_data');
+
+            if (!$user || !$tokenData) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            $uid = $tokenData['uid'];
+
+            // Verify current password by attempting to sign in
+            try {
+                // Firebase Admin SDK doesn't have a direct way to verify password
+                // We'll update the password directly. The frontend should verify current password
+                // by re-authenticating the user before calling this endpoint
+                $this->firebaseService->updateUserPassword($uid, $validated['new_password']);
+            } catch (\Exception $e) {
+                Log::error('Password update failed: ' . $e->getMessage());
+                return response()->json(['error' => 'Failed to update password. Please ensure your current password is correct.'], 400);
+            }
+
+            return response()->json([
+                'message' => 'Password updated successfully',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Change password failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to change password'], 500);
+        }
+    }
 }

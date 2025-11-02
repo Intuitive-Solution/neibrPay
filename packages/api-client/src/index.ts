@@ -8,5 +8,18 @@ export { paymentsApi } from './payments';
 export { chargesApi } from './charges';
 export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';
+export {
+  settingsApi,
+  useSettings,
+  useUpdateTenantSettings,
+  useUpdateUserProfile,
+  useUpdatePassword,
+  useUpdateLocalization,
+  type SettingsData,
+  type UpdateTenantSettingsRequest,
+  type UpdateUserProfileRequest,
+  type UpdatePasswordRequest,
+  type UpdateLocalizationRequest,
+} from './settings';
 export * from './queryKeys';
 export { setAuthTokenGetter } from './apiClient';

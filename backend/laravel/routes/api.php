@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\InvoicePdfController;
 use App\Http\Controllers\Api\ResidentController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\Api\UnitDocumentController;
 use App\Http\Controllers\Api\VendorController;
@@ -48,6 +50,8 @@ Route::prefix('auth')->group(function () {
     Route::middleware('firebase.auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+        Route::put('/user/password', [AuthController::class, 'changePassword']);
     });
 });
 
@@ -134,6 +138,13 @@ Route::middleware('firebase.auth')->group(function () {
     Route::post('expenses/{expense}/attachments', [ExpenseAttachmentController::class, 'store']);
     Route::get('expenses/{expense}/attachments/{attachment}/download', [ExpenseAttachmentController::class, 'download']);
     Route::delete('expenses/{expense}/attachments/{attachment}', [ExpenseAttachmentController::class, 'destroy']);
+    
+    // Settings routes
+    Route::get('settings', [SettingsController::class, 'index']);
+    
+    // Tenant routes
+    Route::put('tenant', [TenantController::class, 'update']);
+    Route::put('tenant/localization', [TenantController::class, 'updateLocalization']);
 });
 
 // Legacy route for backward compatibility

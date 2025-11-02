@@ -69,6 +69,12 @@ export const paymentKeys = {
   detail: (id: number) => [...paymentKeys.details(), id] as const,
 } as const;
 
+export const settingsKeys = {
+  all: ['settings'] as const,
+  details: () => [...settingsKeys.all, 'detail'] as const,
+  detail: () => [...settingsKeys.details()] as const,
+} as const;
+
 export const queryKeys = {
   residents: residentKeys,
   units: unitKeys,
@@ -77,4 +83,5 @@ export const queryKeys = {
   expenses: expenseKeys,
   invoices: invoiceKeys,
   payments: paymentKeys,
+  settings: settingsKeys,
 } as const;

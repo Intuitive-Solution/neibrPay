@@ -197,4 +197,24 @@ class FirebaseService
                isset($identities['email']) ||
                isset($identities['password']);
     }
+
+    /**
+     * Update user password in Firebase
+     *
+     * @param string $uid
+     * @param string $newPassword
+     * @return void
+     * @throws Exception
+     */
+    public function updateUserPassword(string $uid, string $newPassword): void
+    {
+        try {
+            $this->auth->updateUser($uid, [
+                'password' => $newPassword,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to update user password: ' . $e->getMessage());
+            throw new Exception('Failed to update password');
+        }
+    }
 }
