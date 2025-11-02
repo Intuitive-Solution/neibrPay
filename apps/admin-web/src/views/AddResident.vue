@@ -156,6 +156,63 @@
           </div>
         </div>
 
+        <!-- Type Field -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
+          <label
+            for="type"
+            class="block text-sm font-medium text-gray-700 lg:pt-3"
+          >
+            Type <span class="text-red-500">*</span>
+          </label>
+          <div class="lg:col-span-2">
+            <select
+              id="type"
+              v-model="form.type"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              :class="{
+                'border-red-300 focus:ring-red-500 focus:border-red-500':
+                  errors.type,
+              }"
+            >
+              <option value="owner">Owner</option>
+              <option value="tenant">Tenant</option>
+              <option value="others">Others</option>
+            </select>
+            <p v-if="errors.type" class="mt-2 text-sm text-red-600">
+              {{ errors.type }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Role Field -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
+          <label
+            for="member_role"
+            class="block text-sm font-medium text-gray-700 lg:pt-3"
+          >
+            Role <span class="text-red-500">*</span>
+          </label>
+          <div class="lg:col-span-2">
+            <select
+              id="member_role"
+              v-model="form.member_role"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              :class="{
+                'border-red-300 focus:ring-red-500 focus:border-red-500':
+                  errors.member_role,
+              }"
+            >
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+            <p v-if="errors.member_role" class="mt-2 text-sm text-red-600">
+              {{ errors.member_role }}
+            </p>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <!-- Spacer for large screens to align with form fields -->
@@ -982,6 +1039,8 @@ const form = ref<ResidentFormData>({
   name: '',
   email: '',
   phone: '',
+  type: 'owner',
+  member_role: 'member',
 });
 
 // Form errors
@@ -1186,6 +1245,8 @@ onMounted(() => {
       name: resident.value.name,
       email: resident.value.email,
       phone: resident.value.phone,
+      type: resident.value.type || 'owner',
+      member_role: resident.value.member_role || 'member',
     };
   }
 
@@ -1202,19 +1263,21 @@ watch(resident, (newResident: any) => {
       name: newResident.name,
       email: newResident.email,
       phone: newResident.phone,
+      type: newResident.type || 'owner',
+      member_role: newResident.member_role || 'member',
     };
   }
 });
 
 // Watch for resident ID changes to refetch units
-watch(residentId, newId => {
+watch(residentId, (newId: number | null) => {
   if (newId && isEditMode.value) {
     refetchUnits();
   }
 });
 
 // Watch for tab changes to refetch units when switching to Units tab
-watch(activeTab, newTab => {
+watch(activeTab, (newTab: string) => {
   if (newTab === 'units' && isEditMode.value && residentId.value) {
     refetchUnits();
   }

@@ -55,6 +55,8 @@ class ResidentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone,
+            'type' => $request->type ?? 'owner',
+            'member_role' => $request->member_role ?? 'member',
             'role' => 'resident',
             'tenant_id' => $user->tenant_id,
             'is_active' => true,
@@ -251,6 +253,8 @@ class ResidentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone,
+            'type' => $request->type,
+            'member_role' => $request->member_role,
         ]);
         
         $resident->load('tenant');

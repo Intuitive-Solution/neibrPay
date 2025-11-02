@@ -404,6 +404,36 @@
                 </div>
               </th>
               <th
+                @click="sortBy('member_role')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
+              >
+                <div class="flex items-center space-x-1">
+                  <span>ROLE</span>
+                  <svg
+                    v-if="sortColumn === 'member_role'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </th>
+              <th
                 class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
               ></th>
             </tr>
@@ -455,6 +485,17 @@
                         >
                           Deleted
                         </span>
+                      </div>
+                      <div
+                        v-if="resident.type"
+                        :class="[
+                          'text-xs mt-1',
+                          resident.deleted_at
+                            ? 'text-red-400'
+                            : 'text-gray-500',
+                        ]"
+                      >
+                        {{ formatType(resident.type) }}
                       </div>
                       <!-- Mobile-only additional info -->
                       <div class="sm:hidden mt-1">
@@ -528,6 +569,21 @@
                   class="badge"
                 >
                   {{ getStatusText(resident) }}
+                </span>
+              </td>
+
+              <!-- Role Column -->
+              <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                <span
+                  v-if="resident.member_role"
+                  :class="[
+                    'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
+                    resident.member_role === 'admin'
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-blue-100 text-blue-800',
+                  ]"
+                >
+                  {{ formatRole(resident.member_role) }}
                 </span>
               </td>
 
@@ -692,7 +748,9 @@ const deletingResidentId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const residentToDelete = ref<Resident | null>(null);
 const activeFilter = ref<'active' | 'all' | null>('active'); // Default to 'active' filter
-const sortColumn = ref<'name' | 'email' | 'phone' | 'status' | null>(null);
+const sortColumn = ref<
+  'name' | 'email' | 'phone' | 'status' | 'member_role' | null
+>(null);
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
 // Debounced search
@@ -811,6 +869,10 @@ const filteredResidents = computed(() => {
               ? 'active'
               : 'inactive';
           break;
+        case 'member_role':
+          aValue = a.member_role || 'member';
+          bValue = b.member_role || 'member';
+          break;
         default:
           return 0;
       }
@@ -840,7 +902,9 @@ const filterByStatus = (status: 'active' | 'all') => {
   }
 };
 
-const sortBy = (column: 'name' | 'email' | 'phone' | 'status') => {
+const sortBy = (
+  column: 'name' | 'email' | 'phone' | 'status' | 'member_role'
+) => {
   if (sortColumn.value === column) {
     // Toggle direction if clicking the same column
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
@@ -859,6 +923,23 @@ const getStatusText = (resident: Resident) => {
 const getStatusBadgeClass = (resident: Resident) => {
   if (resident.deleted_at) return 'badge-overdue';
   return resident.is_active ? 'badge-paid' : 'badge-draft';
+};
+
+const formatType = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    owner: 'Owner',
+    tenant: 'Tenant',
+    others: 'Others',
+  };
+  return typeMap[type] || type;
+};
+
+const formatRole = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    admin: 'Admin',
+    member: 'Member',
+  };
+  return roleMap[role] || role;
 };
 
 const editResident = (residentId: number) => {
