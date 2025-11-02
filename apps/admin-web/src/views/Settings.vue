@@ -1,11 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Page Header -->
-    <div class="card">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
-      <p class="text-gray-600">Configure your community settings</p>
-    </div>
-
     <!-- Settings Sections -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Community Settings -->
