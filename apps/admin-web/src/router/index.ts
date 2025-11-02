@@ -24,10 +24,17 @@ import AddVendor from '../views/AddVendor.vue';
 import Documents from '../views/Documents.vue';
 import Settings from '../views/Settings.vue';
 import { setupAuthGuards } from './guards';
+import MagicLinkAuth from '../views/MagicLinkAuth.vue';
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
+    {
+      path: '/auth/magic',
+      name: 'MagicLinkAuth',
+      component: MagicLinkAuth,
+      meta: { requiresAuth: false },
+    },
     {
       path: '/login',
       name: 'Login',

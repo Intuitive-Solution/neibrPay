@@ -28,6 +28,11 @@ export const useAuthStore = defineStore('auth', () => {
   );
   const tenantName = computed(() => tenant.value?.name || '');
 
+  // Role-based getters
+  const isResident = computed(() => user.value?.role === 'resident');
+  const isAdmin = computed(() => user.value?.role === 'admin');
+  const isBookkeeper = computed(() => user.value?.role === 'bookkeeper');
+
   // Actions
   const setUser = (
     authUser: AuthUser,
@@ -151,6 +156,34 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  const signinWithMagicLink = async (customToken: string) => {
+    try {
+      setLoading(true);
+      clearError();
+
+      // Import Firebase auth function
+      const { signInWithCustomToken } = await import('firebase/auth');
+      const { auth } = await import('../config/firebase');
+
+      // Sign in with custom token
+      const userCredential = await signInWithCustomToken(auth, customToken);
+      const idToken = await userCredential.user.getIdToken();
+
+      // Exchange token with backend
+      const result = await authService.exchangeMagicToken(idToken);
+      setUser(result.user, result.tenant, result.token);
+
+      return result;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Magic link authentication failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Initialize auth state listener
   const initializeAuth = () => {
     if (isInitialized.value) return;
@@ -183,6 +216,7 @@ export const useAuthStore = defineStore('auth', () => {
                 emailVerified: firebaseUser.emailVerified,
                 phoneNumber: firebaseUser.phoneNumber,
                 photoURL: firebaseUser.photoURL,
+                role: result.user?.role,
               },
               result.tenant,
               idToken
@@ -234,12 +268,16 @@ export const useAuthStore = defineStore('auth', () => {
     isEmailVerified,
     userDisplayName,
     tenantName,
+    isResident,
+    isAdmin,
+    isBookkeeper,
 
     // Actions
     signupWithEmail,
     signupWithGoogle,
     signinWithEmail,
     signinWithGoogle,
+    signinWithMagicLink,
     signout,
     initializeAuth,
     refreshToken,

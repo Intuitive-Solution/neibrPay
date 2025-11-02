@@ -6,18 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\InvoiceUnit;
 use App\Models\Unit;
 use App\Services\InvoicePdfService;
+use App\Services\FirebaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class InvoiceController extends Controller
 {
     protected $pdfService;
+    protected $firebaseService;
 
-    public function __construct(InvoicePdfService $pdfService)
+    public function __construct(InvoicePdfService $pdfService, FirebaseService $firebaseService)
     {
         $this->pdfService = $pdfService;
+        $this->firebaseService = $firebaseService;
     }
 
     /**
@@ -32,6 +37,26 @@ class InvoiceController extends Controller
         
         $query = InvoiceUnit::forTenant($user->tenant_id)
             ->with(['unit', 'creator', 'notes', 'payments', 'schedule']);
+            
+        // If user is a resident, filter invoices to only show those for user's owned units
+        if ($user->isResident()) {
+            $ownedUnitIds = $user->ownedUnits()->pluck('id')->toArray();
+            if (empty($ownedUnitIds)) {
+                // Resident has no owned units, return empty result
+                return response()->json([
+                    'data' => [],
+                    'meta' => [
+                        'total' => 0,
+                        'include_deleted' => $includeDeleted,
+                        'filters' => [
+                            'unit_id' => $unitId,
+                            'status' => $status,
+                        ],
+                    ],
+                ]);
+            }
+            $query->whereIn('unit_id', $ownedUnitIds);
+        }
             
         if ($includeDeleted) {
             $query->withTrashed();
@@ -174,6 +199,14 @@ class InvoiceController extends Controller
 
         if (!$invoiceUnit) {
             return response()->json(['message' => 'Invoice not found'], 404);
+        }
+
+        // If user is a resident, verify invoice belongs to user's owned units
+        if ($user->isResident()) {
+            $ownedUnitIds = $user->ownedUnits()->pluck('id')->toArray();
+            if (!in_array($invoiceUnit->unit_id, $ownedUnitIds)) {
+                return response()->json(['message' => 'Invoice not found'], 403);
+            }
         }
 
         $invoiceUnit->load([
@@ -874,18 +907,206 @@ class InvoiceController extends Controller
             'email' => 'nullable|email',
         ]);
 
-        // Get the email address - use provided email or unit owner's email
-        $email = $validated['email'] ?? $invoiceUnit->unit->owners->first()?->email;
+        // Load invoice with relationships
+        $invoiceUnit->load(['unit.owners', 'tenant']);
+
+        // Get the owner - use provided email or first unit owner
+        $owner = null;
+        $email = $validated['email'] ?? null;
         
-        if (!$email) {
+        if ($email) {
+            // Find owner by email
+            $owner = $invoiceUnit->unit->owners->firstWhere('email', $email);
+        } else {
+            // Use first owner from unit
+            $owner = $invoiceUnit->unit->owners->first();
+            $email = $owner?->email;
+        }
+        
+        if (!$email || !$owner) {
             return response()->json(['message' => 'No email address available for this invoice'], 400);
         }
 
-        // TODO: Implement actual email sending functionality
-        // For now, just return success message
-        return response()->json([
-            'message' => "Invoice would be sent to {$email}",
-        ]);
+        // Check if n8n webhook URL is configured
+        $n8nWebhookUrl = config('n8n.webhook_url');
+        if (!$n8nWebhookUrl) {
+            Log::warning('N8N_WEBHOOK_URL not configured. Email invoice webhook not sent.');
+            return response()->json([
+                'message' => 'Email service not configured. Invoice email not sent.',
+            ], 500);
+        }
+
+        // Get webhook secret token for authentication
+        $webhookSecret = config('n8n.webhook_secret');
+        if (!$webhookSecret) {
+            Log::warning('N8N_WEBHOOK_SECRET not configured. Webhook may be unsecured.');
+        }
+
+        try {
+            // Ensure owner has a Firebase account (create if doesn't exist)
+            if (!$owner->firebase_uid) {
+                try {
+                    // Check if Firebase account exists by email
+                    $firebaseUid = $this->firebaseService->getUserUidByEmail($email);
+                    
+                    if (!$firebaseUid) {
+                        // Create new Firebase account for the owner
+                        $firebaseUid = $this->firebaseService->createUser(
+                            $email,
+                            $owner->name,
+                            false // Email not verified yet
+                        );
+                    }
+                    
+                    // Update owner with Firebase UID
+                    $owner->firebase_uid = $firebaseUid;
+                    $owner->save();
+                } catch (\Exception $e) {
+                    Log::error('Failed to create Firebase account for owner: ' . $e->getMessage(), [
+                        'owner_id' => $owner->id,
+                        'owner_email' => $email,
+                    ]);
+                    return response()->json([
+                        'message' => 'Failed to create Firebase account for owner. Please ensure the owner has signed up first.',
+                        'error' => $e->getMessage()
+                    ], 500);
+                }
+            }
+
+            // Generate custom token (already returns string after fix)
+            $customTokenString = $this->firebaseService->createCustomToken($owner->firebase_uid);
+            
+            // Build magic link URL
+            $appUrl = config('app.url');
+            $magicLink = rtrim($appUrl, '/') . '/auth/magic?token=' . urlencode($customTokenString);
+
+            // Calculate due date
+            $dueDate = $invoiceUnit->getActualDueDate();
+            $dueDateFormatted = $dueDate->format('Y-m-d');
+
+            // Build unit address string
+            $unit = $invoiceUnit->unit;
+            $unitAddress = trim(
+                ($unit->address ?? '') . ', ' . 
+                ($unit->city ?? '') . ', ' . 
+                ($unit->state ?? '') . ' ' . 
+                ($unit->zip_code ?? '')
+            );
+            $unitAddress = trim($unitAddress, ', ');
+
+            // Prepare n8n webhook payload
+            $payload = [
+                'recipient' => [
+                    'email' => $email,
+                    'name' => $owner->name ?? $owner->email,
+                ],
+                'invoice_summary' => [
+                    'invoice_number' => $invoiceUnit->invoice_number,
+                    'total' => number_format((float) $invoiceUnit->total, 2, '.', ''),
+                    'balance_due' => number_format((float) $invoiceUnit->balance_due, 2, '.', ''),
+                    'due_date' => $dueDateFormatted,
+                    'unit_title' => $unit->title ?? '',
+                    'unit_address' => $unitAddress,
+                ],
+                'magic_link' => $magicLink,
+                'tenant_name' => $invoiceUnit->tenant->name ?? 'HOA',
+            ];
+
+            Log::info('Sending n8n webhook request', [
+                'url' => $n8nWebhookUrl,
+                'has_secret' => !empty($webhookSecret),
+                'payload_keys' => array_keys($payload),
+            ]);
+            // Prepare headers for webhook request
+            $headers = [
+                'Content-Type' => 'application/json',
+            ];
+
+            // Add authentication token if configured
+            if ($webhookSecret) {
+                $headers['X-Webhook-Token'] = $webhookSecret;
+            }
+
+            // Send HTTP POST request to n8n webhook
+            // Note: Using synchronous call to catch errors, but it's fast enough
+            try {
+                $response = Http::timeout(10)
+                    ->retry(2, 100) // Retry twice with 100ms delay
+                    ->withHeaders($headers)
+                    ->post($n8nWebhookUrl, $payload);
+                
+                if ($response->successful()) {
+                    Log::info('n8n webhook sent successfully', [
+                        'status' => $response->status(),
+                        'response_body' => substr($response->body(), 0, 200), // First 200 chars
+                    ]);
+                } else {
+                    $errorMessage = 'n8n webhook returned non-success status';
+                    $responseBody = $response->body();
+                    
+                    // Provide helpful error messages for common issues
+                    if ($response->status() === 404) {
+                        $errorMessage = 'n8n webhook not found - workflow may not be activated';
+                        if (strpos($responseBody, 'not registered') !== false) {
+                            Log::warning($errorMessage . '. Make sure the n8n workflow is ACTIVE (not in test mode).', [
+                                'status' => $response->status(),
+                                'url' => $n8nWebhookUrl,
+                                'hint' => 'Activate the workflow in n8n and use production webhook URL (remove /webhook-test/)',
+                            ]);
+                        } else {
+                            Log::warning($errorMessage, [
+                                'status' => $response->status(),
+                                'response_body' => $responseBody,
+                                'url' => $n8nWebhookUrl,
+                            ]);
+                        }
+                    } else {
+                        Log::warning('n8n webhook returned non-success status', [
+                            'status' => $response->status(),
+                            'response_body' => substr($responseBody, 0, 500),
+                            'url' => $n8nWebhookUrl,
+                        ]);
+                    }
+                }
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                Log::error('n8n webhook connection failed - network error', [
+                    'error' => $e->getMessage(),
+                    'url' => $n8nWebhookUrl,
+                    'timeout' => 10,
+                ]);
+            } catch (\Illuminate\Http\Client\RequestException $e) {
+                Log::error('n8n webhook request exception', [
+                    'error' => $e->getMessage(),
+                    'response' => $e->response ? [
+                        'status' => $e->response->status(),
+                        'body' => substr($e->response->body(), 0, 500),
+                    ] : null,
+                    'url' => $n8nWebhookUrl,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('n8n webhook request failed - unexpected error', [
+                    'error' => $e->getMessage(),
+                    'class' => get_class($e),
+                    'url' => $n8nWebhookUrl,
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Invoice email sent successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            // Log error but don't fail the request
+            Log::error('Failed to send invoice email via n8n webhook: ' . $e->getMessage(), [
+                'invoice_id' => $invoiceUnit->id,
+                'owner_email' => $email,
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'message' => 'Invoice email queued. An error occurred but the request was processed.',
+            ], 200);
+        }
     }
 
     /**

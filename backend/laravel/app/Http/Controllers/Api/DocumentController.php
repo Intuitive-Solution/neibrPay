@@ -22,8 +22,11 @@ class DocumentController extends Controller
             ->with('uploader:id,name,email')
             ->orderBy('created_at', 'desc');
 
-        // Filter by visibility if requested
-        if ($request->has('visible_to_residents')) {
+        // If user is a resident, automatically filter by visible_to_residents = true
+        if ($user->isResident()) {
+            $query->where('visible_to_residents', true);
+        } elseif ($request->has('visible_to_residents')) {
+            // For admins/bookkeepers, allow filtering by visibility if requested
             $query->where('visible_to_residents', $request->boolean('visible_to_residents'));
         }
 

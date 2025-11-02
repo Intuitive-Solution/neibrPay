@@ -235,8 +235,8 @@
           </div>
         </div>
 
-        <!-- Quick Action Buttons -->
-        <div class="flex flex-wrap gap-3 mt-6">
+        <!-- Quick Action Buttons (Hidden for residents) -->
+        <div v-if="!isResident" class="flex flex-wrap gap-3 mt-6">
           <!-- Actions for deleted invoices -->
           <template v-if="invoice.deleted_at">
             <button
@@ -1128,12 +1128,17 @@ import {
   useDownloadInvoiceAttachment,
 } from '../composables/useInvoiceAttachments';
 import { usePayments, useDeletePayment } from '../composables/usePayments';
+import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
+
+// Role check
+const isResident = computed(() => authStore.isResident);
 
 // Get invoice ID from route params
 const invoiceId = computed(() => parseInt(route.params.id as string));

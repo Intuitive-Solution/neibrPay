@@ -18,6 +18,17 @@ class ResidentController extends Controller
         $user = $request->get('firebase_user');
         $includeDeleted = $request->boolean('include_deleted', false);
         
+        // If user is a resident, return empty array (residents cannot see other residents)
+        if ($user->isResident()) {
+            return response()->json([
+                'data' => [],
+                'meta' => [
+                    'total' => 0,
+                    'include_deleted' => $includeDeleted,
+                ]
+            ]);
+        }
+        
         $query = User::forTenant($user->tenant_id)
             ->byRole('resident')
             ->with('tenant');

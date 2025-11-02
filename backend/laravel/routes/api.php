@@ -47,6 +47,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/google-signup', [AuthController::class, 'googleSignup']);
     
+    // Magic link token exchange (no authentication required)
+    Route::post('/exchange-magic-token', [AuthController::class, 'exchangeMagicToken']);
+    
     // Protected routes (require Firebase authentication)
     Route::middleware('firebase.auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);

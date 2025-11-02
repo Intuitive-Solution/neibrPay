@@ -8,7 +8,8 @@
         $route.name !== 'ForgotPassword' &&
         $route.name !== 'ResetPassword' &&
         $route.name !== 'TermsOfService' &&
-        $route.name !== 'PrivacyNotice'
+        $route.name !== 'PrivacyNotice' &&
+        $route.name !== 'MagicLinkAuth'
       "
     >
       <router-view />

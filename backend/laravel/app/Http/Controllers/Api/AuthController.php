@@ -358,4 +358,68 @@ class AuthController extends Controller
             return response()->json(['error' => 'Failed to change password'], 500);
         }
     }
+
+    /**
+     * Exchange magic link custom token for user data
+     * Note: Frontend should use signInWithCustomToken() first to get ID token, then send ID token here
+     */
+    public function exchangeMagicToken(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'id_token' => 'required|string',
+            ]);
+
+            // Verify the ID token (frontend sends ID token after signInWithCustomToken)
+            $tokenData = $this->firebaseService->verifyIdToken($validated['id_token']);
+            $firebaseUid = $tokenData['uid'];
+
+            // Find user by Firebase UID
+            $user = User::where('firebase_uid', $firebaseUid)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'error' => 'User not found',
+                    'message' => 'User account not found in system. Please contact your HOA administrator.'
+                ], 404);
+            }
+
+            // Update last login
+            $user->updateLastLogin();
+            $user->load('tenant');
+
+            return response()->json([
+                'message' => 'Magic link authentication successful',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'phone_number' => $user->phone_number,
+                    'avatar_url' => $user->avatar_url,
+                    'email_verified' => $user->email_verified_at !== null,
+                    'is_active' => $user->is_active,
+                    'last_login_at' => $user->last_login_at,
+                ],
+                'tenant' => $user->tenant ? [
+                    'id' => $user->tenant->id,
+                    'name' => $user->tenant->name,
+                    'slug' => $user->tenant->slug,
+                    'is_active' => $user->tenant->is_active,
+                    'trial_ends_at' => $user->tenant->trial_ends_at,
+                    'subscription_ends_at' => $user->tenant->subscription_ends_at,
+                    'can_access' => $user->tenant->canAccess(),
+                ] : null
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Magic token exchange failed: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Authentication failed',
+                'message' => 'Invalid or expired token. Please request a new magic link.'
+            ], 401);
+        }
+    }
 }

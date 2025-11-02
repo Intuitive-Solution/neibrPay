@@ -4,7 +4,8 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Units and Residents Container - Stacked at lg, separate at md -->
       <!-- Hidden at md (Units and Residents will be individual grid items) -->
-      <div class="hidden lg:flex lg:flex-col gap-6">
+      <!-- Hidden for residents -->
+      <div v-if="!isResident" class="hidden lg:flex lg:flex-col gap-6">
         <!-- Units -->
         <div class="card card-hover cursor-pointer" @click="navigateToUnits">
           <div class="flex items-center">
@@ -61,7 +62,9 @@
       </div>
 
       <!-- Units - Individual at mobile and md, hidden at lg -->
+      <!-- Hidden for residents -->
       <div
+        v-if="!isResident"
         class="card card-hover cursor-pointer block lg:hidden"
         @click="navigateToUnits"
       >
@@ -91,7 +94,9 @@
       </div>
 
       <!-- Residents - Individual at mobile and md, hidden at lg -->
+      <!-- Hidden for residents -->
       <div
+        v-if="!isResident"
         class="card card-hover cursor-pointer block lg:hidden"
         @click="navigateToPeople"
       >
@@ -458,8 +463,8 @@
       </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="card">
+    <!-- Quick Actions (Hidden for residents) -->
+    <div v-if="!isResident" class="card">
       <h3 class="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <router-link to="/invoices/create" class="block">
@@ -585,9 +590,14 @@ import { useUnits } from '../composables/useUnits';
 import { useInvoices } from '../composables/useInvoices';
 import { usePayments } from '../composables/usePayments';
 import { useResidents } from '../composables/useResidents';
+import { useAuthStore } from '../stores/auth';
 import type { Unit, InvoiceUnit, Payment, Resident } from '@neibrpay/models';
 
 const router = useRouter();
+const authStore = useAuthStore();
+
+// Role check
+const isResident = computed(() => authStore.isResident);
 
 // Query hooks
 const { data: units, isLoading: unitsLoading } = useUnits(false);

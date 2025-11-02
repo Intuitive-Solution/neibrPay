@@ -143,10 +143,35 @@ class FirebaseService
     public function createCustomToken(string $uid, array $additionalClaims = []): string
     {
         try {
-            return $this->auth->createCustomToken($uid, $additionalClaims);
+            $customToken = $this->auth->createCustomToken($uid, $additionalClaims);
+            
+            // Handle different return types from Firebase SDK
+            // In newer versions, createCustomToken returns a token object (Lcobucci\JWT\Token\Plain)
+            // that needs to be converted to string using toString()
+            if (is_object($customToken)) {
+                // Check for toString() method (available in Lcobucci JWT 4.0+)
+                if (method_exists($customToken, 'toString')) {
+                    return $customToken->toString();
+                }
+                
+                // Fallback: if object has __toString() magic method
+                if (method_exists($customToken, '__toString')) {
+                    return (string) $customToken;
+                }
+                
+                // Last resort: try direct casting (might fail but will show better error)
+                return (string) $customToken;
+            }
+            
+            // If it's already a string, return as is
+            return $customToken;
         } catch (Exception $e) {
-            Log::error('Failed to create custom token: ' . $e->getMessage());
-            throw new Exception('Failed to create custom token');
+            Log::error('Failed to create custom token: ' . $e->getMessage(), [
+                'uid' => $uid,
+                'token_type' => gettype($customToken ?? null),
+                'token_class' => is_object($customToken ?? null) ? get_class($customToken) : null,
+            ]);
+            throw new Exception('Failed to create custom token: ' . $e->getMessage());
         }
     }
 
@@ -215,6 +240,60 @@ class FirebaseService
         } catch (Exception $e) {
             Log::error('Failed to update user password: ' . $e->getMessage());
             throw new Exception('Failed to update password');
+        }
+    }
+
+    /**
+     * Create a Firebase user account by email
+     * Creates a user without a password (they can set it later via password reset)
+     *
+     * @param string $email
+     * @param string|null $displayName
+     * @param bool $emailVerified
+     * @return string Firebase UID
+     * @throws Exception
+     */
+    public function createUser(string $email, ?string $displayName = null, bool $emailVerified = false): string
+    {
+        try {
+            $createRequest = [
+                'email' => $email,
+                'emailVerified' => $emailVerified,
+            ];
+
+            if ($displayName) {
+                $createRequest['displayName'] = $displayName;
+            }
+
+            $userRecord = $this->auth->createUser($createRequest);
+            
+            return $userRecord->uid;
+        } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
+            // User already exists, get the existing user
+            $existingUser = $this->auth->getUserByEmail($email);
+            return $existingUser->uid;
+        } catch (Exception $e) {
+            Log::error('Failed to create Firebase user: ' . $e->getMessage());
+            throw new Exception('Failed to create Firebase account: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get user by email (check if Firebase account exists)
+     *
+     * @param string $email
+     * @return string|null Firebase UID or null if not found
+     */
+    public function getUserUidByEmail(string $email): ?string
+    {
+        try {
+            $userRecord = $this->auth->getUserByEmail($email);
+            return $userRecord->uid;
+        } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
+            return null;
+        } catch (Exception $e) {
+            Log::error('Failed to get Firebase user by email: ' . $e->getMessage());
+            return null;
         }
     }
 }

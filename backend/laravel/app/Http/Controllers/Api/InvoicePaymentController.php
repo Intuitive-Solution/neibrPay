@@ -27,6 +27,17 @@ class InvoicePaymentController extends Controller
             ->with(['invoiceUnit.unit', 'recorder'])
             ->whereHas('invoiceUnit', function ($q) use ($user) {
                 $q->where('tenant_id', $user->tenant_id);
+                
+                // If user is a resident, filter payments to only show those for invoices belonging to user's owned units
+                if ($user->isResident()) {
+                    $ownedUnitIds = $user->ownedUnits()->pluck('id')->toArray();
+                    if (empty($ownedUnitIds)) {
+                        // Resident has no owned units, return empty result by adding impossible condition
+                        $q->whereRaw('1 = 0');
+                    } else {
+                        $q->whereIn('unit_id', $ownedUnitIds);
+                    }
+                }
             });
             
         if ($invoiceId) {

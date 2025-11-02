@@ -99,7 +99,8 @@
             </router-link>
           </li>
 
-          <li>
+          <!-- Charges - Hidden for residents -->
+          <li v-if="!isResident">
             <router-link
               to="/charges"
               :class="getNavLinkClass(['Charges', 'AddCharge', 'EditCharge'])"
@@ -122,7 +123,8 @@
             </router-link>
           </li>
 
-          <li>
+          <!-- Residents (People) - Hidden for residents -->
+          <li v-if="!isResident">
             <router-link
               to="/people"
               :class="getNavLinkClass('People')"
@@ -221,7 +223,8 @@
             </router-link>
           </li>
 
-          <li>
+          <!-- Vendors - Hidden for residents -->
+          <li v-if="!isResident">
             <router-link
               to="/vendors"
               :class="getNavLinkClass('Vendors')"
@@ -688,6 +691,7 @@ const closeCreateDropdown = () => {
 const communityName = computed(() => authStore.tenantName || 'Community');
 const userDisplayName = computed(() => authStore.userDisplayName || 'User');
 const userEmail = computed(() => authStore.user?.email || '');
+const isResident = computed(() => authStore.isResident);
 const userInitials = computed(() => {
   const name = userDisplayName.value;
   return name

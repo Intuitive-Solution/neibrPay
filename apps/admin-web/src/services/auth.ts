@@ -2,6 +2,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithCustomToken,
   signOut,
   sendEmailVerification,
   sendPasswordResetEmail,
@@ -37,6 +38,7 @@ export interface AuthUser {
   emailVerified: boolean;
   phoneNumber: string | null;
   photoURL: string | null;
+  role?: string;
 }
 
 export interface TenantData {
@@ -152,7 +154,10 @@ class AuthService {
       const result = await response.json();
 
       return {
-        user: this.mapFirebaseUser(user),
+        user: {
+          ...this.mapFirebaseUser(user),
+          role: result.user?.role || 'admin', // Default to admin for new signups
+        },
         tenant: result.tenant,
         token: idToken,
       };
@@ -212,7 +217,10 @@ class AuthService {
       console.log('Backend signup successful');
 
       return {
-        user: this.mapFirebaseUser(user),
+        user: {
+          ...this.mapFirebaseUser(user),
+          role: responseData.user?.role || 'admin', // Default to admin for new signups
+        },
         tenant: responseData.tenant,
         token: idToken,
       };
@@ -281,7 +289,10 @@ class AuthService {
       const result = await response.json();
 
       return {
-        user: this.mapFirebaseUser(user),
+        user: {
+          ...this.mapFirebaseUser(user),
+          role: result.user?.role,
+        },
         tenant: result.tenant,
         token: idToken,
       };
@@ -323,7 +334,10 @@ class AuthService {
       const responseData = await response.json();
 
       return {
-        user: this.mapFirebaseUser(user),
+        user: {
+          ...this.mapFirebaseUser(user),
+          role: responseData.user?.role,
+        },
         tenant: responseData.tenant,
         token: idToken,
       };
@@ -361,6 +375,48 @@ class AuthService {
       return await user.getIdToken();
     }
     return null;
+  }
+
+  /**
+   * Exchange magic link token for user data
+   * Frontend should use signInWithCustomToken() first, then call this
+   */
+  async exchangeMagicToken(idToken: string): Promise<AuthResponse> {
+    try {
+      const response = await this.makeRequest(
+        `${this.baseURL}/auth/exchange-magic-token`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id_token: idToken,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to exchange magic token');
+      }
+
+      const result = await response.json();
+
+      return {
+        user: {
+          uid: result.user.id.toString(),
+          email: result.user.email,
+          displayName: result.user.name,
+          emailVerified: result.user.email_verified,
+        },
+        tenant: result.tenant,
+        token: idToken,
+      };
+    } catch (error) {
+      console.error('Magic token exchange error:', error);
+      throw error;
+    }
   }
 
   /**

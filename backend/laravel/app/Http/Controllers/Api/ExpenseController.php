@@ -46,6 +46,9 @@ class ExpenseController extends Controller
             $query->search($search);
         }
         
+        // Residents can view all expenses (read-only) - no additional filtering needed
+        // All expenses are visible to residents regardless of status
+        
         $expenses = $query->orderBy('created_at', 'desc')->get();
         
         return response()->json([
