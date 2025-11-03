@@ -38,7 +38,8 @@
 
           <!-- Filter Toggle -->
           <div class="flex items-center space-x-3">
-            <label class="flex items-center">
+            <!-- Show only visible to residents - Hidden for residents -->
+            <label v-if="!isResident" class="flex items-center">
               <input
                 v-model="filterVisible"
                 type="checkbox"
@@ -51,7 +52,7 @@
 
             <!-- Refresh Button -->
             <button
-              @click="refetch"
+              @click="() => refetch()"
               :disabled="isLoading"
               class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-colors duration-200"
             >
@@ -71,8 +72,9 @@
               </svg>
             </button>
 
-            <!-- Upload Button (Icon Only) -->
+            <!-- Upload Button (Icon Only) - Hidden for residents -->
             <button
+              v-if="!isResident"
               @click="showUploadModal = true"
               class="btn-primary btn-sm"
               title="Upload Document"
@@ -141,9 +143,17 @@
         </svg>
         <p class="text-gray-500 text-lg font-medium">No documents found</p>
         <p class="text-gray-400 text-sm mt-1">
-          Upload your first document to get started
+          {{
+            isResident
+              ? 'No documents available'
+              : 'Upload your first document to get started'
+          }}
         </p>
-        <button @click="showUploadModal = true" class="btn-primary mt-4">
+        <button
+          v-if="!isResident"
+          @click="showUploadModal = true"
+          class="btn-primary mt-4"
+        >
           Upload Document
         </button>
       </div>
@@ -178,6 +188,7 @@
                 Uploaded By
               </th>
               <th
+                v-if="!isResident"
                 scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
@@ -250,7 +261,7 @@
                   {{ document.uploader?.email }}
                 </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td v-if="!isResident" class="px-6 py-4 whitespace-nowrap">
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -302,6 +313,7 @@
                     </svg>
                   </button>
                   <button
+                    v-if="!isResident"
                     @click="deleteDocument(document)"
                     class="text-red-600 hover:text-red-800"
                     title="Delete"
@@ -537,9 +549,14 @@ import {
   queryKeys,
   type HoaDocument,
 } from '@neibrpay/api-client';
+import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 
 const queryClient = useQueryClient();
+const authStore = useAuthStore();
+
+// Role check
+const isResident = computed(() => authStore.isResident);
 
 // State
 const searchQuery = ref('');
@@ -558,9 +575,15 @@ const showDeleteModal = ref(false);
 const documentToDelete = ref<HoaDocument | null>(null);
 
 // Queries
-const queryParams = computed(() => ({
-  visible_to_residents: filterVisible.value ? true : undefined,
-}));
+const queryParams = computed(() => {
+  // Members can only see visible documents
+  if (isResident.value) {
+    return { visible_to_residents: true };
+  }
+  return {
+    visible_to_residents: filterVisible.value ? true : undefined,
+  };
+});
 
 const {
   data: documents,
@@ -569,7 +592,9 @@ const {
 } = useQuery({
   queryKey: computed(() =>
     queryKeys.documents.list({
-      visible_to_residents: filterVisible.value || undefined,
+      visible_to_residents: isResident.value
+        ? true
+        : filterVisible.value || undefined,
     })
   ),
   queryFn: () => documentsApi.getDocuments(queryParams.value),
