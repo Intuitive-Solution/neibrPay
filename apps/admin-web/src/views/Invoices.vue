@@ -185,8 +185,8 @@
 
           <!-- Header Controls (Right) -->
           <div class="flex items-center space-x-3">
-            <!-- Show Deleted Checkbox -->
-            <div class="flex items-center">
+            <!-- Show Deleted Checkbox - Hidden for residents -->
+            <div v-if="!isResident" class="flex items-center">
               <input
                 id="show-deleted"
                 v-model="showDeleted"
@@ -1035,52 +1035,107 @@ const isInvoiceOpen = (invoice: any): boolean => {
 // Computed properties for summary cards
 const openInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
-  return invoices.value.filter(
-    (invoice: any) => isInvoiceOpen(invoice) && !invoice.deleted_at
-  ).length;
+  return invoices.value.filter((invoice: any) => {
+    if (
+      isResident.value &&
+      (invoice.status === 'draft' || invoice.deleted_at)
+    ) {
+      return false;
+    }
+    return isInvoiceOpen(invoice) && !invoice.deleted_at;
+  }).length;
 });
 
 const openInvoicesAmount = computed(() => {
   if (!invoices.value) return 0;
   return invoices.value
-    .filter((invoice: any) => isInvoiceOpen(invoice) && !invoice.deleted_at)
+    .filter((invoice: any) => {
+      if (
+        isResident.value &&
+        (invoice.status === 'draft' || invoice.deleted_at)
+      ) {
+        return false;
+      }
+      return isInvoiceOpen(invoice) && !invoice.deleted_at;
+    })
     .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
 });
 
 const overdueInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
-  return invoices.value.filter(
-    (invoice: any) => isInvoiceOverdue(invoice) && !invoice.deleted_at
-  ).length;
+  return invoices.value.filter((invoice: any) => {
+    if (
+      isResident.value &&
+      (invoice.status === 'draft' || invoice.deleted_at)
+    ) {
+      return false;
+    }
+    return isInvoiceOverdue(invoice) && !invoice.deleted_at;
+  }).length;
 });
 
 const overdueInvoicesAmount = computed(() => {
   if (!invoices.value) return 0;
   return invoices.value
-    .filter((invoice: any) => isInvoiceOverdue(invoice) && !invoice.deleted_at)
+    .filter((invoice: any) => {
+      if (
+        isResident.value &&
+        (invoice.status === 'draft' || invoice.deleted_at)
+      ) {
+        return false;
+      }
+      return isInvoiceOverdue(invoice) && !invoice.deleted_at;
+    })
     .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
 });
 
 const paidInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
-  return invoices.value.filter((invoice: any) => invoice.status === 'paid')
-    .length;
+  return invoices.value.filter((invoice: any) => {
+    if (
+      isResident.value &&
+      (invoice.status === 'draft' || invoice.deleted_at)
+    ) {
+      return false;
+    }
+    return invoice.status === 'paid';
+  }).length;
 });
 
 const paidInvoicesAmount = computed(() => {
   if (!invoices.value) return 0;
   return invoices.value
-    .filter((invoice: any) => invoice.status === 'paid')
+    .filter((invoice: any) => {
+      if (
+        isResident.value &&
+        (invoice.status === 'draft' || invoice.deleted_at)
+      ) {
+        return false;
+      }
+      return invoice.status === 'paid';
+    })
     .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
 });
 
 const allInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
+  if (isResident.value) {
+    return invoices.value.filter(
+      (invoice: any) => invoice.status !== 'draft' && !invoice.deleted_at
+    ).length;
+  }
   return invoices.value.length;
 });
 
 const allInvoicesAmount = computed(() => {
   if (!invoices.value) return 0;
+  if (isResident.value) {
+    return invoices.value
+      .filter(
+        (invoice: any) => invoice.status !== 'draft' && !invoice.deleted_at
+      )
+      .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
+  }
   return invoices.value.reduce(
     (sum: number, invoice: any) => sum + (invoice.total || 0),
     0
@@ -1092,6 +1147,13 @@ const filteredInvoices = computed(() => {
   if (!invoices.value) return [];
 
   let filtered = invoices.value.filter((invoice: any) => {
+    // For members: hide draft invoices and deleted invoices
+    if (isResident.value) {
+      if (invoice.status === 'draft' || invoice.deleted_at) {
+        return false;
+      }
+    }
+
     // Apply active filter from summary cards
     if (
       activeFilter.value === 'open' &&
