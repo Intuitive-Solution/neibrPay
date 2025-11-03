@@ -26,7 +26,9 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
+          <!-- Edit Button - Hidden for residents -->
           <button
+            v-if="!isResident"
             @click="editExpense"
             class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
           >
@@ -45,7 +47,9 @@
             </svg>
             Edit
           </button>
+          <!-- Delete Button - Hidden for residents -->
           <button
+            v-if="!isResident"
             @click="deleteExpense"
             class="inline-flex items-center px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors duration-200"
           >
@@ -487,6 +491,7 @@ import {
   useDeleteExpense,
   useExpenseAttachments,
 } from '../composables/useExpenses';
+import { useAuthStore } from '../stores/auth';
 import { expensesApi } from '@neibrpay/api-client';
 import {
   getExpenseCategoryDisplayName,
@@ -501,6 +506,10 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
+
+// Role check
+const isResident = computed(() => authStore.isResident);
 
 // Get expense ID from route
 const expenseId = computed(() => Number(route.params.id));

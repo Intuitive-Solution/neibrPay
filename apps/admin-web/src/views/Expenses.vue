@@ -168,8 +168,8 @@
               </select>
             </div>
 
-            <!-- Show Deleted Checkbox -->
-            <div class="flex items-center">
+            <!-- Show Deleted Checkbox - Hidden for residents -->
+            <div v-if="!isResident" class="flex items-center">
               <input
                 id="show-deleted"
                 v-model="includeDeleted"
@@ -204,8 +204,12 @@
               </svg>
             </button>
 
-            <!-- New Expense Button (Desktop) -->
-            <router-link to="/expenses/create" class="hidden md:inline-flex">
+            <!-- New Expense Button (Desktop) - Hidden for residents -->
+            <router-link
+              v-if="!isResident"
+              to="/expenses/create"
+              class="hidden md:inline-flex"
+            >
               <button class="btn-primary btn-sm">
                 <svg
                   class="w-4 h-4"
@@ -311,10 +315,12 @@
               {{
                 searchQuery
                   ? 'Try adjusting your search query.'
-                  : 'Get started by adding your first expense.'
+                  : isResident
+                    ? 'No expenses found.'
+                    : 'Get started by adding your first expense.'
               }}
             </p>
-            <div v-if="!searchQuery" class="mt-4">
+            <div v-if="!searchQuery && !isResident" class="mt-4">
               <router-link to="/expenses/create">
                 <button
                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -677,8 +683,8 @@
                     trigger-class="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <template #default="{ close }">
-                      <!-- Actions for deleted expenses -->
-                      <template v-if="expense.deleted_at">
+                      <!-- Actions for deleted expenses - Hidden for residents -->
+                      <template v-if="expense.deleted_at && !isResident">
                         <button
                           @click="
                             () => {
@@ -742,60 +748,63 @@
                           </svg>
                           View
                         </button>
-                        <button
-                          @click="
-                            () => {
-                              editExpense(expense.id);
-                              close();
-                            }
-                          "
-                          class="dropdown-item"
-                        >
-                          <svg
-                            class="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                        <!-- Edit and Delete - Hidden for residents -->
+                        <template v-if="!isResident">
+                          <button
+                            @click="
+                              () => {
+                                editExpense(expense.id);
+                                close();
+                              }
+                            "
+                            class="dropdown-item"
                           >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
-                          Edit
-                        </button>
-                        <div class="border-t border-gray-200 my-1"></div>
-                        <button
-                          @click="
-                            () => {
-                              deleteExpense(expense);
-                              close();
-                            }
-                          "
-                          :disabled="deletingExpenseId === expense.id"
-                          class="dropdown-item dropdown-item-danger"
-                        >
-                          <svg
-                            class="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                            Edit
+                          </button>
+                          <div class="border-t border-gray-200 my-1"></div>
+                          <button
+                            @click="
+                              () => {
+                                deleteExpense(expense);
+                                close();
+                              }
+                            "
+                            :disabled="deletingExpenseId === expense.id"
+                            class="dropdown-item dropdown-item-danger"
                           >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                          {{
-                            deletingExpenseId === expense.id
-                              ? 'Deleting...'
-                              : 'Delete'
-                          }}
-                        </button>
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                            {{
+                              deletingExpenseId === expense.id
+                                ? 'Deleting...'
+                                : 'Delete'
+                            }}
+                          </button>
+                        </template>
                       </template>
                     </template>
                   </DropdownMenu>
@@ -833,8 +842,9 @@
       @cancel="cancelRestore"
     />
 
-    <!-- Mobile Fixed Bottom Button -->
+    <!-- Mobile Fixed Bottom Button - Hidden for residents -->
     <div
+      v-if="!isResident"
       class="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 safe-area-inset-bottom"
     >
       <router-link to="/expenses/create" class="block">
@@ -867,6 +877,7 @@ import {
   useDeleteExpense,
   useRestoreExpense,
 } from '../composables/useExpenses';
+import { useAuthStore } from '../stores/auth';
 import {
   getExpenseCategoryDisplayName,
   getExpenseCategoryOptions,
@@ -877,6 +888,10 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DropdownMenu from '../components/DropdownMenu.vue';
 
 const router = useRouter();
+const authStore = useAuthStore();
+
+// Role check
+const isResident = computed(() => authStore.isResident);
 
 // Local state
 const searchQuery = ref('');
@@ -973,6 +988,11 @@ const filteredExpenses = computed(() => {
   if (!expenses.value) return [];
 
   let filtered = expenses.value.filter((expense: any) => {
+    // For members: hide deleted expenses
+    if (isResident.value && expense.deleted_at) {
+      return false;
+    }
+
     // Apply active filter from summary cards
     if (activeFilter.value === 'unpaid' && !isExpenseUnpaid(expense)) {
       return false;
@@ -1000,7 +1020,7 @@ const filteredExpenses = computed(() => {
       return invoiceNumber.includes(query) || category.includes(query);
     }
 
-    // Filter out deleted expenses unless includeDeleted is true
+    // Filter out deleted expenses unless includeDeleted is true (admin only)
     if (expense.deleted_at && !includeDeleted.value) {
       return false;
     }
