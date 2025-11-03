@@ -446,7 +446,7 @@
               />
             </svg>
           </button>
-          <button class="p-2 rounded-lg hover:bg-gray-100">
+          <button v-if="!isResident" class="p-2 rounded-lg hover:bg-gray-100">
             <svg
               class="w-5 h-5 text-gray-600"
               fill="none"
@@ -511,7 +511,7 @@
             </button>
 
             <!-- Create Dropdown -->
-            <div class="relative">
+            <div v-if="!isResident" class="relative">
               <button
                 @click="toggleCreateDropdown"
                 class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
