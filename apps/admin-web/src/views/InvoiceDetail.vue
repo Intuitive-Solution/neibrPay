@@ -1144,7 +1144,12 @@ const isResident = computed(() => authStore.isResident);
 const invoiceId = computed(() => parseInt(route.params.id as string));
 
 // Fetch invoice data
-const { data: invoice, isLoading, error } = useInvoice(invoiceId.value);
+const {
+  data: invoice,
+  isLoading,
+  error,
+  refetch: refetchInvoice,
+} = useInvoice(invoiceId.value);
 
 // Fetch PDF data
 const { data: latestPdf, isLoading: isLoadingPdf } = useLatestInvoicePdf(
@@ -1300,6 +1305,8 @@ const emailInvoice = async () => {
       id: invoice.value.id,
       email: invoice.value.unit?.owners?.[0]?.email,
     });
+    // Refresh invoice data to show updated status
+    await refetchInvoice();
     showSuccess('Invoice email sent successfully!');
   } catch (error: any) {
     console.error('Error sending email:', error);

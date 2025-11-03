@@ -188,8 +188,16 @@ export function useCloneInvoice() {
 
 // Email invoice mutation
 export function useEmailInvoice() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, email }: { id: number; email?: string }) =>
       invoicesApi.emailInvoice(id, email),
+    onSuccess: (_, { id }) => {
+      // Invalidate and refetch the specific invoice to show updated status
+      queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.detail(id) });
+      // Also invalidate lists to ensure consistency
+      queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.lists() });
+    },
   });
 }

@@ -1040,6 +1040,15 @@ class InvoiceController extends Controller
                         'status' => $response->status(),
                         'response_body' => substr($response->body(), 0, 200), // First 200 chars
                     ]);
+                    
+                    // Update invoice status to 'sent' when email is successfully sent
+                    if ($invoiceUnit->status === 'draft') {
+                        $invoiceUnit->update(['status' => 'sent']);
+                        Log::info('Invoice status updated to sent', [
+                            'invoice_id' => $invoiceUnit->id,
+                            'invoice_number' => $invoiceUnit->invoice_number,
+                        ]);
+                    }
                 } else {
                     $errorMessage = 'n8n webhook returned non-success status';
                     $responseBody = $response->body();
