@@ -174,7 +174,7 @@ class ResidentController extends Controller
             ->get();
         
         // Get units already owned by this resident
-        $ownedUnitIds = $resident->ownedUnits()->pluck('units.id')->toArray();
+        $ownedUnitIds = $resident->ownedUnits()->get()->pluck('id')->toArray();
         
         // Filter out units already owned by this resident
         $availableUnits = $allUnits->reject(function ($unit) use ($ownedUnitIds) {

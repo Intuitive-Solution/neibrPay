@@ -20,7 +20,18 @@ class ResidentRequest extends FormRequest
      */
     public function rules(): array
     {
-        $residentId = $this->route('resident');
+        // Get the resident ID from the route parameter
+        // apiResource creates routes like PUT /residents/{resident}
+        // Try multiple parameter names to be safe
+        $residentId = $this->route('resident') 
+                   ?? $this->route('id')
+                   ?? $this->route()->parameter('resident')
+                   ?? $this->route()->parameter('id');
+        
+        // If route parameter is a model instance, get its ID
+        if (is_object($residentId) && method_exists($residentId, 'getKey')) {
+            $residentId = $residentId->getKey();
+        }
         
         return [
             'name' => [

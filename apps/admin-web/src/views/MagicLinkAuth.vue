@@ -43,9 +43,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { signInWithCustomToken } from 'firebase/auth';
-import { auth } from '../config/firebase';
-import { authService } from '../services/auth';
 import { useAuthStore } from '../stores/auth';
 
 const route = useRoute();
@@ -66,20 +63,12 @@ onMounted(async () => {
       return;
     }
 
-    // Sign in with custom token using Firebase
-    const userCredential = await signInWithCustomToken(auth, token);
+    // Use the auth store's signinWithMagicLink method which handles everything
+    await authStore.signinWithMagicLink(token);
 
-    // Get ID token from signed-in user
-    const idToken = await userCredential.user.getIdToken();
-
-    // Exchange ID token with backend to get user and tenant data
-    const result = await authService.exchangeMagicToken(idToken);
-
-    // Update auth store
-    authStore.setUser(result.user, result.tenant, result.token);
-
-    // Redirect to dashboard
+    // Redirect to dashboard on success
     router.push('/');
+    isLoading.value = false;
   } catch (err: any) {
     console.error('Magic link authentication error:', err);
     error.value =

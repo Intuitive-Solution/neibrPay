@@ -40,7 +40,7 @@ class InvoiceController extends Controller
             
         // If user is a resident, filter invoices to only show those for user's owned units
         if ($user->isResident()) {
-            $ownedUnitIds = $user->ownedUnits()->pluck('id')->toArray();
+            $ownedUnitIds = $user->ownedUnits()->get()->pluck('id')->toArray();
             if (empty($ownedUnitIds)) {
                 // Resident has no owned units, return empty result
                 return response()->json([
