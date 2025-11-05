@@ -598,6 +598,9 @@
     <CommunityNameModal
       :is-open="showCommunityModal"
       :is-loading="authStore.isLoading"
+      :is-member-signup="isMemberSignup"
+      :locked-community-name="lockedCommunityName"
+      :locked-email="lockedEmail"
       @close="handleCommunityModalClose"
       @submit="handleCommunityModalSubmit"
     />
