@@ -114,6 +114,7 @@
             User
           </button>
           <button
+            v-if="!isResident"
             @click="activeTab = 'localization'"
             :class="[
               activeTab === 'localization'
@@ -180,7 +181,10 @@
               />
             </div>
           </div>
-          <div class="flex justify-end pt-4 border-t border-gray-200">
+          <div
+            v-if="!isResident"
+            class="flex justify-end pt-4 border-t border-gray-200"
+          >
             <button
               @click="saveHoaSettings"
               :disabled="isSavingHoa"
@@ -407,9 +411,28 @@ import {
   useUpdateLocalization,
   type SettingsData,
 } from '@neibrpay/api-client';
+import { useAuthStore } from '../stores/auth';
+
+// Auth store
+const authStore = useAuthStore();
+const isResident = computed(() => authStore.isResident);
 
 // Tab state
 const activeTab = ref<'hoa' | 'user' | 'localization' | 'security'>('hoa');
+
+// Redirect to 'user' tab if resident tries to access 'localization'
+watch(
+  [isResident, activeTab],
+  ([isResidentValue, currentTab]: [
+    boolean,
+    'hoa' | 'user' | 'localization' | 'security',
+  ]) => {
+    if (isResidentValue && currentTab === 'localization') {
+      activeTab.value = 'user';
+    }
+  },
+  { immediate: true }
+);
 
 // Success/Error messages
 const showSuccessMessage = ref(false);

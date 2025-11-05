@@ -360,6 +360,186 @@ class AuthController extends Controller
     }
 
     /**
+     * Handle member signup (joins existing tenant)
+     */
+    public function memberSignup(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'resident_id' => 'required|integer|exists:users,id',
+                'full_name' => 'required|string|max:255',
+                'phone_number' => 'nullable|string|max:20',
+                'firebase_uid' => 'required|string',
+                'email' => 'required|email|max:255',
+            ]);
+
+            $authHeader = $request->header('Authorization');
+            if (!$authHeader || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                return response()->json(['error' => 'Invalid authorization header'], 401);
+            }
+
+            $tokenData = $this->firebaseService->verifyIdToken($matches[1]);
+
+            if ($tokenData['uid'] !== $validated['firebase_uid']) {
+                return response()->json(['error' => 'Token mismatch'], 401);
+            }
+
+            // Find existing resident record
+            $resident = User::findOrFail($validated['resident_id']);
+
+            // Verify resident is a resident (not admin)
+            if ($resident->role !== 'resident') {
+                return response()->json(['error' => 'Invalid resident ID'], 400);
+            }
+
+            // Verify email matches
+            if ($resident->email !== $validated['email']) {
+                return response()->json(['error' => 'Email does not match resident record'], 400);
+            }
+
+            // Verify resident is active
+            if (!$resident->is_active || $resident->deleted_at) {
+                return response()->json(['error' => 'Resident account is not active'], 400);
+            }
+
+            // Check if Firebase account already exists for this email
+            $existingFirebaseUser = User::where('firebase_uid', $validated['firebase_uid'])
+                ->where('id', '!=', $resident->id)
+                ->first();
+            
+            if ($existingFirebaseUser) {
+                return response()->json(['error' => 'Firebase account already linked to another user'], 400);
+            }
+
+            // Update resident with Firebase UID
+            $resident->update([
+                'firebase_uid' => $validated['firebase_uid'],
+                'name' => $validated['full_name'], // Update name if changed
+                'phone_number' => $validated['phone_number'] ?? $resident->phone_number,
+                'email_verified_at' => $tokenData['email_verified'] ? now() : null,
+            ]);
+
+            $resident->load('tenant');
+
+            return response()->json([
+                'message' => 'Account activated successfully',
+                'user' => [
+                    'id' => $resident->id,
+                    'name' => $resident->name,
+                    'email' => $resident->email,
+                    'role' => $resident->role,
+                    'phone_number' => $resident->phone_number,
+                    'email_verified' => $resident->email_verified_at !== null,
+                ],
+                'tenant' => $resident->tenant ? [
+                    'id' => $resident->tenant->id,
+                    'name' => $resident->tenant->name,
+                    'slug' => $resident->tenant->slug,
+                ] : null
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Member signup failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Member signup failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Handle member Google signup (joins existing tenant)
+     */
+    public function memberGoogleSignup(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'resident_id' => 'required|integer|exists:users,id',
+                'phone_number' => 'nullable|string|max:20',
+                'firebase_uid' => 'required|string',
+                'email' => 'required|email|max:255',
+                'full_name' => 'required|string|max:255',
+            ]);
+
+            $authHeader = $request->header('Authorization');
+            if (!$authHeader || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                return response()->json(['error' => 'Invalid authorization header'], 401);
+            }
+
+            $tokenData = $this->firebaseService->verifyIdToken($matches[1]);
+
+            if ($tokenData['uid'] !== $validated['firebase_uid']) {
+                return response()->json(['error' => 'Token mismatch'], 401);
+            }
+
+            if (!$this->firebaseService->isGoogleProvider($tokenData)) {
+                return response()->json(['error' => 'Invalid provider'], 400);
+            }
+
+            // Find existing resident record
+            $resident = User::findOrFail($validated['resident_id']);
+
+            // Verify resident is a resident (not admin)
+            if ($resident->role !== 'resident') {
+                return response()->json(['error' => 'Invalid resident ID'], 400);
+            }
+
+            // Verify email matches
+            if ($resident->email !== $validated['email']) {
+                return response()->json(['error' => 'Google account email must match the invitation email'], 400);
+            }
+
+            // Verify resident is active
+            if (!$resident->is_active || $resident->deleted_at) {
+                return response()->json(['error' => 'Resident account is not active'], 400);
+            }
+
+            // Check if Firebase account already exists for this email
+            $existingFirebaseUser = User::where('firebase_uid', $validated['firebase_uid'])
+                ->where('id', '!=', $resident->id)
+                ->first();
+            
+            if ($existingFirebaseUser) {
+                return response()->json(['error' => 'Firebase account already linked to another user'], 400);
+            }
+
+            // Update resident with Firebase UID
+            $resident->update([
+                'firebase_uid' => $validated['firebase_uid'],
+                'name' => $validated['full_name'], // Update name if changed
+                'phone_number' => $validated['phone_number'] ?? $resident->phone_number,
+                'avatar_url' => $tokenData['picture'] ?? $resident->avatar_url,
+                'email_verified_at' => now(), // Google accounts are verified
+            ]);
+
+            $resident->load('tenant');
+
+            return response()->json([
+                'message' => 'Account activated successfully with Google',
+                'user' => [
+                    'id' => $resident->id,
+                    'name' => $resident->name,
+                    'email' => $resident->email,
+                    'role' => $resident->role,
+                    'phone_number' => $resident->phone_number,
+                    'avatar_url' => $resident->avatar_url,
+                    'email_verified' => true,
+                ],
+                'tenant' => $resident->tenant ? [
+                    'id' => $resident->tenant->id,
+                    'name' => $resident->tenant->name,
+                    'slug' => $resident->tenant->slug,
+                ] : null
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Member Google signup failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Member Google signup failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Exchange magic link custom token for user data
      * Note: Frontend should use signInWithCustomToken() first to get ID token, then send ID token here
      */

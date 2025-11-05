@@ -8,6 +8,8 @@ import {
   type TenantData,
   type SignupData,
   type GoogleSignupData,
+  type MemberSignupData,
+  type MemberGoogleSignupData,
   type LoginData,
 } from '../services/auth';
 
@@ -95,6 +97,47 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Google signup failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const memberSignupWithEmail = async (data: MemberSignupData) => {
+    try {
+      setLoading(true);
+      clearError();
+
+      const result = await authService.memberSignupWithEmail(data);
+      setUser(result.user, result.tenant, result.token);
+
+      return result;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Member signup failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const memberSignupWithGoogle = async (
+    data: MemberGoogleSignupData,
+    options?: { validateEmailMatch?: string }
+  ) => {
+    try {
+      setLoading(true);
+      clearError();
+
+      const result = await authService.memberSignupWithGoogle(data, options);
+      setUser(result.user, result.tenant, result.token);
+
+      return result;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Member Google signup failed';
       setError(errorMessage);
       throw err;
     } finally {
@@ -275,6 +318,8 @@ export const useAuthStore = defineStore('auth', () => {
     // Actions
     signupWithEmail,
     signupWithGoogle,
+    memberSignupWithEmail,
+    memberSignupWithGoogle,
     signinWithEmail,
     signinWithGoogle,
     signinWithMagicLink,

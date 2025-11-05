@@ -47,6 +47,10 @@ Route::prefix('auth')->group(function () {
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/google-signup', [AuthController::class, 'googleSignup']);
     
+    // Member signup routes (join existing tenant, no authentication required)
+    Route::post('/member-signup', [AuthController::class, 'memberSignup']);
+    Route::post('/member-google-signup', [AuthController::class, 'memberGoogleSignup']);
+    
     // Magic link token exchange (no authentication required)
     Route::post('/exchange-magic-token', [AuthController::class, 'exchangeMagicToken']);
     
@@ -69,6 +73,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::delete('residents/{resident}/units/{unit}', [ResidentController::class, 'removeUnit']);
     Route::post('residents/{resident}/restore', [ResidentController::class, 'restore']);
     Route::delete('residents/{resident}/force', [ResidentController::class, 'forceDelete']);
+    Route::post('residents/{resident}/send-activation', [ResidentController::class, 'sendActivation']);
     
     // Unit management routes
     Route::get('units/for-invoices', [UnitsController::class, 'forInvoices']);

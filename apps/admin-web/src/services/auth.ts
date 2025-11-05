@@ -26,6 +26,21 @@ export interface GoogleSignupData {
   phoneNumber?: string;
 }
 
+export interface MemberSignupData {
+  residentId: number;
+  email: string;
+  fullName: string;
+  phoneNumber: string;
+  password: string;
+}
+
+export interface MemberGoogleSignupData {
+  residentId: number;
+  email: string;
+  fullName: string;
+  phoneNumber?: string;
+}
+
 export interface LoginData {
   email: string;
   password: string;
@@ -244,6 +259,159 @@ class AuthService {
         } else if (error.message.includes('auth/popup-blocked')) {
           throw new Error(
             'Popup was blocked by your browser. Please allow popups and try again.'
+          );
+        }
+      }
+
+      throw this.handleAuthError(error as AuthError);
+    }
+  }
+
+  /**
+   * Member signup with email/password (joins existing tenant)
+   */
+  async memberSignupWithEmail(data: MemberSignupData): Promise<AuthResponse> {
+    try {
+      // Create user with Firebase
+      const userCredential: UserCredential =
+        await createUserWithEmailAndPassword(auth, data.email, data.password);
+
+      const user = userCredential.user;
+
+      // Send email verification
+      await sendEmailVerification(user);
+
+      // Get ID token
+      const idToken = await user.getIdToken();
+
+      // Update existing resident record in backend
+      const response = await this.makeRequest(
+        `${this.baseURL}/auth/member-signup`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            resident_id: data.residentId,
+            full_name: data.fullName,
+            phone_number: data.phoneNumber,
+            firebase_uid: user.uid,
+            email: user.email,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to activate account');
+      }
+
+      const result = await response.json();
+
+      return {
+        user: {
+          ...this.mapFirebaseUser(user),
+          role: result.user?.role || 'resident',
+        },
+        tenant: result.tenant,
+        token: idToken,
+      };
+    } catch (error) {
+      console.error('Member signup error:', error);
+      throw this.handleAuthError(error as AuthError);
+    }
+  }
+
+  /**
+   * Member signup with Google (joins existing tenant)
+   */
+  async memberSignupWithGoogle(
+    data: MemberGoogleSignupData,
+    options?: { validateEmailMatch?: string }
+  ): Promise<AuthResponse> {
+    try {
+      console.log('Starting member Google signup process...');
+
+      // Sign in with Google popup
+      const googleResult = await signInWithPopup(auth, googleProvider);
+      const user = googleResult.user;
+
+      console.log('Google signup successful:', user.email);
+
+      // Validate email match if required
+      if (
+        options?.validateEmailMatch &&
+        user.email !== options.validateEmailMatch
+      ) {
+        // Sign out the user since email doesn't match
+        await signOut(auth);
+        throw new Error(
+          `Google account email must match ${options.validateEmailMatch}. Please use the correct Google account.`
+        );
+      }
+
+      // Get ID token
+      const idToken = await user.getIdToken();
+      console.log('ID token obtained');
+
+      // Update existing resident record in backend
+      const response = await this.makeRequest(
+        `${this.baseURL}/auth/member-google-signup`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            resident_id: data.residentId,
+            phone_number: data.phoneNumber,
+            firebase_uid: user.uid,
+            email: user.email,
+            full_name: user.displayName || data.fullName,
+          }),
+        }
+      );
+
+      console.log('Backend response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Backend error:', errorData);
+        // Sign out on error
+        await signOut(auth);
+        throw new Error(
+          errorData.error || 'Failed to activate account with Google'
+        );
+      }
+
+      const responseData = await response.json();
+      console.log('Backend member signup successful');
+
+      return {
+        user: {
+          ...this.mapFirebaseUser(user),
+          role: responseData.user?.role || 'resident',
+        },
+        tenant: responseData.tenant,
+        token: idToken,
+      };
+    } catch (error) {
+      console.error('Member Google signup error:', error);
+
+      // Handle specific Firebase auth errors
+      if (error instanceof Error) {
+        if (error.message.includes('popup-closed-by-user')) {
+          throw new Error('Google sign-in was cancelled. Please try again.');
+        } else if (error.message.includes('popup-blocked')) {
+          throw new Error(
+            'Popup was blocked by your browser. Please allow popups and try again.'
+          );
+        } else if (error.message.includes('network-request-failed')) {
+          throw new Error(
+            'Network error. Please check your internet connection and try again.'
           );
         }
       }

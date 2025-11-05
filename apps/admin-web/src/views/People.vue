@@ -649,6 +649,36 @@
                           </svg>
                           Edit
                         </button>
+                        <button
+                          v-if="isResidentActive(resident)"
+                          @click="
+                            () => {
+                              sendActivationEmail(resident.id);
+                              close();
+                            }
+                          "
+                          :disabled="sendingActivationId === resident.id"
+                          class="dropdown-item"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                          {{
+                            sendingActivationId === resident.id
+                              ? 'Sending...'
+                              : 'Send Activation'
+                          }}
+                        </button>
                         <div class="border-t border-gray-200 my-1"></div>
                         <button
                           @click="
@@ -745,6 +775,7 @@ const queryClient = useQueryClient();
 const searchQuery = ref('');
 const includeDeleted = ref(false);
 const deletingResidentId = ref<number | null>(null);
+const sendingActivationId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const residentToDelete = ref<Resident | null>(null);
 const activeFilter = ref<'active' | 'all' | null>('active'); // Default to 'active' filter
@@ -790,6 +821,11 @@ const { mutateAsync: restoreResidentMutation } = useMutation({
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.residents.all });
   },
+});
+
+// Send activation email mutation
+const { mutateAsync: sendActivationEmailMutation } = useMutation({
+  mutationFn: (id: number) => residentsApi.sendActivationEmail(id),
 });
 
 // Helper function to check if resident is active
@@ -1000,6 +1036,21 @@ const confirmDelete = async () => {
 const cancelDelete = () => {
   showDeleteModal.value = false;
   residentToDelete.value = null;
+};
+
+const sendActivationEmail = async (residentId: number) => {
+  sendingActivationId.value = residentId;
+  try {
+    await sendActivationEmailMutation(residentId);
+    alert('Activation email sent successfully!');
+  } catch (error: any) {
+    console.error('Error sending activation email:', error);
+    alert(
+      `Failed to send activation email: ${error.message || 'Unknown error'}`
+    );
+  } finally {
+    sendingActivationId.value = null;
+  }
 };
 
 // Apply filters

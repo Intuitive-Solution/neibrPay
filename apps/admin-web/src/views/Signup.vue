@@ -55,14 +55,35 @@
             >
               Community Name <span class="text-red-500">*</span>
             </label>
-            <input
-              id="communityName"
-              v-model="form.communityName"
-              type="text"
-              required
-              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-              placeholder="Enter your community name"
-            />
+            <div class="relative">
+              <input
+                id="communityName"
+                v-model="form.communityName"
+                type="text"
+                required
+                :readonly="isMemberSignup"
+                :disabled="isMemberSignup"
+                :class="[
+                  'w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body',
+                  isMemberSignup ? 'bg-gray-50 cursor-not-allowed' : '',
+                ]"
+                placeholder="Enter your community name"
+              />
+              <svg
+                v-if="isMemberSignup"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
           </div>
 
           <!-- Email Input -->
@@ -73,15 +94,36 @@
             >
               Email <span class="text-red-500">*</span>
             </label>
-            <input
-              id="email"
-              v-model="form.email"
-              type="email"
-              autocomplete="email"
-              required
-              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-              placeholder="Enter your email"
-            />
+            <div class="relative">
+              <input
+                id="email"
+                v-model="form.email"
+                type="email"
+                autocomplete="email"
+                required
+                :readonly="isMemberSignup"
+                :disabled="isMemberSignup"
+                :class="[
+                  'w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body',
+                  isMemberSignup ? 'bg-gray-50 cursor-not-allowed' : '',
+                ]"
+                placeholder="Enter your email"
+              />
+              <svg
+                v-if="isMemberSignup"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
           </div>
 
           <!-- Full Name Input -->
@@ -563,13 +605,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import CommunityNameModal from '../components/CommunityNameModal.vue';
 import NeibrPayLogo from '../components/NeibrPayLogo.vue';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 // Form state
@@ -585,6 +628,12 @@ const form = reactive({
 const showPassword = ref(false);
 const showCommunityModal = ref(false);
 const errorMessage = ref('');
+
+// Member signup mode
+const isMemberSignup = computed(() => route.query.member === 'true');
+const lockedEmail = ref<string | null>(null);
+const lockedCommunityName = ref<string | null>(null);
+const residentId = ref<number | null>(null);
 
 // Phone number formatting
 const formattedPhoneNumber = ref('');
@@ -755,13 +804,24 @@ const handleSignup = async () => {
       return;
     }
 
-    await authStore.signupWithEmail({
-      communityName: form.communityName.trim(),
-      email: form.email.trim(),
-      fullName: form.fullName.trim(),
-      phoneNumber: form.phoneNumber.trim(),
-      password: form.password,
-    });
+    // Use member signup if in member mode
+    if (isMemberSignup.value && residentId.value) {
+      await authStore.memberSignupWithEmail({
+        residentId: residentId.value,
+        email: form.email.trim(),
+        fullName: form.fullName.trim(),
+        phoneNumber: form.phoneNumber.trim(),
+        password: form.password,
+      });
+    } else {
+      await authStore.signupWithEmail({
+        communityName: form.communityName.trim(),
+        email: form.email.trim(),
+        fullName: form.fullName.trim(),
+        phoneNumber: form.phoneNumber.trim(),
+        password: form.password,
+      });
+    }
 
     // Redirect to dashboard on success
     router.push('/');
@@ -774,7 +834,17 @@ const handleSignup = async () => {
 const handleGoogleSignup = async () => {
   try {
     errorMessage.value = '';
-    showCommunityModal.value = true;
+
+    // In member signup mode, skip the community modal and validate email match
+    if (isMemberSignup.value && lockedEmail.value) {
+      // Google signup will validate email match in the service method
+      // For now, show community modal with prefilled community (but it won't be editable)
+      // Actually, we should handle this differently - the Google popup happens first
+      // Then we validate the email, so we need to catch it in handleCommunityModalSubmit
+      showCommunityModal.value = true;
+    } else {
+      showCommunityModal.value = true;
+    }
   } catch (error) {
     errorMessage.value =
       error instanceof Error ? error.message : 'Google signup failed';
@@ -786,22 +856,87 @@ const handleCommunityModalSubmit = async (data: {
   phoneNumber?: string;
 }) => {
   try {
-    await authStore.signupWithGoogle({
-      communityName: data.communityName,
-      phoneNumber: data.phoneNumber,
-    });
+    // In member signup mode, use member signup endpoint
+    if (isMemberSignup.value && residentId.value && lockedEmail.value) {
+      await authStore.memberSignupWithGoogle(
+        {
+          residentId: residentId.value,
+          email: lockedEmail.value,
+          fullName: form.fullName.trim(),
+          phoneNumber: data.phoneNumber || form.phoneNumber,
+        },
+        {
+          validateEmailMatch: lockedEmail.value,
+        }
+      );
+    } else {
+      // Regular admin signup
+      const communityName =
+        isMemberSignup.value && lockedCommunityName.value
+          ? lockedCommunityName.value
+          : data.communityName;
+
+      await authStore.signupWithGoogle({
+        communityName: communityName,
+        phoneNumber: data.phoneNumber || form.phoneNumber,
+      });
+    }
 
     showCommunityModal.value = false;
     router.push('/');
   } catch (error) {
     errorMessage.value =
       error instanceof Error ? error.message : 'Google signup failed';
+    showCommunityModal.value = false;
   }
 };
 
 const handleCommunityModalClose = () => {
   showCommunityModal.value = false;
 };
+
+// Initialize form from query parameters on mount
+onMounted(() => {
+  if (isMemberSignup.value) {
+    // Extract query parameters
+    const queryEmail = route.query.email as string | undefined;
+    const queryName = route.query.name as string | undefined;
+    const queryPhone = route.query.phone as string | undefined;
+    const queryCommunity = route.query.community as string | undefined;
+    const queryResidentId = route.query.resident_id as string | undefined;
+
+    // Prefill and lock email
+    if (queryEmail) {
+      form.email = queryEmail.trim();
+      lockedEmail.value = queryEmail.trim();
+    }
+
+    // Prefill and lock community name
+    if (queryCommunity) {
+      form.communityName = queryCommunity.trim();
+      lockedCommunityName.value = queryCommunity.trim();
+    }
+
+    // Prefill name (editable)
+    if (queryName) {
+      form.fullName = queryName.trim();
+    }
+
+    // Prefill phone (editable)
+    if (queryPhone) {
+      const cleanedPhone = queryPhone.replace(/\D/g, '');
+      if (cleanedPhone.length === 10) {
+        form.phoneNumber = cleanedPhone;
+        formattedPhoneNumber.value = formatPhoneNumber(cleanedPhone);
+      }
+    }
+
+    // Store resident ID
+    if (queryResidentId) {
+      residentId.value = parseInt(queryResidentId, 10);
+    }
+  }
+});
 </script>
 
 <style scoped>
