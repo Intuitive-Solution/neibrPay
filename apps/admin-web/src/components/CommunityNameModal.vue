@@ -113,6 +113,9 @@
                   />
                 </svg>
               </div>
+              <p class="mt-1 text-xs text-gray-500 font-bold">
+                Choose thie email in your Google account signup.
+              </p>
             </div>
 
             <!-- Community Name Input -->
@@ -167,15 +170,41 @@
               >
                 Phone Number (Optional)
               </label>
-              <input
-                id="phoneNumber"
-                v-model="formattedPhoneNumber"
-                @input="handlePhoneInput"
-                type="tel"
-                maxlength="14"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                placeholder="555-555-5555"
-              />
+              <div class="relative">
+                <input
+                  id="phoneNumber"
+                  v-model="formattedPhoneNumber"
+                  @input="handlePhoneInput"
+                  type="tel"
+                  maxlength="14"
+                  :readonly="
+                    !!(props.isMemberSignup && props.lockedPhoneNumber)
+                  "
+                  :disabled="
+                    !!(props.isMemberSignup && props.lockedPhoneNumber)
+                  "
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                  :class="{
+                    'bg-gray-50 cursor-not-allowed':
+                      props.isMemberSignup && props.lockedPhoneNumber,
+                  }"
+                  placeholder="555-555-5555"
+                />
+                <svg
+                  v-if="props.isMemberSignup && props.lockedPhoneNumber"
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </div>
               <p class="mt-1 text-sm text-gray-500">
                 Optional: Enter a valid US phone number (10 digits).
               </p>
@@ -237,6 +266,7 @@ interface Props {
   isMemberSignup?: boolean;
   lockedCommunityName?: string | null;
   lockedEmail?: string | null;
+  lockedPhoneNumber?: string | null;
 }
 
 interface Emits {
@@ -249,6 +279,7 @@ const props = withDefaults(defineProps<Props>(), {
   isMemberSignup: false,
   lockedCommunityName: null,
   lockedEmail: null,
+  lockedPhoneNumber: null,
 });
 
 const emit = defineEmits<Emits>();
@@ -337,11 +368,21 @@ watch(
         if (props.lockedCommunityName) {
           form.communityName = props.lockedCommunityName;
         }
+        if (props.lockedPhoneNumber) {
+          form.phoneNumber = props.lockedPhoneNumber.replace(/\D/g, '');
+          formattedPhoneNumber.value = formatPhoneNumber(
+            props.lockedPhoneNumber
+          );
+        } else {
+          form.phoneNumber = '';
+          formattedPhoneNumber.value = '';
+        }
       } else {
         form.email = '';
         form.communityName = '';
+        form.phoneNumber = '';
+        formattedPhoneNumber.value = '';
       }
-      form.phoneNumber = '';
       errors.communityName = '';
     }
   }
@@ -363,6 +404,17 @@ watch(
   (newValue: string | null) => {
     if (props.isMemberSignup && newValue) {
       form.email = newValue;
+    }
+  }
+);
+
+// Watch for lockedPhoneNumber changes
+watch(
+  () => props.lockedPhoneNumber,
+  (newValue: string | null) => {
+    if (props.isMemberSignup && newValue) {
+      form.phoneNumber = newValue.replace(/\D/g, '');
+      formattedPhoneNumber.value = formatPhoneNumber(newValue);
     }
   }
 );

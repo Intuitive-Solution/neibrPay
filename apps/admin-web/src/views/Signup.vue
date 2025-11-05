@@ -601,6 +601,7 @@
       :is-member-signup="isMemberSignup"
       :locked-community-name="lockedCommunityName"
       :locked-email="lockedEmail"
+      :locked-phone-number="lockedPhoneNumber"
       @close="handleCommunityModalClose"
       @submit="handleCommunityModalSubmit"
     />
@@ -636,6 +637,7 @@ const errorMessage = ref('');
 const isMemberSignup = computed(() => route.query.member === 'true');
 const lockedEmail = ref<string | null>(null);
 const lockedCommunityName = ref<string | null>(null);
+const lockedPhoneNumber = ref<string | null>(null);
 const residentId = ref<number | null>(null);
 
 // Phone number formatting
@@ -925,12 +927,13 @@ onMounted(() => {
       form.fullName = queryName.trim();
     }
 
-    // Prefill phone (editable)
+    // Prefill and lock phone number if available
     if (queryPhone) {
       const cleanedPhone = queryPhone.replace(/\D/g, '');
       if (cleanedPhone.length === 10) {
         form.phoneNumber = cleanedPhone;
         formattedPhoneNumber.value = formatPhoneNumber(cleanedPhone);
+        lockedPhoneNumber.value = formatPhoneNumber(cleanedPhone);
       }
     }
 
