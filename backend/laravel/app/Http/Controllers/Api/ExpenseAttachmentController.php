@@ -17,7 +17,7 @@ class ExpenseAttachmentController extends Controller
      */
     public function index(Request $request, Expense $expense): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {
@@ -43,7 +43,7 @@ class ExpenseAttachmentController extends Controller
      */
     public function store(Request $request, Expense $expense): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {
@@ -110,7 +110,7 @@ class ExpenseAttachmentController extends Controller
      */
     public function show(Request $request, Expense $expense, int $attachmentId): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {
@@ -136,7 +136,7 @@ class ExpenseAttachmentController extends Controller
      */
     public function download(Request $request, Expense $expense, int $attachmentId)
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {
@@ -165,7 +165,7 @@ class ExpenseAttachmentController extends Controller
      */
     public function destroy(Request $request, Expense $expense, int $attachmentId): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {

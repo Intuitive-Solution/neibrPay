@@ -17,7 +17,7 @@ class VendorController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         if (!$user || !$user->tenant_id) {
             return response()->json(['message' => 'Unauthorized'], 401);

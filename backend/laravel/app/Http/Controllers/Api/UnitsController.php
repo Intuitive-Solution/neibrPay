@@ -15,7 +15,7 @@ class UnitsController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         $includeDeleted = $request->boolean('include_deleted', false);
         
         $query = Unit::forTenant($user->tenant_id)
@@ -41,7 +41,7 @@ class UnitsController extends Controller
      */
     public function forInvoices(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $units = Unit::forTenant($user->tenant_id)
             ->where('is_active', true)
@@ -80,7 +80,7 @@ class UnitsController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -111,7 +111,7 @@ class UnitsController extends Controller
      */
     public function show(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the unit belongs to the user's tenant
         if ($unit->tenant_id !== $user->tenant_id) {
@@ -130,7 +130,7 @@ class UnitsController extends Controller
      */
     public function update(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the unit belongs to the user's tenant
         if ($unit->tenant_id !== $user->tenant_id) {
@@ -162,7 +162,7 @@ class UnitsController extends Controller
      */
     public function destroy(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the unit belongs to the user's tenant
         if ($unit->tenant_id !== $user->tenant_id) {
@@ -181,7 +181,7 @@ class UnitsController extends Controller
      */
     public function restore(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $unit = Unit::withTrashed()
             ->where('id', $id)
@@ -210,7 +210,7 @@ class UnitsController extends Controller
      */
     public function forceDelete(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $unit = Unit::withTrashed()
             ->where('id', $id)
@@ -233,7 +233,7 @@ class UnitsController extends Controller
      */
     public function addOwners(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the unit belongs to the user's tenant
         if ($unit->tenant_id !== $user->tenant_id) {
@@ -271,7 +271,7 @@ class UnitsController extends Controller
      */
     public function removeOwners(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the unit belongs to the user's tenant
         if ($unit->tenant_id !== $user->tenant_id) {
@@ -297,7 +297,7 @@ class UnitsController extends Controller
      */
     public function syncOwners(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the unit belongs to the user's tenant
         if ($unit->tenant_id !== $user->tenant_id) {

@@ -22,7 +22,7 @@ class TenantController extends Controller
                 'phone' => 'sometimes|nullable|string|max:20',
             ]);
 
-            $user = $request->get('firebase_user');
+            $user = $request->user();
 
             if (!$user) {
                 return response()->json(['error' => 'User not found'], 404);
@@ -80,7 +80,7 @@ class TenantController extends Controller
                 'first_month_of_year' => 'sometimes|string|in:January,February,March,April,May,June,July,August,September,October,November,December',
             ]);
 
-            $user = $request->get('firebase_user');
+            $user = $request->user();
 
             if (!$user) {
                 return response()->json(['error' => 'User not found'], 404);

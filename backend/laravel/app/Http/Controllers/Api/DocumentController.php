@@ -16,7 +16,7 @@ class DocumentController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
 
         $query = HoaDocument::forTenant($user->tenant_id)
             ->with('uploader:id,name,email')
@@ -45,7 +45,7 @@ class DocumentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
 
         // Only admins can upload documents
         if (!$user->isAdmin()) {
@@ -115,7 +115,7 @@ class DocumentController extends Controller
      */
     public function show(Request $request, HoaDocument $document): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
 
         // Ensure user can access this document
         if ($document->tenant_id !== $user->tenant_id) {
@@ -139,7 +139,7 @@ class DocumentController extends Controller
      */
     public function update(Request $request, HoaDocument $document): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
 
         // Only admins can update documents
         if (!$user->isAdmin()) {
@@ -173,7 +173,7 @@ class DocumentController extends Controller
      */
     public function download(Request $request, HoaDocument $document)
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
 
         // Ensure user can access this document
         if ($document->tenant_id !== $user->tenant_id) {
@@ -200,7 +200,7 @@ class DocumentController extends Controller
      */
     public function destroy(Request $request, HoaDocument $document): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
 
         // Only admins can delete documents
         if (!$user->isAdmin()) {
@@ -228,7 +228,7 @@ class DocumentController extends Controller
      */
     public function forceDelete(Request $request, HoaDocument $document): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
 
         // Only admins can permanently delete documents
         if (!$user->isAdmin()) {

@@ -19,7 +19,7 @@ class UnitDocumentController extends Controller
      */
     public function index(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure user can access this unit
         if ($unit->tenant_id !== $user->tenant_id) {
@@ -44,7 +44,7 @@ class UnitDocumentController extends Controller
      */
     public function store(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         
         // Ensure user can access this unit
@@ -111,7 +111,7 @@ class UnitDocumentController extends Controller
      */
     public function show(Request $request, Unit $unit, UnitDocument $document): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure user can access this unit and document
         if ($unit->tenant_id !== $user->tenant_id || $document->unit_id !== $unit->id) {
@@ -130,7 +130,7 @@ class UnitDocumentController extends Controller
      */
     public function download(Request $request, Unit $unit, UnitDocument $document)
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure user can access this unit and document
         if ($unit->tenant_id !== $user->tenant_id || $document->unit_id !== $unit->id) {
@@ -152,7 +152,7 @@ class UnitDocumentController extends Controller
      */
     public function destroy(Request $request, Unit $unit, UnitDocument $document): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure user can access this unit and document
         if ($unit->tenant_id !== $user->tenant_id || $document->unit_id !== $unit->id) {
@@ -172,7 +172,7 @@ class UnitDocumentController extends Controller
      */
     public function forceDelete(Request $request, Unit $unit, UnitDocument $document): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure user can access this unit and document
         if ($unit->tenant_id !== $user->tenant_id || $document->unit_id !== $unit->id) {

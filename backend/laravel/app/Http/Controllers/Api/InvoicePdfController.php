@@ -22,7 +22,7 @@ class InvoicePdfController extends Controller
      */
     public function generate(Request $request, InvoiceUnit $invoice): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -65,7 +65,7 @@ class InvoicePdfController extends Controller
      */
     public function latest(Request $request, InvoiceUnit $invoice): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -90,7 +90,7 @@ class InvoicePdfController extends Controller
      */
     public function view(Request $request, InvoiceUnit $invoice): Response
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -121,7 +121,7 @@ class InvoicePdfController extends Controller
      */
     public function download(Request $request, InvoiceUnit $invoice): Response
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -151,7 +151,7 @@ class InvoicePdfController extends Controller
      */
     public function versions(Request $request, InvoiceUnit $invoice): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -174,7 +174,7 @@ class InvoicePdfController extends Controller
      */
     public function downloadVersion(Request $request, InvoiceUnit $invoice, int $version): Response
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {

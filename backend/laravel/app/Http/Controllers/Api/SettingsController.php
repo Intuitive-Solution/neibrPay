@@ -15,7 +15,7 @@ class SettingsController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $user = $request->get('firebase_user');
+            $user = $request->user();
 
             if (!$user) {
                 return response()->json(['error' => 'User not found'], 404);
