@@ -3,13 +3,9 @@
     <!-- Use sidebar layout for authenticated pages -->
     <AppSidebar
       v-if="
-        $route.name !== 'Login' &&
-        $route.name !== 'Signup' &&
-        $route.name !== 'ForgotPassword' &&
-        $route.name !== 'ResetPassword' &&
+        $route.name !== 'UnifiedAuth' &&
         $route.name !== 'TermsOfService' &&
-        $route.name !== 'PrivacyNotice' &&
-        $route.name !== 'MagicLinkAuth'
+        $route.name !== 'PrivacyNotice'
       "
     >
       <router-view />

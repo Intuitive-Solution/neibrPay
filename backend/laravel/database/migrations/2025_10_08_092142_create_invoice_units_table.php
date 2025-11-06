@@ -31,7 +31,7 @@ return new class extends Migration
             $table->decimal('total', 10, 2)->default(0.00);
             $table->decimal('paid_to_date', 10, 2)->default(0.00);
             $table->decimal('balance_due', 10, 2)->default(0.00);
-            $table->enum('status', ['draft', 'sent', 'paid', 'overdue', 'cancelled'])->default('draft');
+            $table->enum('status', ['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])->default('draft');
             $table->foreignId('parent_invoice_id')->nullable()->constrained('invoice_units')->onDelete('set null');
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();

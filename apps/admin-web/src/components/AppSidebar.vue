@@ -800,11 +800,11 @@ const getNavLinkClass = (routeNames: string | string[]) => {
 // Handle logout
 const handleLogout = async () => {
   try {
-    await authStore.signout();
-    router.push('/login');
+    await authStore.logout();
+    router.push('/auth');
   } catch (error) {
     console.error('Logout failed:', error);
-    router.push('/login');
+    router.push('/auth');
   }
 };
 </script>

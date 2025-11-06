@@ -6,10 +6,8 @@ import { useAuthStore } from './stores/auth';
 import { VueQueryPlugin } from '@tanstack/vue-query';
 import { queryClient } from './config/queryClient';
 import { setAuthTokenGetter } from '@neibrpay/api-client';
+import { setupAuthGuards } from './router/guards';
 import './style.css';
-
-// Initialize Firebase
-import './config/firebase';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -17,6 +15,9 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 app.use(VueQueryPlugin, { queryClient });
+
+// Setup authentication guards AFTER Pinia is initialized
+setupAuthGuards(router);
 
 // Initialize auth store after pinia is set up
 const authStore = useAuthStore();

@@ -14,9 +14,9 @@
     "barryvdh/laravel-dompdf": "^3.1",
     "doctrine/dbal": "^3.10",
     "guzzlehttp/guzzle": "^7.2",
-    "kreait/firebase-php": "^6.0",
     "laravel/framework": "^10.10",
     "laravel/sanctum": "^3.2",
+    "laravel/socialite": "^5.23",
     "laravel/tinker": "^2.8"
   },
   "require-dev": {

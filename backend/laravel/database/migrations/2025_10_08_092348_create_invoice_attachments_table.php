@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('invoice_unit_id')->constrained()->onDelete('cascade');
             $table->string('file_name');
             $table->string('file_path');
-            $table->string('file_hash')->unique();
+            $table->string('file_hash'); // Not unique - allows same file for multiple invoices
             $table->bigInteger('file_size');
             $table->string('mime_type');
             $table->enum('attachment_type', ['pdf', 'image', 'document', 'other'])->default('other');

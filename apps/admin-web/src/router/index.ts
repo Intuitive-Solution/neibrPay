@@ -1,9 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../views/Dashboard.vue';
-import Login from '../views/Login.vue';
-import Signup from '../views/Signup.vue';
-import ForgotPassword from '../views/ForgotPassword.vue';
-import ResetPassword from '../views/ResetPassword.vue';
+import UnifiedAuth from '../views/UnifiedAuth.vue';
 import TermsOfService from '../views/TermsOfService.vue';
 import PrivacyNotice from '../views/PrivacyNotice.vue';
 import Invoices from '../views/Invoices.vue';
@@ -24,39 +21,14 @@ import AddVendor from '../views/AddVendor.vue';
 import Documents from '../views/Documents.vue';
 import Settings from '../views/Settings.vue';
 import { setupAuthGuards } from './guards';
-import MagicLinkAuth from '../views/MagicLinkAuth.vue';
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/auth/magic',
-      name: 'MagicLinkAuth',
-      component: MagicLinkAuth,
-      meta: { requiresAuth: false },
-    },
-    {
-      path: '/login',
-      name: 'Login',
-      component: Login,
-      meta: { requiresAuth: false },
-    },
-    {
-      path: '/signup',
-      name: 'Signup',
-      component: Signup,
-      meta: { requiresAuth: false },
-    },
-    {
-      path: '/forgot-password',
-      name: 'ForgotPassword',
-      component: ForgotPassword,
-      meta: { requiresAuth: false },
-    },
-    {
-      path: '/reset-password',
-      name: 'ResetPassword',
-      component: ResetPassword,
+      path: '/auth',
+      name: 'UnifiedAuth',
+      component: UnifiedAuth,
       meta: { requiresAuth: false },
     },
     {
@@ -226,7 +198,7 @@ const router = createRouter({
   ],
 });
 
-// Setup authentication guards
-setupAuthGuards(router);
+// Note: setupAuthGuards will be called in main.ts after Pinia is initialized
+// This prevents "getActivePinia()" error
 
 export default router;

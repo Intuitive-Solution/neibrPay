@@ -5,53 +5,174 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\FirebaseService;
+use App\Models\VerificationCode;
+use App\Services\VerificationCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
 {
-    protected FirebaseService $firebaseService;
+    protected VerificationCodeService $verificationCodeService;
 
-    public function __construct(FirebaseService $firebaseService)
+    public function __construct(VerificationCodeService $verificationCodeService)
     {
-        $this->firebaseService = $firebaseService;
+        $this->verificationCodeService = $verificationCodeService;
     }
 
     /**
-     * Handle email/password signup
+     * Check if email exists in the system
+     */
+    public function checkEmail(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'required|email|max:255',
+            ]);
+
+            $email = strtolower(trim($validated['email']));
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                return response()->json([
+                    'exists' => true,
+                    'requires_signup' => false,
+                    'tenant_name' => $user->tenant?->name,
+                ]);
+            }
+
+            return response()->json([
+                'exists' => false,
+                'requires_signup' => true,
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Check email failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to check email'], 500);
+        }
+    }
+
+    /**
+     * Send verification code to email
+     */
+    public function sendCode(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'required|email|max:255',
+            ]);
+
+            $email = strtolower(trim($validated['email']));
+            $ipAddress = $request->ip();
+
+            // Check rate limits
+            if (!$this->verificationCodeService->canSendCode($email)) {
+                return response()->json([
+                    'error' => 'Too many verification code requests. Please try again later.',
+                ], 429);
+            }
+
+            // Generate and store code
+            $verificationCode = $this->verificationCodeService->generateCode($email, null, $ipAddress);
+
+            // Send email via n8n
+            $this->verificationCodeService->sendCodeEmail($email, $verificationCode->code);
+
+            return response()->json([
+                'message' => 'Verification code sent',
+                'expires_in' => $this->verificationCodeService->getExpirationSeconds(),
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Send code failed: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Verify code and return temporary verification token
+     */
+    public function verifyCode(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'required|email|max:255',
+                'code' => 'required|string|size:6',
+            ]);
+
+            $email = strtolower(trim($validated['email']));
+            $code = $validated['code'];
+
+            // Validate code
+            $verificationCode = $this->verificationCodeService->validateCode($email, $code);
+
+            if (!$verificationCode) {
+                return response()->json([
+                    'valid' => false,
+                    'error' => 'Invalid or expired verification code',
+                ], 400);
+            }
+
+            // Generate temporary verification token (stored in cache for 10 minutes)
+            $verificationToken = Str::random(64);
+            Cache::put("verification_token:{$verificationToken}", [
+                'email' => $email,
+                'code_id' => $verificationCode->id,
+                'verified_at' => now(),
+            ], now()->addMinutes(10));
+
+            return response()->json([
+                'valid' => true,
+                'verification_token' => $verificationToken,
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Verify code failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to verify code'], 500);
+        }
+    }
+
+    /**
+     * Signup new user with verification code
      */
     public function signup(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
-                'community_name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'verification_token' => 'required|string',
                 'full_name' => 'required|string|max:255',
                 'phone_number' => 'nullable|string|max:20',
-                'firebase_uid' => 'required|string',
-                'email' => 'required|email|max:255',
+                'community_name' => 'required|string|max:255',
             ]);
 
-            $authHeader = $request->header('Authorization');
-            if (!$authHeader || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-                return response()->json(['error' => 'Invalid authorization header'], 401);
+            // Validate verification token
+            $tokenData = Cache::get("verification_token:{$validated['verification_token']}");
+            if (!$tokenData || $tokenData['email'] !== strtolower(trim($validated['email']))) {
+                return response()->json(['error' => 'Invalid verification token'], 400);
             }
 
-            $tokenData = $this->firebaseService->verifyIdToken($matches[1]);
+            $email = strtolower(trim($validated['email']));
 
-            if ($tokenData['uid'] !== $validated['firebase_uid']) {
-                return response()->json(['error' => 'Token mismatch'], 401);
-            }
-
-            $existingUser = User::where('firebase_uid', $validated['firebase_uid'])->first();
+            // Check if user already exists
+            $existingUser = User::where('email', $email)->first();
             if ($existingUser) {
                 return response()->json(['error' => 'User already exists'], 400);
             }
 
+            // Check if community already exists
             $existingTenant = Tenant::where('name', $validated['community_name'])->first();
             if ($existingTenant) {
                 return response()->json(['error' => 'Community already exists'], 400);
@@ -60,22 +181,30 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             try {
+                // Create tenant
                 $tenant = Tenant::create([
                     'name' => $validated['community_name'],
                     'slug' => Str::slug($validated['community_name']),
                     'trial_ends_at' => now()->addDays(30),
-                ]);
-
-                $user = User::create([
-                    'firebase_uid' => $validated['firebase_uid'],
-                    'tenant_id' => $tenant->id,
-                    'name' => $validated['full_name'],
-                    'email' => $validated['email'],
-                    'phone_number' => $validated['phone_number'],
-                    'role' => 'admin',
-                    'email_verified_at' => $tokenData['email_verified'] ? now() : null,
                     'is_active' => true,
                 ]);
+
+                // Create user
+                $user = User::create([
+                    'tenant_id' => $tenant->id,
+                    'name' => $validated['full_name'],
+                    'email' => $email,
+                    'phone_number' => $validated['phone_number'] ?? null,
+                    'role' => 'admin',
+                    'email_verified_at' => now(),
+                    'is_active' => true,
+                ]);
+
+                // Generate Sanctum token
+                $token = $user->createToken('auth-token')->plainTextToken;
+
+                // Delete verification token from cache
+                Cache::forget("verification_token:{$validated['verification_token']}");
 
                 DB::commit();
 
@@ -87,14 +216,15 @@ class AuthController extends Controller
                         'email' => $user->email,
                         'role' => $user->role,
                         'phone_number' => $user->phone_number,
-                        'email_verified' => $user->email_verified_at !== null,
+                        'email_verified' => true,
                     ],
                     'tenant' => [
                         'id' => $tenant->id,
                         'name' => $tenant->name,
                         'slug' => $tenant->slug,
                         'trial_ends_at' => $tenant->trial_ends_at,
-                    ]
+                    ],
+                    'token' => $token,
                 ], 201);
 
             } catch (\Exception $e) {
@@ -111,39 +241,190 @@ class AuthController extends Controller
     }
 
     /**
-     * Handle Google signup
+     * Login existing user with verification code
+     */
+    public function login(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'required|email|max:255',
+                'verification_token' => 'required|string',
+            ]);
+
+            // Validate verification token
+            $tokenData = Cache::get("verification_token:{$validated['verification_token']}");
+            if (!$tokenData || $tokenData['email'] !== strtolower(trim($validated['email']))) {
+                return response()->json(['error' => 'Invalid verification token'], 400);
+            }
+
+            $email = strtolower(trim($validated['email']));
+
+            // Find user
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            // Check if user is active
+            if (!$user->is_active) {
+                return response()->json(['error' => 'Account is inactive'], 403);
+            }
+
+            // Update last login
+            $user->updateLastLogin();
+
+            // Generate Sanctum token
+            $token = $user->createToken('auth-token')->plainTextToken;
+
+            // Delete verification token from cache
+            Cache::forget("verification_token:{$validated['verification_token']}");
+
+            $user->load('tenant');
+
+            return response()->json([
+                'message' => 'Login successful',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'phone_number' => $user->phone_number,
+                    'email_verified' => $user->email_verified_at !== null,
+                ],
+                'tenant' => $user->tenant ? [
+                    'id' => $user->tenant->id,
+                    'name' => $user->tenant->name,
+                    'slug' => $user->tenant->slug,
+                    'trial_ends_at' => $user->tenant->trial_ends_at,
+                ] : null,
+                'token' => $token,
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Login failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Login failed'], 500);
+        }
+    }
+
+    /**
+     * Redirect to Google OAuth
+     */
+    public function redirectToGoogle()
+    {
+        try {
+            return Socialite::driver('google')->redirect();
+        } catch (\Exception $e) {
+            Log::error('Google redirect failed: ' . $e->getMessage());
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+            return redirect("{$frontendUrl}/auth?error=" . urlencode('Failed to initiate Google authentication'));
+        }
+    }
+
+    /**
+     * Handle Google OAuth callback
+     * Redirects to frontend with result data in query params
+     */
+    public function handleGoogleCallback(Request $request)
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+
+            $email = strtolower(trim($googleUser->getEmail()));
+            $name = $googleUser->getName();
+            $avatar = $googleUser->getAvatar();
+
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+
+            // Check if user exists
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                // Existing user - login
+                if (!$user->is_active) {
+                    return redirect("{$frontendUrl}/auth?error=" . urlencode('Account is inactive'));
+                }
+
+                // Update user info from Google
+                $user->update([
+                    'name' => $name ?? $user->name,
+                    'avatar_url' => $avatar ?? $user->avatar_url,
+                    'email_verified_at' => now(),
+                ]);
+
+                $user->updateLastLogin();
+
+                // Generate Sanctum token
+                $token = $user->createToken('auth-token')->plainTextToken;
+
+                $user->load('tenant');
+
+                // Redirect to frontend with token and user data
+                $params = http_build_query([
+                    'token' => $token,
+                    'user_id' => $user->id,
+                    'exists' => 'true',
+                ]);
+
+                return redirect("{$frontendUrl}/auth?{$params}");
+            } else {
+                // New user - return Google data for signup
+                $googleToken = Str::random(64);
+                Cache::put("google_signup:{$googleToken}", [
+                    'email' => $email,
+                    'name' => $name,
+                    'avatar' => $avatar,
+                    'verified_at' => now(),
+                ], now()->addMinutes(30));
+
+                // Redirect to frontend with Google data
+                $params = http_build_query([
+                    'google_token' => $googleToken,
+                    'email' => $email,
+                    'name' => $name,
+                    'avatar' => $avatar,
+                    'exists' => 'false',
+                ]);
+
+                return redirect("{$frontendUrl}/auth?{$params}");
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Google callback failed: ' . $e->getMessage());
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+            return redirect("{$frontendUrl}/auth?error=" . urlencode('Google authentication failed'));
+        }
+    }
+
+    /**
+     * Signup new user with Google OAuth
      */
     public function googleSignup(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
-                'community_name' => 'required|string|max:255',
+                'google_token' => 'required|string',
                 'phone_number' => 'nullable|string|max:20',
-                'firebase_uid' => 'required|string',
-                'email' => 'required|email|max:255',
-                'full_name' => 'required|string|max:255',
+                'community_name' => 'required|string|max:255',
             ]);
 
-            $authHeader = $request->header('Authorization');
-            if (!$authHeader || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-                return response()->json(['error' => 'Invalid authorization header'], 401);
+            // Validate Google token
+            $googleData = Cache::get("google_signup:{$validated['google_token']}");
+            if (!$googleData) {
+                return response()->json(['error' => 'Invalid or expired Google token'], 400);
             }
 
-            $tokenData = $this->firebaseService->verifyIdToken($matches[1]);
+            $email = $googleData['email'];
 
-            if ($tokenData['uid'] !== $validated['firebase_uid']) {
-                return response()->json(['error' => 'Token mismatch'], 401);
-            }
-
-            if (!$this->firebaseService->isGoogleProvider($tokenData)) {
-                return response()->json(['error' => 'Invalid provider'], 400);
-            }
-
-            $existingUser = User::where('firebase_uid', $validated['firebase_uid'])->first();
+            // Check if user already exists
+            $existingUser = User::where('email', $email)->first();
             if ($existingUser) {
                 return response()->json(['error' => 'User already exists'], 400);
             }
 
+            // Check if community already exists
             $existingTenant = Tenant::where('name', $validated['community_name'])->first();
             if ($existingTenant) {
                 return response()->json(['error' => 'Community already exists'], 400);
@@ -152,23 +433,31 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             try {
+                // Create tenant
                 $tenant = Tenant::create([
                     'name' => $validated['community_name'],
                     'slug' => Str::slug($validated['community_name']),
                     'trial_ends_at' => now()->addDays(30),
+                    'is_active' => true,
                 ]);
 
+                // Create user
                 $user = User::create([
-                    'firebase_uid' => $validated['firebase_uid'],
                     'tenant_id' => $tenant->id,
-                    'name' => $validated['full_name'],
-                    'email' => $validated['email'],
-                    'phone_number' => $validated['phone_number'],
-                    'avatar_url' => $tokenData['picture'] ?? null,
+                    'name' => $googleData['name'],
+                    'email' => $email,
+                    'phone_number' => $validated['phone_number'] ?? null,
+                    'avatar_url' => $googleData['avatar'] ?? null,
                     'role' => 'admin',
                     'email_verified_at' => now(),
                     'is_active' => true,
                 ]);
+
+                // Generate Sanctum token
+                $token = $user->createToken('auth-token')->plainTextToken;
+
+                // Delete Google token from cache
+                Cache::forget("google_signup:{$validated['google_token']}");
 
                 DB::commit();
 
@@ -188,7 +477,8 @@ class AuthController extends Controller
                         'name' => $tenant->name,
                         'slug' => $tenant->slug,
                         'trial_ends_at' => $tenant->trial_ends_at,
-                    ]
+                    ],
+                    'token' => $token,
                 ], 201);
 
             } catch (\Exception $e) {
@@ -205,12 +495,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Get current user and tenant information
+     * Get current authenticated user
      */
     public function me(Request $request): JsonResponse
     {
         try {
-            $user = $request->get('firebase_user');
+            $user = $request->user();
 
             if (!$user) {
                 return response()->json(['error' => 'User not found'], 404);
@@ -254,10 +544,11 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
-            $tokenData = $request->get('firebase_token_data');
+            $user = $request->user();
 
-            if ($tokenData) {
-                $this->firebaseService->revokeRefreshTokens($tokenData['uid']);
+            if ($user) {
+                // Revoke current token
+                $request->user()->currentAccessToken()->delete();
             }
 
             return response()->json(['message' => 'Logged out successfully']);
@@ -265,341 +556,6 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             Log::error('Logout failed: ' . $e->getMessage());
             return response()->json(['error' => 'Logout failed'], 500);
-        }
-    }
-
-    /**
-     * Update user profile
-     */
-    public function updateProfile(Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'name' => 'sometimes|string|max:255',
-                'email' => 'sometimes|email|max:255',
-                'phone_number' => 'sometimes|nullable|string|max:20',
-            ]);
-
-            $user = $request->get('firebase_user');
-
-            if (!$user) {
-                return response()->json(['error' => 'User not found'], 404);
-            }
-
-            // Update only provided fields
-            if (isset($validated['name'])) {
-                $user->name = $validated['name'];
-            }
-            if (isset($validated['email'])) {
-                $user->email = $validated['email'];
-            }
-            if (isset($validated['phone_number'])) {
-                $user->phone_number = $validated['phone_number'];
-            }
-
-            $user->save();
-
-            return response()->json([
-                'message' => 'Profile updated successfully',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone_number' => $user->phone_number ?? '',
-                ],
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            Log::error('Update profile failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to update profile'], 500);
-        }
-    }
-
-    /**
-     * Change password
-     */
-    public function changePassword(Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'current_password' => 'required|string',
-                'new_password' => 'required|string|min:8|confirmed',
-                'new_password_confirmation' => 'required|string',
-            ]);
-
-            $user = $request->get('firebase_user');
-            $tokenData = $request->get('firebase_token_data');
-
-            if (!$user || !$tokenData) {
-                return response()->json(['error' => 'User not found'], 404);
-            }
-
-            $uid = $tokenData['uid'];
-
-            // Verify current password by attempting to sign in
-            try {
-                // Firebase Admin SDK doesn't have a direct way to verify password
-                // We'll update the password directly. The frontend should verify current password
-                // by re-authenticating the user before calling this endpoint
-                $this->firebaseService->updateUserPassword($uid, $validated['new_password']);
-            } catch (\Exception $e) {
-                Log::error('Password update failed: ' . $e->getMessage());
-                return response()->json(['error' => 'Failed to update password. Please ensure your current password is correct.'], 400);
-            }
-
-            return response()->json([
-                'message' => 'Password updated successfully',
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            Log::error('Change password failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to change password'], 500);
-        }
-    }
-
-    /**
-     * Handle member signup (joins existing tenant)
-     */
-    public function memberSignup(Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'resident_id' => 'required|integer|exists:users,id',
-                'full_name' => 'required|string|max:255',
-                'phone_number' => 'nullable|string|max:20',
-                'firebase_uid' => 'required|string',
-                'email' => 'required|email|max:255',
-            ]);
-
-            $authHeader = $request->header('Authorization');
-            if (!$authHeader || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-                return response()->json(['error' => 'Invalid authorization header'], 401);
-            }
-
-            $tokenData = $this->firebaseService->verifyIdToken($matches[1]);
-
-            if ($tokenData['uid'] !== $validated['firebase_uid']) {
-                return response()->json(['error' => 'Token mismatch'], 401);
-            }
-
-            // Find existing resident record
-            $resident = User::findOrFail($validated['resident_id']);
-
-            // Verify resident is a resident (not admin)
-            if ($resident->role !== 'resident') {
-                return response()->json(['error' => 'Invalid resident ID'], 400);
-            }
-
-            // Verify email matches
-            if ($resident->email !== $validated['email']) {
-                return response()->json(['error' => 'Email does not match resident record'], 400);
-            }
-
-            // Verify resident is active
-            if (!$resident->is_active || $resident->deleted_at) {
-                return response()->json(['error' => 'Resident account is not active'], 400);
-            }
-
-            // Check if Firebase account already exists for this email
-            $existingFirebaseUser = User::where('firebase_uid', $validated['firebase_uid'])
-                ->where('id', '!=', $resident->id)
-                ->first();
-            
-            if ($existingFirebaseUser) {
-                return response()->json(['error' => 'Firebase account already linked to another user'], 400);
-            }
-
-            // Update resident with Firebase UID
-            $resident->update([
-                'firebase_uid' => $validated['firebase_uid'],
-                'name' => $validated['full_name'], // Update name if changed
-                'phone_number' => $validated['phone_number'] ?? $resident->phone_number,
-                'email_verified_at' => $tokenData['email_verified'] ? now() : null,
-            ]);
-
-            $resident->load('tenant');
-
-            return response()->json([
-                'message' => 'Account activated successfully',
-                'user' => [
-                    'id' => $resident->id,
-                    'name' => $resident->name,
-                    'email' => $resident->email,
-                    'role' => $resident->role,
-                    'phone_number' => $resident->phone_number,
-                    'email_verified' => $resident->email_verified_at !== null,
-                ],
-                'tenant' => $resident->tenant ? [
-                    'id' => $resident->tenant->id,
-                    'name' => $resident->tenant->name,
-                    'slug' => $resident->tenant->slug,
-                ] : null
-            ], 200);
-
-        } catch (ValidationException $e) {
-            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            Log::error('Member signup failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Member signup failed: ' . $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Handle member Google signup (joins existing tenant)
-     */
-    public function memberGoogleSignup(Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'resident_id' => 'required|integer|exists:users,id',
-                'phone_number' => 'nullable|string|max:20',
-                'firebase_uid' => 'required|string',
-                'email' => 'required|email|max:255',
-                'full_name' => 'required|string|max:255',
-            ]);
-
-            $authHeader = $request->header('Authorization');
-            if (!$authHeader || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-                return response()->json(['error' => 'Invalid authorization header'], 401);
-            }
-
-            $tokenData = $this->firebaseService->verifyIdToken($matches[1]);
-
-            if ($tokenData['uid'] !== $validated['firebase_uid']) {
-                return response()->json(['error' => 'Token mismatch'], 401);
-            }
-
-            if (!$this->firebaseService->isGoogleProvider($tokenData)) {
-                return response()->json(['error' => 'Invalid provider'], 400);
-            }
-
-            // Find existing resident record
-            $resident = User::findOrFail($validated['resident_id']);
-
-            // Verify resident is a resident (not admin)
-            if ($resident->role !== 'resident') {
-                return response()->json(['error' => 'Invalid resident ID'], 400);
-            }
-
-            // Verify email matches
-            if ($resident->email !== $validated['email']) {
-                return response()->json(['error' => 'Google account email must match the invitation email'], 400);
-            }
-
-            // Verify resident is active
-            if (!$resident->is_active || $resident->deleted_at) {
-                return response()->json(['error' => 'Resident account is not active'], 400);
-            }
-
-            // Check if Firebase account already exists for this email
-            $existingFirebaseUser = User::where('firebase_uid', $validated['firebase_uid'])
-                ->where('id', '!=', $resident->id)
-                ->first();
-            
-            if ($existingFirebaseUser) {
-                return response()->json(['error' => 'Firebase account already linked to another user'], 400);
-            }
-
-            // Update resident with Firebase UID
-            $resident->update([
-                'firebase_uid' => $validated['firebase_uid'],
-                'name' => $validated['full_name'], // Update name if changed
-                'phone_number' => $validated['phone_number'] ?? $resident->phone_number,
-                'avatar_url' => $tokenData['picture'] ?? $resident->avatar_url,
-                'email_verified_at' => now(), // Google accounts are verified
-            ]);
-
-            $resident->load('tenant');
-
-            return response()->json([
-                'message' => 'Account activated successfully with Google',
-                'user' => [
-                    'id' => $resident->id,
-                    'name' => $resident->name,
-                    'email' => $resident->email,
-                    'role' => $resident->role,
-                    'phone_number' => $resident->phone_number,
-                    'avatar_url' => $resident->avatar_url,
-                    'email_verified' => true,
-                ],
-                'tenant' => $resident->tenant ? [
-                    'id' => $resident->tenant->id,
-                    'name' => $resident->tenant->name,
-                    'slug' => $resident->tenant->slug,
-                ] : null
-            ], 200);
-
-        } catch (ValidationException $e) {
-            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            Log::error('Member Google signup failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Member Google signup failed: ' . $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Exchange magic link custom token for user data
-     * Note: Frontend should use signInWithCustomToken() first to get ID token, then send ID token here
-     */
-    public function exchangeMagicToken(Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'id_token' => 'required|string',
-            ]);
-
-            // Verify the ID token (frontend sends ID token after signInWithCustomToken)
-            $tokenData = $this->firebaseService->verifyIdToken($validated['id_token']);
-            $firebaseUid = $tokenData['uid'];
-
-            // Find user by Firebase UID
-            $user = User::where('firebase_uid', $firebaseUid)->first();
-
-            if (!$user) {
-                return response()->json([
-                    'error' => 'User not found',
-                    'message' => 'User account not found in system. Please contact your HOA administrator.'
-                ], 404);
-            }
-
-            // Update last login
-            $user->updateLastLogin();
-            $user->load('tenant');
-
-            return response()->json([
-                'message' => 'Magic link authentication successful',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'phone_number' => $user->phone_number,
-                    'avatar_url' => $user->avatar_url,
-                    'email_verified' => $user->email_verified_at !== null,
-                    'is_active' => $user->is_active,
-                    'last_login_at' => $user->last_login_at,
-                ],
-                'tenant' => $user->tenant ? [
-                    'id' => $user->tenant->id,
-                    'name' => $user->tenant->name,
-                    'slug' => $user->tenant->slug,
-                    'is_active' => $user->tenant->is_active,
-                    'trial_ends_at' => $user->tenant->trial_ends_at,
-                    'subscription_ends_at' => $user->tenant->subscription_ends_at,
-                    'can_access' => $user->tenant->canAccess(),
-                ] : null
-            ]);
-
-        } catch (ValidationException $e) {
-            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            Log::error('Magic token exchange failed: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Authentication failed',
-                'message' => 'Invalid or expired token. Please request a new magic link.'
-            ], 401);
         }
     }
 }

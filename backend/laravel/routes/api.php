@@ -39,32 +39,29 @@ Route::get('/test', function () {
     ]);
 });
 
-
-
-// Authentication routes
+// Authentication routes (public)
 Route::prefix('auth')->group(function () {
-    // Signup routes (no authentication required)
+    // Email-based authentication
+    Route::post('/check-email', [AuthController::class, 'checkEmail']);
+    Route::post('/send-code', [AuthController::class, 'sendCode']);
+    Route::post('/verify-code', [AuthController::class, 'verifyCode']);
     Route::post('/signup', [AuthController::class, 'signup']);
-    Route::post('/google-signup', [AuthController::class, 'googleSignup']);
+    Route::post('/login', [AuthController::class, 'login']);
     
-    // Member signup routes (join existing tenant, no authentication required)
-    Route::post('/member-signup', [AuthController::class, 'memberSignup']);
-    Route::post('/member-google-signup', [AuthController::class, 'memberGoogleSignup']);
+    // Google OAuth
+    Route::get('/google/redirect', [AuthController::class, 'redirectToGoogle']);
+    Route::get('/google/callback', [AuthController::class, 'handleGoogleCallback']);
+    Route::post('/google/signup', [AuthController::class, 'googleSignup']);
     
-    // Magic link token exchange (no authentication required)
-    Route::post('/exchange-magic-token', [AuthController::class, 'exchangeMagicToken']);
-    
-    // Protected routes (require Firebase authentication)
-    Route::middleware('firebase.auth')->group(function () {
+    // Protected routes (require Sanctum authentication)
+    Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::put('/user/profile', [AuthController::class, 'updateProfile']);
-        Route::put('/user/password', [AuthController::class, 'changePassword']);
     });
 });
 
-// Protected routes (require Firebase authentication)
-Route::middleware('firebase.auth')->group(function () {
+// Protected routes (require Sanctum authentication)
+Route::middleware('auth:sanctum')->group(function () {
     // Resident management routes
     Route::apiResource('residents', ResidentController::class);
     Route::get('residents/{resident}/units', [ResidentController::class, 'units']);
