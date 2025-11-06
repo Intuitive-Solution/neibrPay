@@ -119,6 +119,13 @@ export const residentsApi = {
   async forceDeleteResident(id: number): Promise<void> {
     await apiClient.delete(`/residents/${id}/force`);
   },
+
+  /**
+   * Send invite email to a resident with welcome message and login link
+   */
+  async sendInviteEmail(id: number): Promise<void> {
+    await apiClient.post(`/residents/${id}/send-invite`);
+  },
 };
 
 export default residentsApi;

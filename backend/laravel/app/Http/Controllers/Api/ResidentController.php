@@ -351,4 +351,151 @@ class ResidentController extends Controller
             'message' => 'Resident permanently deleted'
         ]);
     }
+
+    /**
+     * Send invite email to a resident with welcome message and login link.
+     */
+    public function sendInvite(Request $request, string $id): JsonResponse
+    {
+        $user = $request->user();
+        
+        // Find the resident and ensure they belong to the user's tenant
+        $resident = User::forTenant($user->tenant_id)
+            ->byRole('resident')
+            ->findOrFail($id);
+        
+        // Validate that resident is active
+        if (!$resident->is_active || $resident->deleted_at) {
+            return response()->json([
+                'message' => 'Cannot send invite email to inactive or deleted residents'
+            ], 400);
+        }
+        
+        // Load tenant information
+        $resident->load('tenant');
+        $tenant = $resident->tenant;
+        
+        if (!$tenant) {
+            return response()->json([
+                'message' => 'Resident tenant not found'
+            ], 404);
+        }
+        
+        // Check if n8n webhook URL is configured
+        $n8nWebhookUrl = config('n8n.webhook_url');
+        if (!$n8nWebhookUrl) {
+            Log::warning('N8N_WEBHOOK_URL not configured. Invite email webhook not sent.');
+            return response()->json([
+                'message' => 'Email service not configured. Invite email not sent.',
+            ], 500);
+        }
+        
+        // Get webhook secret token for authentication
+        $webhookSecret = config('n8n.webhook_secret');
+        if (!$webhookSecret) {
+            Log::warning('N8N_WEBHOOK_SECRET not configured. Webhook may be unsecured.');
+        }
+        
+        try {
+            // Build login URL
+            $appUrl = config('app.url');
+            $frontendUrl = config('app.frontend_url', $appUrl);
+            $loginLink = rtrim($frontendUrl, '/') . '/auth';
+            
+            // Prepare n8n webhook payload
+            $payload = [
+                'type' => 'resident_invite',
+                'recipient' => [
+                    'email' => $resident->email,
+                    'name' => $resident->name ?? $resident->email,
+                ],
+                'login_link' => $loginLink,
+                'tenant_name' => $tenant->name ?? 'HOA',
+                'resident_name' => $resident->name ?? $resident->email,
+            ];
+            
+            Log::info('Sending invite email webhook request', [
+                'url' => $n8nWebhookUrl,
+                'has_secret' => !empty($webhookSecret),
+                'recipient_email' => $resident->email,
+            ]);
+            
+            // Prepare headers for webhook request
+            $headers = [
+                'Content-Type' => 'application/json',
+            ];
+            
+            // Add authentication token if configured
+            if ($webhookSecret) {
+                $headers['X-Webhook-Token'] = $webhookSecret;
+            }
+            
+            // Send HTTP POST request to n8n webhook
+            try {
+                $response = Http::timeout(10)
+                    ->retry(2, 100)
+                    ->withHeaders($headers)
+                    ->post($n8nWebhookUrl, $payload);
+                
+                if ($response->successful()) {
+                    Log::info('Invite email webhook sent successfully', [
+                        'status' => $response->status(),
+                        'resident_id' => $resident->id,
+                        'resident_email' => $resident->email,
+                    ]);
+                    
+                    return response()->json([
+                        'message' => 'Invite email sent successfully',
+                        'data' => [
+                            'resident_id' => $resident->id,
+                            'email' => $resident->email,
+                        ]
+                    ]);
+                } else {
+                    $errorMessage = 'n8n webhook returned non-success status';
+                    $responseBody = $response->body();
+                    
+                    if ($response->status() === 404) {
+                        $errorMessage = 'n8n webhook not found - workflow may not be activated';
+                        Log::warning($errorMessage, [
+                            'status' => $response->status(),
+                            'url' => $n8nWebhookUrl,
+                        ]);
+                    } else {
+                        Log::warning('Invite email webhook returned non-success status', [
+                            'status' => $response->status(),
+                            'response_body' => substr($responseBody, 0, 500),
+                            'url' => $n8nWebhookUrl,
+                        ]);
+                    }
+                    
+                    return response()->json([
+                        'message' => 'Failed to send invite email',
+                        'error' => $errorMessage
+                    ], 500);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send invite email webhook: ' . $e->getMessage(), [
+                    'resident_id' => $resident->id,
+                    'resident_email' => $resident->email,
+                    'error' => $e->getMessage(),
+                ]);
+                
+                return response()->json([
+                    'message' => 'Failed to send invite email',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error in sendInvite: ' . $e->getMessage(), [
+                'resident_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'message' => 'Failed to send invite email',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
