@@ -73,20 +73,22 @@ class AuthController extends Controller
             $email = strtolower(trim($validated['email']));
             $ipAddress = $request->ip();
 
-            // Check rate limits
-            if (!$this->verificationCodeService->canSendCode($email)) {
+            // Check if user exists to determine rate limit
+            $user = User::where('email', $email)->with('tenant')->first();
+            $isExistingUser = $user !== null;
+            $userName = $user?->name;
+            $tenantName = $user?->tenant?->name;
+
+            // Check rate limits (10 for existing users, 3 for new users)
+            if (!$this->verificationCodeService->canSendCode($email, $isExistingUser)) {
+                $maxCodes = $isExistingUser ? 10 : 3;
                 return response()->json([
-                    'error' => 'Too many verification code requests. Please try again later.',
+                    'error' => "Too many verification code requests. Maximum {$maxCodes} codes per hour allowed. Please try again later.",
                 ], 429);
             }
 
             // Generate and store code
-            $verificationCode = $this->verificationCodeService->generateCode($email, null, $ipAddress);
-
-            // Fetch user and tenant info if user exists
-            $user = User::where('email', $email)->with('tenant')->first();
-            $userName = $user?->name;
-            $tenantName = $user?->tenant?->name;
+            $verificationCode = $this->verificationCodeService->generateCode($email, null, $ipAddress, $isExistingUser);
 
             // Send email via n8n
             $this->verificationCodeService->sendCodeEmail($email, $verificationCode->code, $userName, $tenantName);

@@ -17,9 +17,14 @@ class VerificationCodeService
     private const EXPIRATION_MINUTES = 15;
 
     /**
-     * Maximum number of codes per email per hour.
+     * Maximum number of codes per email per hour for new users.
      */
-    private const MAX_CODES_PER_HOUR = 3;
+    private const MAX_CODES_PER_HOUR_NEW = 3;
+
+    /**
+     * Maximum number of codes per email per hour for existing users.
+     */
+    private const MAX_CODES_PER_HOUR_EXISTING = 10;
 
     /**
      * Generate a random 6-digit code.
@@ -31,8 +36,12 @@ class VerificationCodeService
 
     /**
      * Check if we can send a code for the given email (rate limiting).
+     *
+     * @param string $email
+     * @param bool $isExistingUser Whether the user already exists in the system
+     * @return bool
      */
-    public function canSendCode(string $email): bool
+    public function canSendCode(string $email, bool $isExistingUser = false): bool
     {
         $oneHourAgo = now()->subHour();
         
@@ -40,7 +49,9 @@ class VerificationCodeService
             ->where('created_at', '>=', $oneHourAgo)
             ->count();
 
-        return $recentCodes < self::MAX_CODES_PER_HOUR;
+        $maxCodes = $isExistingUser ? self::MAX_CODES_PER_HOUR_EXISTING : self::MAX_CODES_PER_HOUR_NEW;
+
+        return $recentCodes < $maxCodes;
     }
 
     /**
@@ -52,11 +63,12 @@ class VerificationCodeService
      * @return VerificationCode
      * @throws Exception
      */
-    public function generateCode(string $email, ?int $tenantId = null, ?string $ipAddress = null): VerificationCode
+    public function generateCode(string $email, ?int $tenantId = null, ?string $ipAddress = null, bool $isExistingUser = false): VerificationCode
     {
         // Check rate limits
-        if (!$this->canSendCode($email)) {
-            throw new Exception('Too many verification code requests. Please try again later.');
+        if (!$this->canSendCode($email, $isExistingUser)) {
+            $maxCodes = $isExistingUser ? self::MAX_CODES_PER_HOUR_EXISTING : self::MAX_CODES_PER_HOUR_NEW;
+            throw new Exception("Too many verification code requests. Maximum {$maxCodes} codes per hour allowed. Please try again later.");
         }
 
         // Invalidate any existing unverified codes for this email
