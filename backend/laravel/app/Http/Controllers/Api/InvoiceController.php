@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\InvoiceUnit;
 use App\Models\Unit;
 use App\Services\InvoicePdfService;
-use App\Services\FirebaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,12 +16,10 @@ use Illuminate\Validation\Rule;
 class InvoiceController extends Controller
 {
     protected $pdfService;
-    protected $firebaseService;
 
-    public function __construct(InvoicePdfService $pdfService, FirebaseService $firebaseService)
+    public function __construct(InvoicePdfService $pdfService)
     {
         $this->pdfService = $pdfService;
-        $this->firebaseService = $firebaseService;
     }
 
     /**
@@ -30,7 +27,7 @@ class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         $includeDeleted = $request->boolean('include_deleted', false);
         $unitId = $request->get('unit_id');
         $status = $request->get('status');
@@ -90,7 +87,7 @@ class InvoiceController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $validated = $request->validate([
             'unit_ids' => 'required|array|min:1',
@@ -189,7 +186,7 @@ class InvoiceController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Fetch invoice with trashed (deleted) invoices included
         $invoiceUnit = InvoiceUnit::withTrashed()
@@ -230,7 +227,7 @@ class InvoiceController extends Controller
      */
     public function update(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -344,7 +341,7 @@ class InvoiceController extends Controller
      */
     public function destroy(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -368,7 +365,7 @@ class InvoiceController extends Controller
      */
     public function restore(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $invoiceUnit = InvoiceUnit::withTrashed()
             ->where('id', $id)
@@ -397,7 +394,7 @@ class InvoiceController extends Controller
      */
     public function forceDelete(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $invoiceUnit = InvoiceUnit::withTrashed()
             ->where('id', $id)
@@ -420,7 +417,7 @@ class InvoiceController extends Controller
      */
     public function markAsSent(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -445,7 +442,7 @@ class InvoiceController extends Controller
      */
     public function markAsPaid(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -824,7 +821,7 @@ class InvoiceController extends Controller
      */
     public function clone(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -896,7 +893,7 @@ class InvoiceController extends Controller
      */
     public function email(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -943,42 +940,13 @@ class InvoiceController extends Controller
         }
 
         try {
-            // Ensure owner has a Firebase account (create if doesn't exist)
-            if (!$owner->firebase_uid) {
-                try {
-                    // Check if Firebase account exists by email
-                    $firebaseUid = $this->firebaseService->getUserUidByEmail($email);
-                    
-                    if (!$firebaseUid) {
-                        // Create new Firebase account for the owner
-                        $firebaseUid = $this->firebaseService->createUser(
-                            $email,
-                            $owner->name,
-                            false // Email not verified yet
-                        );
-                    }
-                    
-                    // Update owner with Firebase UID
-                    $owner->firebase_uid = $firebaseUid;
-                    $owner->save();
-                } catch (\Exception $e) {
-                    Log::error('Failed to create Firebase account for owner: ' . $e->getMessage(), [
-                        'owner_id' => $owner->id,
-                        'owner_email' => $email,
-                    ]);
-                    return response()->json([
-                        'message' => 'Failed to create Firebase account for owner. Please ensure the owner has signed up first.',
-                        'error' => $e->getMessage()
-                    ], 500);
-                }
-            }
-
-            // Generate custom token (already returns string after fix)
-            $customTokenString = $this->firebaseService->createCustomToken($owner->firebase_uid);
-            
-            // Build magic link URL
+            // Build invoice view link (using signed URL for security)
             $appUrl = config('app.url');
-            $magicLink = rtrim($appUrl, '/') . '/auth/magic?token=' . urlencode($customTokenString);
+            $frontendUrl = config('app.frontend_url', $appUrl);
+            
+            // Create a signed URL that expires in 30 days for invoice viewing
+            // For now, use a simple link - can be enhanced with signed URLs later
+            $magicLink = rtrim($frontendUrl, '/') . '/invoices/' . $invoiceUnit->id;
 
             // Calculate due date
             $dueDate = $invoiceUnit->getActualDueDate();
@@ -1123,7 +1091,7 @@ class InvoiceController extends Controller
      */
     public function forUnit(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the unit belongs to the user's tenant
         if ($unit->tenant_id !== $user->tenant_id) {

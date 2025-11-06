@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ResidentRequest;
 use App\Models\User;
-use App\Services\FirebaseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -13,19 +12,13 @@ use Illuminate\Support\Facades\Log;
 
 class ResidentController extends Controller
 {
-    protected FirebaseService $firebaseService;
-
-    public function __construct(FirebaseService $firebaseService)
-    {
-        $this->firebaseService = $firebaseService;
-    }
 
     /**
      * Display a listing of residents.
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         $includeDeleted = $request->boolean('include_deleted', false);
         
         // If user is a resident, return empty array (residents cannot see other residents)
@@ -70,7 +63,7 @@ class ResidentController extends Controller
      */
     public function store(ResidentRequest $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::create([
             'name' => $request->name,
@@ -100,7 +93,7 @@ class ResidentController extends Controller
      */
     public function show(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -120,7 +113,7 @@ class ResidentController extends Controller
      */
     public function units(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -145,7 +138,7 @@ class ResidentController extends Controller
      */
     public function removeUnit(Request $request, string $id, string $unitId): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -171,7 +164,7 @@ class ResidentController extends Controller
      */
     public function availableUnits(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -206,7 +199,7 @@ class ResidentController extends Controller
      */
     public function addUnits(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -264,7 +257,7 @@ class ResidentController extends Controller
      */
     public function update(ResidentRequest $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -295,7 +288,7 @@ class ResidentController extends Controller
      */
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -313,7 +306,7 @@ class ResidentController extends Controller
      */
     public function restore(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -338,7 +331,7 @@ class ResidentController extends Controller
      */
     public function forceDelete(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Only admins can permanently delete
         if (!$user->isAdmin()) {
@@ -364,7 +357,7 @@ class ResidentController extends Controller
      */
     public function sendActivation(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Find the resident and ensure they belong to the user's tenant
         $resident = User::forTenant($user->tenant_id)
