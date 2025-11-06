@@ -3,6 +3,7 @@ import Dashboard from '../views/Dashboard.vue';
 import UnifiedAuth from '../views/UnifiedAuth.vue';
 import TermsOfService from '../views/TermsOfService.vue';
 import PrivacyNotice from '../views/PrivacyNotice.vue';
+import MagicLinkAuth from '../views/MagicLinkAuth.vue';
 import Invoices from '../views/Invoices.vue';
 import AddInvoice from '../views/AddInvoice.vue';
 import InvoiceDetail from '../views/InvoiceDetail.vue';
@@ -29,6 +30,12 @@ const router = createRouter({
       path: '/auth',
       name: 'UnifiedAuth',
       component: UnifiedAuth,
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/magic-link',
+      name: 'MagicLinkAuth',
+      component: MagicLinkAuth,
       meta: { requiresAuth: false },
     },
     {

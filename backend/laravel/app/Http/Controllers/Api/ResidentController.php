@@ -7,8 +7,10 @@ use App\Http\Requests\ResidentRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ResidentController extends Controller
 {
@@ -397,10 +399,17 @@ class ResidentController extends Controller
         }
         
         try {
-            // Build login URL
-            $appUrl = config('app.url');
-            $frontendUrl = config('app.frontend_url', $appUrl);
-            $loginLink = rtrim($frontendUrl, '/') . '/auth';
+            // Generate magic link token (expires in 7 days)
+            $magicLinkToken = Str::random(64);
+            Cache::put("magic_link:{$magicLinkToken}", [
+                'email' => $resident->email,
+                'resident_id' => $resident->id,
+                'created_at' => now(),
+            ], now()->addDays(7));
+            
+            // Build magic link URL
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            $magicLink = rtrim($frontendUrl, '/') . '/magic-link?token=' . $magicLinkToken;
             
             // Prepare n8n webhook payload
             $payload = [
@@ -409,7 +418,8 @@ class ResidentController extends Controller
                     'email' => $resident->email,
                     'name' => $resident->name ?? $resident->email,
                 ],
-                'login_link' => $loginLink,
+                'magic_link' => $magicLink,
+                'login_link' => $magicLink, // Keep for backward compatibility
                 'tenant_name' => $tenant->name ?? 'HOA',
                 'resident_name' => $resident->name ?? $resident->email,
             ];

@@ -47,6 +47,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/verify-code', [AuthController::class, 'verifyCode']);
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/magic-link', [AuthController::class, 'magicLinkAuth']);
     
     // Google OAuth (requires sessions for OAuth state)
     Route::middleware([

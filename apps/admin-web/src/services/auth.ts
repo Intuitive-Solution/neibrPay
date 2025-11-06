@@ -307,6 +307,41 @@ class AuthService {
   }
 
   /**
+   * Authenticate with magic link token
+   */
+  async magicLinkAuth(token: string): Promise<AuthResponse> {
+    try {
+      const response = await this.makeRequest(
+        `${this.baseURL}/auth/magic-link`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Magic link authentication failed');
+      }
+
+      const result = await response.json();
+      return {
+        user: result.user,
+        tenant: result.tenant,
+        token: result.token,
+      };
+    } catch (error) {
+      console.error('Magic link auth error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get current authenticated user
    */
   async getCurrentUser(): Promise<{ user: AuthUser; tenant: TenantData }> {

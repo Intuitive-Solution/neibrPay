@@ -109,6 +109,24 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  // Sign in with magic link token
+  const signinWithMagicLink = async (token: string) => {
+    try {
+      setLoading(true);
+      clearError();
+
+      const result = await authService.magicLinkAuth(token);
+      setAuth(result);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Magic link authentication failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     // State
     user: readonly(user),
@@ -136,5 +154,6 @@ export const useAuthStore = defineStore('auth', () => {
     initializeAuth,
     logout,
     refreshUser,
+    signinWithMagicLink,
   };
 });

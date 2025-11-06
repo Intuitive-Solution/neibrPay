@@ -565,6 +565,91 @@ class AuthController extends Controller
     }
 
     /**
+     * Authenticate user with magic link token
+     */
+    public function magicLinkAuth(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'token' => 'required|string',
+            ]);
+
+            $token = $validated['token'];
+            
+            // Get magic link data from cache
+            $magicLinkData = Cache::get("magic_link:{$token}");
+            
+            if (!$magicLinkData) {
+                return response()->json([
+                    'error' => 'Invalid or expired magic link'
+                ], 400);
+            }
+
+            $email = $magicLinkData['email'];
+            $residentId = $magicLinkData['resident_id'] ?? null;
+
+            // Find user
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'error' => 'User not found'
+                ], 404);
+            }
+
+            // Check if user is active
+            if (!$user->is_active) {
+                return response()->json([
+                    'error' => 'Account is inactive'
+                ], 403);
+            }
+
+            // Verify resident ID matches if provided
+            if ($residentId && $user->id != $residentId) {
+                return response()->json([
+                    'error' => 'Invalid magic link'
+                ], 400);
+            }
+
+            // Update last login
+            $user->updateLastLogin();
+
+            // Generate Sanctum token
+            $authToken = $user->createToken('magic-link-auth')->plainTextToken;
+
+            // Delete magic link token from cache (one-time use)
+            Cache::forget("magic_link:{$token}");
+
+            $user->load('tenant');
+
+            return response()->json([
+                'message' => 'Authentication successful',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'phone_number' => $user->phone_number,
+                    'email_verified' => $user->email_verified_at !== null,
+                ],
+                'tenant' => $user->tenant ? [
+                    'id' => $user->tenant->id,
+                    'name' => $user->tenant->name,
+                    'slug' => $user->tenant->slug,
+                    'trial_ends_at' => $user->tenant->trial_ends_at,
+                ] : null,
+                'token' => $authToken,
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Magic link auth failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Authentication failed'], 500);
+        }
+    }
+
+    /**
      * Get current authenticated user
      */
     public function me(Request $request): JsonResponse
