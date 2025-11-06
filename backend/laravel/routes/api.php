@@ -70,7 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('residents/{resident}/units/{unit}', [ResidentController::class, 'removeUnit']);
     Route::post('residents/{resident}/restore', [ResidentController::class, 'restore']);
     Route::delete('residents/{resident}/force', [ResidentController::class, 'forceDelete']);
-    Route::post('residents/{resident}/send-activation', [ResidentController::class, 'sendActivation']);
     
     // Unit management routes
     Route::get('units/for-invoices', [UnitsController::class, 'forInvoices']);

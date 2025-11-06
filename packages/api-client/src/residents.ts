@@ -119,13 +119,6 @@ export const residentsApi = {
   async forceDeleteResident(id: number): Promise<void> {
     await apiClient.delete(`/residents/${id}/force`);
   },
-
-  /**
-   * Send activation email to a resident
-   */
-  async sendActivationEmail(id: number): Promise<void> {
-    await apiClient.post(`/residents/${id}/send-activation`);
-  },
 };
 
 export default residentsApi;
