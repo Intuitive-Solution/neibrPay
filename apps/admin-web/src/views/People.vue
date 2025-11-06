@@ -1,5 +1,85 @@
 <template>
   <div class="space-y-6">
+    <!-- Success Message -->
+    <div
+      v-if="showSuccessMessage"
+      class="p-4 bg-green-50 border border-green-200 rounded-lg"
+    >
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-green-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-green-800">{{ successMessage }}</p>
+        </div>
+        <div class="ml-auto pl-3">
+          <button
+            @click="showSuccessMessage = false"
+            class="inline-flex bg-green-50 rounded-md p-1.5 text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600"
+          >
+            <span class="sr-only">Dismiss</span>
+            <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fill-rule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div
+      v-if="showErrorMessage"
+      class="p-4 bg-red-50 border border-red-200 rounded-lg"
+    >
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-red-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-red-800">{{ errorMessage }}</p>
+        </div>
+        <div class="ml-auto pl-3">
+          <button
+            @click="showErrorMessage = false"
+            class="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+          >
+            <span class="sr-only">Dismiss</span>
+            <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fill-rule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Active Residents Card -->
@@ -779,6 +859,12 @@ const sendingInviteId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const residentToDelete = ref<Resident | null>(null);
 const activeFilter = ref<'active' | 'all' | null>('active'); // Default to 'active' filter
+
+// Success/Error messages
+const successMessage = ref('');
+const errorMessage = ref('');
+const showSuccessMessage = ref(false);
+const showErrorMessage = ref(false);
 const sortColumn = ref<
   'name' | 'email' | 'phone' | 'status' | 'member_role' | null
 >(null);
@@ -986,10 +1072,13 @@ const restoreResident = async (residentId: number) => {
   try {
     await restoreResidentMutation(residentId);
     console.log('Resident restored successfully');
+    showSuccess('Resident restored successfully');
     refetch();
   } catch (error: any) {
     console.error('Error restoring resident:', error);
-    alert(`Failed to restore resident: ${error.message || 'Unknown error'}`);
+    showError(
+      `Failed to restore resident: ${error.message || 'Unknown error'}`
+    );
   }
 };
 
@@ -1022,10 +1111,12 @@ const confirmDelete = async () => {
     // Check if it's an authentication error
     if (error.message && error.message.includes('Resident not found')) {
       // This might be an authentication issue
-      alert('Authentication error. Please refresh the page and try again.');
+      showError('Authentication error. Please refresh the page and try again.');
     } else {
       // Show error message to user
-      alert(`Failed to delete resident: ${error.message || 'Unknown error'}`);
+      showError(
+        `Failed to delete resident: ${error.message || 'Unknown error'}`
+      );
     }
   } finally {
     // Always reset the loading state
@@ -1042,10 +1133,12 @@ const sendInviteEmail = async (residentId: number) => {
   sendingInviteId.value = residentId;
   try {
     await sendInviteEmailMutation(residentId);
-    alert('Invite email sent successfully!');
+    showSuccess('Invite email sent successfully!');
   } catch (error: any) {
     console.error('Error sending invite email:', error);
-    alert(`Failed to send invite email: ${error.message || 'Unknown error'}`);
+    showError(
+      `Failed to send invite email: ${error.message || 'Unknown error'}`
+    );
   } finally {
     sendingInviteId.value = null;
   }
@@ -1073,6 +1166,23 @@ watch(
 onMounted(() => {
   // Reset any stuck states
 });
+
+// Helper functions for showing messages
+const showSuccess = (message: string) => {
+  successMessage.value = message;
+  showSuccessMessage.value = true;
+  setTimeout(() => {
+    showSuccessMessage.value = false;
+  }, 5000);
+};
+
+const showError = (message: string) => {
+  errorMessage.value = message;
+  showErrorMessage.value = true;
+  setTimeout(() => {
+    showErrorMessage.value = false;
+  }, 5000);
+};
 
 // Global reset function for debugging (can be called from browser console)
 (window as any).resetResidentMutations = () => {
