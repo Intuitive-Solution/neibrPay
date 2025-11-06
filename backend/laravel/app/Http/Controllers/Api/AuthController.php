@@ -83,8 +83,13 @@ class AuthController extends Controller
             // Generate and store code
             $verificationCode = $this->verificationCodeService->generateCode($email, null, $ipAddress);
 
+            // Fetch user and tenant info if user exists
+            $user = User::where('email', $email)->with('tenant')->first();
+            $userName = $user?->name;
+            $tenantName = $user?->tenant?->name;
+
             // Send email via n8n
-            $this->verificationCodeService->sendCodeEmail($email, $verificationCode->code);
+            $this->verificationCodeService->sendCodeEmail($email, $verificationCode->code, $userName, $tenantName);
 
             return response()->json([
                 'message' => 'Verification code sent',
