@@ -54,12 +54,19 @@ const error = ref<string | null>(null);
 
 onMounted(async () => {
   try {
-    // Extract token from query parameters
+    // Extract token and email from query parameters
     const token = route.query.token as string;
+    const emailFromUrl = route.query.email as string | undefined;
 
     if (!token) {
       error.value = 'No authentication token provided in the link.';
       isLoading.value = false;
+      // Redirect to login with email if available
+      if (emailFromUrl) {
+        router.push(`/auth?email=${encodeURIComponent(emailFromUrl)}`);
+      } else {
+        router.push('/auth');
+      }
       return;
     }
 
@@ -75,6 +82,16 @@ onMounted(async () => {
       err.message ||
       'Failed to authenticate. The link may have expired or is invalid.';
     isLoading.value = false;
+
+    // Extract email from URL and redirect to login page
+    const emailFromUrl = route.query.email as string | undefined;
+
+    // Redirect to login page with email pre-filled
+    if (emailFromUrl) {
+      router.push(`/auth?email=${encodeURIComponent(emailFromUrl)}`);
+    } else {
+      router.push('/auth');
+    }
   }
 });
 </script>

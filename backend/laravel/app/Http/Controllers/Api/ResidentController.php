@@ -407,9 +407,9 @@ class ResidentController extends Controller
                 'created_at' => now(),
             ], now()->addDays(7));
             
-            // Build magic link URL
+            // Build magic link URL with email parameter for fallback
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-            $magicLink = rtrim($frontendUrl, '/') . '/magic-link?token=' . $magicLinkToken;
+            $magicLink = rtrim($frontendUrl, '/') . '/magic-link?token=' . $magicLinkToken . '&email=' . urlencode($resident->email);
             
             // Prepare n8n webhook payload
             $payload = [

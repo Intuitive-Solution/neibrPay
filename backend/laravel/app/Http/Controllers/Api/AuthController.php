@@ -580,8 +580,11 @@ class AuthController extends Controller
             $magicLinkData = Cache::get("magic_link:{$token}");
             
             if (!$magicLinkData) {
+                // Magic link expired or invalid
+                // Email should be in URL query parameter, but we can't access it here
+                // Frontend will extract it from URL
                 return response()->json([
-                    'error' => 'Invalid or expired magic link'
+                    'error' => 'Invalid or expired magic link',
                 ], 400);
             }
 

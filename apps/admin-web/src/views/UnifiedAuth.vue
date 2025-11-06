@@ -688,8 +688,14 @@ const goBack = () => {
   canResend.value = true;
 };
 
-// Handle Google OAuth callback
+// Handle Google OAuth callback and email pre-fill
 onMounted(async () => {
+  // Check for email parameter to pre-fill (from expired magic link)
+  const emailParam = route.query.email as string | undefined;
+  if (emailParam && step.value === 'email') {
+    email.value = decodeURIComponent(emailParam);
+  }
+
   // Check for Google OAuth callback from backend redirect
   const token = route.query.token as string | undefined;
   const googleTokenParam = route.query.google_token as string | undefined;
