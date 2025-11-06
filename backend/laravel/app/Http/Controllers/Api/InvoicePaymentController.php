@@ -17,7 +17,7 @@ class InvoicePaymentController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         $invoiceId = $request->get('invoice_id');
         $paymentMethod = $request->get('payment_method');
         $startDate = $request->get('start_date');
@@ -79,7 +79,7 @@ class InvoicePaymentController extends Controller
      */
     public function store(Request $request, int $invoiceId): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // First, verify the invoice exists and belongs to the user's tenant
         $invoice = InvoiceUnit::forTenant($user->tenant_id)->findOrFail($invoiceId);
@@ -154,7 +154,7 @@ class InvoicePaymentController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $payment = InvoicePayment::with(['invoiceUnit.unit', 'recorder'])
             ->whereHas('invoiceUnit', function ($q) use ($user) {
@@ -172,7 +172,7 @@ class InvoicePaymentController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $payment = InvoicePayment::with('invoiceUnit')
             ->whereHas('invoiceUnit', function ($q) use ($user) {
@@ -239,7 +239,7 @@ class InvoicePaymentController extends Controller
      */
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $payment = InvoicePayment::with('invoiceUnit')
             ->whereHas('invoiceUnit', function ($q) use ($user) {

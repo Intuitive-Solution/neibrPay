@@ -322,11 +322,46 @@ class AuthController extends Controller
     public function redirectToGoogle()
     {
         try {
-            return Socialite::driver('google')->redirect();
+            // Check if Google OAuth is configured
+            $clientId = config('services.google.client_id');
+            $clientSecret = config('services.google.client_secret');
+            $redirectUri = config('services.google.redirect');
+            
+            Log::info('Google OAuth redirect attempt', [
+                'client_id' => $clientId ? 'set' : 'missing',
+                'client_secret' => $clientSecret ? 'set' : 'missing',
+                'redirect_uri' => $redirectUri,
+                'env_redirect' => env('GOOGLE_REDIRECT_URI'),
+                'app_url' => config('app.url'),
+            ]);
+            
+            if (empty($clientId) || empty($clientSecret)) {
+                Log::error('Google OAuth not configured: Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
+                $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+                return redirect("{$frontendUrl}/auth?error=" . urlencode('Google OAuth is not configured. Please contact support.'));
+            }
+            
+            // Explicitly set the redirect URI to ensure it matches Google Cloud Console
+            // Remove any trailing slashes and ensure exact match
+            $redirectUri = rtrim($redirectUri, '/');
+            
+            Log::info('Google OAuth redirect URI being used', [
+                'redirect_uri' => $redirectUri,
+                'config_redirect' => config('services.google.redirect'),
+                'env_redirect' => env('GOOGLE_REDIRECT_URI'),
+            ]);
+            
+            // Explicitly set redirect URL to ensure exact match with Google Cloud Console
+            return Socialite::driver('google')
+                ->redirectUrl($redirectUri)
+                ->redirect();
         } catch (\Exception $e) {
-            Log::error('Google redirect failed: ' . $e->getMessage());
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
-            return redirect("{$frontendUrl}/auth?error=" . urlencode('Failed to initiate Google authentication'));
+            Log::error('Google redirect failed: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            return redirect("{$frontendUrl}/auth?error=" . urlencode('Failed to initiate Google authentication: ' . $e->getMessage()));
         }
     }
 
@@ -337,13 +372,25 @@ class AuthController extends Controller
     public function handleGoogleCallback(Request $request)
     {
         try {
+            Log::info('Google OAuth callback received', [
+                'query_params' => $request->query(),
+                'has_code' => $request->has('code'),
+                'has_state' => $request->has('state'),
+            ]);
+
             $googleUser = Socialite::driver('google')->user();
 
             $email = strtolower(trim($googleUser->getEmail()));
             $name = $googleUser->getName();
             $avatar = $googleUser->getAvatar();
 
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+            Log::info('Google user data retrieved', [
+                'email' => $email,
+                'name' => $name,
+                'has_avatar' => !empty($avatar),
+            ]);
+
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
 
             // Check if user exists
             $user = User::where('email', $email)->first();
@@ -351,6 +398,7 @@ class AuthController extends Controller
             if ($user) {
                 // Existing user - login
                 if (!$user->is_active) {
+                    Log::warning('Google OAuth login attempt for inactive user', ['email' => $email]);
                     return redirect("{$frontendUrl}/auth?error=" . urlencode('Account is inactive'));
                 }
 
@@ -367,6 +415,11 @@ class AuthController extends Controller
                 $token = $user->createToken('auth-token')->plainTextToken;
 
                 $user->load('tenant');
+
+                Log::info('Google OAuth login successful', [
+                    'user_id' => $user->id,
+                    'email' => $email,
+                ]);
 
                 // Redirect to frontend with token and user data
                 $params = http_build_query([
@@ -386,12 +439,17 @@ class AuthController extends Controller
                     'verified_at' => now(),
                 ], now()->addMinutes(30));
 
+                Log::info('Google OAuth new user signup', [
+                    'email' => $email,
+                    'google_token' => $googleToken,
+                ]);
+
                 // Redirect to frontend with Google data
                 $params = http_build_query([
                     'google_token' => $googleToken,
                     'email' => $email,
                     'name' => $name,
-                    'avatar' => $avatar,
+                    'avatar' => $avatar ?? '',
                     'exists' => 'false',
                 ]);
 
@@ -399,9 +457,14 @@ class AuthController extends Controller
             }
 
         } catch (\Exception $e) {
-            Log::error('Google callback failed: ' . $e->getMessage());
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
-            return redirect("{$frontendUrl}/auth?error=" . urlencode('Google authentication failed'));
+            Log::error('Google callback failed', [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+                'query_params' => $request->query(),
+            ]);
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            return redirect("{$frontendUrl}/auth?error=" . urlencode('Google authentication failed: ' . $e->getMessage()));
         }
     }
 

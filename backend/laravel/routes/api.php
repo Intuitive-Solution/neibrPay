@@ -48,9 +48,15 @@ Route::prefix('auth')->group(function () {
     Route::post('/signup', [AuthController::class, 'signup']);
     Route::post('/login', [AuthController::class, 'login']);
     
-    // Google OAuth
-    Route::get('/google/redirect', [AuthController::class, 'redirectToGoogle']);
-    Route::get('/google/callback', [AuthController::class, 'handleGoogleCallback']);
+    // Google OAuth (requires sessions for OAuth state)
+    Route::middleware([
+        \App\Http\Middleware\EncryptCookies::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+    ])->group(function () {
+        Route::get('/google/redirect', [AuthController::class, 'redirectToGoogle']);
+        Route::get('/google/callback', [AuthController::class, 'handleGoogleCallback']);
+    });
     Route::post('/google/signup', [AuthController::class, 'googleSignup']);
     
     // Protected routes (require Sanctum authentication)

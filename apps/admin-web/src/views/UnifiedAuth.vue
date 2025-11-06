@@ -696,6 +696,22 @@ onMounted(async () => {
   const exists = route.query.exists as string | undefined;
   const error = route.query.error as string | undefined;
 
+  // Check if we have raw Google OAuth parameters (means Google redirected directly to frontend)
+  const hasGoogleCode = route.query.code as string | undefined;
+  const hasGoogleState = route.query.state as string | undefined;
+
+  // If we have raw Google OAuth parameters, redirect to backend callback
+  if (hasGoogleCode && hasGoogleState && !token && !googleTokenParam) {
+    // Google redirected directly to frontend - redirect to backend callback
+    const apiUrl =
+      (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000/api';
+    // Remove /api suffix if present, then add /api/auth/google/callback
+    const backendBase = apiUrl.replace(/\/api$/, '');
+    const callbackUrl = `${backendBase}/api/auth/google/callback?${new URLSearchParams(route.query as Record<string, string>).toString()}`;
+    window.location.href = callbackUrl;
+    return;
+  }
+
   if (error) {
     errorMessage.value = decodeURIComponent(error);
     step.value = 'email';
