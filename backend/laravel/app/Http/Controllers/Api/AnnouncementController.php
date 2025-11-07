@@ -259,7 +259,17 @@ class AnnouncementController extends Controller
             // Collect recipient emails
             $recipientEmails = $this->collectRecipientEmails($announcement, $user->tenant_id);
             
+            // Remove creator email from BCC if present (they're in To field)
+            $bccEmails = array_filter($recipientEmails, function($email) use ($user) {
+                return $email !== $user->email;
+            });
+            
+            // Prepare payload with type field for n8n switch node
             $payload = [
+                'type' => 'announcement', // Required for n8n switch node routing
+                'tenant_name' => $user->tenant->name ?? 'HOA', // Top-level for easy access
+                'to' => $user->email, // Creator email in To (required by some email systems)
+                'bcc' => array_values($bccEmails), // All recipients in BCC only (excluding creator)
                 'announcement' => [
                     'id' => $announcement->id,
                     'subject' => $announcement->subject,
@@ -271,7 +281,7 @@ class AnnouncementController extends Controller
                     'id' => $user->tenant_id,
                     'name' => $user->tenant->name ?? null,
                 ],
-                'recipients' => $recipientEmails,
+                'recipients' => $recipientEmails, // Keep for backward compatibility
                 'recipient_types' => $announcement->recipients->map(function ($r) {
                     return [
                         'type' => $r->recipient_type,
