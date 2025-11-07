@@ -759,6 +759,8 @@ const isAddEditPage = computed(() => {
     'EditVendor',
     'AddExpense',
     'EditExpense',
+    'AddAnnouncement',
+    'EditAnnouncement',
   ].includes(route.name as string);
 });
 
@@ -783,6 +785,8 @@ const pageTitle = computed(() => {
       return 'Vendors';
     case 'Documents':
       return 'HOA Documents';
+    case 'Announcements':
+      return 'Announcements';
     case 'Settings':
       return 'Settings';
     default:
@@ -810,6 +814,8 @@ const pageDescription = computed(() => {
       return 'Manage vendors and service providers';
     case 'Documents':
       return 'Manage community documents and control resident visibility';
+    case 'Announcements':
+      return 'Manage community announcements and communications';
     case 'Settings':
       return 'Configure your community settings';
     default:
