@@ -590,6 +590,7 @@ class AuthController extends Controller
 
             $email = $magicLinkData['email'];
             $residentId = $magicLinkData['resident_id'] ?? null;
+            $ownerId = $magicLinkData['owner_id'] ?? null;
 
             // Find user
             $user = User::where('email', $email)->first();
@@ -607,8 +608,9 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            // Verify resident ID matches if provided
-            if ($residentId && $user->id != $residentId) {
+            // Verify resident ID or owner ID matches if provided
+            $expectedId = $residentId ?? $ownerId;
+            if ($expectedId && $user->id != $expectedId) {
                 return response()->json([
                     'error' => 'Invalid magic link'
                 ], 400);

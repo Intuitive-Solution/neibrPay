@@ -8,9 +8,11 @@ use App\Models\Unit;
 use App\Services\InvoicePdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class InvoiceController extends Controller
@@ -200,7 +202,7 @@ class InvoiceController extends Controller
 
         // If user is a resident, verify invoice belongs to user's owned units
         if ($user->isResident()) {
-            $ownedUnitIds = $user->ownedUnits()->pluck('id')->toArray();
+            $ownedUnitIds = $user->ownedUnits()->get()->pluck('id')->toArray();
             if (!in_array($invoiceUnit->unit_id, $ownedUnitIds)) {
                 return response()->json(['message' => 'Invoice not found'], 403);
             }
@@ -1001,14 +1003,22 @@ class InvoiceController extends Controller
         }
 
         try {
-            // Build invoice view link (using signed URL for security)
-            $appUrl = config('app.url');
-            $frontendUrl = config('app.frontend_url', $appUrl);
+            // Generate magic link token (expires in 30 days, similar to invitation link)
+            $magicLinkToken = Str::random(64);
+            Cache::put("magic_link:{$magicLinkToken}", [
+                'email' => $email,
+                'owner_id' => $owner->id,
+                'invoice_id' => $invoiceUnit->id,
+                'unit_id' => $invoiceUnit->unit_id,
+                'created_at' => now(),
+            ], now()->addDays(30));
             
-            // Create a signed URL that expires in 30 days for invoice viewing
-            // For now, use a simple link - can be enhanced with signed URLs later
-            $magicLink = rtrim($frontendUrl, '/') . '/invoices/' . $invoiceUnit->id;
-
+            // Build magic link URL that will authenticate user and redirect to invoice
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            
+            // Create magic link that authenticates user and redirects to invoice
+            // Format: /magic-link?token=...&email=...&redirect=/invoices/{id}
+            $magicLink = rtrim($frontendUrl, '/') . '/magic-link?token=' . $magicLinkToken . '&email=' . urlencode($email) . '&redirect=' . urlencode('/invoices/' . $invoiceUnit->id);
             // Calculate due date
             $dueDate = $invoiceUnit->getActualDueDate();
             $dueDateFormatted = $dueDate->format('Y-m-d');

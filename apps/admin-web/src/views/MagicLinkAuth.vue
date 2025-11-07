@@ -54,9 +54,10 @@ const error = ref<string | null>(null);
 
 onMounted(async () => {
   try {
-    // Extract token and email from query parameters
+    // Extract token, email, and redirect from query parameters
     const token = route.query.token as string;
     const emailFromUrl = route.query.email as string | undefined;
+    const redirectPath = route.query.redirect as string | undefined;
 
     if (!token) {
       error.value = 'No authentication token provided in the link.';
@@ -73,8 +74,9 @@ onMounted(async () => {
     // Use the auth store's signinWithMagicLink method which handles everything
     await authStore.signinWithMagicLink(token);
 
-    // Redirect to dashboard on success
-    router.push('/');
+    // Redirect to specified path or dashboard on success
+    const finalRedirect = redirectPath || '/';
+    router.push(finalRedirect);
     isLoading.value = false;
   } catch (err: any) {
     console.error('Magic link authentication error:', err);
