@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto bg-white p-6">
+  <div class="max-w-7xl">
     <!-- Success Message -->
     <div
       v-if="showSuccessMessage"
@@ -123,7 +123,7 @@
     <!-- Invoice Details Content -->
     <div v-else-if="invoice" class="space-y-6">
       <!-- Header Section -->
-      <div class="card">
+      <div class="card mb-6">
         <div
           class="flex flex-col lg:flex-row lg:items-start lg:justify-between"
         >
@@ -229,14 +229,33 @@
                 }}
               </span>
             </div>
-            <p class="text-gray-600">
-              {{ invoice.unit?.title }} • {{ formatDate(invoice.created_at) }}
-            </p>
+            <p class="text-gray-600">Preview invoice details and information</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button @click="goBack" class="btn-outline">
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to Invoices
+            </button>
           </div>
         </div>
 
         <!-- Quick Action Buttons (Hidden for residents) -->
-        <div v-if="!isResident" class="flex flex-wrap gap-3 mt-6">
+        <div
+          v-if="!isResident"
+          class="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-200"
+        >
           <!-- Actions for deleted invoices -->
           <template v-if="invoice.deleted_at">
             <button
@@ -387,282 +406,591 @@
               {{ isDeleting ? 'Deleting...' : 'Delete' }}
             </button>
           </template>
-
-          <button
-            @click="goBack"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            Cancel
-          </button>
         </div>
       </div>
 
       <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column - Invoice Information -->
-        <div class="card">
-          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
-          </div>
-          <div class="p-6 space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >Invoice Number</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ invoice.invoice_number }}
-              </p>
+      <div class="bg-white p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Left Column - Invoice Information -->
+          <div class="card">
+            <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+              <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >Invoice Date</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ formatDate(invoice.created_at) }}
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >Due Date</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ getDueDate() }}
-              </p>
-            </div>
-            <div v-if="invoice.po_number">
-              <label class="block text-sm font-medium text-gray-700"
-                >PO Number</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ invoice.po_number }}
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >Frequency</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ formatFrequency(invoice.frequency) }}
-              </p>
-            </div>
-            <div v-if="invoice.remaining_cycles">
-              <label class="block text-sm font-medium text-gray-700"
-                >Remaining Cycles</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ invoice.remaining_cycles }}
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >Start Date</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ formatDate(invoice.start_date) }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Middle Column - Unit & Owner Information -->
-        <div class="card">
-          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Unit & Owner</h3>
-          </div>
-          <div class="p-6 space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >Unit</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ invoice.unit?.title }}
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700"
-                >Address</label
-              >
-              <p
-                class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
-              >
-                {{ invoice.unit?.address }}<br />
-                {{ invoice.unit?.city }}, {{ invoice.unit?.state }}
-                {{ invoice.unit?.zip_code }}
-              </p>
-            </div>
-            <div v-if="invoice.unit?.owners && invoice.unit.owners.length > 0">
-              <label class="block text-sm font-medium text-gray-700"
-                >Owner(s)</label
-              >
-              <div class="mt-1 space-y-2">
-                <div
-                  v-for="owner in invoice.unit.owners"
-                  :key="owner.id"
-                  class="bg-gray-50 px-3 py-2 rounded"
+            <div class="p-6 space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Invoice Number</label
                 >
-                  <p class="text-sm text-gray-900 font-medium">
-                    {{ owner.name }}
-                  </p>
-                  <p class="text-sm text-gray-600">{{ owner.email }}</p>
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ invoice.invoice_number }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Invoice Date</label
+                >
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ formatDate(invoice.created_at) }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Due Date</label
+                >
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ getDueDate() }}
+                </p>
+              </div>
+              <div v-if="invoice.po_number">
+                <label class="block text-sm font-medium text-gray-700"
+                  >PO Number</label
+                >
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ invoice.po_number }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Frequency</label
+                >
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ formatFrequency(invoice.frequency) }}
+                </p>
+              </div>
+              <div v-if="invoice.remaining_cycles">
+                <label class="block text-sm font-medium text-gray-700"
+                  >Remaining Cycles</label
+                >
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ invoice.remaining_cycles }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Start Date</label
+                >
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ formatDate(invoice.start_date) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle Column - Unit & Owner Information -->
+          <div class="card">
+            <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+              <h3 class="text-lg font-medium text-gray-900">Unit & Owner</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Unit</label
+                >
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ invoice.unit?.title }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Address</label
+                >
+                <p
+                  class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                >
+                  {{ invoice.unit?.address }}<br />
+                  {{ invoice.unit?.city }}, {{ invoice.unit?.state }}
+                  {{ invoice.unit?.zip_code }}
+                </p>
+              </div>
+              <div
+                v-if="invoice.unit?.owners && invoice.unit.owners.length > 0"
+              >
+                <label class="block text-sm font-medium text-gray-700"
+                  >Owner(s)</label
+                >
+                <div class="mt-1 space-y-2">
+                  <div
+                    v-for="owner in invoice.unit.owners"
+                    :key="owner.id"
+                    class="bg-gray-50 px-3 py-2 rounded"
+                  >
+                    <p class="text-sm text-gray-900 font-medium">
+                      {{ owner.name }}
+                    </p>
+                    <p class="text-sm text-gray-600">{{ owner.email }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column - Financial Summary -->
+          <div class="card">
+            <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+              <h3 class="text-lg font-medium text-gray-900">
+                Financial Summary
+              </h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Subtotal</span>
+                <span class="text-sm font-medium text-gray-900"
+                  >${{ formatCurrency(invoice.subtotal) }}</span
+                >
+              </div>
+              <div
+                v-if="invoice.discount_amount > 0"
+                class="flex justify-between"
+              >
+                <span class="text-sm text-gray-600">Discount</span>
+                <span class="text-sm font-medium text-gray-900">
+                  ${{ formatCurrency(invoice.discount_amount) }}
+                  <span class="text-xs text-gray-500"
+                    >({{ invoice.discount_type }})</span
+                  >
+                </span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600"
+                  >Tax ({{ invoice.tax_rate }}%)</span
+                >
+                <span class="text-sm font-medium text-gray-900"
+                  >${{ formatCurrency(invoice.tax_amount) }}</span
+                >
+              </div>
+              <div class="border-t border-gray-200 pt-3">
+                <div class="flex justify-between">
+                  <span class="text-sm font-medium text-gray-900">Total</span>
+                  <span class="text-sm font-bold text-gray-900"
+                    >${{ formatCurrency(invoice.total) }}</span
+                  >
+                </div>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Paid to Date</span>
+                <span class="text-sm font-medium text-gray-900"
+                  >${{ formatCurrency(invoice.paid_to_date) }}</span
+                >
+              </div>
+              <div class="border-t border-gray-200 pt-3">
+                <div class="flex justify-between">
+                  <span class="text-sm font-medium text-gray-900"
+                    >Balance Due</span
+                  >
+                  <span class="text-sm font-bold text-gray-900"
+                    >${{ formatCurrency(invoice.balance_due) }}</span
+                  >
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column - Financial Summary -->
+        <!-- Documents and Activity Tabs Section -->
         <div class="card">
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Financial Summary</h3>
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
+            </div>
           </div>
-          <div class="p-6 space-y-4">
-            <div class="flex justify-between">
-              <span class="text-sm text-gray-600">Subtotal</span>
-              <span class="text-sm font-medium text-gray-900"
-                >${{ formatCurrency(invoice.subtotal) }}</span
+
+          <!-- Tab Navigation -->
+          <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+              <button
+                @click="activeTab = 'documents'"
+                :class="[
+                  activeTab === 'documents'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                ]"
               >
-            </div>
-            <div
-              v-if="invoice.discount_amount > 0"
-              class="flex justify-between"
-            >
-              <span class="text-sm text-gray-600">Discount</span>
-              <span class="text-sm font-medium text-gray-900">
-                ${{ formatCurrency(invoice.discount_amount) }}
-                <span class="text-xs text-gray-500"
-                  >({{ invoice.discount_type }})</span
-                >
-              </span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-sm text-gray-600"
-                >Tax ({{ invoice.tax_rate }}%)</span
+                Documents
+              </button>
+              <button
+                @click="activeTab = 'payments'"
+                :class="[
+                  activeTab === 'payments'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                ]"
               >
-              <span class="text-sm font-medium text-gray-900"
-                >${{ formatCurrency(invoice.tax_amount) }}</span
+                Payments
+              </button>
+              <button
+                @click="activeTab = 'activity'"
+                :class="[
+                  activeTab === 'activity'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+                ]"
               >
-            </div>
-            <div class="border-t border-gray-200 pt-3">
-              <div class="flex justify-between">
-                <span class="text-sm font-medium text-gray-900">Total</span>
-                <span class="text-sm font-bold text-gray-900"
-                  >${{ formatCurrency(invoice.total) }}</span
-                >
+                Activity
+              </button>
+            </nav>
+          </div>
+
+          <!-- Tab Content -->
+          <div class="p-6">
+            <!-- Documents Tab -->
+            <div v-if="activeTab === 'documents'">
+              <div v-if="isLoadingAttachments" class="text-center py-8">
+                <div
+                  class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
+                ></div>
+                <p class="mt-2 text-sm text-gray-600">Loading documents...</p>
               </div>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-sm text-gray-600">Paid to Date</span>
-              <span class="text-sm font-medium text-gray-900"
-                >${{ formatCurrency(invoice.paid_to_date) }}</span
-              >
-            </div>
-            <div class="border-t border-gray-200 pt-3">
-              <div class="flex justify-between">
-                <span class="text-sm font-medium text-gray-900"
-                  >Balance Due</span
-                >
-                <span class="text-sm font-bold text-gray-900"
-                  >${{ formatCurrency(invoice.balance_due) }}</span
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Documents and Activity Tabs Section -->
-      <div class="card">
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
-          </div>
-        </div>
-
-        <!-- Tab Navigation -->
-        <div class="border-b border-gray-200">
-          <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-            <button
-              @click="activeTab = 'documents'"
-              :class="[
-                activeTab === 'documents'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
-              ]"
-            >
-              Documents
-            </button>
-            <button
-              @click="activeTab = 'payments'"
-              :class="[
-                activeTab === 'payments'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
-              ]"
-            >
-              Payments
-            </button>
-            <button
-              @click="activeTab = 'activity'"
-              :class="[
-                activeTab === 'activity'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
-              ]"
-            >
-              Activity
-            </button>
-          </nav>
-        </div>
-
-        <!-- Tab Content -->
-        <div class="p-6">
-          <!-- Documents Tab -->
-          <div v-if="activeTab === 'documents'">
-            <div v-if="isLoadingAttachments" class="text-center py-8">
               <div
-                class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
-              ></div>
-              <p class="mt-2 text-sm text-gray-600">Loading documents...</p>
+                v-else-if="attachmentsError"
+                class="text-center py-8 text-red-500"
+              >
+                <svg
+                  class="mx-auto h-12 w-12 text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">
+                  Error Loading Documents
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                  Failed to load invoice documents
+                </p>
+              </div>
+
+              <div
+                v-else-if="!attachments || attachments.length === 0"
+                class="text-center py-8 text-gray-500"
+              >
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">
+                  No Documents
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                  No documents have been uploaded for this invoice yet.
+                </p>
+              </div>
+
+              <div v-else class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Name
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Type
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Size
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Upload Date
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Uploaded By
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <tr
+                      v-for="attachment in attachments"
+                      :key="attachment.id"
+                      class="hover:bg-gray-50"
+                    >
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          <span class="text-lg mr-3">{{
+                            getFileIcon(attachment.attachment_type)
+                          }}</span>
+                          <div class="text-sm font-medium text-gray-900">
+                            {{ attachment.file_name }}
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 capitalize">
+                          {{ attachment.attachment_type }}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          {{ attachment.mime_type }}
+                        </div>
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                      >
+                        {{ formatFileSize(attachment.file_size) }}
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                      >
+                        {{ formatDate(attachment.created_at) }}
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                      >
+                        {{
+                          attachment.uploader?.name ||
+                          attachment.uploader?.email ||
+                          'Unknown'
+                        }}
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                      >
+                        <button
+                          @click="handleDownload(attachment)"
+                          :disabled="downloadAttachmentMutation.isPending.value"
+                          class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          {{
+                            downloadAttachmentMutation.isPending.value
+                              ? 'Downloading...'
+                              : 'Download'
+                          }}
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
+            <!-- Payments Tab -->
+            <div v-if="activeTab === 'payments'">
+              <div v-if="isLoadingPayments" class="text-center py-8">
+                <div
+                  class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
+                ></div>
+                <p class="mt-2 text-sm text-gray-600">Loading payments...</p>
+              </div>
+
+              <div
+                v-else-if="paymentsError"
+                class="text-center py-8 text-red-500"
+              >
+                <svg
+                  class="mx-auto h-12 w-12 text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">
+                  Error Loading Payments
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                  Failed to load payment history
+                </p>
+              </div>
+
+              <div
+                v-else-if="!payments || payments.length === 0"
+                class="text-center py-8 text-gray-500"
+              >
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">
+                  No Payments Yet
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                  No payments have been recorded for this invoice yet.
+                </p>
+              </div>
+
+              <div v-else class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Payment Date
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Amount
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Method
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Reference
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Recorded By
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <tr
+                      v-for="payment in payments"
+                      :key="payment.id"
+                      class="hover:bg-gray-50"
+                    >
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                      >
+                        {{ formatDate(payment.payment_date) }}
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                      >
+                        ${{ formatCurrency(payment.amount) }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span
+                          :class="
+                            getPaymentMethodBadgeClass(payment.payment_method)
+                          "
+                          class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                        >
+                          {{ formatPaymentMethod(payment.payment_method) }}
+                        </span>
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                      >
+                        {{ payment.payment_reference || '-' }}
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                      >
+                        {{ payment.recorder?.name || 'Unknown' }}
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                      >
+                        <div class="flex space-x-2">
+                          <button
+                            @click="viewPayment(payment)"
+                            class="text-primary hover:text-primary-600"
+                          >
+                            View
+                          </button>
+                          <button
+                            @click="deletePayment(payment)"
+                            :disabled="deletingPaymentId === payment.id"
+                            class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {{
+                              deletingPaymentId === payment.id
+                                ? 'Deleting...'
+                                : 'Delete'
+                            }}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Activity Tab -->
             <div
-              v-else-if="attachmentsError"
-              class="text-center py-8 text-red-500"
+              v-if="activeTab === 'activity'"
+              class="text-center py-12 text-gray-500"
             >
               <svg
-                class="mx-auto h-12 w-12 text-red-400"
+                class="mx-auto h-12 w-12 text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -671,21 +999,74 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
               <h3 class="mt-2 text-sm font-medium text-gray-900">
-                Error Loading Documents
+                Activity Tracking Coming Soon
               </h3>
               <p class="mt-1 text-sm text-gray-500">
-                Failed to load invoice documents
+                Invoice activity and history will be displayed here.
               </p>
             </div>
+          </div>
+        </div>
 
-            <div
-              v-else-if="!attachments || attachments.length === 0"
-              class="text-center py-8 text-gray-500"
-            >
+        <!-- Invoice PDF Section -->
+        <div class="card">
+          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-medium text-gray-900">Invoice PDF</h3>
+            </div>
+          </div>
+          <div class="p-6">
+            <div v-if="latestPdf" class="space-y-4">
+              <!-- Embedded PDF Viewer -->
+              <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <iframe
+                  :key="pdfRefreshKey"
+                  :src="pdfViewerUrl"
+                  class="w-full h-96"
+                  frameborder="0"
+                  title="Invoice PDF Viewer"
+                  @load="onPdfLoad"
+                  @error="onPdfError"
+                ></iframe>
+              </div>
+
+              <!-- Fallback message if PDF doesn't load -->
+              <div v-if="pdfLoadError" class="text-center py-8 text-gray-500">
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">
+                  PDF Preview Unavailable
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                  Unable to display PDF preview. Use the download button to view
+                  the PDF.
+                </p>
+              </div>
+            </div>
+            <div v-else-if="isLoadingPdf" class="text-center py-8">
+              <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
+              ></div>
+              <p class="mt-2 text-sm text-gray-600">
+                Loading PDF information...
+              </p>
+            </div>
+            <div v-else class="text-center py-8 text-gray-500">
               <svg
                 class="mx-auto h-12 w-12 text-gray-400"
                 fill="none"
@@ -700,382 +1081,12 @@
                 />
               </svg>
               <h3 class="mt-2 text-sm font-medium text-gray-900">
-                No Documents
+                No PDF Available
               </h3>
               <p class="mt-1 text-sm text-gray-500">
-                No documents have been uploaded for this invoice yet.
+                No PDF has been generated for this invoice yet.
               </p>
             </div>
-
-            <div v-else class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Name
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Type
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Size
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Upload Date
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Uploaded By
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr
-                    v-for="attachment in attachments"
-                    :key="attachment.id"
-                    class="hover:bg-gray-50"
-                  >
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="flex items-center">
-                        <span class="text-lg mr-3">{{
-                          getFileIcon(attachment.attachment_type)
-                        }}</span>
-                        <div class="text-sm font-medium text-gray-900">
-                          {{ attachment.file_name }}
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-900 capitalize">
-                        {{ attachment.attachment_type }}
-                      </div>
-                      <div class="text-sm text-gray-500">
-                        {{ attachment.mime_type }}
-                      </div>
-                    </td>
-                    <td
-                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    >
-                      {{ formatFileSize(attachment.file_size) }}
-                    </td>
-                    <td
-                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    >
-                      {{ formatDate(attachment.created_at) }}
-                    </td>
-                    <td
-                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    >
-                      {{
-                        attachment.uploader?.name ||
-                        attachment.uploader?.email ||
-                        'Unknown'
-                      }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        @click="handleDownload(attachment)"
-                        :disabled="downloadAttachmentMutation.isPending.value"
-                        class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                        {{
-                          downloadAttachmentMutation.isPending.value
-                            ? 'Downloading...'
-                            : 'Download'
-                        }}
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Payments Tab -->
-          <div v-if="activeTab === 'payments'">
-            <div v-if="isLoadingPayments" class="text-center py-8">
-              <div
-                class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
-              ></div>
-              <p class="mt-2 text-sm text-gray-600">Loading payments...</p>
-            </div>
-
-            <div
-              v-else-if="paymentsError"
-              class="text-center py-8 text-red-500"
-            >
-              <svg
-                class="mx-auto h-12 w-12 text-red-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">
-                Error Loading Payments
-              </h3>
-              <p class="mt-1 text-sm text-gray-500">
-                Failed to load payment history
-              </p>
-            </div>
-
-            <div
-              v-else-if="!payments || payments.length === 0"
-              class="text-center py-8 text-gray-500"
-            >
-              <svg
-                class="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">
-                No Payments Yet
-              </h3>
-              <p class="mt-1 text-sm text-gray-500">
-                No payments have been recorded for this invoice yet.
-              </p>
-            </div>
-
-            <div v-else class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Payment Date
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Amount
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Method
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Reference
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Recorded By
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr
-                    v-for="payment in payments"
-                    :key="payment.id"
-                    class="hover:bg-gray-50"
-                  >
-                    <td
-                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    >
-                      {{ formatDate(payment.payment_date) }}
-                    </td>
-                    <td
-                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                    >
-                      ${{ formatCurrency(payment.amount) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span
-                        :class="
-                          getPaymentMethodBadgeClass(payment.payment_method)
-                        "
-                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                      >
-                        {{ formatPaymentMethod(payment.payment_method) }}
-                      </span>
-                    </td>
-                    <td
-                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    >
-                      {{ payment.payment_reference || '-' }}
-                    </td>
-                    <td
-                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    >
-                      {{ payment.recorder?.name || 'Unknown' }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div class="flex space-x-2">
-                        <button
-                          @click="viewPayment(payment)"
-                          class="text-primary hover:text-primary-600"
-                        >
-                          View
-                        </button>
-                        <button
-                          @click="deletePayment(payment)"
-                          :disabled="deletingPaymentId === payment.id"
-                          class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {{
-                            deletingPaymentId === payment.id
-                              ? 'Deleting...'
-                              : 'Delete'
-                          }}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Activity Tab -->
-          <div
-            v-if="activeTab === 'activity'"
-            class="text-center py-12 text-gray-500"
-          >
-            <svg
-              class="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">
-              Activity Tracking Coming Soon
-            </h3>
-            <p class="mt-1 text-sm text-gray-500">
-              Invoice activity and history will be displayed here.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Invoice PDF Section -->
-      <div class="card">
-        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-gray-900">Invoice PDF</h3>
-          </div>
-        </div>
-        <div class="p-6">
-          <div v-if="latestPdf" class="space-y-4">
-            <!-- Embedded PDF Viewer -->
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-              <iframe
-                :key="pdfRefreshKey"
-                :src="pdfViewerUrl"
-                class="w-full h-96"
-                frameborder="0"
-                title="Invoice PDF Viewer"
-                @load="onPdfLoad"
-                @error="onPdfError"
-              ></iframe>
-            </div>
-
-            <!-- Fallback message if PDF doesn't load -->
-            <div v-if="pdfLoadError" class="text-center py-8 text-gray-500">
-              <svg
-                class="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">
-                PDF Preview Unavailable
-              </h3>
-              <p class="mt-1 text-sm text-gray-500">
-                Unable to display PDF preview. Use the download button to view
-                the PDF.
-              </p>
-            </div>
-          </div>
-          <div v-else-if="isLoadingPdf" class="text-center py-8">
-            <div
-              class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
-            ></div>
-            <p class="mt-2 text-sm text-gray-600">Loading PDF information...</p>
-          </div>
-          <div v-else class="text-center py-8 text-gray-500">
-            <svg
-              class="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">
-              No PDF Available
-            </h3>
-            <p class="mt-1 text-sm text-gray-500">
-              No PDF has been generated for this invoice yet.
-            </p>
           </div>
         </div>
       </div>
