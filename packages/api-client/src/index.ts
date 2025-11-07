@@ -8,6 +8,7 @@ export { paymentsApi } from './payments';
 export { chargesApi } from './charges';
 export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';
+export { announcementsApi } from './announcements';
 export { documentsApi } from './documents';
 export type {
   HoaDocument,
@@ -28,4 +29,5 @@ export {
   type UpdateLocalizationRequest,
 } from './settings';
 export * from './queryKeys';
+export { announcementKeys } from './queryKeys';
 export { setAuthTokenGetter } from './apiClient';

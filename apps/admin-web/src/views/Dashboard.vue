@@ -1,5 +1,8 @@
 <template>
   <div class="space-y-6">
+    <!-- Announcements Carousel -->
+    <AnnouncementsCarousel />
+
     <!-- Dashboard Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Units and Residents Container - Stacked at lg, separate at md -->
@@ -591,6 +594,7 @@ import { useInvoices } from '../composables/useInvoices';
 import { usePayments } from '../composables/usePayments';
 import { useResidents } from '../composables/useResidents';
 import { useAuthStore } from '../stores/auth';
+import AnnouncementsCarousel from '../components/AnnouncementsCarousel.vue';
 import type { Unit, InvoiceUnit, Payment, Resident } from '@neibrpay/models';
 
 const router = useRouter();

@@ -20,5 +20,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI') ? trim(env('GOOGLE_REDIRECT_URI'), '"\'/') : (env('APP_URL') . '/api/auth/google/callback'),
     ],
 
+    'n8n' => [
+        'webhook_url' => env('N8N_WEBHOOK_URL'),
+    ],
+
 ];
 

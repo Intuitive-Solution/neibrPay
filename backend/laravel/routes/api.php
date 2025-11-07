@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChargeController;
 use App\Http\Controllers\Api\ExpenseAttachmentController;
@@ -167,6 +168,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tenant routes
     Route::put('tenant', [TenantController::class, 'update']);
     Route::put('tenant/localization', [TenantController::class, 'updateLocalization']);
+    
+    // Announcement routes
+    Route::get('announcements/for-user', [AnnouncementController::class, 'forUser']);
+    Route::apiResource('announcements', AnnouncementController::class);
 });
 
 // Legacy route for backward compatibility

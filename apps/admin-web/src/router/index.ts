@@ -21,6 +21,8 @@ import Vendors from '../views/Vendors.vue';
 import AddVendor from '../views/AddVendor.vue';
 import Documents from '../views/Documents.vue';
 import Settings from '../views/Settings.vue';
+import Announcements from '../views/Announcements.vue';
+import AddAnnouncement from '../views/AddAnnouncement.vue';
 import { setupAuthGuards } from './guards';
 
 const router = createRouter({
@@ -178,6 +180,24 @@ const router = createRouter({
       path: '/documents',
       name: 'Documents',
       component: Documents,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/announcements',
+      name: 'Announcements',
+      component: Announcements,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/announcements/create',
+      name: 'AddAnnouncement',
+      component: AddAnnouncement,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/announcements/:id/edit',
+      name: 'EditAnnouncement',
+      component: AddAnnouncement,
       meta: { requiresAuth: true },
     },
     {

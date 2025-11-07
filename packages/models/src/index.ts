@@ -1,6 +1,7 @@
 // Models exports
 // This will contain zod schemas, TypeScript types, currency & date helpers
 
+export * from './announcement';
 export * from './charge';
 export * from './expense';
 export * from './resident';

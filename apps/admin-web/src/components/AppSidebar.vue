@@ -270,6 +270,36 @@
             </router-link>
           </li>
 
+          <!-- Announcements - Admin only -->
+          <li v-if="isAdmin">
+            <router-link
+              to="/announcements"
+              :class="
+                getNavLinkClass([
+                  'Announcements',
+                  'AddAnnouncement',
+                  'EditAnnouncement',
+                ])
+              "
+              :title="!isExpanded ? 'Announcements' : ''"
+            >
+              <svg
+                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3.14a7.5 7.5 0 011.291 7.239M19 13a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <span v-if="isExpanded">Announcements</span>
+            </router-link>
+          </li>
+
           <li>
             <router-link
               to="/settings"
@@ -692,6 +722,7 @@ const communityName = computed(() => authStore.tenantName || 'Community');
 const userDisplayName = computed(() => authStore.userDisplayName || 'User');
 const userEmail = computed(() => authStore.user?.email || '');
 const isResident = computed(() => authStore.isResident);
+const isAdmin = computed(() => authStore.isAdmin);
 const userInitials = computed(() => {
   const name = userDisplayName.value;
   return name
