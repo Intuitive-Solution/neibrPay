@@ -905,7 +905,29 @@ class InvoiceController extends Controller
         ]);
 
         // Load invoice with relationships
-        $invoiceUnit->load(['unit.owners', 'tenant']);
+        // First ensure unit is loaded, then load owners
+        if (!$invoiceUnit->relationLoaded('unit')) {
+            $invoiceUnit->load('unit');
+        }
+        
+        // Check if unit exists
+        if (!$invoiceUnit->unit) {
+            Log::error('Invoice unit not found for invoice', [
+                'invoice_id' => $invoiceUnit->id,
+                'unit_id' => $invoiceUnit->unit_id,
+            ]);
+            return response()->json(['message' => 'Unit not found for this invoice'], 400);
+        }
+        
+        // Load owners relationship if not already loaded
+        if (!$invoiceUnit->unit->relationLoaded('owners')) {
+            $invoiceUnit->unit->load('owners');
+        }
+        
+        // Load tenant if not already loaded
+        if (!$invoiceUnit->relationLoaded('tenant')) {
+            $invoiceUnit->load('tenant');
+        }
 
         // Get the owner - use provided email or first unit owner
         $owner = null;
@@ -914,14 +936,53 @@ class InvoiceController extends Controller
         if ($email) {
             // Find owner by email
             $owner = $invoiceUnit->unit->owners->firstWhere('email', $email);
+            if (!$owner) {
+                Log::warning('Owner not found with provided email', [
+                    'invoice_id' => $invoiceUnit->id,
+                    'unit_id' => $invoiceUnit->unit_id,
+                    'provided_email' => $email,
+                ]);
+            }
         } else {
             // Use first owner from unit
             $owner = $invoiceUnit->unit->owners->first();
-            $email = $owner?->email;
+            if ($owner) {
+                $email = $owner->email;
+            }
         }
         
-        if (!$email || !$owner) {
-            return response()->json(['message' => 'No email address available for this invoice'], 400);
+        // If no owner found, check if unit has any owners
+        if (!$owner) {
+            $ownersCount = $invoiceUnit->unit->owners->count();
+            Log::warning('No owner found for invoice email', [
+                'invoice_id' => $invoiceUnit->id,
+                'unit_id' => $invoiceUnit->unit_id,
+                'unit_title' => $invoiceUnit->unit->title,
+                'owners_count' => $ownersCount,
+            ]);
+            
+            if ($ownersCount === 0) {
+                return response()->json([
+                    'message' => 'No owners assigned to this unit. Please assign an owner with an email address before sending the invoice.',
+                ], 400);
+            } else {
+                return response()->json([
+                    'message' => 'No owner with a valid email address found for this unit. Please ensure at least one owner has an email address.',
+                ], 400);
+            }
+        }
+        
+        // Check if owner has an email
+        if (!$email || empty(trim($email))) {
+            Log::warning('Owner found but no email address', [
+                'invoice_id' => $invoiceUnit->id,
+                'unit_id' => $invoiceUnit->unit_id,
+                'owner_id' => $owner->id,
+                'owner_name' => $owner->name ?? 'N/A',
+            ]);
+            return response()->json([
+                'message' => 'The owner assigned to this unit does not have an email address. Please update the owner\'s email address.',
+            ], 400);
         }
 
         // Check if n8n webhook URL is configured
@@ -964,6 +1025,7 @@ class InvoiceController extends Controller
 
             // Prepare n8n webhook payload
             $payload = [
+                'type' => 'invoice',
                 'recipient' => [
                     'email' => $email,
                     'name' => $owner->name ?? $owner->email,
