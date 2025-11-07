@@ -720,6 +720,7 @@ const isAddEditPage = computed(() => {
     'AddUnit',
     'EditUnit',
     'AddInvoice',
+    'EditInvoice',
     'InvoiceDetail',
     'AddCharge',
     'EditCharge',
