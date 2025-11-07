@@ -128,7 +128,7 @@
             <router-link
               to="/people"
               :class="getNavLinkClass('People')"
-              :title="!isExpanded ? 'People' : ''"
+              :title="!isExpanded ? 'Residents' : ''"
             >
               <svg
                 :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
@@ -741,7 +741,7 @@ const pageTitle = computed(() => {
     case 'Charges':
       return 'Charges';
     case 'People':
-      return 'People';
+      return 'Residents';
     case 'Units':
       return 'Units';
     case 'Payments':
@@ -767,7 +767,7 @@ const pageDescription = computed(() => {
       return 'Manage community invoices and billing';
     case 'Charges':
       return 'Manage standard charges and fees';
-    case 'People':
+    case 'Residents':
       return 'Manage residents and community members';
     case 'Units':
       return 'Manage units and properties';
