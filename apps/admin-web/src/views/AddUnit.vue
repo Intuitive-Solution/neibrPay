@@ -938,6 +938,283 @@
           </div>
         </form>
       </div>
+
+      <!-- Owner, Account History, Document Section -->
+      <div class="bg-white rounded-lg p-6 mt-6">
+        <!-- Tabs Navigation -->
+        <div class="border-b border-gray-200 mb-6">
+          <nav class="-mb-px flex space-x-8">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              @click="activeTab = tab.id"
+              :class="[
+                activeTab === tab.id
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm',
+              ]"
+            >
+              {{ tab.name }}
+            </button>
+          </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div>
+          <!-- Owner Tab -->
+          <div v-if="activeTab === 'owner'" class="space-y-4">
+            <!-- Search Bar and Add Button -->
+            <div class="flex items-center justify-between">
+              <!-- Search Box -->
+              <div class="relative flex-1 max-w-md">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Search..."
+                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                />
+                <button
+                  v-if="searchQuery"
+                  @click="searchQuery = ''"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Add Button -->
+              <button
+                type="button"
+                @click="openAddOwnerModal"
+                class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              >
+                <svg
+                  class="-ml-1 mr-2 h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Add
+              </button>
+            </div>
+
+            <!-- Owner Table -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+              <table
+                class="min-w-full divide-y divide-gray-200"
+                :key="`owners-table-${owners.length}`"
+              >
+                <thead class="bg-gray-300">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Name
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Email
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="owner in filteredOwners" :key="owner.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      {{ owner.name }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ owner.email }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      <button
+                        @click="removeOwner(owner.id)"
+                        class="text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                  <!-- Empty State -->
+                  <tr v-if="filteredOwners.length === 0">
+                    <td
+                      colspan="3"
+                      class="px-6 py-8 text-center text-sm text-gray-500"
+                    >
+                      <div class="flex flex-col items-center">
+                        <svg
+                          class="h-12 w-12 text-gray-400 mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                          />
+                        </svg>
+                        <p class="text-gray-500">
+                          No owners assigned to this unit
+                        </p>
+                        <p class="text-gray-400 text-xs mt-1">
+                          Click "Add" to assign owners
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Account History Tab -->
+          <div v-if="activeTab === 'account-history'" class="space-y-4">
+            <!-- Account History Table -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Description
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Remark
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="history in accountHistory" :key="history.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ history.date }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ history.description }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ history.remark }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Document Tab -->
+          <div v-if="activeTab === 'document'" class="space-y-6">
+            <div class="bg-white shadow rounded-lg p-6">
+              <DocumentUpload
+                :is-uploading="isUploadingDocument"
+                :upload-progress="uploadProgress"
+                :upload-error="uploadError?.message || null"
+                @upload="handleDocumentUpload"
+              />
+            </div>
+
+            <!-- Documents List -->
+            <div class="bg-white shadow rounded-lg p-6">
+              <div
+                v-if="isLoadingDocuments"
+                class="flex items-center justify-center py-8"
+              >
+                <svg
+                  class="animate-spin h-8 w-8 text-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span class="ml-2 text-gray-600">Loading documents...</span>
+              </div>
+
+              <DocumentList
+                v-else
+                :documents="documents"
+                :is-deleting="isDeletingDocument"
+                @download="handleDocumentDownload"
+                @delete="handleDocumentDelete"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1501,6 +1778,12 @@ const confirmRemoveOwner = async () => {
 
   // Close the confirmation modal
   closeRemoveOwnerModal();
+};
+
+// Simple remove owner function for Add Mode (no API call needed)
+const removeOwner = (ownerId: number) => {
+  owners.value = owners.value.filter((owner: any) => owner.id !== ownerId);
+  ownersUpdateTrigger.value++;
 };
 
 const formatZipCode = (event: Event) => {
