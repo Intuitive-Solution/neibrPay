@@ -1,7 +1,7 @@
 <template>
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-4xl">
     <!-- Header Section -->
-    <div class="card mb-6">
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -67,333 +67,421 @@
     </div>
 
     <!-- Main Content -->
-    <div class="card">
+    <div class="bg-white rounded-lg shadow p-6">
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Basic Information Section -->
-        <div class="border-b border-gray-200 pb-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">
+        <div class="border-b border-gray-200 pb-6 mb-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-6">
             Basic Information
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-6">
             <!-- Vendor Selection -->
-            <div>
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="vendor_id"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Vendor <span class="text-red-500">*</span>
               </label>
-              <select
-                id="vendor_id"
-                v-model="form.vendor_id"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                :class="{ 'border-red-300': errors.vendor_id }"
-                required
-              >
-                <option value="">Select a vendor</option>
-                <option
-                  v-for="vendor in vendors"
-                  :key="vendor.id"
-                  :value="vendor.id"
+              <div class="lg:col-span-2">
+                <select
+                  id="vendor_id"
+                  v-model="form.vendor_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.vendor_id,
+                  }"
+                  required
                 >
-                  {{ vendor.name }}
-                </option>
-              </select>
-              <p v-if="errors.vendor_id" class="mt-1 text-sm text-red-600">
-                {{ errors.vendor_id }}
-              </p>
+                  <option value="">Select a vendor</option>
+                  <option
+                    v-for="vendor in vendors"
+                    :key="vendor.id"
+                    :value="vendor.id"
+                  >
+                    {{ vendor.name }}
+                  </option>
+                </select>
+                <p v-if="errors.vendor_id" class="mt-2 text-sm text-red-600">
+                  {{ errors.vendor_id }}
+                </p>
+              </div>
             </div>
 
             <!-- Invoice Number -->
-            <div>
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="invoice_number"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Invoice Number <span class="text-red-500">*</span>
               </label>
-              <input
-                id="invoice_number"
-                v-model="form.invoice_number"
-                type="text"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                :class="{ 'border-red-300': errors.invoice_number }"
-                placeholder="Enter invoice number"
-                required
-              />
-              <p v-if="errors.invoice_number" class="mt-1 text-sm text-red-600">
-                {{ errors.invoice_number }}
-              </p>
+              <div class="lg:col-span-2">
+                <input
+                  id="invoice_number"
+                  v-model="form.invoice_number"
+                  type="text"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.invoice_number,
+                  }"
+                  placeholder="Enter invoice number"
+                  required
+                />
+                <p
+                  v-if="errors.invoice_number"
+                  class="mt-2 text-sm text-red-600"
+                >
+                  {{ errors.invoice_number }}
+                </p>
+              </div>
             </div>
 
             <!-- Invoice Date -->
-            <div>
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="invoice_date"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Invoice Date <span class="text-red-500">*</span>
               </label>
-              <input
-                id="invoice_date"
-                v-model="form.invoice_date"
-                type="date"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                :class="{ 'border-red-300': errors.invoice_date }"
-                required
-              />
-              <p v-if="errors.invoice_date" class="mt-1 text-sm text-red-600">
-                {{ errors.invoice_date }}
-              </p>
+              <div class="lg:col-span-2">
+                <input
+                  id="invoice_date"
+                  v-model="form.invoice_date"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.invoice_date,
+                  }"
+                  required
+                />
+                <p v-if="errors.invoice_date" class="mt-2 text-sm text-red-600">
+                  {{ errors.invoice_date }}
+                </p>
+              </div>
             </div>
 
             <!-- Invoice Due Date -->
-            <div>
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="invoice_due_date"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Invoice Due Date <span class="text-red-500">*</span>
               </label>
-              <input
-                id="invoice_due_date"
-                v-model="form.invoice_due_date"
-                type="date"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                :class="{ 'border-red-300': errors.invoice_due_date }"
-                required
-              />
-              <p
-                v-if="errors.invoice_due_date"
-                class="mt-1 text-sm text-red-600"
-              >
-                {{ errors.invoice_due_date }}
-              </p>
+              <div class="lg:col-span-2">
+                <input
+                  id="invoice_due_date"
+                  v-model="form.invoice_due_date"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.invoice_due_date,
+                  }"
+                  required
+                />
+                <p
+                  v-if="errors.invoice_due_date"
+                  class="mt-2 text-sm text-red-600"
+                >
+                  {{ errors.invoice_due_date }}
+                </p>
+              </div>
             </div>
 
             <!-- Invoice Amount -->
-            <div>
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="invoice_amount"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Invoice Amount <span class="text-red-500">*</span>
               </label>
-              <div class="relative">
-                <div
-                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                >
-                  <span class="text-gray-500 sm:text-sm">$</span>
+              <div class="lg:col-span-2">
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  >
+                    <span class="text-gray-500 text-sm">$</span>
+                  </div>
+                  <input
+                    id="invoice_amount"
+                    v-model="form.invoice_amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    class="w-full pl-6 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                    :class="{
+                      'border-red-300 focus:ring-red-500 focus:border-red-500':
+                        errors.invoice_amount,
+                    }"
+                    placeholder="0.00"
+                    required
+                  />
                 </div>
-                <input
-                  id="invoice_amount"
-                  v-model="form.invoice_amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  class="mt-1 block w-full pl-7 border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  :class="{ 'border-red-300': errors.invoice_amount }"
-                  placeholder="0.00"
-                  required
-                />
+                <p
+                  v-if="errors.invoice_amount"
+                  class="mt-2 text-sm text-red-600"
+                >
+                  {{ errors.invoice_amount }}
+                </p>
               </div>
-              <p v-if="errors.invoice_amount" class="mt-1 text-sm text-red-600">
-                {{ errors.invoice_amount }}
-              </p>
             </div>
 
             <!-- Category -->
-            <div>
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="category"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Category <span class="text-red-500">*</span>
               </label>
-              <select
-                id="category"
-                v-model="form.category"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                :class="{ 'border-red-300': errors.category }"
-                required
-              >
-                <option value="">Select a category</option>
-                <option
-                  v-for="option in categoryOptions"
-                  :key="option.value"
-                  :value="option.value"
+              <div class="lg:col-span-2">
+                <select
+                  id="category"
+                  v-model="form.category"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.category,
+                  }"
+                  required
                 >
-                  {{ option.label }}
-                </option>
-              </select>
-              <p v-if="errors.category" class="mt-1 text-sm text-red-600">
-                {{ errors.category }}
-              </p>
+                  <option value="">Select a category</option>
+                  <option
+                    v-for="option in categoryOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+                <p v-if="errors.category" class="mt-2 text-sm text-red-600">
+                  {{ errors.category }}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <!-- Note -->
-          <div class="mt-6">
-            <label
-              for="note"
-              class="block text-sm font-medium text-gray-700 mb-2"
+            <!-- Note -->
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
             >
-              Note
-            </label>
-            <textarea
-              id="note"
-              v-model="form.note"
-              rows="3"
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              placeholder="Additional notes about this expense"
-            />
+              <label
+                for="note"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
+              >
+                Note
+              </label>
+              <div class="lg:col-span-2">
+                <textarea
+                  id="note"
+                  v-model="form.note"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  placeholder="Additional notes about this expense"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Payment Information Section -->
-        <div class="border-b border-gray-200 pb-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">
+        <div class="border-b border-gray-200 pb-6 mb-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-6">
             Payment Information
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-6">
             <!-- Status -->
-            <div>
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="status"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Status <span class="text-red-500">*</span>
               </label>
-              <select
-                id="status"
-                v-model="form.status"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                :class="{ 'border-red-300': errors.status }"
-                required
-              >
-                <option value="">Select status</option>
-                <option
-                  v-for="option in statusOptions"
-                  :key="option.value"
-                  :value="option.value"
+              <div class="lg:col-span-2">
+                <select
+                  id="status"
+                  v-model="form.status"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.status,
+                  }"
+                  required
                 >
-                  {{ option.label }}
-                </option>
-              </select>
-              <p v-if="errors.status" class="mt-1 text-sm text-red-600">
-                {{ errors.status }}
-              </p>
+                  <option value="">Select status</option>
+                  <option
+                    v-for="option in statusOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+                <p v-if="errors.status" class="mt-2 text-sm text-red-600">
+                  {{ errors.status }}
+                </p>
+              </div>
             </div>
 
             <!-- Payment Method (shown when status is partial or paid) -->
-            <div v-if="form.status === 'partial' || form.status === 'paid'">
+            <div
+              v-if="form.status === 'partial' || form.status === 'paid'"
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="payment_method"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Payment Method <span class="text-red-500">*</span>
               </label>
-              <select
-                id="payment_method"
-                v-model="form.payment_method"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                :class="{ 'border-red-300': errors.payment_method }"
-                required
-              >
-                <option value="">Select payment method</option>
-                <option
-                  v-for="option in paymentMethodOptions"
-                  :key="option.value"
-                  :value="option.value"
+              <div class="lg:col-span-2">
+                <select
+                  id="payment_method"
+                  v-model="form.payment_method"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.payment_method,
+                  }"
+                  required
                 >
-                  {{ option.label }}
-                </option>
-              </select>
-              <p v-if="errors.payment_method" class="mt-1 text-sm text-red-600">
-                {{ errors.payment_method }}
-              </p>
+                  <option value="">Select payment method</option>
+                  <option
+                    v-for="option in paymentMethodOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+                <p
+                  v-if="errors.payment_method"
+                  class="mt-2 text-sm text-red-600"
+                >
+                  {{ errors.payment_method }}
+                </p>
+              </div>
             </div>
 
             <!-- Paid Amount (shown when status is partial) -->
-            <div v-if="form.status === 'partial'">
+            <div
+              v-if="form.status === 'partial'"
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="paid_amount"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Paid Amount <span class="text-red-500">*</span>
               </label>
-              <div class="relative">
-                <div
-                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                >
-                  <span class="text-gray-500 sm:text-sm">$</span>
+              <div class="lg:col-span-2">
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  >
+                    <span class="text-gray-500 text-sm">$</span>
+                  </div>
+                  <input
+                    id="paid_amount"
+                    v-model="form.paid_amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    :max="form.invoice_amount"
+                    class="w-full pl-6 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                    :class="{
+                      'border-red-300 focus:ring-red-500 focus:border-red-500':
+                        errors.paid_amount,
+                    }"
+                    placeholder="0.00"
+                    required
+                  />
                 </div>
-                <input
-                  id="paid_amount"
-                  v-model="form.paid_amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  :max="form.invoice_amount"
-                  class="mt-1 block w-full pl-7 border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                  :class="{ 'border-red-300': errors.paid_amount }"
-                  placeholder="0.00"
-                  required
-                />
+                <p v-if="errors.paid_amount" class="mt-2 text-sm text-red-600">
+                  {{ errors.paid_amount }}
+                </p>
               </div>
-              <p v-if="errors.paid_amount" class="mt-1 text-sm text-red-600">
-                {{ errors.paid_amount }}
-              </p>
             </div>
 
             <!-- Paid Date (shown when status is partial or paid) -->
-            <div v-if="form.status === 'partial' || form.status === 'paid'">
+            <div
+              v-if="form.status === 'partial' || form.status === 'paid'"
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
               <label
                 for="paid_date"
-                class="block text-sm font-medium text-gray-700 mb-2"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
                 Paid Date <span class="text-red-500">*</span>
               </label>
-              <input
-                id="paid_date"
-                v-model="form.paid_date"
-                type="date"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                :class="{ 'border-red-300': errors.paid_date }"
-                required
-              />
-              <p v-if="errors.paid_date" class="mt-1 text-sm text-red-600">
-                {{ errors.paid_date }}
-              </p>
+              <div class="lg:col-span-2">
+                <input
+                  id="paid_date"
+                  v-model="form.paid_date"
+                  type="date"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.paid_date,
+                  }"
+                  required
+                />
+                <p v-if="errors.paid_date" class="mt-2 text-sm text-red-600">
+                  {{ errors.paid_date }}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <!-- Payment Details (shown when status is partial or paid) -->
-          <div
-            v-if="form.status === 'partial' || form.status === 'paid'"
-            class="mt-6"
-          >
-            <label
-              for="payment_details"
-              class="block text-sm font-medium text-gray-700 mb-2"
+            <!-- Payment Details (shown when status is partial or paid) -->
+            <div
+              v-if="form.status === 'partial' || form.status === 'paid'"
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
             >
-              Payment Details
-            </label>
-            <textarea
-              id="payment_details"
-              v-model="form.payment_details"
-              rows="3"
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-              placeholder="Additional payment details (check number, transaction ID, etc.)"
-            />
+              <label
+                for="payment_details"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
+              >
+                Payment Details
+              </label>
+              <div class="lg:col-span-2">
+                <textarea
+                  id="payment_details"
+                  v-model="form.payment_details"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  placeholder="Additional payment details (check number, transaction ID, etc.)"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Document Upload Section -->
-        <div class="border-b border-gray-200 pb-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Documents</h3>
+        <div class="mb-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-6">Documents</h3>
 
           <!-- File Upload -->
           <div class="mb-4">
@@ -569,23 +657,61 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex justify-end space-x-3">
-          <button
-            type="button"
-            @click="handleCancel"
-            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-          >
-            Cancel
-          </button>
-          <button type="submit" :disabled="isSubmitting" class="btn-primary">
-            {{
-              isSubmitting
-                ? 'Saving...'
-                : isEditMode
-                  ? 'Update Expense'
-                  : 'Create Expense'
-            }}
-          </button>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <!-- Spacer for large screens to align with form fields -->
+          <div class="hidden lg:block"></div>
+
+          <!-- Buttons Container -->
+          <div class="lg:col-span-2 flex flex-col sm:flex-row gap-4">
+            <!-- Primary Button -->
+            <button
+              type="submit"
+              :disabled="isSubmitting"
+              class="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              <span v-if="isSubmitting" class="flex items-center">
+                <svg
+                  class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                {{
+                  isSubmitting
+                    ? 'Saving...'
+                    : isEditMode
+                      ? 'Update Expense'
+                      : 'Create Expense'
+                }}
+              </span>
+              <span v-else>
+                {{ isEditMode ? 'Update Expense' : 'Create Expense' }}
+              </span>
+            </button>
+
+            <!-- Cancel Button -->
+            <button
+              type="button"
+              @click="handleCancel"
+              class="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </form>
     </div>
