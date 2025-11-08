@@ -98,8 +98,6 @@ class InvoiceController extends Controller
             'start_date' => 'required|date',
             'remaining_cycles' => 'nullable|string',
             'due_date' => 'required|in:use_payment_terms,net_15,net_30,net_45,net_60,due_on_receipt',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'discount_type' => 'required|in:amount,percentage',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
             'items.*.description' => 'nullable|string',
@@ -112,6 +110,14 @@ class InvoiceController extends Controller
             'notes.private_notes' => 'nullable|string',
             'notes.terms' => 'nullable|string',
             'notes.footer' => 'nullable|string',
+            'early_payment_discount_enabled' => 'nullable|boolean',
+            'early_payment_discount_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_type' => 'nullable|in:amount,percentage|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_by_date' => 'nullable|date|required_if:early_payment_discount_enabled,true',
+            'late_fee_enabled' => 'nullable|boolean',
+            'late_fee_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:late_fee_enabled,true',
+            'late_fee_type' => 'nullable|in:amount,percentage|required_if:late_fee_enabled,true',
+            'late_fee_applies_on_date' => 'nullable|date|required_if:late_fee_enabled,true',
         ]);
 
         // Ensure all units belong to the same tenant
@@ -246,8 +252,6 @@ class InvoiceController extends Controller
             'remaining_cycles' => 'nullable|string',
             'due_date' => 'required|in:use_payment_terms,net_15,net_30,net_45,net_60,due_on_receipt',
             'po_number' => 'nullable|string',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'discount_type' => 'sometimes|in:amount,percentage',
             'items' => 'sometimes|array|min:1',
             'items.*.name' => 'required_with:items|string|max:255',
             'items.*.description' => 'nullable|string',
@@ -260,6 +264,14 @@ class InvoiceController extends Controller
             'notes.private_notes' => 'nullable|string',
             'notes.terms' => 'nullable|string',
             'notes.footer' => 'nullable|string',
+            'early_payment_discount_enabled' => 'nullable|boolean',
+            'early_payment_discount_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_type' => 'nullable|in:amount,percentage|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_by_date' => 'nullable|date|required_if:early_payment_discount_enabled,true',
+            'late_fee_enabled' => 'nullable|boolean',
+            'late_fee_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:late_fee_enabled,true',
+            'late_fee_type' => 'nullable|in:amount,percentage|required_if:late_fee_enabled,true',
+            'late_fee_applies_on_date' => 'nullable|date|required_if:late_fee_enabled,true',
         ]);
 
         // Ensure the new unit belongs to the user's tenant
@@ -571,16 +583,6 @@ class InvoiceController extends Controller
         }
 
         $discountHtml = '';
-        if ($invoiceUnit->discount_amount && $invoiceUnit->discount_amount > 0) {
-            $discountValue = $invoiceUnit->discount_type === 'percentage' 
-                ? ($invoiceUnit->subtotal * $invoiceUnit->discount_amount) / 100 
-                : $invoiceUnit->discount_amount;
-            $discountHtml = "
-            <div class=\"total-row clearfix\">
-                <span class=\"total-label\">Discount (" . ($invoiceUnit->discount_type === 'percentage' ? $invoiceUnit->discount_amount . '%' : 'Amount') . "):</span>
-                <span class=\"total-value\">-$" . number_format((float)$discountValue, 2) . "</span>
-            </div>";
-        }
 
         $taxHtml = '';
         if ($invoiceUnit->tax_rate > 0) {
@@ -826,10 +828,16 @@ class InvoiceController extends Controller
                 'start_date' => now()->format('Y-m-d'), // Set start date to today
                 'remaining_cycles' => $invoiceUnit->remaining_cycles,
                 'due_date' => $invoiceUnit->due_date,
-                'discount_amount' => $invoiceUnit->discount_amount,
-                'discount_type' => $invoiceUnit->discount_type,
                 'items' => $invoiceUnit->items,
                 'tax_rate' => $invoiceUnit->tax_rate,
+                'early_payment_discount_enabled' => $invoiceUnit->early_payment_discount_enabled ?? false,
+                'early_payment_discount_amount' => $invoiceUnit->early_payment_discount_amount,
+                'early_payment_discount_type' => $invoiceUnit->early_payment_discount_type,
+                'early_payment_discount_by_date' => $invoiceUnit->early_payment_discount_by_date,
+                'late_fee_enabled' => $invoiceUnit->late_fee_enabled ?? false,
+                'late_fee_amount' => $invoiceUnit->late_fee_amount,
+                'late_fee_type' => $invoiceUnit->late_fee_type,
+                'late_fee_applies_on_date' => $invoiceUnit->late_fee_applies_on_date,
                 'status' => 'draft',
                 'created_by' => $user->id,
             ]);
@@ -1180,12 +1188,18 @@ class InvoiceController extends Controller
             'unit_id' => $unitId,
             'frequency' => $validated['frequency'],
             'start_date' => $validated['start_date'],
-            'remaining_cycles' => $validated['remaining_cycles'],
+            'remaining_cycles' => $validated['remaining_cycles'] ?? null,
             'due_date' => $validated['due_date'],
-            'discount_amount' => $validated['discount_amount'] ?? 0,
-            'discount_type' => $validated['discount_type'],
             'items' => $validated['items'],
             'tax_rate' => $validated['tax_rate'] ?? 0,
+            'early_payment_discount_enabled' => $validated['early_payment_discount_enabled'] ?? false,
+            'early_payment_discount_amount' => $validated['early_payment_discount_amount'] ?? null,
+            'early_payment_discount_type' => $validated['early_payment_discount_type'] ?? null,
+            'early_payment_discount_by_date' => $validated['early_payment_discount_by_date'] ?? null,
+            'late_fee_enabled' => $validated['late_fee_enabled'] ?? false,
+            'late_fee_amount' => $validated['late_fee_amount'] ?? null,
+            'late_fee_type' => $validated['late_fee_type'] ?? null,
+            'late_fee_applies_on_date' => $validated['late_fee_applies_on_date'] ?? null,
             'status' => 'draft',
             'parent_invoice_id' => $parentInvoiceId,
             'created_by' => $user->id,

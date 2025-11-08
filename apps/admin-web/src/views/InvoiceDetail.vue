@@ -488,6 +488,115 @@
                   {{ formatDate(invoice.start_date) }}
                 </p>
               </div>
+
+              <!-- Early Payment Discount -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Add Early Payment Discount
+                </label>
+                <div class="flex items-center gap-2 mb-2">
+                  <span
+                    :class="[
+                      'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium',
+                      invoice.early_payment_discount_enabled
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-600',
+                    ]"
+                  >
+                    {{
+                      invoice.early_payment_discount_enabled
+                        ? 'Enabled'
+                        : 'Disabled'
+                    }}
+                  </span>
+                </div>
+                <div
+                  v-if="invoice.early_payment_discount_enabled"
+                  class="mt-3 space-y-3"
+                >
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600"
+                      >Discount Amount</label
+                    >
+                    <p
+                      class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                    >
+                      ${{
+                        formatCurrency(
+                          invoice.early_payment_discount_amount || 0
+                        )
+                      }}
+                      <span class="text-xs text-gray-500 ml-1"
+                        >({{
+                          invoice.early_payment_discount_type === 'percentage'
+                            ? '%'
+                            : 'Amount'
+                        }})</span
+                      >
+                    </p>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600"
+                      >If paid in full by</label
+                    >
+                    <p
+                      class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                    >
+                      {{
+                        formatDate(invoice.early_payment_discount_by_date || '')
+                      }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Late Fee -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Add Late Fee
+                </label>
+                <div class="flex items-center gap-2 mb-2">
+                  <span
+                    :class="[
+                      'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium',
+                      invoice.late_fee_enabled
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-gray-100 text-gray-600',
+                    ]"
+                  >
+                    {{ invoice.late_fee_enabled ? 'Enabled' : 'Disabled' }}
+                  </span>
+                </div>
+                <div v-if="invoice.late_fee_enabled" class="mt-3 space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600"
+                      >Fee Amount</label
+                    >
+                    <p
+                      class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                    >
+                      ${{ formatCurrency(invoice.late_fee_amount || 0) }}
+                      <span class="text-xs text-gray-500 ml-1"
+                        >({{
+                          invoice.late_fee_type === 'percentage'
+                            ? '%'
+                            : 'Amount'
+                        }})</span
+                      >
+                    </p>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-600"
+                      >Applies on</label
+                    >
+                    <p
+                      class="mt-1 text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded"
+                    >
+                      {{ formatDate(invoice.late_fee_applies_on_date || '') }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -554,18 +663,6 @@
                 <span class="text-sm font-medium text-gray-900"
                   >${{ formatCurrency(invoice.subtotal) }}</span
                 >
-              </div>
-              <div
-                v-if="invoice.discount_amount > 0"
-                class="flex justify-between"
-              >
-                <span class="text-sm text-gray-600">Discount</span>
-                <span class="text-sm font-medium text-gray-900">
-                  ${{ formatCurrency(invoice.discount_amount) }}
-                  <span class="text-xs text-gray-500"
-                    >({{ invoice.discount_type }})</span
-                  >
-                </span>
               </div>
               <div class="flex justify-between">
                 <span class="text-sm text-gray-600"

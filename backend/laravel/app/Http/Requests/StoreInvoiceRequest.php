@@ -28,8 +28,14 @@ class StoreInvoiceRequest extends FormRequest
             'start_date' => 'required|date|after_or_equal:today',
             'remaining_cycles' => 'nullable|string|in:endless,1,2,3,6,12,24',
             'due_date' => 'required|in:use_payment_terms,net_15,net_30,net_45,net_60,due_on_receipt',
-            'discount_amount' => 'nullable|numeric|min:0|max:999999.99',
-            'discount_type' => 'required|in:amount,percentage',
+            'early_payment_discount_enabled' => 'nullable|boolean',
+            'early_payment_discount_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_type' => 'nullable|in:amount,percentage|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_by_date' => 'nullable|date|required_if:early_payment_discount_enabled,true',
+            'late_fee_enabled' => 'nullable|boolean',
+            'late_fee_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:late_fee_enabled,true',
+            'late_fee_type' => 'nullable|in:amount,percentage|required_if:late_fee_enabled,true',
+            'late_fee_applies_on_date' => 'nullable|date|required_if:late_fee_enabled,true',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
             'items.*.description' => 'nullable|string|max:1000',
@@ -63,10 +69,6 @@ class StoreInvoiceRequest extends FormRequest
             'remaining_cycles.in' => 'Invalid remaining cycles value.',
             'due_date.required' => 'Please select a due date option.',
             'due_date.in' => 'Invalid due date option.',
-            'discount_amount.numeric' => 'Discount amount must be a valid number.',
-            'discount_amount.min' => 'Discount amount cannot be negative.',
-            'discount_type.required' => 'Please select a discount type.',
-            'discount_type.in' => 'Invalid discount type.',
             'items.required' => 'Please add at least one item.',
             'items.min' => 'Please add at least one item.',
             'items.*.name.required' => 'Item name is required.',
@@ -120,11 +122,6 @@ class StoreInvoiceRequest extends FormRequest
                             "Line total ({$item['line_total']}) does not match unit cost × quantity ({$expectedTotal}).");
                     }
                 }
-            }
-
-            // Validate discount amount based on type
-            if ($this->input('discount_type') === 'percentage' && $this->input('discount_amount') > 100) {
-                $validator->errors()->add('discount_amount', 'Percentage discount cannot exceed 100%.');
             }
         });
     }

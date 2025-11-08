@@ -37,8 +37,20 @@ export const CreateInvoiceRequestSchema = z.object({
     'net_60',
     'due_on_receipt',
   ]),
-  discount_amount: z.number().min(0).optional(),
-  discount_type: z.enum(['amount', 'percentage']),
+  early_payment_discount_enabled: z.boolean().optional(),
+  early_payment_discount_amount: z.number().min(0).optional(),
+  early_payment_discount_type: z.enum(['amount', 'percentage']).optional(),
+  early_payment_discount_by_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format')
+    .optional(),
+  late_fee_enabled: z.boolean().optional(),
+  late_fee_amount: z.number().min(0).optional(),
+  late_fee_type: z.enum(['amount', 'percentage']).optional(),
+  late_fee_applies_on_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format')
+    .optional(),
   items: z.array(InvoiceItemSchema).min(1, 'At least one item is required'),
   tax_rate: z.number().min(0).max(100).optional(),
   notes: InvoiceNotesSchema.optional(),
@@ -60,8 +72,20 @@ export const UpdateInvoiceRequestSchema = z.object({
     'due_on_receipt',
   ]),
   po_number: z.string().optional(),
-  discount_amount: z.number().min(0).optional(),
-  discount_type: z.enum(['amount', 'percentage']).optional(),
+  early_payment_discount_enabled: z.boolean().optional(),
+  early_payment_discount_amount: z.number().min(0).optional(),
+  early_payment_discount_type: z.enum(['amount', 'percentage']).optional(),
+  early_payment_discount_by_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format')
+    .optional(),
+  late_fee_enabled: z.boolean().optional(),
+  late_fee_amount: z.number().min(0).optional(),
+  late_fee_type: z.enum(['amount', 'percentage']).optional(),
+  late_fee_applies_on_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format')
+    .optional(),
   items: z.array(InvoiceItemSchema).min(1).optional(),
   tax_rate: z.number().min(0).max(100).optional(),
   notes: InvoiceNotesSchema.optional(),
@@ -107,8 +131,14 @@ export const InvoiceUnitSchema = z.object({
     'net_60',
     'due_on_receipt',
   ]),
-  discount_amount: z.number(),
-  discount_type: z.enum(['amount', 'percentage']),
+  early_payment_discount_enabled: z.boolean().optional(),
+  early_payment_discount_amount: z.number().optional(),
+  early_payment_discount_type: z.enum(['amount', 'percentage']).optional(),
+  early_payment_discount_by_date: z.string().optional(),
+  late_fee_enabled: z.boolean().optional(),
+  late_fee_amount: z.number().optional(),
+  late_fee_type: z.enum(['amount', 'percentage']).optional(),
+  late_fee_applies_on_date: z.string().optional(),
   items: z.array(InvoiceItemSchema),
   subtotal: z.number(),
   tax_rate: z.number(),
