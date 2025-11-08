@@ -95,26 +95,11 @@ class AuthService {
    */
   async checkEmail(email: string): Promise<CheckEmailResponse> {
     try {
-      const response = await this.makeRequest(
-        `${this.baseURL}/auth/check-email`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to check email');
-      }
-
-      return await response.json();
-    } catch (error) {
+      const response = await apiClient.post('/auth/check-email', { email });
+      return response.data;
+    } catch (error: any) {
       console.error('Check email error:', error);
-      throw error;
+      throw new Error(error?.message || 'Failed to check email');
     }
   }
 
@@ -123,24 +108,10 @@ class AuthService {
    */
   async sendVerificationCode(email: string): Promise<void> {
     try {
-      const response = await this.makeRequest(
-        `${this.baseURL}/auth/send-code`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to send verification code');
-      }
-    } catch (error) {
+      await apiClient.post('/auth/send-code', { email });
+    } catch (error: any) {
       console.error('Send verification code error:', error);
-      throw error;
+      throw new Error(error?.message || 'Failed to send verification code');
     }
   }
 
@@ -149,31 +120,20 @@ class AuthService {
    */
   async verifyCode(email: string, code: string): Promise<string> {
     try {
-      const response = await this.makeRequest(
-        `${this.baseURL}/auth/verify-code`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, code }),
-        }
-      );
+      const response = await apiClient.post('/auth/verify-code', {
+        email,
+        code,
+      });
+      const result = response.data;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Invalid verification code');
-      }
-
-      const result = await response.json();
       if (!result.valid || !result.verification_token) {
         throw new Error('Invalid verification code');
       }
 
       return result.verification_token;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Verify code error:', error);
-      throw error;
+      throw new Error(error?.message || 'Invalid verification code');
     }
   }
 
@@ -185,34 +145,22 @@ class AuthService {
     verificationToken: string
   ): Promise<AuthResponse> {
     try {
-      const response = await this.makeRequest(`${this.baseURL}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          verification_token: verificationToken,
-          full_name: data.fullName,
-          phone_number: data.phoneNumber,
-          community_name: data.communityName,
-        }),
+      const response = await apiClient.post('/auth/signup', {
+        email: data.email,
+        verification_token: verificationToken,
+        full_name: data.fullName,
+        phone_number: data.phoneNumber,
+        community_name: data.communityName,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to create account');
-      }
-
-      const result = await response.json();
       return {
-        user: result.user,
-        tenant: result.tenant,
-        token: result.token,
+        user: response.data.user,
+        tenant: response.data.tenant,
+        token: response.data.token,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error);
-      throw error;
+      throw new Error(error?.message || 'Failed to create account');
     }
   }
 
@@ -221,31 +169,19 @@ class AuthService {
    */
   async login(email: string, verificationToken: string): Promise<AuthResponse> {
     try {
-      const response = await this.makeRequest(`${this.baseURL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          verification_token: verificationToken,
-        }),
+      const response = await apiClient.post('/auth/login', {
+        email,
+        verification_token: verificationToken,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Login failed');
-      }
-
-      const result = await response.json();
       return {
-        user: result.user,
-        tenant: result.tenant,
-        token: result.token,
+        user: response.data.user,
+        tenant: response.data.tenant,
+        token: response.data.token,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      throw error;
+      throw new Error(error?.message || 'Login failed');
     }
   }
 
@@ -272,37 +208,20 @@ class AuthService {
     data: GoogleSignupData
   ): Promise<AuthResponse> {
     try {
-      const response = await this.makeRequest(
-        `${this.baseURL}/auth/google/signup`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            google_token: googleToken,
-            phone_number: data.phoneNumber,
-            community_name: data.communityName,
-          }),
-        }
-      );
+      const response = await apiClient.post('/auth/google/signup', {
+        google_token: googleToken,
+        phone_number: data.phoneNumber,
+        community_name: data.communityName,
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || 'Failed to create account with Google'
-        );
-      }
-
-      const result = await response.json();
       return {
-        user: result.user,
-        tenant: result.tenant,
-        token: result.token,
+        user: response.data.user,
+        tenant: response.data.tenant,
+        token: response.data.token,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google signup error:', error);
-      throw error;
+      throw new Error(error?.message || 'Failed to create account with Google');
     }
   }
 
@@ -311,33 +230,16 @@ class AuthService {
    */
   async magicLinkAuth(token: string): Promise<AuthResponse> {
     try {
-      const response = await this.makeRequest(
-        `${this.baseURL}/auth/magic-link`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token,
-          }),
-        }
-      );
+      const response = await apiClient.post('/auth/magic-link', { token });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Magic link authentication failed');
-      }
-
-      const result = await response.json();
       return {
-        user: result.user,
-        tenant: result.tenant,
-        token: result.token,
+        user: response.data.user,
+        tenant: response.data.tenant,
+        token: response.data.token,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Magic link auth error:', error);
-      throw error;
+      throw new Error(error?.message || 'Magic link authentication failed');
     }
   }
 
