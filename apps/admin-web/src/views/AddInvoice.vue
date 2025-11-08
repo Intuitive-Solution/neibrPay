@@ -1662,9 +1662,9 @@ const invoiceId = computed(() =>
 // Form data
 const form = ref({
   unit_ids: [] as number[], // Changed to support multiple units with proper typing
-  frequency: 'monthly',
+  frequency: 'one-time',
   start_date: '',
-  remaining_cycles: 'endless',
+  remaining_cycles: '',
   due_date: 'use_payment_terms',
   invoice_number: '',
   po_number: '',
@@ -2918,7 +2918,7 @@ onMounted(() => {
 
   if (clonedData) {
     // Populate scheduling details
-    form.value.frequency = clonedData.frequency || 'monthly';
+    form.value.frequency = clonedData.frequency || 'one-time';
     form.value.remaining_cycles = clonedData.remaining_cycles || 'endless';
 
     // Handle start_date - convert to YYYY-MM-DD format if needed

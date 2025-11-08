@@ -409,6 +409,185 @@
         </div>
       </div>
 
+      <!-- Payment Status Banner -->
+      <div
+        v-if="
+          invoice.status !== 'paid' &&
+          invoice.status !== 'cancelled' &&
+          !invoice.deleted_at
+        "
+        :class="[
+          'mb-6 p-4 rounded-lg border-l-4',
+          invoice.status === 'overdue'
+            ? 'bg-red-50 border-red-500'
+            : invoice.status === 'partial'
+              ? 'bg-yellow-50 border-yellow-500'
+              : 'bg-blue-50 border-blue-500',
+        ]"
+      >
+        <div class="flex items-center">
+          <svg
+            v-if="invoice.status === 'overdue'"
+            class="w-5 h-5 mr-3 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+            />
+          </svg>
+          <svg
+            v-else-if="invoice.status === 'partial'"
+            class="w-5 h-5 mr-3 text-yellow-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <svg
+            v-else
+            class="w-5 h-5 mr-3 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <div class="flex-1">
+            <p
+              :class="[
+                'font-medium text-base',
+                invoice.status === 'overdue'
+                  ? 'text-red-900'
+                  : invoice.status === 'partial'
+                    ? 'text-yellow-900'
+                    : 'text-blue-900',
+              ]"
+            >
+              {{
+                invoice.status === 'overdue'
+                  ? 'Overdue'
+                  : invoice.status === 'partial'
+                    ? 'Partially Paid'
+                    : 'Payment Due'
+              }}
+            </p>
+            <p
+              :class="[
+                'text-sm mt-1',
+                invoice.status === 'overdue'
+                  ? 'text-red-700'
+                  : invoice.status === 'partial'
+                    ? 'text-yellow-700'
+                    : 'text-blue-700',
+              ]"
+            >
+              Balance Due:
+              <span class="font-bold"
+                >${{ formatCurrency(invoice.balance_due) }}</span
+              >
+              <span v-if="getDueDateDisplay()" class="ml-2">
+                • {{ getDueDateDisplay() }}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line Items Section -->
+      <div v-if="invoice.items && invoice.items.length > 0" class="card mb-6">
+        <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
+          <h3 class="text-lg font-medium text-gray-900">Charges</h3>
+        </div>
+        <div class="p-6">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Item
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Description
+                  </th>
+                  <th
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Unit Cost
+                  </th>
+                  <th
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Qty
+                  </th>
+                  <th
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr
+                  v-for="(item, index) in invoice.items"
+                  :key="index"
+                  class="hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">
+                      {{ item.name }}
+                    </div>
+                    <div
+                      v-if="item.category"
+                      class="text-xs text-gray-500 mt-1"
+                    >
+                      {{ item.category }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-600 max-w-md">
+                      {{ item.description || '-' }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <div class="text-sm text-gray-900">
+                      ${{ formatCurrency(item.unit_cost) }}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <div class="text-sm text-gray-900">{{ item.quantity }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <div class="text-sm font-medium text-gray-900">
+                      ${{ formatCurrency(item.line_total) }}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Main Content Grid -->
       <div class="bg-white p-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -680,14 +859,56 @@
                   >
                 </div>
               </div>
-              <div class="border-t border-gray-200 pt-3">
+
+              <!-- Amount Paid (if payments exist) -->
+              <div
+                v-if="payments && payments.length > 0"
+                class="border-t border-gray-200 pt-3"
+              >
                 <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Amount Paid</span>
+                  <span class="text-sm font-medium text-green-600"
+                    >${{ formatCurrency(amountPaid) }}</span
+                  >
+                </div>
+              </div>
+
+              <!-- Balance Due with Color Coding -->
+              <div class="border-t border-gray-200 pt-3">
+                <div class="flex justify-between items-center">
                   <span class="text-sm font-medium text-gray-900"
                     >Balance Due</span
                   >
-                  <span class="text-sm font-bold text-gray-900"
+                  <span
+                    :class="[
+                      'text-sm font-bold',
+                      getBalanceDueClass(invoice.balance_due, invoice.status),
+                    ]"
                     >${{ formatCurrency(invoice.balance_due) }}</span
                   >
+                </div>
+                <!-- Payment Progress Bar -->
+                <div
+                  v-if="invoice.total > 0 && invoice.status !== 'paid'"
+                  class="mt-3"
+                >
+                  <div class="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Payment Progress</span>
+                    <span>{{ paymentProgress }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      :class="[
+                        'h-2 rounded-full transition-all duration-300',
+                        invoice.status === 'overdue'
+                          ? 'bg-red-500'
+                          : invoice.status === 'partial'
+                            ? 'bg-yellow-500'
+                            : 'bg-blue-500',
+                      ]"
+                      :style="{ width: `${paymentProgress}%` }"
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1311,6 +1532,19 @@ const pdfViewerUrl = computed(() => {
   return `${backendUrl}/storage/${latestPdf.value.file_path}?t=${pdfRefreshKey.value}`;
 });
 
+// Computed properties for financial summary
+const amountPaid = computed(() => {
+  if (!payments.value || payments.value.length === 0) return 0;
+  return payments.value.reduce((sum, payment) => sum + payment.amount, 0);
+});
+
+const paymentProgress = computed(() => {
+  if (!invoice.value || invoice.value.total === 0) return 0;
+  const paid = amountPaid.value;
+  const total = invoice.value.total;
+  return Math.min(Math.round((paid / total) * 100), 100);
+});
+
 // Methods
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A';
@@ -1396,6 +1630,62 @@ const getDueDate = () => {
   }
 
   return formatDate(dueDate.toISOString());
+};
+
+const getDueDateDisplay = () => {
+  if (!invoice.value) return '';
+
+  const startDate = new Date(invoice.value.start_date);
+  let dueDate = new Date(startDate);
+
+  switch (invoice.value.due_date) {
+    case 'net_15':
+      dueDate.setDate(startDate.getDate() + 15);
+      break;
+    case 'net_30':
+      dueDate.setDate(startDate.getDate() + 30);
+      break;
+    case 'net_45':
+      dueDate.setDate(startDate.getDate() + 45);
+      break;
+    case 'net_60':
+      dueDate.setDate(startDate.getDate() + 60);
+      break;
+    case 'due_on_receipt':
+      return 'Due on Receipt';
+    case 'use_payment_terms':
+    default:
+      return '';
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
+
+  const diffTime = dueDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    const daysOverdue = Math.abs(diffDays);
+    return `${daysOverdue} ${daysOverdue === 1 ? 'day' : 'days'} overdue`;
+  } else if (diffDays === 0) {
+    return 'Due today';
+  } else {
+    return `Due in ${diffDays} ${diffDays === 1 ? 'day' : 'days'}`;
+  }
+};
+
+const getBalanceDueClass = (balanceDue: number, status: string) => {
+  if (balanceDue === 0 || status === 'paid') {
+    return 'text-green-600';
+  }
+  if (status === 'overdue') {
+    return 'text-red-600';
+  }
+  if (status === 'partial') {
+    return 'text-yellow-600';
+  }
+  return 'text-gray-900';
 };
 
 // Action handlers
