@@ -270,6 +270,7 @@ class AnnouncementController extends Controller
                 'tenant_name' => $user->tenant->name ?? 'HOA', // Top-level for easy access
                 'to' => $user->email, // Creator email in To (required by some email systems)
                 'bcc' => array_values($bccEmails), // All recipients in BCC only (excluding creator)
+                'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),//frontend url for the announcement
                 'announcement' => [
                     'id' => $announcement->id,
                     'subject' => $announcement->subject,
