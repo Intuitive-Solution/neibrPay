@@ -569,38 +569,6 @@
                 </p>
               </div>
 
-              <!-- Paid to Date -->
-              <div>
-                <label for="paid_to_date" class="form-label-modern">
-                  Paid to Date
-                </label>
-                <div class="input-group">
-                  <span class="input-icon text-sm">$</span>
-                  <input
-                    id="paid_to_date"
-                    v-model.number="form.paid_to_date"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    class="input-modern pl-7"
-                    :class="{
-                      'input-error': errors.paid_to_date,
-                    }"
-                    placeholder="0.00"
-                  />
-                </div>
-                <p v-if="errors.paid_to_date" class="form-error">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  {{ errors.paid_to_date }}
-                </p>
-              </div>
-
               <!-- Discount -->
               <div>
                 <label class="form-label-modern"> Discount </label>
@@ -643,55 +611,6 @@
                     />
                   </svg>
                   {{ errors.discount_amount || errors.discount_type }}
-                </p>
-              </div>
-
-              <!-- Auto Bill -->
-              <div>
-                <label for="auto_bill" class="form-label-modern">
-                  Auto Bill
-                </label>
-                <div class="input-group">
-                  <select
-                    id="auto_bill"
-                    v-model="form.auto_bill"
-                    class="select-modern"
-                    :class="{
-                      'input-error': errors.auto_bill,
-                    }"
-                  >
-                    <option value="disabled">Disabled</option>
-                    <option value="enabled">Enabled</option>
-                    <option value="on_due_date">On Due Date</option>
-                    <option value="on_send">On Send</option>
-                  </select>
-                  <div
-                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                  >
-                    <svg
-                      class="h-5 w-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <p v-if="errors.auto_bill" class="form-error">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  {{ errors.auto_bill }}
                 </p>
               </div>
             </div>
@@ -1398,14 +1317,6 @@
                 </div>
               </div>
 
-              <!-- Paid to Date -->
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Paid to Date</span>
-                <span class="text-sm font-medium text-gray-900"
-                  >${{ formatCurrency(paidToDate) }}</span
-                >
-              </div>
-
               <!-- Balance Due -->
               <div class="border-t border-gray-200 pt-3">
                 <div class="flex justify-between items-center">
@@ -1518,7 +1429,6 @@
           :tax-rate="taxRate"
           :tax-amount="taxAmount"
           :total="total"
-          :paid-to-date="paidToDate"
           :balance-due="balanceDue"
           :tab-content="tabContent"
           :units="units"
@@ -1582,10 +1492,8 @@ const form = ref({
   due_date: 'use_payment_terms',
   invoice_number: '',
   po_number: '',
-  paid_to_date: 0,
   discount_amount: '',
   discount_type: 'amount',
-  auto_bill: 'disabled',
 });
 
 // Form errors
@@ -1597,10 +1505,8 @@ const errors = ref({
   remaining_cycles: '',
   due_date: '',
   invoice_number: '',
-  paid_to_date: '',
   discount_amount: '',
   discount_type: '',
-  auto_bill: '',
 });
 
 // Loading state
@@ -1756,8 +1662,6 @@ watch(
       form.value.po_number = invoice.po_number || '';
       form.value.discount_amount = invoice.discount_amount?.toString() || '';
       form.value.discount_type = invoice.discount_type;
-      form.value.auto_bill = invoice.auto_bill;
-      form.value.paid_to_date = parseFloat(invoice.paid_to_date) || 0;
 
       // Transform invoice items to UI format
       invoiceItems.value = invoice.items.map((item: any) => ({
@@ -1821,11 +1725,6 @@ watch(
   { immediate: true }
 );
 
-const paidToDate = computed(() => {
-  const value = form.value.paid_to_date;
-  return typeof value === 'string' ? parseFloat(value) || 0 : value || 0;
-});
-
 // Rich text editor state
 const editorRef = ref<HTMLElement | null>(null);
 const selectedFormat = ref('p');
@@ -1887,7 +1786,7 @@ const total = computed(() => {
 });
 
 const balanceDue = computed(() => {
-  return total.value - paidToDate.value;
+  return total.value;
 });
 
 // Show preview when conditions are met
@@ -2556,10 +2455,8 @@ const handleSubmit = async () => {
     remaining_cycles: '',
     due_date: '',
     invoice_number: '',
-    paid_to_date: '',
     discount_amount: '',
     discount_type: '',
-    auto_bill: '',
   };
 
   // Basic validation
@@ -2600,8 +2497,6 @@ const handleSubmit = async () => {
           ? parseFloat(form.value.discount_amount)
           : undefined,
         discount_type: form.value.discount_type as any,
-        auto_bill: form.value.auto_bill as any,
-        paid_to_date: form.value.paid_to_date || 0,
         items: invoiceItems.value.map((item: any) => ({
           name: item.name,
           description: item.description,
@@ -2662,7 +2557,6 @@ const handleSubmit = async () => {
           ? parseFloat(form.value.discount_amount)
           : undefined,
         discount_type: form.value.discount_type as any,
-        auto_bill: form.value.auto_bill as any,
         items: invoiceItems.value.map((item: any) => ({
           name: item.name,
           description: item.description,

@@ -100,7 +100,6 @@ class InvoiceController extends Controller
             'due_date' => 'required|in:use_payment_terms,net_15,net_30,net_45,net_60,due_on_receipt',
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_type' => 'required|in:amount,percentage',
-            'auto_bill' => 'required|in:disabled,enabled,on_due_date,on_send',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
             'items.*.description' => 'nullable|string',
@@ -113,7 +112,6 @@ class InvoiceController extends Controller
             'notes.private_notes' => 'nullable|string',
             'notes.terms' => 'nullable|string',
             'notes.footer' => 'nullable|string',
-            'paid_to_date' => 'nullable|numeric|min:0',
         ]);
 
         // Ensure all units belong to the same tenant
@@ -250,7 +248,6 @@ class InvoiceController extends Controller
             'po_number' => 'nullable|string',
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_type' => 'sometimes|in:amount,percentage',
-            'auto_bill' => 'sometimes|in:disabled,enabled,on_due_date,on_send',
             'items' => 'sometimes|array|min:1',
             'items.*.name' => 'required_with:items|string|max:255',
             'items.*.description' => 'nullable|string',
@@ -258,7 +255,6 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required_with:items|numeric|min:1',
             'items.*.line_total' => 'required_with:items|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
-            'paid_to_date' => 'nullable|numeric|min:0',
             'notes' => 'nullable|array',
             'notes.public_notes' => 'nullable|string',
             'notes.private_notes' => 'nullable|string',
@@ -455,10 +451,9 @@ class InvoiceController extends Controller
             return response()->json(['message' => 'Invoice is already marked as paid'], 400);
         }
 
-        // Update invoice status and paid amount
+        // Update invoice status and balance
         $invoiceUnit->update([
             'status' => 'paid',
-            'paid_to_date' => $invoiceUnit->total,
             'balance_due' => 0, // Set balance_due to 0 when fully paid
         ]);
 
@@ -593,15 +588,6 @@ class InvoiceController extends Controller
             <div class=\"total-row clearfix\">
                 <span class=\"total-label\">Tax ({$invoiceUnit->tax_rate}%):</span>
                 <span class=\"total-value\">$" . number_format((float)$invoiceUnit->tax_amount, 2) . "</span>
-            </div>";
-        }
-
-        $paidToDateHtml = '';
-        if ($invoiceUnit->paid_to_date > 0) {
-            $paidToDateHtml = "
-            <div class=\"total-row clearfix\">
-                <span class=\"total-label\">Paid to Date:</span>
-                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->paid_to_date, 2) . "</span>
             </div>";
         }
 
@@ -793,7 +779,6 @@ class InvoiceController extends Controller
                             <span class=\"total-label\">Total:</span>
                             <span class=\"total-value\">$" . number_format((float)$invoiceUnit->total, 2) . "</span>
                         </div>
-                        {$paidToDateHtml}
                         {$balanceDueHtml}
                     </div>
                 </div>
@@ -843,7 +828,6 @@ class InvoiceController extends Controller
                 'due_date' => $invoiceUnit->due_date,
                 'discount_amount' => $invoiceUnit->discount_amount,
                 'discount_type' => $invoiceUnit->discount_type,
-                'auto_bill' => $invoiceUnit->auto_bill,
                 'items' => $invoiceUnit->items,
                 'tax_rate' => $invoiceUnit->tax_rate,
                 'status' => 'draft',
@@ -1200,10 +1184,8 @@ class InvoiceController extends Controller
             'due_date' => $validated['due_date'],
             'discount_amount' => $validated['discount_amount'] ?? 0,
             'discount_type' => $validated['discount_type'],
-            'auto_bill' => $validated['auto_bill'],
             'items' => $validated['items'],
             'tax_rate' => $validated['tax_rate'] ?? 0,
-            'paid_to_date' => $validated['paid_to_date'] ?? 0,
             'status' => 'draft',
             'parent_invoice_id' => $parentInvoiceId,
             'created_by' => $user->id,

@@ -116,14 +116,14 @@ class InvoicePaymentController extends Controller
                 'recorded_by' => $user->id,
             ]);
             
-            // Update invoice payment totals
-            $invoice->paid_to_date += $validated['amount'];
-            $invoice->balance_due = $invoice->total - $invoice->paid_to_date;
+            // Recalculate invoice balance from payments
+            $totalPaid = $invoice->payments()->sum('amount');
+            $invoice->balance_due = $invoice->total - $totalPaid;
             
             // Update invoice status based on payment
             if ($invoice->balance_due <= 0) {
                 $invoice->status = 'paid';
-            } elseif ($invoice->paid_to_date > 0) {
+            } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';
             }
             
@@ -198,14 +198,14 @@ class InvoicePaymentController extends Controller
             // Update the payment
             $payment->update($validated);
             
-            // Recalculate invoice totals
-            $invoice->paid_to_date = $invoice->paid_to_date - $oldAmount + $newAmount;
-            $invoice->balance_due = $invoice->total - $invoice->paid_to_date;
+            // Recalculate invoice balance from payments
+            $totalPaid = $invoice->payments()->sum('amount');
+            $invoice->balance_due = $invoice->total - $totalPaid;
             
             // Update invoice status based on new payment totals
             if ($invoice->balance_due <= 0) {
                 $invoice->status = 'paid';
-            } elseif ($invoice->paid_to_date > 0) {
+            } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';
             } else {
                 // If no payments, revert to sent status
@@ -252,12 +252,12 @@ class InvoicePaymentController extends Controller
         try {
             $invoice = $payment->invoiceUnit;
             
-            // Remove payment amount from invoice totals
-            $invoice->paid_to_date -= $payment->amount;
-            $invoice->balance_due = $invoice->total - $invoice->paid_to_date;
+            // Recalculate invoice balance from remaining payments
+            $totalPaid = $invoice->payments()->sum('amount');
+            $invoice->balance_due = $invoice->total - $totalPaid;
             
             // Update invoice status based on remaining payments
-            if ($invoice->paid_to_date <= 0) {
+            if ($totalPaid <= 0) {
                 $invoice->status = 'sent';
             } elseif ($invoice->balance_due <= 0) {
                 $invoice->status = 'paid';

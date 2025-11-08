@@ -96,11 +96,6 @@
           <span class="total-value">${{ formatCurrency(total) }}</span>
         </div>
 
-        <div v-if="paidToDate > 0" class="total-row">
-          <span class="total-label">Paid to Date:</span>
-          <span class="total-value">${{ formatCurrency(paidToDate) }}</span>
-        </div>
-
         <div v-if="balanceDue > 0" class="total-row balance-due">
           <span class="total-label">Balance Due:</span>
           <span class="total-value">${{ formatCurrency(balanceDue) }}</span>
@@ -186,7 +181,6 @@ interface Props {
   taxRate: number;
   taxAmount: number;
   total: number;
-  paidToDate: number;
   balanceDue: number;
   tabContent: {
     'public-notes': string;

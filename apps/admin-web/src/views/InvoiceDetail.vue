@@ -583,12 +583,6 @@
                   >
                 </div>
               </div>
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-600">Paid to Date</span>
-                <span class="text-sm font-medium text-gray-900"
-                  >${{ formatCurrency(invoice.paid_to_date) }}</span
-                >
-              </div>
               <div class="border-t border-gray-200 pt-3">
                 <div class="flex justify-between">
                   <span class="text-sm font-medium text-gray-900"
