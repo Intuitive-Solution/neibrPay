@@ -128,7 +128,7 @@
         </div>
       </div>
 
-      <!-- Active Invoices Chart -->
+      <!-- Combined Invoices & Payments Chart -->
       <div class="card card-hover cursor-pointer" @click="navigateToInvoices">
         <div class="flex flex-col h-full">
           <div class="flex items-center mb-4">
@@ -148,18 +148,29 @@
               </svg>
             </div>
             <div class="ml-4 flex-1">
-              <h3 class="text-sm font-medium text-gray-600">Active Invoices</h3>
-              <div class="flex items-baseline gap-2 mt-1">
-                <p class="text-2xl font-bold text-gray-900">
-                  {{ formatCurrency(activeInvoicesAmount) }}
-                </p>
-                <p v-if="!isLoading" class="text-sm text-gray-500">
-                  {{ isLoading && !invoices ? '-' : activeInvoicesCount }}
-                </p>
+              <h3 class="text-sm font-medium text-gray-600">
+                Invoices & Payments (6M)
+              </h3>
+              <div class="flex items-baseline gap-3 mt-1">
+                <div class="flex items-center gap-1">
+                  <div class="w-2 h-2 bg-gray-900 rounded-full"></div>
+                  <p class="text-lg font-bold text-gray-900">
+                    {{ formatCurrency(activeInvoicesAmount) }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-1">
+                  <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  <p class="text-lg font-bold text-gray-900">
+                    {{ formatCurrency(totalCollectedAmount) }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-          <div v-if="isLoading && !invoices" class="relative w-full h-32 mt-2">
+          <div
+            v-if="isLoading && (!invoices || !payments)"
+            class="relative w-full h-32 mt-2"
+          >
             <!-- Loading grid lines -->
             <svg
               class="absolute inset-0 w-full h-full"
@@ -167,7 +178,7 @@
             >
               <line
                 v-for="i in 5"
-                :key="`invoice-loading-grid-${i}`"
+                :key="`combined-loading-grid-${i}`"
                 x1="40"
                 :y1="i * 20 + '%'"
                 x2="100%"
@@ -198,7 +209,7 @@
               <g class="grid-lines">
                 <line
                   v-for="i in 5"
-                  :key="`invoice-grid-${i}`"
+                  :key="`combined-grid-${i}`"
                   x1="40"
                   :y1="i * 20 + '%'"
                   x2="100%"
@@ -233,31 +244,36 @@
               style="height: calc(100% - 1rem)"
             >
               <div
-                v-for="(tick, index) in invoiceYAxisTicks"
-                :key="`invoice-y-tick-${index}`"
+                v-for="(tick, index) in combinedYAxisTicks"
+                :key="`combined-y-tick-${index}`"
                 class="text-[10px] text-gray-500 text-right leading-tight"
               >
                 {{ tick }}
               </div>
             </div>
 
-            <!-- Chart area with bars -->
+            <!-- Chart area with side-by-side bars -->
             <div
-              class="flex items-end justify-center gap-1.5 px-4 ml-10"
+              class="flex items-end justify-center gap-1 px-4 ml-10"
               style="height: calc(100% - 1rem)"
             >
               <div
-                v-for="(monthData, index) in monthlyInvoiceData"
+                v-for="(monthData, index) in combinedChartData"
                 :key="index"
-                class="relative group flex-1 flex flex-col items-center"
+                class="relative group flex-1 flex flex-col items-center gap-0.5"
                 style="height: 100%"
               >
                 <!-- Bar container - full height, bars aligned to bottom -->
-                <div class="w-full flex items-end" style="height: 100%">
-                  <!-- Bar - percentage height, starts from bottom (x-axis) -->
+                <div class="w-full flex items-end gap-0.5" style="height: 100%">
+                  <!-- Invoice bar -->
                   <div
-                    class="w-full bg-gray-900 rounded-t transition-all duration-300 hover:bg-gray-700"
-                    :style="`height: ${getInvoiceBarHeight(monthData.Amount)}%`"
+                    class="flex-1 bg-gray-900 rounded-t transition-all duration-300 hover:bg-gray-700"
+                    :style="`height: ${getCombinedBarHeight(monthData.invoices)}%`"
+                  ></div>
+                  <!-- Payment bar -->
+                  <div
+                    class="flex-1 bg-blue-600 rounded-t transition-all duration-300 hover:bg-blue-700"
+                    :style="`height: ${getCombinedBarHeight(monthData.payments)}%`"
                   ></div>
                 </div>
                 <!-- Tooltip -->
@@ -265,8 +281,13 @@
                   class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10"
                 >
                   <div class="font-medium">{{ monthData.month }}</div>
-                  <div class="mt-0.5">
-                    {{ formatCurrency(monthData.Amount) }}
+                  <div class="mt-0.5 flex flex-col gap-0.5">
+                    <div>
+                      Invoices: {{ formatCurrency(monthData.invoices) }}
+                    </div>
+                    <div>
+                      Payments: {{ formatCurrency(monthData.payments) }}
+                    </div>
                   </div>
                   <!-- Tooltip arrow -->
                   <div
@@ -278,12 +299,12 @@
 
             <!-- X-axis labels - positioned below the chart area -->
             <div
-              class="flex justify-center gap-1.5 px-4 ml-10 mt-1"
+              class="flex justify-center gap-1 px-4 ml-10 mt-1"
               style="height: 1rem"
             >
               <div
-                v-for="(monthData, index) in monthlyInvoiceData"
-                :key="`invoice-label-${index}`"
+                v-for="(monthData, index) in combinedChartData"
+                :key="`combined-label-${index}`"
                 class="flex-1 text-center"
               >
                 <div
@@ -297,8 +318,8 @@
         </div>
       </div>
 
-      <!-- Total Collected Chart -->
-      <div class="card card-hover cursor-pointer" @click="navigateToPayments">
+      <!-- Expenses Pie Chart -->
+      <div class="card card-hover cursor-pointer" @click="navigateToExpenses">
         <div class="flex flex-col h-full">
           <div class="flex items-center mb-4">
             <div class="p-3 bg-primary-100 rounded-lg">
@@ -312,152 +333,94 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
             </div>
             <div class="ml-4 flex-1">
-              <h3 class="text-sm font-medium text-gray-600">Payments (6M)</h3>
+              <h3 class="text-sm font-medium text-gray-600">Expenses (6M)</h3>
               <p
                 v-if="!isLoading"
                 class="text-2xl font-bold text-gray-900 mt-1"
               >
-                {{ formatCurrency(totalCollectedAmount) }}
+                {{ formatCurrency(totalExpensesAmount) }}
               </p>
               <p v-else class="text-2xl font-bold text-gray-900 mt-1">-</p>
             </div>
           </div>
-          <div v-if="isLoading && !payments" class="relative w-full h-32 mt-2">
-            <!-- Loading grid lines -->
-            <svg
-              class="absolute inset-0 w-full h-full"
-              preserveAspectRatio="none"
-            >
-              <line
-                v-for="i in 5"
-                :key="`loading-grid-${i}`"
-                x1="40"
-                :y1="i * 20 + '%'"
-                x2="100%"
-                :y2="i * 20 + '%'"
-                stroke="#F3F4F6"
-                stroke-width="1"
-              />
-            </svg>
+          <div
+            v-if="isLoading && !expenses"
+            class="relative w-full h-32 mt-2 flex items-center justify-center"
+          >
             <div
-              class="flex items-end justify-center gap-1.5 h-full px-4 ml-10"
-            >
-              <div
-                v-for="i in 6"
-                :key="i"
-                class="w-10 bg-gray-200 rounded-t flex-1"
-                :style="`height: ${20 + Math.random() * 40}%`"
-              ></div>
+              class="w-24 h-24 border-4 border-gray-200 border-t-gray-400 rounded-full animate-spin"
+            ></div>
+          </div>
+          <div
+            v-else-if="!expenses || expenses.length === 0"
+            class="relative w-full h-32 mt-2 flex items-center justify-center"
+          >
+            <div class="text-center">
+              <p class="text-sm text-gray-500">No expenses found</p>
             </div>
           </div>
-          <div v-else class="relative w-full h-32 mt-2">
-            <!-- SVG for grid lines and axes -->
+          <div
+            v-else-if="expenseCategoryData.length === 0"
+            class="relative w-full h-32 mt-2 flex items-center justify-center"
+          >
+            <div class="text-center">
+              <p class="text-sm text-gray-500">
+                No expenses in the last 6 months
+              </p>
+            </div>
+          </div>
+          <div v-else class="relative w-full h-32 mt-2 flex items-center">
+            <!-- Donut Chart SVG -->
             <svg
-              class="absolute inset-0 w-full"
-              style="height: calc(100% - 1rem)"
-              preserveAspectRatio="none"
+              class="w-32 h-32"
+              viewBox="0 0 100 100"
+              style="transform: rotate(-90deg)"
             >
-              <!-- Very soft grid lines -->
-              <g class="grid-lines">
-                <line
-                  v-for="i in 5"
-                  :key="`grid-${i}`"
-                  x1="40"
-                  :y1="i * 20 + '%'"
-                  x2="100%"
-                  :y2="i * 20 + '%'"
-                  stroke="#F3F4F6"
-                  stroke-width="1"
+              <g>
+                <path
+                  v-for="slice in pieChartSlices"
+                  :key="slice.category"
+                  :d="
+                    getDonutSlicePath(
+                      slice.startAngle,
+                      slice.endAngle,
+                      40,
+                      20,
+                      50,
+                      50
+                    )
+                  "
+                  :fill="getExpenseCategoryColor(slice.category)"
+                  class="transition-opacity duration-200 hover:opacity-80 cursor-pointer"
+                  :data-category="slice.category"
                 />
               </g>
-              <!-- Y-axis line -->
-              <line
-                x1="40"
-                y1="0"
-                x2="40"
-                y2="100%"
-                stroke="#E5E7EB"
-                stroke-width="1"
-              />
-              <!-- X-axis line - at the bottom of chart area -->
-              <line
-                x1="40"
-                y1="100%"
-                x2="100%"
-                y2="100%"
-                stroke="#E5E7EB"
-                stroke-width="1"
-              />
             </svg>
-
-            <!-- Y-axis labels -->
-            <div
-              class="absolute left-0 top-0 w-10 flex flex-col justify-between pr-1"
-              style="height: calc(100% - 1rem)"
-            >
+            <!-- Legend -->
+            <div class="flex-1 ml-4 space-y-1">
               <div
-                v-for="(tick, index) in yAxisTicks"
-                :key="`y-tick-${index}`"
-                class="text-[10px] text-gray-500 text-right leading-tight"
+                v-for="item in expenseCategoryData"
+                :key="item.category"
+                class="flex items-center gap-2 text-xs group"
               >
-                {{ tick }}
-              </div>
-            </div>
-
-            <!-- Chart area with bars -->
-            <div
-              class="flex items-end justify-center gap-1.5 px-4 ml-10"
-              style="height: calc(100% - 1rem)"
-            >
-              <div
-                v-for="(monthData, index) in monthlyPaymentData"
-                :key="index"
-                class="relative group flex-1 flex flex-col items-center"
-                style="height: 100%"
-              >
-                <!-- Bar container - full height, bars aligned to bottom -->
-                <div class="w-full flex items-end" style="height: 100%">
-                  <!-- Bar - percentage height, starts from bottom (x-axis) -->
-                  <div
-                    class="w-full bg-gray-900 rounded-t transition-all duration-300 hover:bg-gray-700"
-                    :style="`height: ${getBarHeight(monthData.Collections)}%`"
-                  ></div>
-                </div>
-                <!-- Tooltip -->
                 <div
-                  class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10"
-                >
-                  <div class="font-medium">{{ monthData.month }}</div>
-                  <div class="mt-0.5">
-                    {{ formatCurrency(monthData.Collections) }}
+                  class="w-3 h-3 rounded-full flex-shrink-0"
+                  :style="`background-color: ${getExpenseCategoryColor(item.category)}`"
+                ></div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-gray-900 truncate">
+                    {{ item.displayName }}
                   </div>
-                  <!-- Tooltip arrow -->
-                  <div
-                    class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- X-axis labels - positioned below the chart area -->
-            <div
-              class="flex justify-center gap-1.5 px-4 ml-10 mt-1"
-              style="height: 1rem"
-            >
-              <div
-                v-for="(monthData, index) in monthlyPaymentData"
-                :key="`label-${index}`"
-                class="flex-1 text-center"
-              >
-                <div
-                  class="text-[10px] text-gray-500 leading-tight whitespace-nowrap"
-                >
-                  {{ monthData.month }}
+                  <div class="text-gray-500">
+                    {{ formatCurrency(item.amount) }} ({{
+                      item.percentage.toFixed(1)
+                    }}%)
+                  </div>
                 </div>
               </div>
             </div>
@@ -593,9 +556,20 @@ import { useUnits } from '../composables/useUnits';
 import { useInvoices } from '../composables/useInvoices';
 import { usePayments } from '../composables/usePayments';
 import { useResidents } from '../composables/useResidents';
+import { useExpenses } from '../composables/useExpenses';
 import { useAuthStore } from '../stores/auth';
 import AnnouncementsCarousel from '../components/AnnouncementsCarousel.vue';
-import type { Unit, InvoiceUnit, Payment, Resident } from '@neibrpay/models';
+import type {
+  Unit,
+  InvoiceUnit,
+  Payment,
+  Resident,
+  Expense,
+} from '@neibrpay/models';
+import {
+  getExpenseCategoryDisplayName,
+  ExpenseCategory,
+} from '@neibrpay/models';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -608,6 +582,7 @@ const { data: units, isLoading: unitsLoading } = useUnits(false);
 const { data: invoices, isLoading: invoicesLoading } = useInvoices();
 const { data: payments, isLoading: paymentsLoading } = usePayments();
 const { data: residents, isLoading: residentsLoading } = useResidents(false);
+const { data: expenses, isLoading: expensesLoading } = useExpenses();
 
 // Currency formatting helper
 const formatCurrency = (amount: number): string => {
@@ -649,8 +624,7 @@ const activeInvoices = computed(() => {
   if (!invoices.value) return [];
   return invoices.value.filter(
     (invoice: InvoiceUnit) =>
-      invoice.status !== 'paid' &&
-      invoice.status !== 'cancelled' &&
+      (invoice.status === 'sent' || invoice.status === 'partial') &&
       !invoice.deleted_at
   );
 });
@@ -906,6 +880,310 @@ const getInvoiceBarHeight = (value: number): number => {
   return (value / maxValue) * 100;
 };
 
+// Combined chart data - merge invoices and payments
+const combinedChartData = computed(() => {
+  const invoiceData = monthlyInvoiceData.value;
+  const paymentData = monthlyPaymentData.value;
+
+  if (!invoiceData || !paymentData) return [];
+
+  return invoiceData.map((invoiceMonth, index) => ({
+    month: invoiceMonth.month,
+    invoices: invoiceMonth.Amount,
+    payments: paymentData[index]?.Collections || 0,
+  }));
+});
+
+// Unified Y-axis ticks for combined chart
+const combinedYAxisTicks = computed(() => {
+  const data = combinedChartData.value;
+  if (!data || data.length === 0) return ['0', '0', '0', '0', '0'];
+
+  const maxValue = Math.max(
+    ...data.map(d => Math.max(d.invoices || 0, d.payments || 0)),
+    1
+  );
+
+  if (maxValue === 0) return ['0', '0', '0', '0', '0'];
+
+  const ticks: string[] = [];
+  for (let i = 4; i >= 0; i--) {
+    const tickValue = (maxValue / 4) * i;
+    ticks.push(formatCompactNumber(tickValue));
+  }
+  return ticks;
+});
+
+// Get bar height for combined chart
+const getCombinedBarHeight = (value: number): number => {
+  const data = combinedChartData.value;
+  if (!data || data.length === 0) return 0;
+
+  const maxValue = Math.max(
+    ...data.map(d => Math.max(d.invoices || 0, d.payments || 0)),
+    1
+  );
+
+  if (maxValue === 0) return 0;
+  if (value === 0) return 0;
+  return (value / maxValue) * 100;
+};
+
+// Expense category data for pie chart (last 6 months)
+const expenseCategoryData = computed(() => {
+  if (!expenses.value || expenses.value.length === 0) return [];
+
+  const now = new Date();
+  // Set to first day of the month 6 months ago
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  sixMonthsAgo.setHours(0, 0, 0, 0);
+
+  // Filter expenses from last 6 months
+  const recentExpenses = expenses.value.filter((expense: Expense) => {
+    // Skip deleted expenses
+    if (expense.deleted_at) return false;
+
+    // Use invoice_date as primary, fallback to created_at
+    const dateString = expense.invoice_date || expense.created_at;
+    if (!dateString) return false;
+
+    try {
+      const expenseDate = new Date(dateString);
+      expenseDate.setHours(0, 0, 0, 0);
+      // Include expenses from the start of 6 months ago to now
+      return expenseDate >= sixMonthsAgo && expenseDate <= now;
+    } catch (e) {
+      // If date parsing fails, exclude the expense
+      return false;
+    }
+  });
+
+  // Group by category and sum amounts
+  const categoryTotals: Record<string, number> = {};
+  let totalAmount = 0;
+
+  recentExpenses.forEach((expense: Expense) => {
+    const category = expense.category || ExpenseCategory.OTHER;
+    // Handle amount conversion (could be string from API)
+    let amount = 0;
+    if (expense.invoice_amount != null) {
+      amount =
+        typeof expense.invoice_amount === 'string'
+          ? parseFloat(expense.invoice_amount) || 0
+          : expense.invoice_amount || 0;
+    }
+
+    // Only include expenses with positive amounts
+    if (amount > 0) {
+      if (!categoryTotals[category]) {
+        categoryTotals[category] = 0;
+      }
+      categoryTotals[category] += amount;
+      totalAmount += amount;
+    }
+  });
+
+  // If no expenses with amounts > 0, return empty array
+  if (totalAmount === 0) return [];
+
+  // Convert to array with percentages - only include categories with amounts > 0
+  const result = Object.keys(categoryTotals)
+    .filter(category => categoryTotals[category] > 0)
+    .map(category => {
+      const amount = categoryTotals[category];
+      const percentage = (amount / totalAmount) * 100;
+
+      return {
+        category: category as ExpenseCategory,
+        displayName: getExpenseCategoryDisplayName(category as ExpenseCategory),
+        amount,
+        percentage,
+      };
+    })
+    .sort((a, b) => b.amount - a.amount);
+
+  return result;
+});
+
+// Total expenses amount for last 6 months
+const totalExpensesAmount = computed(() => {
+  if (!expenseCategoryData.value || expenseCategoryData.value.length === 0)
+    return 0;
+  return expenseCategoryData.value.reduce((sum, item) => sum + item.amount, 0);
+});
+
+// Color palette for expense categories
+const getExpenseCategoryColor = (category: ExpenseCategory): string => {
+  const colors: Record<ExpenseCategory, string> = {
+    [ExpenseCategory.MAINTENANCE]: '#3B82F6', // blue
+    [ExpenseCategory.LANDSCAPING]: '#10B981', // green
+    [ExpenseCategory.LEGAL]: '#EF4444', // red
+    [ExpenseCategory.INSURANCE]: '#F59E0B', // yellow/amber
+    [ExpenseCategory.UTILITIES]: '#8B5CF6', // purple
+    [ExpenseCategory.OTHER]: '#6B7280', // gray
+  };
+  return colors[category] || '#6B7280';
+};
+
+// Pie chart slices with calculated angles
+const pieChartSlices = computed(() => {
+  if (!expenseCategoryData.value || expenseCategoryData.value.length === 0)
+    return [];
+
+  let currentAngle = 0;
+  return expenseCategoryData.value.map(item => {
+    const startAngle = currentAngle;
+    const angle = (item.percentage / 100) * 360;
+    const endAngle = currentAngle + angle;
+    currentAngle = endAngle;
+
+    return {
+      ...item,
+      startAngle,
+      endAngle,
+    };
+  });
+});
+
+// Calculate donut chart path for SVG
+const getDonutSlicePath = (
+  startAngle: number,
+  endAngle: number,
+  outerRadius: number,
+  innerRadius: number,
+  centerX: number,
+  centerY: number
+): string => {
+  const angleDiff = endAngle - startAngle;
+  const isFullCircle = angleDiff >= 359.99 || Math.abs(angleDiff - 360) < 0.01;
+
+  // For full circle (360 degrees), draw as two 180-degree arcs
+  if (isFullCircle) {
+    const midAngle = startAngle + 180;
+
+    // Outer ring points
+    const startOuter = polarToCartesian(
+      centerX,
+      centerY,
+      outerRadius,
+      startAngle
+    );
+    const midOuter = polarToCartesian(centerX, centerY, outerRadius, midAngle);
+    const endOuter = polarToCartesian(centerX, centerY, outerRadius, endAngle);
+
+    // Inner ring points (reverse order)
+    const startInner = polarToCartesian(
+      centerX,
+      centerY,
+      innerRadius,
+      endAngle
+    );
+    const midInner = polarToCartesian(centerX, centerY, innerRadius, midAngle);
+    const endInner = polarToCartesian(
+      centerX,
+      centerY,
+      innerRadius,
+      startAngle
+    );
+
+    // Draw complete donut: outer arc (180°) -> line to inner -> inner arc (180° reverse) -> close
+    return [
+      'M',
+      startOuter.x,
+      startOuter.y,
+      'A',
+      outerRadius,
+      outerRadius,
+      0,
+      1,
+      1, // large arc, clockwise
+      midOuter.x,
+      midOuter.y,
+      'A',
+      outerRadius,
+      outerRadius,
+      0,
+      1,
+      1, // large arc, clockwise
+      endOuter.x,
+      endOuter.y,
+      'L',
+      startInner.x,
+      startInner.y,
+      'A',
+      innerRadius,
+      innerRadius,
+      0,
+      1,
+      0, // large arc, counter-clockwise
+      midInner.x,
+      midInner.y,
+      'A',
+      innerRadius,
+      innerRadius,
+      0,
+      1,
+      0, // large arc, counter-clockwise
+      endInner.x,
+      endInner.y,
+      'Z',
+    ].join(' ');
+  }
+
+  // For partial arcs, use standard donut path
+  const startOuter = polarToCartesian(
+    centerX,
+    centerY,
+    outerRadius,
+    startAngle
+  );
+  const endOuter = polarToCartesian(centerX, centerY, outerRadius, endAngle);
+  const startInner = polarToCartesian(centerX, centerY, innerRadius, endAngle);
+  const endInner = polarToCartesian(centerX, centerY, innerRadius, startAngle);
+
+  const largeArcFlag = angleDiff > 180 ? 1 : 0;
+
+  return [
+    'M',
+    startOuter.x,
+    startOuter.y,
+    'A',
+    outerRadius,
+    outerRadius,
+    0,
+    largeArcFlag,
+    1,
+    endOuter.x,
+    endOuter.y,
+    'L',
+    startInner.x,
+    startInner.y,
+    'A',
+    innerRadius,
+    innerRadius,
+    0,
+    largeArcFlag,
+    0,
+    endInner.x,
+    endInner.y,
+    'Z',
+  ].join(' ');
+};
+
+// Helper function to convert polar coordinates to cartesian
+const polarToCartesian = (
+  centerX: number,
+  centerY: number,
+  radius: number,
+  angleInDegrees: number
+): { x: number; y: number } => {
+  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+  return {
+    x: centerX + radius * Math.cos(angleInRadians),
+    y: centerY + radius * Math.sin(angleInRadians),
+  };
+};
+
 // Navigation handlers
 const navigateToUnits = () => {
   router.push('/units');
@@ -919,6 +1197,10 @@ const navigateToPayments = () => {
   router.push('/payments');
 };
 
+const navigateToExpenses = () => {
+  router.push('/expenses');
+};
+
 const navigateToPeople = () => {
   router.push('/people');
 };
@@ -929,7 +1211,8 @@ const isLoading = computed(() => {
     unitsLoading.value ||
     invoicesLoading.value ||
     paymentsLoading.value ||
-    residentsLoading.value
+    residentsLoading.value ||
+    expensesLoading.value
   );
 });
 </script>
