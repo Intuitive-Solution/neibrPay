@@ -1,15 +1,15 @@
 <template>
   <div class="max-w-7xl">
     <!-- Header Section -->
-    <div class="card mb-6">
+    <div class="card mb-4 md:mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
-            <h1 class="text-2xl font-bold text-gray-900">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-900">
               {{ isEditMode ? 'Edit HOA Dues' : 'Add New HOA Dues' }}
             </h1>
           </div>
-          <p class="text-gray-600">
+          <p class="text-sm md:text-base text-gray-600">
             {{
               isEditMode
                 ? 'Update HOA dues information and details'
@@ -18,7 +18,10 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <button @click="handleCancel" class="btn-outline">
+          <button
+            @click="handleCancel"
+            class="btn-outline text-sm md:text-base"
+          >
             <svg
               class="w-4 h-4 mr-2"
               fill="none"
@@ -32,7 +35,8 @@
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Back to HOA Dues
+            <span class="hidden sm:inline">Back to HOA Dues</span>
+            <span class="sm:hidden">Back</span>
           </button>
         </div>
       </div>
@@ -64,24 +68,49 @@
     </div>
 
     <!-- Main Content -->
-    <div class="bg-white p-6">
+    <div class="bg-white p-4 md:p-6">
       <!-- Three Column Layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <!-- Column 1: Units -->
-        <div class="card">
-          <!-- Card Title -->
-          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Units</h3>
+        <div class="card-modern">
+          <!-- Card Header with Icon -->
+          <div class="card-header-modern">
+            <div class="card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="section-title-modern">Units</h3>
+              <p class="section-subtitle-modern">
+                Select units for this invoice
+              </p>
+            </div>
           </div>
 
           <!-- Card Content -->
-          <div class="p-6">
+          <div>
             <div class="space-y-4">
               <!-- Unit Selection -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Units <span class="text-red-500">*</span>
+                <label class="form-label-modern">
+                  Units <span class="required">*</span>
                 </label>
+
+                <!-- Selected Count Badge -->
+                <div v-if="form.unit_ids.length > 0" class="mb-2">
+                  <span
+                    class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary"
+                  >
+                    {{ form.unit_ids.length }}
+                    {{ form.unit_ids.length === 1 ? 'unit' : 'units' }} selected
+                  </span>
+                </div>
 
                 <!-- Loading State -->
                 <div
@@ -106,31 +135,28 @@
                 <div v-else ref="dropdownRef" class="relative">
                   <!-- Main Input Field -->
                   <div
-                    class="relative min-h-[42px] w-full px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors duration-200 cursor-pointer"
+                    class="relative min-h-[42px] w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-primary/10 focus-within:border-primary transition-all duration-200 cursor-pointer bg-white"
                     :class="{
-                      'border-red-300 focus-within:ring-red-500 focus-within:border-red-500':
+                      'input-error focus-within:ring-red-500/10':
                         errors.unit_ids,
                     }"
                     @click="toggleDropdown"
                   >
                     <!-- Selected Units as Chips -->
                     <div class="flex flex-wrap gap-2 items-center min-h-[26px]">
-                      <div
+                      <span
                         v-for="unitId in form.unit_ids"
                         :key="unitId"
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                        class="tag-modern"
                       >
                         {{ getUnitTitle(unitId) }}
                         <button
                           type="button"
                           @click.stop="removeUnit(unitId)"
-                          class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                          class="tag-remove-btn"
+                          aria-label="Remove unit"
                         >
-                          <svg
-                            class="w-2.5 h-2.5"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
+                          <svg fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fill-rule="evenodd"
                               d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -138,14 +164,14 @@
                             />
                           </svg>
                         </button>
-                      </div>
+                      </span>
 
                       <!-- Search Input -->
                       <input
                         v-model="searchQuery"
                         type="text"
                         placeholder="Search units..."
-                        class="flex-1 min-w-[120px] border-0 outline-none bg-transparent text-sm placeholder-gray-500"
+                        class="flex-1 min-w-[120px] border-0 outline-none bg-transparent text-sm placeholder-gray-400 focus:outline-none"
                         @click.stop
                         @keydown.escape="closeDropdown"
                         @keydown.down.prevent="navigateDown"
@@ -205,12 +231,12 @@
                   <!-- Dropdown Menu -->
                   <div
                     v-if="isDropdownOpen"
-                    class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+                    class="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
                   >
                     <!-- Select All Option (hidden in edit mode) -->
                     <div
                       v-if="!isEditMode"
-                      class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                      class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-primary/5 transition-colors duration-150"
                       @click="toggleSelectAll"
                     >
                       <div class="flex items-center">
@@ -235,8 +261,8 @@
                       <div
                         v-for="(unit, index) in filteredUnits"
                         :key="unit.id"
-                        class="px-3 py-2 cursor-pointer hover:bg-gray-50"
-                        :class="{ 'bg-gray-50': highlightedIndex === index }"
+                        class="px-3 py-2 cursor-pointer hover:bg-primary/5 transition-colors duration-150"
+                        :class="{ 'bg-primary/10': highlightedIndex === index }"
                         @click="toggleUnitSelection(unit.id)"
                         @mouseenter="highlightedIndex = index"
                       >
@@ -263,7 +289,14 @@
                 </div>
 
                 <!-- Error Message -->
-                <p v-if="errors.unit_ids" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.unit_ids" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.unit_ids }}
                 </p>
               </div>
@@ -272,32 +305,43 @@
         </div>
 
         <!-- Column 2: Scheduling/Frequency -->
-        <div class="card">
-          <!-- Card Title -->
-          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Scheduling</h3>
+        <div class="card-modern">
+          <!-- Card Header with Icon -->
+          <div class="card-header-modern">
+            <div class="card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="section-title-modern">Scheduling</h3>
+              <p class="section-subtitle-modern">
+                Configure billing frequency and dates
+              </p>
+            </div>
           </div>
 
           <!-- Card Content -->
-          <div class="p-6">
+          <div>
             <div class="space-y-4">
               <!-- Frequency -->
               <div>
-                <label
-                  for="frequency"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Frequency <span class="text-red-500">*</span>
+                <label for="frequency" class="form-label-modern">
+                  Frequency <span class="required">*</span>
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <select
                     id="frequency"
                     v-model="form.frequency"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    class="select-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.frequency,
+                      'input-error': errors.frequency,
                     }"
                   >
                     <option value="one-time">One Time</option>
@@ -324,30 +368,31 @@
                     </svg>
                   </div>
                 </div>
-                <p v-if="errors.frequency" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.frequency" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.frequency }}
                 </p>
               </div>
 
               <!-- Remaining Cycles -->
               <div>
-                <label
-                  for="remaining_cycles"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label for="remaining_cycles" class="form-label-modern">
                   Remaining Cycles
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <select
                     id="remaining_cycles"
                     v-model="form.remaining_cycles"
                     :disabled="isOneTimeFrequency"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    class="select-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.remaining_cycles,
-                      'opacity-50 cursor-not-allowed bg-gray-50':
-                        isOneTimeFrequency,
+                      'input-error': errors.remaining_cycles,
                     }"
                   >
                     <option value="endless">Endless</option>
@@ -376,71 +421,57 @@
                     </svg>
                   </div>
                 </div>
-                <p
-                  v-if="errors.remaining_cycles"
-                  class="mt-2 text-sm text-red-600"
-                >
+                <p v-if="errors.remaining_cycles" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.remaining_cycles }}
                 </p>
               </div>
               <!-- Start Date -->
               <div>
-                <label
-                  for="start_date"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Start Date <span class="text-red-500">*</span>
+                <label for="start_date" class="form-label-modern">
+                  Start Date <span class="required">*</span>
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <input
                     id="start_date"
                     v-model="form.start_date"
                     type="date"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                    class="input-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.start_date,
+                      'input-error': errors.start_date,
                     }"
                   />
-                  <div
-                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                  >
-                    <svg
-                      class="h-5 w-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
                 </div>
-                <p v-if="errors.start_date" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.start_date" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.start_date }}
                 </p>
               </div>
               <!-- Due Date -->
               <div>
-                <label
-                  for="due_date"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label for="due_date" class="form-label-modern">
                   Due Date
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <select
                     id="due_date"
                     v-model="form.due_date"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    class="select-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.due_date,
+                      'input-error': errors.due_date,
                     }"
                   >
                     <option value="use_payment_terms">Use Payment Terms</option>
@@ -468,7 +499,14 @@
                     </svg>
                   </div>
                 </div>
-                <p v-if="errors.due_date" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.due_date" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.due_date }}
                 </p>
               </div>
@@ -477,101 +515,115 @@
         </div>
 
         <!-- Column 3: Invoice Details -->
-        <div class="card">
-          <!-- Card Title -->
-          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
+        <div class="card-modern">
+          <!-- Card Header with Icon -->
+          <div class="card-header-modern">
+            <div class="card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="section-title-modern">Invoice Details</h3>
+              <p class="section-subtitle-modern">
+                Configure invoice settings and options
+              </p>
+            </div>
           </div>
 
           <!-- Card Content -->
-          <div class="p-6">
+          <div>
             <div class="space-y-4">
               <!-- Invoice # -->
               <div>
-                <label
-                  for="invoice_number"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label for="invoice_number" class="form-label-modern">
                   Invoice #
                 </label>
                 <input
                   id="invoice_number"
                   v-model="form.invoice_number"
                   type="text"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  class="input-modern"
                   :class="{
-                    'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.invoice_number,
+                    'input-error': errors.invoice_number,
                   }"
                   placeholder="Auto-generated if empty"
                 />
-                <p
-                  v-if="errors.invoice_number"
-                  class="mt-2 text-sm text-red-600"
-                >
+                <p v-if="!errors.invoice_number" class="form-helper">
+                  Leave empty to auto-generate
+                </p>
+                <p v-if="errors.invoice_number" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.invoice_number }}
                 </p>
               </div>
 
               <!-- Paid to Date -->
               <div>
-                <label
-                  for="paid_to_date"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label for="paid_to_date" class="form-label-modern">
                   Paid to Date
                 </label>
-                <div class="relative">
-                  <span
-                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
-                    >$</span
-                  >
+                <div class="input-group">
+                  <span class="input-icon text-sm">$</span>
                   <input
                     id="paid_to_date"
                     v-model.number="form.paid_to_date"
                     type="number"
                     step="0.01"
                     min="0"
-                    class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                    class="input-modern pl-7"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.paid_to_date,
+                      'input-error': errors.paid_to_date,
                     }"
                     placeholder="0.00"
                   />
                 </div>
-                <p v-if="errors.paid_to_date" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.paid_to_date" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.paid_to_date }}
                 </p>
               </div>
 
               <!-- Discount -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Discount
-                </label>
+                <label class="form-label-modern"> Discount </label>
                 <div class="flex gap-2">
-                  <div class="flex-1">
+                  <div class="flex-1 input-group">
                     <input
                       v-model="form.discount_amount"
                       type="number"
                       step="0.01"
                       min="0"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                      class="input-modern"
                       :class="{
-                        'border-red-300 focus:ring-red-500 focus:border-red-500':
-                          errors.discount_amount,
+                        'input-error': errors.discount_amount,
                       }"
                       placeholder="0.00"
                     />
                   </div>
-                  <div class="w-24">
+                  <div class="w-28 input-group">
                     <select
                       v-model="form.discount_type"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                      class="select-modern"
                       :class="{
-                        'border-red-300 focus:ring-red-500 focus:border-red-500':
-                          errors.discount_type,
+                        'input-error': errors.discount_type,
                       }"
                     >
                       <option value="amount">Amount</option>
@@ -581,28 +633,31 @@
                 </div>
                 <p
                   v-if="errors.discount_amount || errors.discount_type"
-                  class="mt-2 text-sm text-red-600"
+                  class="form-error"
                 >
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.discount_amount || errors.discount_type }}
                 </p>
               </div>
 
               <!-- Auto Bill -->
               <div>
-                <label
-                  for="auto_bill"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label for="auto_bill" class="form-label-modern">
                   Auto Bill
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <select
                     id="auto_bill"
                     v-model="form.auto_bill"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    class="select-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.auto_bill,
+                      'input-error': errors.auto_bill,
                     }"
                   >
                     <option value="disabled">Disabled</option>
@@ -628,7 +683,14 @@
                     </svg>
                   </div>
                 </div>
-                <p v-if="errors.auto_bill" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.auto_bill" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.auto_bill }}
                 </p>
               </div>
