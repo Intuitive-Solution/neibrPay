@@ -80,7 +80,7 @@
             <router-link
               to="/invoices"
               :class="getNavLinkClass('Invoices')"
-              :title="!isExpanded ? 'Invoices' : ''"
+              :title="!isExpanded ? 'HOA Dues' : ''"
             >
               <svg
                 :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
@@ -95,7 +95,7 @@
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span v-if="isExpanded">Invoices</span>
+              <span v-if="isExpanded">HOA Dues</span>
             </router-link>
           </li>
 
@@ -605,7 +605,7 @@
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                       />
                     </svg>
-                    Invoice
+                    HOA Dues
                   </router-link>
                   <router-link to="/people/add" class="dropdown-item">
                     <svg
@@ -770,7 +770,7 @@ const pageTitle = computed(() => {
     case 'Dashboard':
       return 'Dashboard';
     case 'Invoices':
-      return 'Invoices';
+      return 'HOA Dues';
     case 'Charges':
       return 'Charges';
     case 'People':
@@ -798,8 +798,8 @@ const pageDescription = computed(() => {
   switch (route.name) {
     case 'Dashboard':
       return 'Overview of your HOA community management';
-    case 'Invoices':
-      return 'Manage community invoices and billing';
+    case 'HOA Dues':
+      return 'Manage community dues and billing';
     case 'Charges':
       return 'Manage standard charges and fees';
     case 'Residents':

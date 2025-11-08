@@ -6,14 +6,14 @@
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
             <h1 class="text-2xl font-bold text-gray-900">
-              {{ isEditMode ? 'Edit Invoice' : 'Add New Invoice' }}
+              {{ isEditMode ? 'Edit HOA Dues' : 'Add New HOA Dues' }}
             </h1>
           </div>
           <p class="text-gray-600">
             {{
               isEditMode
-                ? 'Update invoice information and details'
-                : 'Create a new invoice for your HOA management'
+                ? 'Update HOA dues information and details'
+                : 'Create a new HOA dues for your HOA management'
             }}
           </p>
         </div>
@@ -32,7 +32,7 @@
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Back to Invoices
+            Back to HOA Dues
           </button>
         </div>
       </div>
