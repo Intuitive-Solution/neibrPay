@@ -505,6 +505,164 @@
                 • {{ getDueDateDisplay() }}
               </span>
             </p>
+
+            <!-- Early Payment Discount Details -->
+            <div
+              v-if="invoice.early_payment_discount_enabled"
+              :class="[
+                'mt-3 pt-3 border-t',
+                invoice.status === 'overdue'
+                  ? 'border-red-200'
+                  : invoice.status === 'partial'
+                    ? 'border-yellow-200'
+                    : 'border-blue-200',
+              ]"
+            >
+              <div class="flex items-start">
+                <svg
+                  class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"
+                  :class="[
+                    invoice.status === 'overdue'
+                      ? 'text-green-600'
+                      : invoice.status === 'partial'
+                        ? 'text-green-600'
+                        : 'text-green-600',
+                  ]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div class="flex-1">
+                  <p
+                    :class="[
+                      'text-sm font-medium',
+                      invoice.status === 'overdue'
+                        ? 'text-green-800'
+                        : invoice.status === 'partial'
+                          ? 'text-green-800'
+                          : 'text-green-800',
+                    ]"
+                  >
+                    Early Payment Discount Available
+                  </p>
+                  <p
+                    :class="[
+                      'text-xs mt-1',
+                      invoice.status === 'overdue'
+                        ? 'text-green-700'
+                        : invoice.status === 'partial'
+                          ? 'text-green-700'
+                          : 'text-green-700',
+                    ]"
+                  >
+                    Save
+                    <span class="font-semibold"
+                      >${{
+                        formatCurrency(
+                          invoice.early_payment_discount_amount || 0
+                        )
+                      }}</span
+                    >
+                    <span
+                      v-if="
+                        invoice.early_payment_discount_type === 'percentage'
+                      "
+                      class="ml-1"
+                    >
+                      ({{ invoice.early_payment_discount_amount }}%)
+                    </span>
+                    if paid by
+                    <span class="font-semibold">
+                      {{
+                        formatDate(invoice.early_payment_discount_by_date || '')
+                      }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Late Fee Details -->
+            <div
+              v-if="invoice.late_fee_enabled"
+              :class="[
+                'mt-3 pt-3 border-t',
+                invoice.status === 'overdue'
+                  ? 'border-red-200'
+                  : invoice.status === 'partial'
+                    ? 'border-yellow-200'
+                    : 'border-blue-200',
+              ]"
+            >
+              <div class="flex items-start">
+                <svg
+                  class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"
+                  :class="[
+                    invoice.status === 'overdue'
+                      ? 'text-red-600'
+                      : invoice.status === 'partial'
+                        ? 'text-yellow-600'
+                        : 'text-orange-600',
+                  ]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <div class="flex-1">
+                  <p
+                    :class="[
+                      'text-sm font-medium',
+                      invoice.status === 'overdue'
+                        ? 'text-red-800'
+                        : invoice.status === 'partial'
+                          ? 'text-yellow-800'
+                          : 'text-orange-800',
+                    ]"
+                  >
+                    Late Fee Applies
+                  </p>
+                  <p
+                    :class="[
+                      'text-xs mt-1',
+                      invoice.status === 'overdue'
+                        ? 'text-red-700'
+                        : invoice.status === 'partial'
+                          ? 'text-yellow-700'
+                          : 'text-orange-700',
+                    ]"
+                  >
+                    Late fee of
+                    <span class="font-semibold"
+                      >${{ formatCurrency(invoice.late_fee_amount || 0) }}</span
+                    >
+                    <span
+                      v-if="invoice.late_fee_type === 'percentage'"
+                      class="ml-1"
+                    >
+                      ({{ invoice.late_fee_amount }}%)
+                    </span>
+                    will be applied after
+                    <span class="font-semibold">
+                      {{ formatDate(invoice.late_fee_applies_on_date || '') }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -2802,6 +2802,9 @@ const handleSubmit = async () => {
           form.value.late_fee_enabled && form.value.late_fee_amount
             ? parseFloat(form.value.late_fee_amount)
             : undefined,
+        late_fee_type: form.value.late_fee_enabled
+          ? (form.value.late_fee_type as any)
+          : undefined,
         late_fee_applies_on_date: form.value.late_fee_enabled
           ? form.value.late_fee_applies_on_date
           : undefined,
