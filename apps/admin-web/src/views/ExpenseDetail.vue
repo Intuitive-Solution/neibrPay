@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-6xl mx-auto">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="card mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -26,7 +26,9 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
+          <!-- Edit Button - Hidden for residents -->
           <button
+            v-if="!isResident"
             @click="editExpense"
             class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
           >
@@ -45,7 +47,9 @@
             </svg>
             Edit
           </button>
+          <!-- Delete Button - Hidden for residents -->
           <button
+            v-if="!isResident"
             @click="deleteExpense"
             class="inline-flex items-center px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors duration-200"
           >
@@ -131,7 +135,7 @@
       <!-- Main Information -->
       <div class="lg:col-span-2 space-y-6">
         <!-- Basic Information Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Basic Information
           </h3>
@@ -194,7 +198,7 @@
         </div>
 
         <!-- Payment Information Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Payment Information
           </h3>
@@ -246,7 +250,7 @@
         </div>
 
         <!-- Documents Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <div class="mb-4">
             <h3 class="text-lg font-medium text-gray-900">Documents</h3>
           </div>
@@ -341,7 +345,7 @@
       <!-- Sidebar -->
       <div class="space-y-6">
         <!-- Vendor Information Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Vendor Information
           </h3>
@@ -397,7 +401,7 @@
         </div>
 
         <!-- Expense Summary Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Expense Summary
           </h3>
@@ -430,7 +434,7 @@
         </div>
 
         <!-- Created Information Card -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="card">
           <h3 class="text-lg font-medium text-gray-900 mb-4">
             Created Information
           </h3>
@@ -487,6 +491,7 @@ import {
   useDeleteExpense,
   useExpenseAttachments,
 } from '../composables/useExpenses';
+import { useAuthStore } from '../stores/auth';
 import { expensesApi } from '@neibrpay/api-client';
 import {
   getExpenseCategoryDisplayName,
@@ -501,6 +506,10 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
+
+// Role check
+const isResident = computed(() => authStore.isResident);
 
 // Get expense ID from route
 const expenseId = computed(() => Number(route.params.id));

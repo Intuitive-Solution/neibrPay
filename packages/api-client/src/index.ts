@@ -8,5 +8,26 @@ export { paymentsApi } from './payments';
 export { chargesApi } from './charges';
 export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';
+export { announcementsApi } from './announcements';
+export { documentsApi } from './documents';
+export type {
+  HoaDocument,
+  CreateDocumentRequest,
+  UpdateDocumentRequest,
+} from './documents';
+export {
+  settingsApi,
+  useSettings,
+  useUpdateTenantSettings,
+  useUpdateUserProfile,
+  useUpdatePassword,
+  useUpdateLocalization,
+  type SettingsData,
+  type UpdateTenantSettingsRequest,
+  type UpdateUserProfileRequest,
+  type UpdatePasswordRequest,
+  type UpdateLocalizationRequest,
+} from './settings';
 export * from './queryKeys';
+export { announcementKeys } from './queryKeys';
 export { setAuthTokenGetter } from './apiClient';

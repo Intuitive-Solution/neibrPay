@@ -8,7 +8,11 @@ use App\Models\Unit;
 use App\Services\InvoicePdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class InvoiceController extends Controller
@@ -25,13 +29,33 @@ class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         $includeDeleted = $request->boolean('include_deleted', false);
         $unitId = $request->get('unit_id');
         $status = $request->get('status');
         
         $query = InvoiceUnit::forTenant($user->tenant_id)
             ->with(['unit', 'creator', 'notes', 'payments', 'schedule']);
+            
+        // If user is a resident, filter invoices to only show those for user's owned units
+        if ($user->isResident()) {
+            $ownedUnitIds = $user->ownedUnits()->get()->pluck('id')->toArray();
+            if (empty($ownedUnitIds)) {
+                // Resident has no owned units, return empty result
+                return response()->json([
+                    'data' => [],
+                    'meta' => [
+                        'total' => 0,
+                        'include_deleted' => $includeDeleted,
+                        'filters' => [
+                            'unit_id' => $unitId,
+                            'status' => $status,
+                        ],
+                    ],
+                ]);
+            }
+            $query->whereIn('unit_id', $ownedUnitIds);
+        }
             
         if ($includeDeleted) {
             $query->withTrashed();
@@ -65,7 +89,7 @@ class InvoiceController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $validated = $request->validate([
             'unit_ids' => 'required|array|min:1',
@@ -74,9 +98,6 @@ class InvoiceController extends Controller
             'start_date' => 'required|date',
             'remaining_cycles' => 'nullable|string',
             'due_date' => 'required|in:use_payment_terms,net_15,net_30,net_45,net_60,due_on_receipt',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'discount_type' => 'required|in:amount,percentage',
-            'auto_bill' => 'required|in:disabled,enabled,on_due_date,on_send',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
             'items.*.description' => 'nullable|string',
@@ -89,7 +110,14 @@ class InvoiceController extends Controller
             'notes.private_notes' => 'nullable|string',
             'notes.terms' => 'nullable|string',
             'notes.footer' => 'nullable|string',
-            'paid_to_date' => 'nullable|numeric|min:0',
+            'early_payment_discount_enabled' => 'nullable|boolean',
+            'early_payment_discount_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_type' => 'nullable|in:amount,percentage|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_by_date' => 'nullable|date|required_if:early_payment_discount_enabled,true',
+            'late_fee_enabled' => 'nullable|boolean',
+            'late_fee_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:late_fee_enabled,true',
+            'late_fee_type' => 'nullable|in:amount,percentage|required_if:late_fee_enabled,true',
+            'late_fee_applies_on_date' => 'nullable|date|required_if:late_fee_enabled,true',
         ]);
 
         // Ensure all units belong to the same tenant
@@ -162,13 +190,26 @@ class InvoiceController extends Controller
     /**
      * Display the specified invoice.
      */
-    public function show(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
-        // Ensure the invoice belongs to the user's tenant
-        if ($invoiceUnit->tenant_id !== $user->tenant_id) {
+        // Fetch invoice with trashed (deleted) invoices included
+        $invoiceUnit = InvoiceUnit::withTrashed()
+            ->where('id', $id)
+            ->where('tenant_id', $user->tenant_id)
+            ->first();
+
+        if (!$invoiceUnit) {
             return response()->json(['message' => 'Invoice not found'], 404);
+        }
+
+        // If user is a resident, verify invoice belongs to user's owned units
+        if ($user->isResident()) {
+            $ownedUnitIds = $user->ownedUnits()->get()->pluck('id')->toArray();
+            if (!in_array($invoiceUnit->unit_id, $ownedUnitIds)) {
+                return response()->json(['message' => 'Invoice not found'], 403);
+            }
         }
 
         $invoiceUnit->load([
@@ -192,7 +233,7 @@ class InvoiceController extends Controller
      */
     public function update(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -211,9 +252,6 @@ class InvoiceController extends Controller
             'remaining_cycles' => 'nullable|string',
             'due_date' => 'required|in:use_payment_terms,net_15,net_30,net_45,net_60,due_on_receipt',
             'po_number' => 'nullable|string',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'discount_type' => 'sometimes|in:amount,percentage',
-            'auto_bill' => 'sometimes|in:disabled,enabled,on_due_date,on_send',
             'items' => 'sometimes|array|min:1',
             'items.*.name' => 'required_with:items|string|max:255',
             'items.*.description' => 'nullable|string',
@@ -221,12 +259,19 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required_with:items|numeric|min:1',
             'items.*.line_total' => 'required_with:items|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
-            'paid_to_date' => 'nullable|numeric|min:0',
             'notes' => 'nullable|array',
             'notes.public_notes' => 'nullable|string',
             'notes.private_notes' => 'nullable|string',
             'notes.terms' => 'nullable|string',
             'notes.footer' => 'nullable|string',
+            'early_payment_discount_enabled' => 'nullable|boolean',
+            'early_payment_discount_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_type' => 'nullable|in:amount,percentage|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_by_date' => 'nullable|date|required_if:early_payment_discount_enabled,true',
+            'late_fee_enabled' => 'nullable|boolean',
+            'late_fee_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:late_fee_enabled,true',
+            'late_fee_type' => 'nullable|in:amount,percentage|required_if:late_fee_enabled,true',
+            'late_fee_applies_on_date' => 'nullable|date|required_if:late_fee_enabled,true',
         ]);
 
         // Ensure the new unit belongs to the user's tenant
@@ -306,7 +351,7 @@ class InvoiceController extends Controller
      */
     public function destroy(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -330,7 +375,7 @@ class InvoiceController extends Controller
      */
     public function restore(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $invoiceUnit = InvoiceUnit::withTrashed()
             ->where('id', $id)
@@ -359,7 +404,7 @@ class InvoiceController extends Controller
      */
     public function forceDelete(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $invoiceUnit = InvoiceUnit::withTrashed()
             ->where('id', $id)
@@ -382,7 +427,7 @@ class InvoiceController extends Controller
      */
     public function markAsSent(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -407,7 +452,7 @@ class InvoiceController extends Controller
      */
     public function markAsPaid(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -418,10 +463,9 @@ class InvoiceController extends Controller
             return response()->json(['message' => 'Invoice is already marked as paid'], 400);
         }
 
-        // Update invoice status and paid amount
+        // Update invoice status and balance
         $invoiceUnit->update([
             'status' => 'paid',
-            'paid_to_date' => $invoiceUnit->total,
             'balance_due' => 0, // Set balance_due to 0 when fully paid
         ]);
 
@@ -539,16 +583,6 @@ class InvoiceController extends Controller
         }
 
         $discountHtml = '';
-        if ($invoiceUnit->discount_amount && $invoiceUnit->discount_amount > 0) {
-            $discountValue = $invoiceUnit->discount_type === 'percentage' 
-                ? ($invoiceUnit->subtotal * $invoiceUnit->discount_amount) / 100 
-                : $invoiceUnit->discount_amount;
-            $discountHtml = "
-            <div class=\"total-row clearfix\">
-                <span class=\"total-label\">Discount (" . ($invoiceUnit->discount_type === 'percentage' ? $invoiceUnit->discount_amount . '%' : 'Amount') . "):</span>
-                <span class=\"total-value\">-$" . number_format((float)$discountValue, 2) . "</span>
-            </div>";
-        }
 
         $taxHtml = '';
         if ($invoiceUnit->tax_rate > 0) {
@@ -556,15 +590,6 @@ class InvoiceController extends Controller
             <div class=\"total-row clearfix\">
                 <span class=\"total-label\">Tax ({$invoiceUnit->tax_rate}%):</span>
                 <span class=\"total-value\">$" . number_format((float)$invoiceUnit->tax_amount, 2) . "</span>
-            </div>";
-        }
-
-        $paidToDateHtml = '';
-        if ($invoiceUnit->paid_to_date > 0) {
-            $paidToDateHtml = "
-            <div class=\"total-row clearfix\">
-                <span class=\"total-label\">Paid to Date:</span>
-                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->paid_to_date, 2) . "</span>
             </div>";
         }
 
@@ -756,7 +781,6 @@ class InvoiceController extends Controller
                             <span class=\"total-label\">Total:</span>
                             <span class=\"total-value\">$" . number_format((float)$invoiceUnit->total, 2) . "</span>
                         </div>
-                        {$paidToDateHtml}
                         {$balanceDueHtml}
                     </div>
                 </div>
@@ -786,7 +810,7 @@ class InvoiceController extends Controller
      */
     public function clone(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -804,11 +828,16 @@ class InvoiceController extends Controller
                 'start_date' => now()->format('Y-m-d'), // Set start date to today
                 'remaining_cycles' => $invoiceUnit->remaining_cycles,
                 'due_date' => $invoiceUnit->due_date,
-                'discount_amount' => $invoiceUnit->discount_amount,
-                'discount_type' => $invoiceUnit->discount_type,
-                'auto_bill' => $invoiceUnit->auto_bill,
                 'items' => $invoiceUnit->items,
                 'tax_rate' => $invoiceUnit->tax_rate,
+                'early_payment_discount_enabled' => $invoiceUnit->early_payment_discount_enabled ?? false,
+                'early_payment_discount_amount' => $invoiceUnit->early_payment_discount_amount,
+                'early_payment_discount_type' => $invoiceUnit->early_payment_discount_type,
+                'early_payment_discount_by_date' => $invoiceUnit->early_payment_discount_by_date,
+                'late_fee_enabled' => $invoiceUnit->late_fee_enabled ?? false,
+                'late_fee_amount' => $invoiceUnit->late_fee_amount,
+                'late_fee_type' => $invoiceUnit->late_fee_type,
+                'late_fee_applies_on_date' => $invoiceUnit->late_fee_applies_on_date,
                 'status' => 'draft',
                 'created_by' => $user->id,
             ]);
@@ -858,7 +887,7 @@ class InvoiceController extends Controller
      */
     public function email(Request $request, InvoiceUnit $invoiceUnit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the invoice belongs to the user's tenant
         if ($invoiceUnit->tenant_id !== $user->tenant_id) {
@@ -869,18 +898,256 @@ class InvoiceController extends Controller
             'email' => 'nullable|email',
         ]);
 
-        // Get the email address - use provided email or unit owner's email
-        $email = $validated['email'] ?? $invoiceUnit->unit->owners->first()?->email;
+        // Load invoice with relationships
+        // First ensure unit is loaded, then load owners
+        if (!$invoiceUnit->relationLoaded('unit')) {
+            $invoiceUnit->load('unit');
+        }
         
-        if (!$email) {
-            return response()->json(['message' => 'No email address available for this invoice'], 400);
+        // Check if unit exists
+        if (!$invoiceUnit->unit) {
+            Log::error('Invoice unit not found for invoice', [
+                'invoice_id' => $invoiceUnit->id,
+                'unit_id' => $invoiceUnit->unit_id,
+            ]);
+            return response()->json(['message' => 'Unit not found for this invoice'], 400);
+        }
+        
+        // Load owners relationship if not already loaded
+        if (!$invoiceUnit->unit->relationLoaded('owners')) {
+            $invoiceUnit->unit->load('owners');
+        }
+        
+        // Load tenant if not already loaded
+        if (!$invoiceUnit->relationLoaded('tenant')) {
+            $invoiceUnit->load('tenant');
         }
 
-        // TODO: Implement actual email sending functionality
-        // For now, just return success message
-        return response()->json([
-            'message' => "Invoice would be sent to {$email}",
-        ]);
+        // Get the owner - use provided email or first unit owner
+        $owner = null;
+        $email = $validated['email'] ?? null;
+        
+        if ($email) {
+            // Find owner by email
+            $owner = $invoiceUnit->unit->owners->firstWhere('email', $email);
+            if (!$owner) {
+                Log::warning('Owner not found with provided email', [
+                    'invoice_id' => $invoiceUnit->id,
+                    'unit_id' => $invoiceUnit->unit_id,
+                    'provided_email' => $email,
+                ]);
+            }
+        } else {
+            // Use first owner from unit
+            $owner = $invoiceUnit->unit->owners->first();
+            if ($owner) {
+                $email = $owner->email;
+            }
+        }
+        
+        // If no owner found, check if unit has any owners
+        if (!$owner) {
+            $ownersCount = $invoiceUnit->unit->owners->count();
+            Log::warning('No owner found for invoice email', [
+                'invoice_id' => $invoiceUnit->id,
+                'unit_id' => $invoiceUnit->unit_id,
+                'unit_title' => $invoiceUnit->unit->title,
+                'owners_count' => $ownersCount,
+            ]);
+            
+            if ($ownersCount === 0) {
+                return response()->json([
+                    'message' => 'No owners assigned to this unit. Please assign an owner with an email address before sending the invoice.',
+                ], 400);
+            } else {
+                return response()->json([
+                    'message' => 'No owner with a valid email address found for this unit. Please ensure at least one owner has an email address.',
+                ], 400);
+            }
+        }
+        
+        // Check if owner has an email
+        if (!$email || empty(trim($email))) {
+            Log::warning('Owner found but no email address', [
+                'invoice_id' => $invoiceUnit->id,
+                'unit_id' => $invoiceUnit->unit_id,
+                'owner_id' => $owner->id,
+                'owner_name' => $owner->name ?? 'N/A',
+            ]);
+            return response()->json([
+                'message' => 'The owner assigned to this unit does not have an email address. Please update the owner\'s email address.',
+            ], 400);
+        }
+
+        // Check if n8n webhook URL is configured
+        $n8nWebhookUrl = config('n8n.webhook_url');
+        if (!$n8nWebhookUrl) {
+            Log::warning('N8N_WEBHOOK_URL not configured. Email invoice webhook not sent.');
+            return response()->json([
+                'message' => 'Email service not configured. Invoice email not sent.',
+            ], 500);
+        }
+
+        // Get webhook secret token for authentication
+        $webhookSecret = config('n8n.webhook_secret');
+        if (!$webhookSecret) {
+            Log::warning('N8N_WEBHOOK_SECRET not configured. Webhook may be unsecured.');
+        }
+
+        try {
+            // Generate magic link token (expires in 30 days, similar to invitation link)
+            $magicLinkToken = Str::random(64);
+            Cache::put("magic_link:{$magicLinkToken}", [
+                'email' => $email,
+                'owner_id' => $owner->id,
+                'invoice_id' => $invoiceUnit->id,
+                'unit_id' => $invoiceUnit->unit_id,
+                'created_at' => now(),
+            ], now()->addDays(30));
+            
+            // Build magic link URL that will authenticate user and redirect to invoice
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            
+            // Create magic link that authenticates user and redirects to invoice
+            // Format: /magic-link?token=...&email=...&redirect=/invoices/{id}
+            $magicLink = rtrim($frontendUrl, '/') . '/magic-link?token=' . $magicLinkToken . '&email=' . urlencode($email) . '&redirect=' . urlencode('/invoices/' . $invoiceUnit->id);
+            // Calculate due date
+            $dueDate = $invoiceUnit->getActualDueDate();
+            $dueDateFormatted = $dueDate->format('Y-m-d');
+
+            // Build unit address string
+            $unit = $invoiceUnit->unit;
+            $unitAddress = trim(
+                ($unit->address ?? '') . ', ' . 
+                ($unit->city ?? '') . ', ' . 
+                ($unit->state ?? '') . ' ' . 
+                ($unit->zip_code ?? '')
+            );
+            $unitAddress = trim($unitAddress, ', ');
+
+            // Prepare n8n webhook payload
+            $payload = [
+                'type' => 'invoice',
+                'recipient' => [
+                    'email' => $email,
+                    'name' => $owner->name ?? $owner->email,
+                ],
+                'invoice_summary' => [
+                    'invoice_number' => $invoiceUnit->invoice_number,
+                    'total' => number_format((float) $invoiceUnit->total, 2, '.', ''),
+                    'balance_due' => number_format((float) $invoiceUnit->balance_due, 2, '.', ''),
+                    'due_date' => $dueDateFormatted,
+                    'unit_title' => $unit->title ?? '',
+                    'unit_address' => $unitAddress,
+                ],
+                'magic_link' => $magicLink,
+                'tenant_name' => $invoiceUnit->tenant->name ?? 'HOA',
+            ];
+
+            Log::info('Sending n8n webhook request', [
+                'url' => $n8nWebhookUrl,
+                'has_secret' => !empty($webhookSecret),
+                'payload_keys' => array_keys($payload),
+            ]);
+            // Prepare headers for webhook request
+            $headers = [
+                'Content-Type' => 'application/json',
+            ];
+
+            // Add authentication token if configured
+            if ($webhookSecret) {
+                $headers['X-Webhook-Token'] = $webhookSecret;
+            }
+
+            // Send HTTP POST request to n8n webhook
+            // Note: Using synchronous call to catch errors, but it's fast enough
+            try {
+                $response = Http::timeout(10)
+                    ->retry(2, 100) // Retry twice with 100ms delay
+                    ->withHeaders($headers)
+                    ->post($n8nWebhookUrl, $payload);
+                
+                if ($response->successful()) {
+                    Log::info('n8n webhook sent successfully', [
+                        'status' => $response->status(),
+                        'response_body' => substr($response->body(), 0, 200), // First 200 chars
+                    ]);
+                    
+                    // Update invoice status to 'sent' when email is successfully sent
+                    if ($invoiceUnit->status === 'draft') {
+                        $invoiceUnit->update(['status' => 'sent']);
+                        Log::info('Invoice status updated to sent', [
+                            'invoice_id' => $invoiceUnit->id,
+                            'invoice_number' => $invoiceUnit->invoice_number,
+                        ]);
+                    }
+                } else {
+                    $errorMessage = 'n8n webhook returned non-success status';
+                    $responseBody = $response->body();
+                    
+                    // Provide helpful error messages for common issues
+                    if ($response->status() === 404) {
+                        $errorMessage = 'n8n webhook not found - workflow may not be activated';
+                        if (strpos($responseBody, 'not registered') !== false) {
+                            Log::warning($errorMessage . '. Make sure the n8n workflow is ACTIVE (not in test mode).', [
+                                'status' => $response->status(),
+                                'url' => $n8nWebhookUrl,
+                                'hint' => 'Activate the workflow in n8n and use production webhook URL (remove /webhook-test/)',
+                            ]);
+                        } else {
+                            Log::warning($errorMessage, [
+                                'status' => $response->status(),
+                                'response_body' => $responseBody,
+                                'url' => $n8nWebhookUrl,
+                            ]);
+                        }
+                    } else {
+                        Log::warning('n8n webhook returned non-success status', [
+                            'status' => $response->status(),
+                            'response_body' => substr($responseBody, 0, 500),
+                            'url' => $n8nWebhookUrl,
+                        ]);
+                    }
+                }
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                Log::error('n8n webhook connection failed - network error', [
+                    'error' => $e->getMessage(),
+                    'url' => $n8nWebhookUrl,
+                    'timeout' => 10,
+                ]);
+            } catch (\Illuminate\Http\Client\RequestException $e) {
+                Log::error('n8n webhook request exception', [
+                    'error' => $e->getMessage(),
+                    'response' => $e->response ? [
+                        'status' => $e->response->status(),
+                        'body' => substr($e->response->body(), 0, 500),
+                    ] : null,
+                    'url' => $n8nWebhookUrl,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('n8n webhook request failed - unexpected error', [
+                    'error' => $e->getMessage(),
+                    'class' => get_class($e),
+                    'url' => $n8nWebhookUrl,
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Invoice email sent successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            // Log error but don't fail the request
+            Log::error('Failed to send invoice email via n8n webhook: ' . $e->getMessage(), [
+                'invoice_id' => $invoiceUnit->id,
+                'owner_email' => $email,
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'message' => 'Invoice email queued. An error occurred but the request was processed.',
+            ], 200);
+        }
     }
 
     /**
@@ -888,7 +1155,7 @@ class InvoiceController extends Controller
      */
     public function forUnit(Request $request, Unit $unit): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the unit belongs to the user's tenant
         if ($unit->tenant_id !== $user->tenant_id) {
@@ -921,14 +1188,18 @@ class InvoiceController extends Controller
             'unit_id' => $unitId,
             'frequency' => $validated['frequency'],
             'start_date' => $validated['start_date'],
-            'remaining_cycles' => $validated['remaining_cycles'],
+            'remaining_cycles' => $validated['remaining_cycles'] ?? null,
             'due_date' => $validated['due_date'],
-            'discount_amount' => $validated['discount_amount'] ?? 0,
-            'discount_type' => $validated['discount_type'],
-            'auto_bill' => $validated['auto_bill'],
             'items' => $validated['items'],
             'tax_rate' => $validated['tax_rate'] ?? 0,
-            'paid_to_date' => $validated['paid_to_date'] ?? 0,
+            'early_payment_discount_enabled' => $validated['early_payment_discount_enabled'] ?? false,
+            'early_payment_discount_amount' => $validated['early_payment_discount_amount'] ?? null,
+            'early_payment_discount_type' => $validated['early_payment_discount_type'] ?? null,
+            'early_payment_discount_by_date' => $validated['early_payment_discount_by_date'] ?? null,
+            'late_fee_enabled' => $validated['late_fee_enabled'] ?? false,
+            'late_fee_amount' => $validated['late_fee_amount'] ?? null,
+            'late_fee_type' => $validated['late_fee_type'] ?? null,
+            'late_fee_applies_on_date' => $validated['late_fee_applies_on_date'] ?? null,
             'status' => 'draft',
             'parent_invoice_id' => $parentInvoiceId,
             'created_by' => $user->id,

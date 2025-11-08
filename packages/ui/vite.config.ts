@@ -8,6 +8,17 @@ export default defineConfig({
     vue(),
     dts({
       insertTypesEntry: true,
+      tsconfigPath: resolve(__dirname, 'tsconfig.json'),
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        '**/*.spec.ts',
+        '**/*.spec.tsx',
+        '../../apps/**', // Exclude all app files
+      ],
+      include: ['src/**/*'], // Only include files from src directory
     }),
   ],
   build: {

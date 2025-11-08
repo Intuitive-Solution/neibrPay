@@ -1,11 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../views/Dashboard.vue';
-import Login from '../views/Login.vue';
-import Signup from '../views/Signup.vue';
-import ForgotPassword from '../views/ForgotPassword.vue';
-import ResetPassword from '../views/ResetPassword.vue';
+import UnifiedAuth from '../views/UnifiedAuth.vue';
 import TermsOfService from '../views/TermsOfService.vue';
 import PrivacyNotice from '../views/PrivacyNotice.vue';
+import MagicLinkAuth from '../views/MagicLinkAuth.vue';
 import Invoices from '../views/Invoices.vue';
 import AddInvoice from '../views/AddInvoice.vue';
 import InvoiceDetail from '../views/InvoiceDetail.vue';
@@ -21,34 +19,25 @@ import AddExpense from '../views/AddExpense.vue';
 import ExpenseDetail from '../views/ExpenseDetail.vue';
 import Vendors from '../views/Vendors.vue';
 import AddVendor from '../views/AddVendor.vue';
+import Documents from '../views/Documents.vue';
 import Settings from '../views/Settings.vue';
+import Announcements from '../views/Announcements.vue';
+import AddAnnouncement from '../views/AddAnnouncement.vue';
 import { setupAuthGuards } from './guards';
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/login',
-      name: 'Login',
-      component: Login,
+      path: '/auth',
+      name: 'UnifiedAuth',
+      component: UnifiedAuth,
       meta: { requiresAuth: false },
     },
     {
-      path: '/signup',
-      name: 'Signup',
-      component: Signup,
-      meta: { requiresAuth: false },
-    },
-    {
-      path: '/forgot-password',
-      name: 'ForgotPassword',
-      component: ForgotPassword,
-      meta: { requiresAuth: false },
-    },
-    {
-      path: '/reset-password',
-      name: 'ResetPassword',
-      component: ResetPassword,
+      path: '/magic-link',
+      name: 'MagicLinkAuth',
+      component: MagicLinkAuth,
       meta: { requiresAuth: false },
     },
     {
@@ -188,6 +177,30 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/documents',
+      name: 'Documents',
+      component: Documents,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/announcements',
+      name: 'Announcements',
+      component: Announcements,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/announcements/create',
+      name: 'AddAnnouncement',
+      component: AddAnnouncement,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/announcements/:id/edit',
+      name: 'EditAnnouncement',
+      component: AddAnnouncement,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/settings',
       name: 'Settings',
       component: Settings,
@@ -212,7 +225,7 @@ const router = createRouter({
   ],
 });
 
-// Setup authentication guards
-setupAuthGuards(router);
+// Note: setupAuthGuards will be called in main.ts after Pinia is initialized
+// This prevents "getActivePinia()" error
 
 export default router;

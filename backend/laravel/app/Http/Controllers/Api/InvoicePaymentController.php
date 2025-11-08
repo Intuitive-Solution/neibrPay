@@ -17,7 +17,7 @@ class InvoicePaymentController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         $invoiceId = $request->get('invoice_id');
         $paymentMethod = $request->get('payment_method');
         $startDate = $request->get('start_date');
@@ -27,6 +27,17 @@ class InvoicePaymentController extends Controller
             ->with(['invoiceUnit.unit', 'recorder'])
             ->whereHas('invoiceUnit', function ($q) use ($user) {
                 $q->where('tenant_id', $user->tenant_id);
+                
+                // If user is a resident, filter payments to only show those for invoices belonging to user's owned units
+                if ($user->isResident()) {
+                    $ownedUnitIds = $user->ownedUnits()->get()->pluck('id')->toArray();
+                    if (empty($ownedUnitIds)) {
+                        // Resident has no owned units, return empty result by adding impossible condition
+                        $q->whereRaw('1 = 0');
+                    } else {
+                        $q->whereIn('unit_id', $ownedUnitIds);
+                    }
+                }
             });
             
         if ($invoiceId) {
@@ -68,7 +79,7 @@ class InvoicePaymentController extends Controller
      */
     public function store(Request $request, int $invoiceId): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // First, verify the invoice exists and belongs to the user's tenant
         $invoice = InvoiceUnit::forTenant($user->tenant_id)->findOrFail($invoiceId);
@@ -105,14 +116,14 @@ class InvoicePaymentController extends Controller
                 'recorded_by' => $user->id,
             ]);
             
-            // Update invoice payment totals
-            $invoice->paid_to_date += $validated['amount'];
-            $invoice->balance_due = $invoice->total - $invoice->paid_to_date;
+            // Recalculate invoice balance from payments
+            $totalPaid = $invoice->payments()->sum('amount');
+            $invoice->balance_due = $invoice->total - $totalPaid;
             
             // Update invoice status based on payment
             if ($invoice->balance_due <= 0) {
                 $invoice->status = 'paid';
-            } elseif ($invoice->paid_to_date > 0) {
+            } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';
             }
             
@@ -143,7 +154,7 @@ class InvoicePaymentController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $payment = InvoicePayment::with(['invoiceUnit.unit', 'recorder'])
             ->whereHas('invoiceUnit', function ($q) use ($user) {
@@ -161,7 +172,7 @@ class InvoicePaymentController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $payment = InvoicePayment::with('invoiceUnit')
             ->whereHas('invoiceUnit', function ($q) use ($user) {
@@ -187,14 +198,14 @@ class InvoicePaymentController extends Controller
             // Update the payment
             $payment->update($validated);
             
-            // Recalculate invoice totals
-            $invoice->paid_to_date = $invoice->paid_to_date - $oldAmount + $newAmount;
-            $invoice->balance_due = $invoice->total - $invoice->paid_to_date;
+            // Recalculate invoice balance from payments
+            $totalPaid = $invoice->payments()->sum('amount');
+            $invoice->balance_due = $invoice->total - $totalPaid;
             
             // Update invoice status based on new payment totals
             if ($invoice->balance_due <= 0) {
                 $invoice->status = 'paid';
-            } elseif ($invoice->paid_to_date > 0) {
+            } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';
             } else {
                 // If no payments, revert to sent status
@@ -228,7 +239,7 @@ class InvoicePaymentController extends Controller
      */
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $payment = InvoicePayment::with('invoiceUnit')
             ->whereHas('invoiceUnit', function ($q) use ($user) {
@@ -241,12 +252,12 @@ class InvoicePaymentController extends Controller
         try {
             $invoice = $payment->invoiceUnit;
             
-            // Remove payment amount from invoice totals
-            $invoice->paid_to_date -= $payment->amount;
-            $invoice->balance_due = $invoice->total - $invoice->paid_to_date;
+            // Recalculate invoice balance from remaining payments
+            $totalPaid = $invoice->payments()->sum('amount');
+            $invoice->balance_due = $invoice->total - $totalPaid;
             
             // Update invoice status based on remaining payments
-            if ($invoice->paid_to_date <= 0) {
+            if ($totalPaid <= 0) {
                 $invoice->status = 'sent';
             } elseif ($invoice->balance_due <= 0) {
                 $invoice->status = 'paid';

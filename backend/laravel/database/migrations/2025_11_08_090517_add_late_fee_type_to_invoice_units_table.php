@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            // Make password field nullable for Firebase authentication
-            $table->string('password')->nullable()->change();
+        Schema::table('invoice_units', function (Blueprint $table) {
+            $table->enum('late_fee_type', ['amount', 'percentage'])->nullable()->after('late_fee_amount');
         });
     }
 
@@ -22,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            // Revert password field to not nullable
-            $table->string('password')->nullable(false)->change();
+        Schema::table('invoice_units', function (Blueprint $table) {
+            $table->dropColumn('late_fee_type');
         });
     }
 };

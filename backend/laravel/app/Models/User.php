@@ -20,12 +20,13 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'firebase_uid',
         'tenant_id',
         'name',
         'email',
         'role',
         'phone_number',
+        'type',
+        'member_role',
         'avatar_url',
         'is_active',
         'last_login_at',
@@ -39,7 +40,6 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'firebase_uid',
     ];
 
     /**

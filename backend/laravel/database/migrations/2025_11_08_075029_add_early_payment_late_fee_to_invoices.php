@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('invoice_attachments', function (Blueprint $table) {
-            $table->dropUnique(['file_hash']);
+        Schema::table('invoice_units', function (Blueprint $table) {
+            //
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('invoice_attachments', function (Blueprint $table) {
-            $table->string('file_hash')->unique()->change();
+        Schema::table('invoice_units', function (Blueprint $table) {
+            //
         });
     }
 };

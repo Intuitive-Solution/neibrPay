@@ -1,26 +1,26 @@
 <template>
   <div class="max-w-7xl">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="card mb-4 md:mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
-            <h1 class="text-2xl font-bold text-gray-900">
-              {{ isEditMode ? 'Edit Invoice' : 'Add New Invoice' }}
+            <h1 class="text-xl md:text-2xl font-bold text-gray-900">
+              {{ isEditMode ? 'Edit HOA Dues' : 'Add New HOA Dues' }}
             </h1>
           </div>
-          <p class="text-gray-600">
+          <p class="text-sm md:text-base text-gray-600">
             {{
               isEditMode
-                ? 'Update invoice information and details'
-                : 'Create a new invoice for your HOA management'
+                ? 'Update HOA dues information and details'
+                : 'Create a new HOA dues for your HOA management'
             }}
           </p>
         </div>
         <div class="flex items-center gap-3">
           <button
             @click="handleCancel"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+            class="btn-outline text-sm md:text-base"
           >
             <svg
               class="w-4 h-4 mr-2"
@@ -35,7 +35,8 @@
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Back to Invoices
+            <span class="hidden sm:inline">Back to HOA Dues</span>
+            <span class="sm:hidden">Back</span>
           </button>
         </div>
       </div>
@@ -67,24 +68,49 @@
     </div>
 
     <!-- Main Content -->
-    <div class="bg-white p-6">
+    <div class="bg-white p-4 md:p-6">
       <!-- Three Column Layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <!-- Column 1: Units -->
-        <div class="bg-white rounded-lg shadow">
-          <!-- Card Title -->
-          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Units</h3>
+        <div class="card-modern">
+          <!-- Card Header with Icon -->
+          <div class="card-header-modern">
+            <div class="card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="section-title-modern">Units</h3>
+              <p class="section-subtitle-modern">
+                Select units for this invoice
+              </p>
+            </div>
           </div>
 
           <!-- Card Content -->
-          <div class="p-6">
+          <div>
             <div class="space-y-4">
               <!-- Unit Selection -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Units <span class="text-red-500">*</span>
+                <label class="form-label-modern">
+                  Units <span class="required">*</span>
                 </label>
+
+                <!-- Selected Count Badge -->
+                <div v-if="form.unit_ids.length > 0" class="mb-2">
+                  <span
+                    class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary"
+                  >
+                    {{ form.unit_ids.length }}
+                    {{ form.unit_ids.length === 1 ? 'unit' : 'units' }} selected
+                  </span>
+                </div>
 
                 <!-- Loading State -->
                 <div
@@ -109,31 +135,28 @@
                 <div v-else ref="dropdownRef" class="relative">
                   <!-- Main Input Field -->
                   <div
-                    class="relative min-h-[42px] w-full px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors duration-200 cursor-pointer"
+                    class="relative min-h-[42px] w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-primary/10 focus-within:border-primary transition-all duration-200 cursor-pointer bg-white"
                     :class="{
-                      'border-red-300 focus-within:ring-red-500 focus-within:border-red-500':
+                      'input-error focus-within:ring-red-500/10':
                         errors.unit_ids,
                     }"
                     @click="toggleDropdown"
                   >
                     <!-- Selected Units as Chips -->
                     <div class="flex flex-wrap gap-2 items-center min-h-[26px]">
-                      <div
+                      <span
                         v-for="unitId in form.unit_ids"
                         :key="unitId"
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                        class="tag-modern"
                       >
                         {{ getUnitTitle(unitId) }}
                         <button
                           type="button"
                           @click.stop="removeUnit(unitId)"
-                          class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                          class="tag-remove-btn"
+                          aria-label="Remove unit"
                         >
-                          <svg
-                            class="w-2.5 h-2.5"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
+                          <svg fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fill-rule="evenodd"
                               d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -141,14 +164,14 @@
                             />
                           </svg>
                         </button>
-                      </div>
+                      </span>
 
                       <!-- Search Input -->
                       <input
                         v-model="searchQuery"
                         type="text"
                         placeholder="Search units..."
-                        class="flex-1 min-w-[120px] border-0 outline-none bg-transparent text-sm placeholder-gray-500"
+                        class="flex-1 min-w-[120px] border-0 outline-none bg-transparent text-sm placeholder-gray-400 focus:outline-none"
                         @click.stop
                         @keydown.escape="closeDropdown"
                         @keydown.down.prevent="navigateDown"
@@ -208,12 +231,12 @@
                   <!-- Dropdown Menu -->
                   <div
                     v-if="isDropdownOpen"
-                    class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+                    class="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
                   >
                     <!-- Select All Option (hidden in edit mode) -->
                     <div
                       v-if="!isEditMode"
-                      class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                      class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 cursor-pointer hover:bg-primary/5 transition-colors duration-150"
                       @click="toggleSelectAll"
                     >
                       <div class="flex items-center">
@@ -238,8 +261,8 @@
                       <div
                         v-for="(unit, index) in filteredUnits"
                         :key="unit.id"
-                        class="px-3 py-2 cursor-pointer hover:bg-gray-50"
-                        :class="{ 'bg-gray-50': highlightedIndex === index }"
+                        class="px-3 py-2 cursor-pointer hover:bg-primary/5 transition-colors duration-150"
+                        :class="{ 'bg-primary/10': highlightedIndex === index }"
                         @click="toggleUnitSelection(unit.id)"
                         @mouseenter="highlightedIndex = index"
                       >
@@ -266,7 +289,14 @@
                 </div>
 
                 <!-- Error Message -->
-                <p v-if="errors.unit_ids" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.unit_ids" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.unit_ids }}
                 </p>
               </div>
@@ -275,32 +305,43 @@
         </div>
 
         <!-- Column 2: Scheduling/Frequency -->
-        <div class="bg-white rounded-lg shadow">
-          <!-- Card Title -->
-          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Scheduling</h3>
+        <div class="card-modern">
+          <!-- Card Header with Icon -->
+          <div class="card-header-modern">
+            <div class="card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="section-title-modern">Scheduling</h3>
+              <p class="section-subtitle-modern">
+                Configure billing frequency and dates
+              </p>
+            </div>
           </div>
 
           <!-- Card Content -->
-          <div class="p-6">
+          <div>
             <div class="space-y-4">
               <!-- Frequency -->
               <div>
-                <label
-                  for="frequency"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Frequency <span class="text-red-500">*</span>
+                <label for="frequency" class="form-label-modern">
+                  Frequency <span class="required">*</span>
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <select
                     id="frequency"
                     v-model="form.frequency"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    class="select-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.frequency,
+                      'input-error': errors.frequency,
                     }"
                   >
                     <option value="one-time">One Time</option>
@@ -327,30 +368,31 @@
                     </svg>
                   </div>
                 </div>
-                <p v-if="errors.frequency" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.frequency" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.frequency }}
                 </p>
               </div>
 
               <!-- Remaining Cycles -->
               <div>
-                <label
-                  for="remaining_cycles"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label for="remaining_cycles" class="form-label-modern">
                   Remaining Cycles
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <select
                     id="remaining_cycles"
                     v-model="form.remaining_cycles"
                     :disabled="isOneTimeFrequency"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    class="select-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.remaining_cycles,
-                      'opacity-50 cursor-not-allowed bg-gray-50':
-                        isOneTimeFrequency,
+                      'input-error': errors.remaining_cycles,
                     }"
                   >
                     <option value="endless">Endless</option>
@@ -379,71 +421,57 @@
                     </svg>
                   </div>
                 </div>
-                <p
-                  v-if="errors.remaining_cycles"
-                  class="mt-2 text-sm text-red-600"
-                >
+                <p v-if="errors.remaining_cycles" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.remaining_cycles }}
                 </p>
               </div>
               <!-- Start Date -->
               <div>
-                <label
-                  for="start_date"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Start Date <span class="text-red-500">*</span>
+                <label for="start_date" class="form-label-modern">
+                  Start Date <span class="required">*</span>
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <input
                     id="start_date"
                     v-model="form.start_date"
                     type="date"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                    class="input-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.start_date,
+                      'input-error': errors.start_date,
                     }"
                   />
-                  <div
-                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                  >
-                    <svg
-                      class="h-5 w-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
                 </div>
-                <p v-if="errors.start_date" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.start_date" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.start_date }}
                 </p>
               </div>
               <!-- Due Date -->
               <div>
-                <label
-                  for="due_date"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label for="due_date" class="form-label-modern">
                   Due Date
                 </label>
-                <div class="relative">
+                <div class="input-group">
                   <select
                     id="due_date"
                     v-model="form.due_date"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
+                    class="select-modern"
                     :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.due_date,
+                      'input-error': errors.due_date,
                     }"
                   >
                     <option value="use_payment_terms">Use Payment Terms</option>
@@ -471,7 +499,14 @@
                     </svg>
                   </div>
                 </div>
-                <p v-if="errors.due_date" class="mt-2 text-sm text-red-600">
+                <p v-if="errors.due_date" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.due_date }}
                 </p>
               </div>
@@ -480,160 +515,279 @@
         </div>
 
         <!-- Column 3: Invoice Details -->
-        <div class="bg-white rounded-lg shadow">
-          <!-- Card Title -->
-          <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
-            <h3 class="text-lg font-medium text-gray-900">Invoice Details</h3>
+        <div class="card-modern">
+          <!-- Card Header with Icon -->
+          <div class="card-header-modern">
+            <div class="card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="section-title-modern">Invoice Details</h3>
+              <p class="section-subtitle-modern">
+                Configure invoice settings and options
+              </p>
+            </div>
           </div>
 
           <!-- Card Content -->
-          <div class="p-6">
+          <div>
             <div class="space-y-4">
               <!-- Invoice # -->
               <div>
-                <label
-                  for="invoice_number"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
+                <label for="invoice_number" class="form-label-modern">
                   Invoice #
                 </label>
                 <input
                   id="invoice_number"
                   v-model="form.invoice_number"
                   type="text"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  class="input-modern"
                   :class="{
-                    'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.invoice_number,
+                    'input-error': errors.invoice_number,
                   }"
                   placeholder="Auto-generated if empty"
                 />
-                <p
-                  v-if="errors.invoice_number"
-                  class="mt-2 text-sm text-red-600"
-                >
+                <p v-if="!errors.invoice_number" class="form-helper">
+                  Leave empty to auto-generate
+                </p>
+                <p v-if="errors.invoice_number" class="form-error">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
                   {{ errors.invoice_number }}
                 </p>
               </div>
 
-              <!-- Paid to Date -->
+              <!-- Early Payment Discount -->
               <div>
-                <label
-                  for="paid_to_date"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Paid to Date
-                </label>
-                <div class="relative">
-                  <span
-                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
-                    >$</span
+                <label class="flex items-center justify-between mb-2">
+                  <span class="form-label-modern mb-0"
+                    >Add Early Payment Discount</span
                   >
-                  <input
-                    id="paid_to_date"
-                    v-model.number="form.paid_to_date"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-                    :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.paid_to_date,
-                    }"
-                    placeholder="0.00"
-                  />
-                </div>
-                <p v-if="errors.paid_to_date" class="mt-2 text-sm text-red-600">
-                  {{ errors.paid_to_date }}
-                </p>
-              </div>
-
-              <!-- Discount -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Discount
-                </label>
-                <div class="flex gap-2">
-                  <div class="flex-1">
+                  <label
+                    class="relative inline-flex items-center cursor-pointer"
+                  >
                     <input
-                      v-model="form.discount_amount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-                      :class="{
-                        'border-red-300 focus:ring-red-500 focus:border-red-500':
-                          errors.discount_amount,
-                      }"
-                      placeholder="0.00"
+                      v-model="form.early_payment_discount_enabled"
+                      type="checkbox"
+                      class="sr-only peer"
                     />
-                  </div>
-                  <div class="w-24">
-                    <select
-                      v-model="form.discount_type"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
-                      :class="{
-                        'border-red-300 focus:ring-red-500 focus:border-red-500':
-                          errors.discount_type,
-                      }"
+                    <div
+                      class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-primary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 relative transition-colors duration-200 ease-in-out"
                     >
-                      <option value="amount">Amount</option>
-                      <option value="percentage">%</option>
-                    </select>
+                      <span
+                        :class="[
+                          'absolute top-0.5 left-0.5 bg-white border border-gray-300 rounded-full h-5 w-5 transition-all duration-200 ease-in-out',
+                          form.early_payment_discount_enabled
+                            ? 'translate-x-5'
+                            : 'translate-x-0',
+                        ]"
+                      ></span>
+                    </div>
+                  </label>
+                </label>
+                <div
+                  v-if="form.early_payment_discount_enabled"
+                  class="space-y-4 mt-4"
+                >
+                  <div>
+                    <label class="form-label-modern">Discount Amount</label>
+                    <div class="flex gap-2">
+                      <div class="flex-1 input-group">
+                        <input
+                          v-model="form.early_payment_discount_amount"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          class="input-modern"
+                          :class="{
+                            'input-error': errors.early_payment_discount_amount,
+                          }"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div class="w-28 input-group">
+                        <select
+                          v-model="form.early_payment_discount_type"
+                          class="select-modern"
+                          :class="{
+                            'input-error': errors.early_payment_discount_type,
+                          }"
+                        >
+                          <option value="amount">Amount</option>
+                          <option value="percentage">%</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p
+                      v-if="
+                        errors.early_payment_discount_amount ||
+                        errors.early_payment_discount_type
+                      "
+                      class="form-error"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      {{
+                        errors.early_payment_discount_amount ||
+                        errors.early_payment_discount_type
+                      }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="form-label-modern">If paid in full by</label>
+                    <input
+                      v-model="form.early_payment_discount_by_date"
+                      type="date"
+                      class="input-modern"
+                      :class="{
+                        'input-error': errors.early_payment_discount_by_date,
+                      }"
+                    />
+                    <p
+                      v-if="errors.early_payment_discount_by_date"
+                      class="form-error"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      {{ errors.early_payment_discount_by_date }}
+                    </p>
                   </div>
                 </div>
-                <p
-                  v-if="errors.discount_amount || errors.discount_type"
-                  class="mt-2 text-sm text-red-600"
-                >
-                  {{ errors.discount_amount || errors.discount_type }}
-                </p>
               </div>
 
-              <!-- Auto Bill -->
+              <!-- Late Fee -->
               <div>
-                <label
-                  for="auto_bill"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Auto Bill
-                </label>
-                <div class="relative">
-                  <select
-                    id="auto_bill"
-                    v-model="form.auto_bill"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm appearance-none bg-white"
-                    :class="{
-                      'border-red-300 focus:ring-red-500 focus:border-red-500':
-                        errors.auto_bill,
-                    }"
+                <label class="flex items-center justify-between mb-2">
+                  <span class="form-label-modern mb-0">Add Late Fee</span>
+                  <label
+                    class="relative inline-flex items-center cursor-pointer"
                   >
-                    <option value="disabled">Disabled</option>
-                    <option value="enabled">Enabled</option>
-                    <option value="on_due_date">On Due Date</option>
-                    <option value="on_send">On Send</option>
-                  </select>
-                  <div
-                    class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-                  >
-                    <svg
-                      class="h-5 w-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <input
+                      v-model="form.late_fee_enabled"
+                      type="checkbox"
+                      class="sr-only peer"
+                    />
+                    <div
+                      class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-primary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 relative transition-colors duration-200 ease-in-out"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                      <span
+                        :class="[
+                          'absolute top-0.5 left-0.5 bg-white border border-gray-300 rounded-full h-5 w-5 transition-all duration-200 ease-in-out',
+                          form.late_fee_enabled
+                            ? 'translate-x-5'
+                            : 'translate-x-0',
+                        ]"
+                      ></span>
+                    </div>
+                  </label>
+                </label>
+                <div v-if="form.late_fee_enabled" class="space-y-4 mt-4">
+                  <div>
+                    <label class="form-label-modern">Fee Amount</label>
+                    <div class="flex gap-2">
+                      <div class="flex-1 input-group">
+                        <input
+                          v-model="form.late_fee_amount"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          class="input-modern"
+                          :class="{
+                            'input-error': errors.late_fee_amount,
+                          }"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div class="w-28 input-group">
+                        <select
+                          v-model="form.late_fee_type"
+                          class="select-modern"
+                          :class="{
+                            'input-error': errors.late_fee_type,
+                          }"
+                        >
+                          <option value="amount">Amount</option>
+                          <option value="percentage">%</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p
+                      v-if="errors.late_fee_amount || errors.late_fee_type"
+                      class="form-error"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      {{ errors.late_fee_amount || errors.late_fee_type }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="form-label-modern">Applies on</label>
+                    <input
+                      v-model="form.late_fee_applies_on_date"
+                      type="date"
+                      class="input-modern"
+                      :class="{
+                        'input-error': errors.late_fee_applies_on_date,
+                      }"
+                    />
+                    <p
+                      v-if="errors.late_fee_applies_on_date"
+                      class="form-error"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      {{ errors.late_fee_applies_on_date }}
+                    </p>
                   </div>
                 </div>
-                <p v-if="errors.auto_bill" class="mt-2 text-sm text-red-600">
-                  {{ errors.auto_bill }}
-                </p>
               </div>
             </div>
           </div>
@@ -641,7 +795,7 @@
       </div>
 
       <!-- Invoice Items Section with Tabs -->
-      <div class="mt-8 bg-white rounded-lg shadow">
+      <div class="mt-8 card">
         <!-- Tab Navigation -->
         <div class="bg-gray-100 rounded-t-lg">
           <nav class="flex space-x-8 px-6" aria-label="Tabs">
@@ -1287,7 +1441,7 @@
         </div>
 
         <!-- Right Section: Total Panel -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="card">
           <!-- Card Title -->
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Invoice Summary</h3>
@@ -1339,14 +1493,6 @@
                 </div>
               </div>
 
-              <!-- Paid to Date -->
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Paid to Date</span>
-                <span class="text-sm font-medium text-gray-900"
-                  >${{ formatCurrency(paidToDate) }}</span
-                >
-              </div>
-
               <!-- Balance Due -->
               <div class="border-t border-gray-200 pt-3">
                 <div class="flex justify-between items-center">
@@ -1368,7 +1514,7 @@
         <button
           type="button"
           @click.prevent="handleCancel"
-          class="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+          class="btn-secondary"
         >
           Cancel
         </button>
@@ -1376,7 +1522,7 @@
           type="button"
           @click="handleSubmit"
           :disabled="isSubmitting"
-          class="px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="btn-primary"
         >
           <span v-if="isSubmitting" class="flex items-center">
             <svg
@@ -1459,7 +1605,6 @@
           :tax-rate="taxRate"
           :tax-amount="taxAmount"
           :total="total"
-          :paid-to-date="paidToDate"
           :balance-due="balanceDue"
           :tab-content="tabContent"
           :units="units"
@@ -1517,16 +1662,20 @@ const invoiceId = computed(() =>
 // Form data
 const form = ref({
   unit_ids: [] as number[], // Changed to support multiple units with proper typing
-  frequency: 'monthly',
+  frequency: 'one-time',
   start_date: '',
-  remaining_cycles: 'endless',
+  remaining_cycles: '',
   due_date: 'use_payment_terms',
   invoice_number: '',
   po_number: '',
-  paid_to_date: 0,
-  discount_amount: '',
-  discount_type: 'amount',
-  auto_bill: 'disabled',
+  early_payment_discount_enabled: false,
+  early_payment_discount_amount: '',
+  early_payment_discount_type: 'amount',
+  early_payment_discount_by_date: '',
+  late_fee_enabled: false,
+  late_fee_amount: '',
+  late_fee_type: 'amount',
+  late_fee_applies_on_date: '',
 });
 
 // Form errors
@@ -1538,10 +1687,14 @@ const errors = ref({
   remaining_cycles: '',
   due_date: '',
   invoice_number: '',
-  paid_to_date: '',
-  discount_amount: '',
-  discount_type: '',
-  auto_bill: '',
+  early_payment_discount_enabled: '',
+  early_payment_discount_amount: '',
+  early_payment_discount_type: '',
+  early_payment_discount_by_date: '',
+  late_fee_enabled: '',
+  late_fee_amount: '',
+  late_fee_type: '',
+  late_fee_applies_on_date: '',
 });
 
 // Loading state
@@ -1695,10 +1848,31 @@ watch(
       form.value.remaining_cycles = invoice.remaining_cycles || 'endless';
       form.value.due_date = invoice.due_date;
       form.value.po_number = invoice.po_number || '';
-      form.value.discount_amount = invoice.discount_amount?.toString() || '';
-      form.value.discount_type = invoice.discount_type;
-      form.value.auto_bill = invoice.auto_bill;
-      form.value.paid_to_date = parseFloat(invoice.paid_to_date) || 0;
+      form.value.early_payment_discount_enabled =
+        invoice.early_payment_discount_enabled || false;
+      form.value.early_payment_discount_amount =
+        invoice.early_payment_discount_amount?.toString() || '';
+      form.value.early_payment_discount_type =
+        invoice.early_payment_discount_type || 'amount';
+      // Format date for HTML5 date input (YYYY-MM-DD)
+      if (invoice.early_payment_discount_by_date) {
+        const date = new Date(invoice.early_payment_discount_by_date);
+        form.value.early_payment_discount_by_date = date
+          .toISOString()
+          .split('T')[0];
+      } else {
+        form.value.early_payment_discount_by_date = '';
+      }
+      form.value.late_fee_enabled = invoice.late_fee_enabled || false;
+      form.value.late_fee_amount = invoice.late_fee_amount?.toString() || '';
+      form.value.late_fee_type = invoice.late_fee_type || 'amount';
+      // Format date for HTML5 date input (YYYY-MM-DD)
+      if (invoice.late_fee_applies_on_date) {
+        const date = new Date(invoice.late_fee_applies_on_date);
+        form.value.late_fee_applies_on_date = date.toISOString().split('T')[0];
+      } else {
+        form.value.late_fee_applies_on_date = '';
+      }
 
       // Transform invoice items to UI format
       invoiceItems.value = invoice.items.map((item: any) => ({
@@ -1762,11 +1936,6 @@ watch(
   { immediate: true }
 );
 
-const paidToDate = computed(() => {
-  const value = form.value.paid_to_date;
-  return typeof value === 'string' ? parseFloat(value) || 0 : value || 0;
-});
-
 // Rich text editor state
 const editorRef = ref<HTMLElement | null>(null);
 const selectedFormat = ref('p');
@@ -1828,7 +1997,7 @@ const total = computed(() => {
 });
 
 const balanceDue = computed(() => {
-  return total.value - paidToDate.value;
+  return total.value;
 });
 
 // Show preview when conditions are met
@@ -2497,10 +2666,6 @@ const handleSubmit = async () => {
     remaining_cycles: '',
     due_date: '',
     invoice_number: '',
-    paid_to_date: '',
-    discount_amount: '',
-    discount_type: '',
-    auto_bill: '',
   };
 
   // Basic validation
@@ -2537,12 +2702,31 @@ const handleSubmit = async () => {
             : form.value.remaining_cycles,
         due_date: form.value.due_date as any,
         po_number: form.value.po_number,
-        discount_amount: form.value.discount_amount
-          ? parseFloat(form.value.discount_amount)
+        early_payment_discount_enabled:
+          form.value.early_payment_discount_enabled ?? false,
+        early_payment_discount_amount:
+          form.value.early_payment_discount_enabled &&
+          form.value.early_payment_discount_amount
+            ? parseFloat(form.value.early_payment_discount_amount)
+            : undefined,
+        early_payment_discount_type: form.value.early_payment_discount_enabled
+          ? (form.value.early_payment_discount_type as any)
           : undefined,
-        discount_type: form.value.discount_type as any,
-        auto_bill: form.value.auto_bill as any,
-        paid_to_date: form.value.paid_to_date || 0,
+        early_payment_discount_by_date: form.value
+          .early_payment_discount_enabled
+          ? form.value.early_payment_discount_by_date
+          : undefined,
+        late_fee_enabled: form.value.late_fee_enabled ?? false,
+        late_fee_amount:
+          form.value.late_fee_enabled && form.value.late_fee_amount
+            ? parseFloat(form.value.late_fee_amount)
+            : undefined,
+        late_fee_type: form.value.late_fee_enabled
+          ? (form.value.late_fee_type as any)
+          : undefined,
+        late_fee_applies_on_date: form.value.late_fee_enabled
+          ? form.value.late_fee_applies_on_date
+          : undefined,
         items: invoiceItems.value.map((item: any) => ({
           name: item.name,
           description: item.description,
@@ -2599,11 +2783,31 @@ const handleSubmit = async () => {
             ? undefined
             : form.value.remaining_cycles,
         due_date: form.value.due_date as any,
-        discount_amount: form.value.discount_amount
-          ? parseFloat(form.value.discount_amount)
+        early_payment_discount_enabled:
+          form.value.early_payment_discount_enabled || undefined,
+        early_payment_discount_amount:
+          form.value.early_payment_discount_enabled &&
+          form.value.early_payment_discount_amount
+            ? parseFloat(form.value.early_payment_discount_amount)
+            : undefined,
+        early_payment_discount_type: form.value.early_payment_discount_enabled
+          ? (form.value.early_payment_discount_type as any)
           : undefined,
-        discount_type: form.value.discount_type as any,
-        auto_bill: form.value.auto_bill as any,
+        early_payment_discount_by_date: form.value
+          .early_payment_discount_enabled
+          ? form.value.early_payment_discount_by_date
+          : undefined,
+        late_fee_enabled: form.value.late_fee_enabled || undefined,
+        late_fee_amount:
+          form.value.late_fee_enabled && form.value.late_fee_amount
+            ? parseFloat(form.value.late_fee_amount)
+            : undefined,
+        late_fee_type: form.value.late_fee_enabled
+          ? (form.value.late_fee_type as any)
+          : undefined,
+        late_fee_applies_on_date: form.value.late_fee_enabled
+          ? form.value.late_fee_applies_on_date
+          : undefined,
         items: invoiceItems.value.map((item: any) => ({
           name: item.name,
           description: item.description,
@@ -2717,7 +2921,7 @@ onMounted(() => {
 
   if (clonedData) {
     // Populate scheduling details
-    form.value.frequency = clonedData.frequency || 'monthly';
+    form.value.frequency = clonedData.frequency || 'one-time';
     form.value.remaining_cycles = clonedData.remaining_cycles || 'endless';
 
     // Handle start_date - convert to YYYY-MM-DD format if needed

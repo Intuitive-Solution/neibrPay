@@ -69,6 +69,31 @@ export const paymentKeys = {
   detail: (id: number) => [...paymentKeys.details(), id] as const,
 } as const;
 
+export const settingsKeys = {
+  all: ['settings'] as const,
+  details: () => [...settingsKeys.all, 'detail'] as const,
+  detail: () => [...settingsKeys.details()] as const,
+} as const;
+
+export const documentKeys = {
+  all: ['documents'] as const,
+  lists: () => [...documentKeys.all, 'list'] as const,
+  list: (filters: Record<string, any> = {}) =>
+    [...documentKeys.lists(), { filters }] as const,
+  details: () => [...documentKeys.all, 'detail'] as const,
+  detail: (id: number) => [...documentKeys.details(), id] as const,
+} as const;
+
+export const announcementKeys = {
+  all: ['announcements'] as const,
+  lists: () => [...announcementKeys.all, 'list'] as const,
+  list: (filters: Record<string, any> = {}) =>
+    [...announcementKeys.lists(), { filters }] as const,
+  details: () => [...announcementKeys.all, 'detail'] as const,
+  detail: (id: number) => [...announcementKeys.details(), id] as const,
+  forUser: () => [...announcementKeys.all, 'for-user'] as const,
+} as const;
+
 export const queryKeys = {
   residents: residentKeys,
   units: unitKeys,
@@ -77,4 +102,7 @@ export const queryKeys = {
   expenses: expenseKeys,
   invoices: invoiceKeys,
   payments: paymentKeys,
+  settings: settingsKeys,
+  documents: documentKeys,
+  announcements: announcementKeys,
 } as const;

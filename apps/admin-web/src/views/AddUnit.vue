@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-6xl">
+  <div class="max-w-4xl">
     <!-- Header Section -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
@@ -78,7 +78,7 @@
           >
             <label
               for="title"
-              class="block text-sm font-medium text-text-primary lg:pt-3"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
             >
               Title <span class="text-red-500">*</span>
             </label>
@@ -88,7 +88,7 @@
                 v-model="form.title"
                 type="text"
                 required
-                class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
                     errors.title,
@@ -107,7 +107,7 @@
           >
             <label
               for="address"
-              class="block text-sm font-medium text-text-primary lg:pt-3"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
             >
               Address <span class="text-red-500">*</span>
             </label>
@@ -117,7 +117,7 @@
                 v-model="form.address"
                 type="text"
                 required
-                class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
                     errors.address,
@@ -136,7 +136,7 @@
           >
             <label
               for="city"
-              class="block text-sm font-medium text-text-primary lg:pt-3"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
             >
               City <span class="text-red-500">*</span>
             </label>
@@ -146,7 +146,7 @@
                 v-model="form.city"
                 type="text"
                 required
-                class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
                     errors.city,
@@ -165,7 +165,7 @@
           >
             <label
               for="state"
-              class="block text-sm font-medium text-text-primary lg:pt-3"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
             >
               State <span class="text-red-500">*</span>
             </label>
@@ -175,7 +175,7 @@
                   id="state"
                   v-model="form.state"
                   required
-                  class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                   :class="{
                     'border-red-300 focus:ring-red-500 focus:border-red-500':
                       errors.state,
@@ -201,7 +201,7 @@
                   type="text"
                   required
                   @input="formatZipCode"
-                  class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                   :class="{
                     'border-red-300 focus:ring-red-500 focus:border-red-500':
                       errors.zip_code,
@@ -222,7 +222,7 @@
           >
             <label
               for="starting_balance"
-              class="block text-sm font-medium text-text-primary lg:pt-3"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
             >
               Starting Balance <span class="text-red-500">*</span>
             </label>
@@ -241,7 +241,7 @@
                   min="-999999.99"
                   max="999999.99"
                   required
-                  class="w-full pl-6 pr-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                  class="w-full pl-6 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                   :class="{
                     'border-red-300 focus:ring-red-500 focus:border-red-500':
                       errors.starting_balance,
@@ -267,7 +267,7 @@
           >
             <label
               for="balance_as_of_date"
-              class="block text-sm font-medium text-text-primary lg:pt-3"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
             >
               Balance As Of Date <span class="text-red-500">*</span>
             </label>
@@ -277,7 +277,7 @@
                 v-model="form.balance_as_of_date"
                 type="date"
                 required
-                class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
                     errors.balance_as_of_date,
@@ -338,7 +338,7 @@
               <button
                 type="button"
                 @click="goBack"
-                class="flex-1 flex justify-center py-2 px-3 border border-neutral-300 rounded-lg shadow-sm bg-white text-sm font-medium text-text-primary hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+                class="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
               >
                 Cancel
               </button>
@@ -654,231 +654,535 @@
       </div>
 
       <!-- Form -->
-      <form @submit.prevent="handleSubmit" class="space-y-6">
-        <!-- Title Field -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="title"
-            class="block text-sm font-medium text-text-primary lg:pt-3"
+      <div class="bg-white rounded-lg shadow p-6">
+        <form @submit.prevent="handleSubmit" class="space-y-6">
+          <!-- Title Field -->
+          <div
+            class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
           >
-            Title <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2">
-            <input
-              id="title"
-              v-model="form.title"
-              type="text"
-              required
-              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.title,
-              }"
-              placeholder="Enter unit title (e.g., Unit 101, Apartment A)"
-            />
-            <p v-if="errors.title" class="mt-2 text-sm text-red-600">
-              {{ errors.title }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Address Field -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="address"
-            class="block text-sm font-medium text-text-primary lg:pt-3"
-          >
-            Address <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2">
-            <input
-              id="address"
-              v-model="form.address"
-              type="text"
-              required
-              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.address,
-              }"
-              placeholder="Enter full address"
-            />
-            <p v-if="errors.address" class="mt-2 text-sm text-red-600">
-              {{ errors.address }}
-            </p>
-          </div>
-        </div>
-
-        <!-- City Field -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="city"
-            class="block text-sm font-medium text-text-primary lg:pt-3"
-          >
-            City <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2">
-            <input
-              id="city"
-              v-model="form.city"
-              type="text"
-              required
-              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.city,
-              }"
-              placeholder="Enter city"
-            />
-            <p v-if="errors.city" class="mt-2 text-sm text-red-600">
-              {{ errors.city }}
-            </p>
-          </div>
-        </div>
-
-        <!-- State and ZIP Code Fields -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="state"
-            class="block text-sm font-medium text-text-primary lg:pt-3"
-          >
-            State <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <select
-                id="state"
-                v-model="form.state"
-                required
-                class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-                :class="{
-                  'border-red-300 focus:ring-red-500 focus:border-red-500':
-                    errors.state,
-                }"
-              >
-                <option value="">Select State</option>
-                <option
-                  v-for="state in US_STATES"
-                  :key="state.value"
-                  :value="state.value"
-                >
-                  {{ state.label }}
-                </option>
-              </select>
-              <p v-if="errors.state" class="mt-2 text-sm text-red-600">
-                {{ errors.state }}
-              </p>
-            </div>
-            <div>
+            <label
+              for="title"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
+            >
+              Title <span class="text-red-500">*</span>
+            </label>
+            <div class="lg:col-span-2">
               <input
-                id="zip_code"
-                v-model="form.zip_code"
+                id="title"
+                v-model="form.title"
                 type="text"
                 required
-                @input="formatZipCode"
-                class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
-                    errors.zip_code,
+                    errors.title,
                 }"
-                placeholder="12345"
-                maxlength="10"
+                placeholder="Enter unit title (e.g., Unit 101, Apartment A)"
               />
-              <p v-if="errors.zip_code" class="mt-2 text-sm text-red-600">
-                {{ errors.zip_code }}
+              <p v-if="errors.title" class="mt-2 text-sm text-red-600">
+                {{ errors.title }}
               </p>
             </div>
           </div>
-        </div>
 
-        <!-- Starting Balance Field -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="starting_balance"
-            class="block text-sm font-medium text-text-primary lg:pt-3"
+          <!-- Address Field -->
+          <div
+            class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
           >
-            Starting Balance <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2">
-            <div class="relative">
-              <div
-                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              >
-                <span class="text-gray-500 sm:text-sm">$</span>
-              </div>
+            <label
+              for="address"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
+            >
+              Address <span class="text-red-500">*</span>
+            </label>
+            <div class="lg:col-span-2">
               <input
-                id="starting_balance"
-                v-model="form.starting_balance"
-                type="number"
-                step="0.01"
-                min="-999999.99"
-                max="999999.99"
+                id="address"
+                v-model="form.address"
+                type="text"
                 required
-                class="w-full pl-6 pr-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
-                    errors.starting_balance,
+                    errors.address,
                 }"
-                placeholder="0.00"
+                placeholder="Enter full address"
+              />
+              <p v-if="errors.address" class="mt-2 text-sm text-red-600">
+                {{ errors.address }}
+              </p>
+            </div>
+          </div>
+
+          <!-- City Field -->
+          <div
+            class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+          >
+            <label
+              for="city"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
+            >
+              City <span class="text-red-500">*</span>
+            </label>
+            <div class="lg:col-span-2">
+              <input
+                id="city"
+                v-model="form.city"
+                type="text"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                :class="{
+                  'border-red-300 focus:ring-red-500 focus:border-red-500':
+                    errors.city,
+                }"
+                placeholder="Enter city"
+              />
+              <p v-if="errors.city" class="mt-2 text-sm text-red-600">
+                {{ errors.city }}
+              </p>
+            </div>
+          </div>
+
+          <!-- State and ZIP Code Fields -->
+          <div
+            class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+          >
+            <label
+              for="state"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
+            >
+              State <span class="text-red-500">*</span>
+            </label>
+            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <select
+                  id="state"
+                  v-model="form.state"
+                  required
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.state,
+                  }"
+                >
+                  <option value="">Select State</option>
+                  <option
+                    v-for="state in US_STATES"
+                    :key="state.value"
+                    :value="state.value"
+                  >
+                    {{ state.label }}
+                  </option>
+                </select>
+                <p v-if="errors.state" class="mt-2 text-sm text-red-600">
+                  {{ errors.state }}
+                </p>
+              </div>
+              <div>
+                <input
+                  id="zip_code"
+                  v-model="form.zip_code"
+                  type="text"
+                  required
+                  @input="formatZipCode"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.zip_code,
+                  }"
+                  placeholder="12345"
+                  maxlength="10"
+                />
+                <p v-if="errors.zip_code" class="mt-2 text-sm text-red-600">
+                  {{ errors.zip_code }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Starting Balance Field -->
+          <div
+            class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+          >
+            <label
+              for="starting_balance"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
+            >
+              Starting Balance <span class="text-red-500">*</span>
+            </label>
+            <div class="lg:col-span-2">
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <span class="text-gray-500 sm:text-sm">$</span>
+                </div>
+                <input
+                  id="starting_balance"
+                  v-model="form.starting_balance"
+                  type="number"
+                  step="0.01"
+                  min="-999999.99"
+                  max="999999.99"
+                  required
+                  class="w-full pl-6 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :class="{
+                    'border-red-300 focus:ring-red-500 focus:border-red-500':
+                      errors.starting_balance,
+                  }"
+                  placeholder="0.00"
+                />
+              </div>
+              <p
+                v-if="errors.starting_balance"
+                class="mt-2 text-sm text-red-600"
+              >
+                {{ errors.starting_balance }}
+              </p>
+              <p class="mt-2 text-sm text-gray-600">
+                Enter the starting balance for this unit (can be negative)
+              </p>
+            </div>
+          </div>
+
+          <!-- Balance As Of Date Field -->
+          <div
+            class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+          >
+            <label
+              for="balance_as_of_date"
+              class="block text-sm font-medium text-gray-700 lg:pt-3"
+            >
+              Balance As Of Date <span class="text-red-500">*</span>
+            </label>
+            <div class="lg:col-span-2">
+              <input
+                id="balance_as_of_date"
+                v-model="form.balance_as_of_date"
+                type="date"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                :class="{
+                  'border-red-300 focus:ring-red-500 focus:border-red-500':
+                    errors.balance_as_of_date,
+                }"
+              />
+              <p
+                v-if="errors.balance_as_of_date"
+                class="mt-2 text-sm text-red-600"
+              >
+                {{ errors.balance_as_of_date }}
+              </p>
+              <p class="mt-2 text-sm text-gray-600">
+                The date when the starting balance was recorded
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+            <!-- Spacer for large screens to align with form fields -->
+            <div class="hidden lg:block"></div>
+
+            <!-- Buttons Container -->
+            <div class="lg:col-span-2 flex flex-col sm:flex-row gap-4">
+              <!-- Primary Button -->
+              <button
+                type="submit"
+                :disabled="isSubmitting"
+                class="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              >
+                <span v-if="isSubmitting" class="flex items-center">
+                  <svg
+                    class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  {{
+                    isSubmitting
+                      ? 'Saving...'
+                      : isEditMode
+                        ? 'Update Unit'
+                        : 'Add Unit'
+                  }}
+                </span>
+                <span v-else>{{
+                  isEditMode ? 'Update Unit' : 'Add Unit'
+                }}</span>
+              </button>
+
+              <!-- Cancel Button -->
+              <button
+                type="button"
+                @click="goBack"
+                class="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Owner, Account History, Document Section -->
+      <div class="bg-white rounded-lg p-6 mt-6">
+        <!-- Tabs Navigation -->
+        <div class="border-b border-gray-200 mb-6">
+          <nav class="-mb-px flex space-x-8">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              @click="activeTab = tab.id"
+              :class="[
+                activeTab === tab.id
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm',
+              ]"
+            >
+              {{ tab.name }}
+            </button>
+          </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div>
+          <!-- Owner Tab -->
+          <div v-if="activeTab === 'owner'" class="space-y-4">
+            <!-- Search Bar and Add Button -->
+            <div class="flex items-center justify-between">
+              <!-- Search Box -->
+              <div class="relative flex-1 max-w-md">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Search..."
+                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                />
+                <button
+                  v-if="searchQuery"
+                  @click="searchQuery = ''"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Add Button -->
+              <button
+                type="button"
+                @click="openAddOwnerModal"
+                class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              >
+                <svg
+                  class="-ml-1 mr-2 h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Add
+              </button>
+            </div>
+
+            <!-- Owner Table -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+              <table
+                class="min-w-full divide-y divide-gray-200"
+                :key="`owners-table-${owners.length}`"
+              >
+                <thead class="bg-gray-300">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Name
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Email
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="owner in filteredOwners" :key="owner.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      {{ owner.name }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ owner.email }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      <button
+                        @click="removeOwner(owner.id)"
+                        class="text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                  <!-- Empty State -->
+                  <tr v-if="filteredOwners.length === 0">
+                    <td
+                      colspan="3"
+                      class="px-6 py-8 text-center text-sm text-gray-500"
+                    >
+                      <div class="flex flex-col items-center">
+                        <svg
+                          class="h-12 w-12 text-gray-400 mb-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                          />
+                        </svg>
+                        <p class="text-gray-500">
+                          No owners assigned to this unit
+                        </p>
+                        <p class="text-gray-400 text-xs mt-1">
+                          Click "Add" to assign owners
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Account History Tab -->
+          <div v-if="activeTab === 'account-history'" class="space-y-4">
+            <!-- Account History Table -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Description
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Remark
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="history in accountHistory" :key="history.id">
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    >
+                      {{ history.date }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ history.description }}
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      {{ history.remark }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Document Tab -->
+          <div v-if="activeTab === 'document'" class="space-y-6">
+            <div class="bg-white shadow rounded-lg p-6">
+              <DocumentUpload
+                :is-uploading="isUploadingDocument"
+                :upload-progress="uploadProgress"
+                :upload-error="uploadError?.message || null"
+                @upload="handleDocumentUpload"
               />
             </div>
-            <p v-if="errors.starting_balance" class="mt-2 text-sm text-red-600">
-              {{ errors.starting_balance }}
-            </p>
-            <p class="mt-2 text-sm text-gray-600">
-              Enter the starting balance for this unit (can be negative)
-            </p>
-          </div>
-        </div>
 
-        <!-- Balance As Of Date Field -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="balance_as_of_date"
-            class="block text-sm font-medium text-text-primary lg:pt-3"
-          >
-            Balance As Of Date <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2">
-            <input
-              id="balance_as_of_date"
-              v-model="form.balance_as_of_date"
-              type="date"
-              required
-              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-body"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.balance_as_of_date,
-              }"
-            />
-            <p
-              v-if="errors.balance_as_of_date"
-              class="mt-2 text-sm text-red-600"
-            >
-              {{ errors.balance_as_of_date }}
-            </p>
-            <p class="mt-2 text-sm text-gray-600">
-              The date when the starting balance was recorded
-            </p>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <!-- Spacer for large screens to align with form fields -->
-          <div class="hidden lg:block"></div>
-
-          <!-- Buttons Container -->
-          <div class="lg:col-span-2 flex flex-col sm:flex-row gap-4">
-            <!-- Primary Button -->
-            <button
-              type="submit"
-              :disabled="isSubmitting"
-              class="flex-1 flex justify-center py-2 px-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              <span v-if="isSubmitting" class="flex items-center">
+            <!-- Documents List -->
+            <div class="bg-white shadow rounded-lg p-6">
+              <div
+                v-if="isLoadingDocuments"
+                class="flex items-center justify-center py-8"
+              >
                 <svg
-                  class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  class="animate-spin h-8 w-8 text-primary"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -897,28 +1201,20 @@
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                {{
-                  isSubmitting
-                    ? 'Saving...'
-                    : isEditMode
-                      ? 'Update Unit'
-                      : 'Add Unit'
-                }}
-              </span>
-              <span v-else>{{ isEditMode ? 'Update Unit' : 'Add Unit' }}</span>
-            </button>
+                <span class="ml-2 text-gray-600">Loading documents...</span>
+              </div>
 
-            <!-- Cancel Button -->
-            <button
-              type="button"
-              @click="goBack"
-              class="flex-1 flex justify-center py-2 px-3 border border-neutral-300 rounded-lg shadow-sm bg-white text-sm font-medium text-text-primary hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
-            >
-              Cancel
-            </button>
+              <DocumentList
+                v-else
+                :documents="documents"
+                :is-deleting="isDeletingDocument"
+                @download="handleDocumentDownload"
+                @delete="handleDocumentDelete"
+              />
+            </div>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -1482,6 +1778,12 @@ const confirmRemoveOwner = async () => {
 
   // Close the confirmation modal
   closeRemoveOwnerModal();
+};
+
+// Simple remove owner function for Add Mode (no API call needed)
+const removeOwner = (ownerId: number) => {
+  owners.value = owners.value.filter((owner: any) => owner.id !== ownerId);
+  ownersUpdateTrigger.value++;
 };
 
 const formatZipCode = (event: Event) => {

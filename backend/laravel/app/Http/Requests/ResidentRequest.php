@@ -20,7 +20,18 @@ class ResidentRequest extends FormRequest
      */
     public function rules(): array
     {
-        $residentId = $this->route('resident');
+        // Get the resident ID from the route parameter
+        // apiResource creates routes like PUT /residents/{resident}
+        // Try multiple parameter names to be safe
+        $residentId = $this->route('resident') 
+                   ?? $this->route('id')
+                   ?? $this->route()->parameter('resident')
+                   ?? $this->route()->parameter('id');
+        
+        // If route parameter is a model instance, get its ID
+        if (is_object($residentId) && method_exists($residentId, 'getKey')) {
+            $residentId = $residentId->getKey();
+        }
         
         return [
             'name' => [
@@ -43,6 +54,16 @@ class ResidentRequest extends FormRequest
                 'regex:/^(\(\d{3}\) \d{3}-\d{4}|\d{3}-\d{3}-\d{4})$/',
                 'max:14'
             ],
+            'type' => [
+                'required',
+                'string',
+                Rule::in(['owner', 'tenant', 'others'])
+            ],
+            'member_role' => [
+                'required',
+                'string',
+                Rule::in(['admin', 'member'])
+            ],
         ];
     }
 
@@ -64,6 +85,12 @@ class ResidentRequest extends FormRequest
             'phone.required' => 'The phone number is required.',
             'phone.regex' => 'Please enter a valid US phone number (10 digits).',
             'phone.max' => 'The phone number may not be greater than 14 characters.',
+            
+            'type.required' => 'The resident type is required.',
+            'type.in' => 'The resident type must be Owner, Tenant, or Others.',
+            
+            'member_role.required' => 'The member role is required.',
+            'member_role.in' => 'The member role must be Admin or Member.',
         ];
     }
 
@@ -76,6 +103,8 @@ class ResidentRequest extends FormRequest
             'name' => 'resident name',
             'email' => 'email address',
             'phone' => 'phone number',
+            'type' => 'resident type',
+            'member_role' => 'member role',
         ];
     }
 }

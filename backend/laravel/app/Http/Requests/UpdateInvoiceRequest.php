@@ -23,9 +23,14 @@ class UpdateInvoiceRequest extends FormRequest
     {
         return [
             'po_number' => 'nullable|string|max:255',
-            'discount_amount' => 'nullable|numeric|min:0|max:999999.99',
-            'discount_type' => 'sometimes|in:amount,percentage',
-            'auto_bill' => 'sometimes|in:disabled,enabled,on_due_date,on_send',
+            'early_payment_discount_enabled' => 'nullable|boolean',
+            'early_payment_discount_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_type' => 'nullable|in:amount,percentage|required_if:early_payment_discount_enabled,true',
+            'early_payment_discount_by_date' => 'nullable|date|required_if:early_payment_discount_enabled,true',
+            'late_fee_enabled' => 'nullable|boolean',
+            'late_fee_amount' => 'nullable|numeric|min:0|max:999999.99|required_if:late_fee_enabled,true',
+            'late_fee_type' => 'nullable|in:amount,percentage|required_if:late_fee_enabled,true',
+            'late_fee_applies_on_date' => 'nullable|date|required_if:late_fee_enabled,true',
             'items' => 'sometimes|array|min:1',
             'items.*.name' => 'required_with:items|string|max:255',
             'items.*.description' => 'nullable|string|max:1000',
@@ -50,10 +55,6 @@ class UpdateInvoiceRequest extends FormRequest
     {
         return [
             'po_number.max' => 'PO number cannot exceed 255 characters.',
-            'discount_amount.numeric' => 'Discount amount must be a valid number.',
-            'discount_amount.min' => 'Discount amount cannot be negative.',
-            'discount_type.in' => 'Invalid discount type.',
-            'auto_bill.in' => 'Invalid auto bill option.',
             'items.min' => 'Please add at least one item.',
             'items.*.name.required_with' => 'Item name is required.',
             'items.*.name.max' => 'Item name cannot exceed 255 characters.',
@@ -97,9 +98,14 @@ class UpdateInvoiceRequest extends FormRequest
                 }
             }
 
-            // Validate discount amount based on type
-            if ($this->input('discount_type') === 'percentage' && $this->input('discount_amount') > 100) {
-                $validator->errors()->add('discount_amount', 'Percentage discount cannot exceed 100%.');
+            // Validate early payment discount amount based on type
+            if ($this->input('early_payment_discount_type') === 'percentage' && $this->input('early_payment_discount_amount') > 100) {
+                $validator->errors()->add('early_payment_discount_amount', 'Early payment percentage discount cannot exceed 100%.');
+            }
+
+            // Validate late fee amount based on type
+            if ($this->input('late_fee_type') === 'percentage' && $this->input('late_fee_amount') > 100) {
+                $validator->errors()->add('late_fee_amount', 'Late fee percentage cannot exceed 100%.');
             }
         });
     }

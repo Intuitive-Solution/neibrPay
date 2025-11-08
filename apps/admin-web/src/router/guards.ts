@@ -1,58 +1,43 @@
 import type { Router } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { setAuthTokenGetter } from '@neibrpay/api-client';
 
 export function setupAuthGuards(router: Router) {
-  // Guard for protected routes (requires authentication)
+  // Set up token getter for API client - use getActivePinia to ensure Pinia is initialized
+  setAuthTokenGetter(() => {
+    try {
+      const authStore = useAuthStore();
+      return authStore.token;
+    } catch {
+      return null;
+    }
+  });
+
   router.beforeEach(async (to, from, next) => {
+    // Get auth store inside the guard (after Pinia is initialized)
     const authStore = useAuthStore();
 
     // Initialize auth if not already done
     if (!authStore.isInitialized) {
-      authStore.initializeAuth();
-
-      // Wait for auth initialization
-      await new Promise(resolve => {
-        const unwatch = authStore.$subscribe((mutation, state) => {
-          if (state.isInitialized) {
-            unwatch();
-            resolve(true);
-          }
-        });
-      });
+      await authStore.initializeAuth();
     }
 
     // Check if route requires authentication
-    const requiresAuth = to.matched.some(
-      record => record.meta.requiresAuth !== false
-    );
-    const isAuthRoute =
-      to.name === 'Login' ||
-      to.name === 'Signup' ||
-      to.name === 'ForgotPassword' ||
-      to.name === 'ResetPassword';
-
-    if (requiresAuth && !authStore.isAuthenticated) {
-      // Redirect to login if not authenticated
-      next({ name: 'Login' });
-    } else if (isAuthRoute && authStore.isAuthenticated) {
-      // Redirect to dashboard if already authenticated and trying to access auth pages
-      next({ name: 'Dashboard' });
+    if (to.meta.requiresAuth) {
+      if (!authStore.isAuthenticated) {
+        // Redirect to auth page
+        next({ name: 'UnifiedAuth', query: { redirect: to.fullPath } });
+      } else {
+        next();
+      }
     } else {
-      next();
+      // If user is authenticated and trying to access auth page, redirect to dashboard
+      if (to.name === 'UnifiedAuth' && authStore.isAuthenticated) {
+        const redirect = to.query.redirect as string | undefined;
+        next(redirect || '/');
+      } else {
+        next();
+      }
     }
   });
-}
-
-// Helper function to check if user has specific role
-export function hasRole(role: string): boolean {
-  const authStore = useAuthStore();
-  // This would need to be implemented based on your user model
-  // For now, we'll assume all authenticated users are admins
-  return authStore.isAuthenticated;
-}
-
-// Helper function to check if user belongs to specific tenant
-export function belongsToTenant(tenantId: string): boolean {
-  const authStore = useAuthStore();
-  return authStore.tenant?.id === tenantId;
 }

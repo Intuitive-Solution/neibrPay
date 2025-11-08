@@ -7,16 +7,32 @@ use App\Http\Requests\ResidentRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ResidentController extends Controller
 {
+
     /**
      * Display a listing of residents.
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         $includeDeleted = $request->boolean('include_deleted', false);
+        
+        // If user is a resident, return empty array (residents cannot see other residents)
+        if ($user->isResident()) {
+            return response()->json([
+                'data' => [],
+                'meta' => [
+                    'total' => 0,
+                    'include_deleted' => $includeDeleted,
+                ]
+            ]);
+        }
         
         $query = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -49,12 +65,14 @@ class ResidentController extends Controller
      */
     public function store(ResidentRequest $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone,
+            'type' => $request->type ?? 'owner',
+            'member_role' => $request->member_role ?? 'member',
             'role' => 'resident',
             'tenant_id' => $user->tenant_id,
             'is_active' => true,
@@ -77,7 +95,7 @@ class ResidentController extends Controller
      */
     public function show(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -97,7 +115,7 @@ class ResidentController extends Controller
      */
     public function units(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -122,7 +140,7 @@ class ResidentController extends Controller
      */
     public function removeUnit(Request $request, string $id, string $unitId): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -148,7 +166,7 @@ class ResidentController extends Controller
      */
     public function availableUnits(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -161,7 +179,7 @@ class ResidentController extends Controller
             ->get();
         
         // Get units already owned by this resident
-        $ownedUnitIds = $resident->ownedUnits()->pluck('units.id')->toArray();
+        $ownedUnitIds = $resident->ownedUnits()->get()->pluck('id')->toArray();
         
         // Filter out units already owned by this resident
         $availableUnits = $allUnits->reject(function ($unit) use ($ownedUnitIds) {
@@ -183,7 +201,7 @@ class ResidentController extends Controller
      */
     public function addUnits(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -241,7 +259,7 @@ class ResidentController extends Controller
      */
     public function update(ResidentRequest $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -251,6 +269,8 @@ class ResidentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone,
+            'type' => $request->type,
+            'member_role' => $request->member_role,
         ]);
         
         $resident->load('tenant');
@@ -270,7 +290,7 @@ class ResidentController extends Controller
      */
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -288,7 +308,7 @@ class ResidentController extends Controller
      */
     public function restore(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
             ->byRole('resident')
@@ -313,7 +333,7 @@ class ResidentController extends Controller
      */
     public function forceDelete(Request $request, string $id): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Only admins can permanently delete
         if (!$user->isAdmin()) {
@@ -332,5 +352,160 @@ class ResidentController extends Controller
         return response()->json([
             'message' => 'Resident permanently deleted'
         ]);
+    }
+
+    /**
+     * Send invite email to a resident with welcome message and login link.
+     */
+    public function sendInvite(Request $request, string $id): JsonResponse
+    {
+        $user = $request->user();
+        
+        // Find the resident and ensure they belong to the user's tenant
+        $resident = User::forTenant($user->tenant_id)
+            ->byRole('resident')
+            ->findOrFail($id);
+        
+        // Validate that resident is active
+        if (!$resident->is_active || $resident->deleted_at) {
+            return response()->json([
+                'message' => 'Cannot send invite email to inactive or deleted residents'
+            ], 400);
+        }
+        
+        // Load tenant information
+        $resident->load('tenant');
+        $tenant = $resident->tenant;
+        
+        if (!$tenant) {
+            return response()->json([
+                'message' => 'Resident tenant not found'
+            ], 404);
+        }
+        
+        // Check if n8n webhook URL is configured
+        $n8nWebhookUrl = config('n8n.webhook_url');
+        if (!$n8nWebhookUrl) {
+            Log::warning('N8N_WEBHOOK_URL not configured. Invite email webhook not sent.');
+            return response()->json([
+                'message' => 'Email service not configured. Invite email not sent.',
+            ], 500);
+        }
+        
+        // Get webhook secret token for authentication
+        $webhookSecret = config('n8n.webhook_secret');
+        if (!$webhookSecret) {
+            Log::warning('N8N_WEBHOOK_SECRET not configured. Webhook may be unsecured.');
+        }
+        
+        try {
+            // Generate magic link token (expires in 7 days)
+            $magicLinkToken = Str::random(64);
+            Cache::put("magic_link:{$magicLinkToken}", [
+                'email' => $resident->email,
+                'resident_id' => $resident->id,
+                'created_at' => now(),
+            ], now()->addDays(7));
+            
+            // Build magic link URL with email parameter for fallback
+            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            $magicLink = rtrim($frontendUrl, '/') . '/magic-link?token=' . $magicLinkToken . '&email=' . urlencode($resident->email);
+            
+            // Prepare n8n webhook payload
+            $payload = [
+                'type' => 'resident_invite',
+                'recipient' => [
+                    'email' => $resident->email,
+                    'name' => $resident->name ?? $resident->email,
+                ],
+                'magic_link' => $magicLink,
+                'login_link' => $magicLink, // Keep for backward compatibility
+                'tenant_name' => $tenant->name ?? 'HOA',
+                'resident_name' => $resident->name ?? $resident->email,
+            ];
+            
+            Log::info('Sending invite email webhook request', [
+                'url' => $n8nWebhookUrl,
+                'has_secret' => !empty($webhookSecret),
+                'recipient_email' => $resident->email,
+            ]);
+            
+            // Prepare headers for webhook request
+            $headers = [
+                'Content-Type' => 'application/json',
+            ];
+            
+            // Add authentication token if configured
+            if ($webhookSecret) {
+                $headers['X-Webhook-Token'] = $webhookSecret;
+            }
+            
+            // Send HTTP POST request to n8n webhook
+            try {
+                $response = Http::timeout(10)
+                    ->retry(2, 100)
+                    ->withHeaders($headers)
+                    ->post($n8nWebhookUrl, $payload);
+                
+                if ($response->successful()) {
+                    Log::info('Invite email webhook sent successfully', [
+                        'status' => $response->status(),
+                        'resident_id' => $resident->id,
+                        'resident_email' => $resident->email,
+                    ]);
+                    
+                    return response()->json([
+                        'message' => 'Invite email sent successfully',
+                        'data' => [
+                            'resident_id' => $resident->id,
+                            'email' => $resident->email,
+                        ]
+                    ]);
+                } else {
+                    $errorMessage = 'n8n webhook returned non-success status';
+                    $responseBody = $response->body();
+                    
+                    if ($response->status() === 404) {
+                        $errorMessage = 'n8n webhook not found - workflow may not be activated';
+                        Log::warning($errorMessage, [
+                            'status' => $response->status(),
+                            'url' => $n8nWebhookUrl,
+                        ]);
+                    } else {
+                        Log::warning('Invite email webhook returned non-success status', [
+                            'status' => $response->status(),
+                            'response_body' => substr($responseBody, 0, 500),
+                            'url' => $n8nWebhookUrl,
+                        ]);
+                    }
+                    
+                    return response()->json([
+                        'message' => 'Failed to send invite email',
+                        'error' => $errorMessage
+                    ], 500);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send invite email webhook: ' . $e->getMessage(), [
+                    'resident_id' => $resident->id,
+                    'resident_email' => $resident->email,
+                    'error' => $e->getMessage(),
+                ]);
+                
+                return response()->json([
+                    'message' => 'Failed to send invite email',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error in sendInvite: ' . $e->getMessage(), [
+                'resident_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'message' => 'Failed to send invite email',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

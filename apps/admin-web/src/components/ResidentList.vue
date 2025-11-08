@@ -1,38 +1,36 @@
 <template>
-  <div class="bg-white shadow rounded-lg">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-900">Resident Directory</h2>
-        <div class="flex items-center space-x-3">
-          <label class="flex items-center">
-            <input
-              v-model="includeDeleted"
-              type="checkbox"
-              class="rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <span class="ml-2 text-sm text-gray-600">Show deleted</span>
-          </label>
-          <button
-            @click="refreshResidents"
-            :disabled="isLoading"
-            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-900">Resident Directory</h2>
+      <div class="flex items-center space-x-3">
+        <label class="flex items-center">
+          <input
+            v-model="includeDeleted"
+            type="checkbox"
+            class="rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span class="ml-2 text-sm text-gray-600">Show deleted</span>
+        </label>
+        <button
+          @click="refreshResidents"
+          :disabled="isLoading"
+          class="btn-outline btn-sm"
+        >
+          <svg
+            class="h-4 w-4"
+            :class="{ 'animate-spin': isLoading }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              class="h-4 w-4"
-              :class="{ 'animate-spin': isLoading }"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </button>
-        </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -144,118 +142,122 @@
       </div>
     </div>
 
-    <div v-else class="overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Name
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Email
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Phone
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr
-              v-for="resident in residents"
-              :key="resident.id"
-              class="hover:bg-gray-50"
-              :class="{ 'opacity-50': resident.deleted_at }"
+    <div v-else class="overflow-x-auto -mx-6">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10">
-                    <div
-                      class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center"
-                    >
-                      <span class="text-sm font-medium text-gray-700">
-                        {{ resident.name.charAt(0).toUpperCase() }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">
-                      {{ resident.name }}
-                    </div>
+              Name
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Email
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Phone
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Status
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr
+            v-for="resident in residents"
+            :key="resident.id"
+            class="table-row-hover"
+            :class="{ 'opacity-50': resident.deleted_at }"
+          >
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 h-10 w-10">
+                  <div
+                    class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center"
+                  >
+                    <span class="text-sm font-medium text-gray-700">
+                      {{ resident.name.charAt(0).toUpperCase() }}
+                    </span>
                   </div>
                 </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ resident.email }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ resident.phone }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  v-if="resident.deleted_at"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-                >
-                  Deleted
-                </span>
-                <span
-                  v-else-if="resident.is_active"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                >
-                  Active
-                </span>
-                <span
-                  v-else
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
-                >
-                  Inactive
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex items-center space-x-2">
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-gray-900">
+                    {{ resident.name }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">{{ resident.email }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">{{ resident.phone }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span v-if="resident.deleted_at" class="badge badge-overdue">
+                Deleted
+              </span>
+              <span v-else-if="resident.is_active" class="badge badge-paid">
+                Active
+              </span>
+              <span v-else class="badge badge-partial"> Inactive </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+              <DropdownMenu>
+                <template #default="{ close }">
                   <button
                     v-if="!resident.deleted_at"
-                    @click="$emit('edit-resident', resident)"
-                    class="text-primary hover:text-primary-600"
+                    @click="
+                      () => {
+                        $emit('edit-resident', resident);
+                        close();
+                      }
+                    "
+                    class="dropdown-item"
                   >
                     Edit
                   </button>
                   <button
                     v-if="!resident.deleted_at"
-                    @click="confirmDelete(resident)"
-                    class="text-red-600 hover:text-red-900"
+                    @click="
+                      () => {
+                        confirmDelete(resident);
+                        close();
+                      }
+                    "
+                    class="dropdown-item-danger"
                   >
                     Delete
                   </button>
                   <button
                     v-if="resident.deleted_at"
-                    @click="confirmRestore(resident)"
-                    class="text-green-600 hover:text-green-900"
+                    @click="
+                      () => {
+                        confirmRestore(resident);
+                        close();
+                      }
+                    "
+                    class="dropdown-item"
                   >
                     Restore
                   </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                </template>
+              </DropdownMenu>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -378,6 +380,7 @@ import {
   useRestoreResident,
 } from '../composables/useResidents';
 import type { Resident } from '@neibrpay/models';
+import DropdownMenu from './DropdownMenu.vue';
 
 // Props
 defineProps<{

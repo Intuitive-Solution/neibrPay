@@ -75,17 +75,6 @@
           <span class="total-value">${{ formatCurrency(subtotal) }}</span>
         </div>
 
-        <div v-if="discountAmount > 0" class="total-row">
-          <span class="total-label"
-            >Discount ({{
-              discountType === 'percentage' ? discountAmount + '%' : 'Amount'
-            }}):</span
-          >
-          <span class="total-value"
-            >-${{ formatCurrency(calculatedDiscount) }}</span
-          >
-        </div>
-
         <div v-if="taxRate > 0" class="total-row">
           <span class="total-label">Tax ({{ taxRate }}%):</span>
           <span class="total-value">${{ formatCurrency(taxAmount) }}</span>
@@ -94,11 +83,6 @@
         <div class="total-row final-total">
           <span class="total-label">Total:</span>
           <span class="total-value">${{ formatCurrency(total) }}</span>
-        </div>
-
-        <div v-if="paidToDate > 0" class="total-row">
-          <span class="total-label">Paid to Date:</span>
-          <span class="total-value">${{ formatCurrency(paidToDate) }}</span>
         </div>
 
         <div v-if="balanceDue > 0" class="total-row balance-due">
@@ -172,8 +156,6 @@ interface Props {
     po_number: string;
     start_date: string;
     due_date?: string;
-    discount_amount: string | number;
-    discount_type: string;
   };
   invoiceItems: Array<{
     name: string;
@@ -186,7 +168,6 @@ interface Props {
   taxRate: number;
   taxAmount: number;
   total: number;
-  paidToDate: number;
   balanceDue: number;
   tabContent: {
     'public-notes': string;
@@ -210,17 +191,6 @@ const poNumber = computed(() => props.form.po_number);
 const startDate = computed(() => props.form.start_date);
 const dueDate = computed(() => props.form.due_date || props.form.start_date);
 const unitIds = computed(() => props.form.unit_ids);
-const discountAmount = computed(
-  () => parseFloat(props.form.discount_amount.toString()) || 0
-);
-const discountType = computed(() => props.form.discount_type);
-
-const calculatedDiscount = computed(() => {
-  if (discountType.value === 'percentage') {
-    return (props.subtotal * discountAmount.value) / 100;
-  }
-  return discountAmount.value;
-});
 
 const publicNotes = computed(() => props.tabContent['public-notes']);
 const terms = computed(() => props.tabContent.terms);

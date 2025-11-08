@@ -47,12 +47,17 @@ neibrpay/
 - **TanStack Query** for server state management
 - **Axios** for HTTP requests
 - **PDF.js** for document viewing
+- **jsPDF** for client-side PDF generation
+- **html2canvas** for PDF rendering
+- **Firebase SDK** for authentication
 
 ### Backend
 
-- **Laravel 11** with Eloquent ORM
+- **Laravel 10** with Eloquent ORM
 - **Laravel Sanctum** for API authentication
-- **MySQL** for primary database
+- **SQLite** for development (MySQL for production)
+- **Laravel DomPDF** for PDF generation
+- **Firebase PHP SDK** for authentication
 - **Multi-tenant architecture** with tenant scoping
 
 ### Development Tools
@@ -78,9 +83,9 @@ neibrpay/
 
 - **Node.js** >= 18.0.0
 - **npm** >= 8.0.0
-- **PHP** >= 8.1
+- **PHP** >= 8.2
 - **Composer**
-- **MySQL** >= 8.0
+- **SQLite** (default) or **MySQL** >= 8.0
 
 ### Installation
 
@@ -221,39 +226,62 @@ php artisan test
 
 ## 📋 Development Status
 
-**Current Phase**: Project Setup (Phase 0)
+**Current Phase**: Core Features Implementation (Phases 1-5)
 
 ### ✅ Completed
 
 - Monorepo structure with Turbo
 - Vue 3 + Laravel boilerplate
 - Build system configuration
-- Basic routing and components
 - TypeScript setup across all packages
+- Firebase authentication integration
+- Multi-tenant database architecture
+- Invoice management with PDF generation
+- Payment tracking and entry
+- Charge management
+- Unit and resident management
+- Expense and vendor management
+- UI redesign (75%+ complete with Bonsai-inspired design)
 
 ### 🔄 In Progress
 
-- Package implementations (UI, API client, models)
-- Database schema design
-- Authentication system
-- CI/CD pipeline setup
+- Advanced reporting features
+- Email notifications
+- Mobile application development
+- Performance optimization
 
 ### 📅 Planned
 
-- Multi-tenant database architecture
-- Firebase authentication integration
-- Payment processing with Stripe
-- Document management system
-- Email notifications
-- Mobile application
+- Stripe payment processing integration
+- Advanced document management
+- Email notifications (SendGrid/SES)
+- Mobile application (Capacitor/Ionic)
+- Bank reconciliation features
+- Advanced reporting and analytics
 
 See [TASKS.md](./md/TASKS.md) for detailed development roadmap.
 
+## 📚 Documentation
+
+- **[API Documentation](./md/INVOICE_API_DOCUMENTATION.md)** - Complete API reference
+- **[PDF Generation Guide](./md/INVOICE_PDF_GENERATION.md)** - PDF implementation details
+- **[Schema Documentation](./md/NeibrPay_Schema_PRD_MVP.md)** - Database schema and relationships
+- **[UI/UX Guide](./md/NeibrPay_UIUX_PRD.md)** - Design system and user experience
+- **[Codebase Improvements](./md/CODEBASE_IMPROVEMENTS.md)** - Technical debt and improvements
+
 ## 🌐 Deployment
+
+### Current Infrastructure
+
+- **Frontend**: Netlify (configured with netlify.toml)
+- **Backend**: Laravel API (development on localhost:8000)
+- **Database**: SQLite for development, MySQL for production
+- **Storage**: Local storage (development), AWS S3 planned
+- **Authentication**: Firebase (integrated)
+- **PDF Generation**: Laravel DomPDF + jsPDF
 
 ### Planned Infrastructure
 
-- **Frontend**: Netlify for static hosting
 - **Backend**: Railway.app for Laravel API
 - **Database**: MySQL with automated backups
 - **Storage**: AWS S3 for document storage
@@ -268,7 +296,8 @@ FRONTEND_URL=https://app.neibrpay.com
 API_URL=https://api.neibrpay.com
 DATABASE_URL=mysql://...
 STRIPE_SECRET_KEY=sk_live_...
-FIREBASE_PROJECT_ID=...
+FIREBASE_PROJECT_ID=neibrpay-hoa
+FIREBASE_CREDENTIALS_JSON={"type":"service_account",...}
 ```
 
 ## 🤝 Contributing

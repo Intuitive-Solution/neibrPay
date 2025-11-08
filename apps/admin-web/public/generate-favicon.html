@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeibrPay Favicon Generator</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+        }
+        .favicon-preview {
+            display: inline-block;
+            margin: 20px;
+            padding: 20px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .favicon-32 {
+            width: 32px;
+            height: 32px;
+        }
+        .favicon-64 {
+            width: 64px;
+            height: 64px;
+        }
+        .favicon-180 {
+            width: 180px;
+            height: 180px;
+        }
+        h3 {
+            color: #1f2937;
+            margin: 20px 0 10px 0;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .instructions ol {
+            color: #6b7280;
+            line-height: 1.8;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            background: #00C27A;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #00a868;
+        }
+        canvas {
+            border: 1px solid #e5e7eb;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #1f2937;">NeibrPay Favicon Generator</h1>
+        
+        <div>
+            <h3>Favicon (32x32)</h3>
+            <div class="favicon-preview">
+                <svg id="favicon-32" class="favicon-32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z"
+                        fill="#00C27A"
+                    />
+                    <path
+                        d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z"
+                        stroke="#00C27A"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                    <path
+                        d="M4 36C8 34 12 36 16 36C20 36 24 34 28 34C32 34 36 36 36 36"
+                        stroke="#00C27A"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        opacity="0.6"
+                    />
+                </svg>
+            </div>
+            <canvas id="canvas-32" width="32" height="32"></canvas>
+            <button onclick="downloadFavicon(32)">Download 32x32 PNG</button>
+        </div>
+
+        <div>
+            <h3>Favicon (64x64)</h3>
+            <div class="favicon-preview">
+                <svg id="favicon-64" class="favicon-64" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z"
+                        fill="#00C27A"
+                    />
+                    <path
+                        d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z"
+                        stroke="#00C27A"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                    <path
+                        d="M4 36C8 34 12 36 16 36C20 36 24 34 28 34C32 34 36 36 36 36"
+                        stroke="#00C27A"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        opacity="0.6"
+                    />
+                </svg>
+            </div>
+            <canvas id="canvas-64" width="64" height="64"></canvas>
+            <button onclick="downloadFavicon(64)">Download 64x64 PNG</button>
+        </div>
+
+        <div>
+            <h3>Apple Touch Icon (180x180)</h3>
+            <div class="favicon-preview">
+                <svg id="favicon-180" class="favicon-180" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z"
+                        fill="#00C27A"
+                    />
+                    <path
+                        d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z"
+                        stroke="#00C27A"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                    <path
+                        d="M4 36C8 34 12 36 16 36C20 36 24 34 28 34C32 34 36 36 36 36"
+                        stroke="#00C27A"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        opacity="0.6"
+                    />
+                </svg>
+            </div>
+            <canvas id="canvas-180" width="180" height="180"></canvas>
+            <button onclick="downloadFavicon(180)">Download 180x180 PNG</button>
+        </div>
+
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Click the download buttons above to get PNG versions</li>
+                <li>For favicon.ico: Convert the 32x32 PNG using <a href="https://realfavicongenerator.net/" target="_blank">realfavicongenerator.net</a></li>
+                <li>Replace the files in <code>/apps/admin-web/public/</code>:
+                    <ul>
+                        <li><code>favicon.ico</code> (32x32 or multi-size ICO)</li>
+                        <li><code>apple-touch-icon.png</code> (180x180)</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Convert SVG to Canvas and download as PNG
+        function svgToCanvas(svg, canvas) {
+            const ctx = canvas.getContext('2d');
+            const data = new XMLSerializer().serializeToString(svg);
+            const img = new Image();
+            const blob = new Blob([data], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(url);
+            };
+            img.src = url;
+        }
+
+        function downloadFavicon(size) {
+            const svg = document.getElementById(`favicon-${size}`);
+            const canvas = document.getElementById(`canvas-${size}`);
+            
+            svgToCanvas(svg, canvas);
+            
+            setTimeout(() => {
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = size === 180 ? 'apple-touch-icon.png' : `favicon-${size}x${size}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            }, 100);
+        }
+
+        // Initialize canvases on load
+        window.addEventListener('load', function() {
+            svgToCanvas(document.getElementById('favicon-32'), document.getElementById('canvas-32'));
+            svgToCanvas(document.getElementById('favicon-64'), document.getElementById('canvas-64'));
+            svgToCanvas(document.getElementById('favicon-180'), document.getElementById('canvas-180'));
+        });
+    </script>
+</body>
+</html>
+

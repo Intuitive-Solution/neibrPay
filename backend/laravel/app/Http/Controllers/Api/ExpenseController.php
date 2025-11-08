@@ -16,7 +16,7 @@ class ExpenseController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         $includeDeleted = $request->boolean('include_deleted', false);
         $vendorId = $request->get('vendor_id');
         $category = $request->get('category');
@@ -46,6 +46,9 @@ class ExpenseController extends Controller
             $query->search($search);
         }
         
+        // Residents can view all expenses (read-only) - no additional filtering needed
+        // All expenses are visible to residents regardless of status
+        
         $expenses = $query->orderBy('created_at', 'desc')->get();
         
         return response()->json([
@@ -68,7 +71,7 @@ class ExpenseController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         $validated = $request->validate([
             'vendor_id' => 'required|integer|exists:vendors,id',
@@ -136,7 +139,7 @@ class ExpenseController extends Controller
      */
     public function show(Request $request, Expense $expense): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {
@@ -159,7 +162,7 @@ class ExpenseController extends Controller
      */
     public function update(Request $request, Expense $expense): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {
@@ -234,7 +237,7 @@ class ExpenseController extends Controller
      */
     public function destroy(Request $request, Expense $expense): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {
@@ -253,7 +256,7 @@ class ExpenseController extends Controller
      */
     public function restore(Request $request, Expense $expense): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Ensure the expense belongs to the user's tenant
         if ($expense->tenant_id !== $user->tenant_id) {

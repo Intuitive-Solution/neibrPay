@@ -17,7 +17,7 @@ class InvoiceAttachmentController extends Controller
      */
     public function index(Request $request, InvoiceUnit $invoice): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -43,7 +43,7 @@ class InvoiceAttachmentController extends Controller
      */
     public function store(Request $request, InvoiceUnit $invoice): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -115,7 +115,7 @@ class InvoiceAttachmentController extends Controller
      */
     public function show(Request $request, InvoiceUnit $invoice, int $attachmentId): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -141,7 +141,7 @@ class InvoiceAttachmentController extends Controller
      */
     public function download(Request $request, InvoiceUnit $invoice, int $attachmentId)
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {
@@ -170,7 +170,7 @@ class InvoiceAttachmentController extends Controller
      */
     public function destroy(Request $request, InvoiceUnit $invoice, int $attachmentId): JsonResponse
     {
-        $user = $request->get('firebase_user');
+        $user = $request->user();
         
         // Verify the invoice belongs to the user's tenant
         if ($invoice->tenant_id !== $user->tenant_id) {

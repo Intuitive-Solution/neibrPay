@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="card mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -18,10 +18,7 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <button
-            @click="handleCancel"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-          >
+          <button @click="handleCancel" class="btn-outline">
             <svg
               class="w-4 h-4 mr-2"
               fill="none"
@@ -67,7 +64,7 @@
     </div>
 
     <!-- Form -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="card">
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Name Field -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
@@ -83,7 +80,7 @@
               v-model="form.name"
               type="text"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.name,
@@ -109,7 +106,7 @@
               id="description"
               v-model="form.description"
               rows="3"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.description,
@@ -135,7 +132,7 @@
               id="category"
               v-model="form.category"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.category,
@@ -170,7 +167,7 @@
               v-model="form.ein"
               type="text"
               maxlength="20"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.ein,
@@ -200,7 +197,7 @@
               v-model="form.street_address"
               type="text"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.street_address,
@@ -227,7 +224,7 @@
               v-model="form.city"
               type="text"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.city,
@@ -253,7 +250,7 @@
               id="state"
               v-model="form.state"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.state,
@@ -289,7 +286,7 @@
               type="text"
               required
               pattern="\d{5}(-\d{4})?"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.zip_code,
@@ -315,7 +312,7 @@
               id="website"
               v-model="form.website"
               type="url"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.website,
@@ -341,7 +338,7 @@
               id="notes"
               v-model="form.notes"
               rows="4"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.notes,
@@ -368,7 +365,7 @@
               v-model="form.contact_name"
               type="text"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.contact_name,
@@ -395,7 +392,7 @@
               v-model="form.contact_email"
               type="email"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.contact_email,
@@ -423,7 +420,7 @@
               type="tel"
               required
               pattern="\(\d{3}\)\s\d{3}-\d{4}"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              class="input-field"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.contact_phone,
@@ -448,7 +445,7 @@
             <button
               type="button"
               @click="handleCancel"
-              class="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+              class="btn-secondary flex-1"
             >
               Cancel
             </button>
@@ -457,7 +454,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              class="btn-primary flex-1"
             >
               <span v-if="isSubmitting" class="flex items-center">
                 <svg

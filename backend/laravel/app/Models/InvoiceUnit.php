@@ -27,15 +27,19 @@ class InvoiceUnit extends Model
         'start_date',
         'remaining_cycles',
         'due_date',
-        'discount_amount',
-        'discount_type',
-        'auto_bill',
+        'early_payment_discount_enabled',
+        'early_payment_discount_amount',
+        'early_payment_discount_type',
+        'early_payment_discount_by_date',
+        'late_fee_enabled',
+        'late_fee_amount',
+        'late_fee_type',
+        'late_fee_applies_on_date',
         'items',
         'subtotal',
         'tax_rate',
         'tax_amount',
         'total',
-        'paid_to_date',
         'balance_due',
         'status',
         'parent_invoice_id',
@@ -50,13 +54,17 @@ class InvoiceUnit extends Model
     protected $casts = [
         'items' => 'array',
         'start_date' => 'date',
+        'early_payment_discount_by_date' => 'date',
+        'late_fee_applies_on_date' => 'date',
         'subtotal' => 'decimal:2',
         'tax_rate' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total' => 'decimal:2',
-        'paid_to_date' => 'decimal:2',
         'balance_due' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
+        'early_payment_discount_amount' => 'decimal:2',
+        'late_fee_amount' => 'decimal:2',
+        'early_payment_discount_enabled' => 'boolean',
+        'late_fee_enabled' => 'boolean',
     ];
 
     /**
@@ -188,7 +196,9 @@ class InvoiceUnit extends Model
         $this->subtotal = (float) $subtotal;
         $this->tax_amount = (float) (($subtotal * $this->tax_rate) / 100);
         $this->total = (float) ($subtotal + $this->tax_amount);
-        $this->balance_due = (float) ($this->total - $this->paid_to_date);
+        // Calculate balance_due from payments
+        $totalPaid = $this->payments()->sum('amount');
+        $this->balance_due = (float) ($this->total - $totalPaid);
     }
 
     /**

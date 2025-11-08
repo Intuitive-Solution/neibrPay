@@ -1,42 +1,19 @@
 <template>
   <div class="space-y-6">
-    <!-- Quick Action Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Add Invoice Card -->
-      <router-link to="/invoices/create" class="block">
-        <div
-          class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-        >
-          <div class="flex items-center">
-            <div class="p-3 bg-blue-100 rounded-lg">
-              <svg
-                class="w-6 h-6 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-semibold text-gray-900">Add Invoice</h3>
-              <p class="text-sm text-gray-600">Create new invoice</p>
-            </div>
-          </div>
-        </div>
-      </router-link>
-
-      <!-- View All Invoices Card -->
-      <div class="bg-white rounded-lg shadow p-6">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Open Invoices Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200"
+        :class="{
+          'ring-2 ring-primary': activeFilter === 'open',
+        }"
+        @click="filterByStatus('open')"
+      >
         <div class="flex items-center">
-          <div class="p-3 bg-green-100 rounded-lg">
+          <div class="p-3 bg-blue-100 rounded-lg">
             <svg
-              class="w-6 h-6 text-green-600"
+              class="w-6 h-6 text-blue-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -49,21 +26,30 @@
               />
             </svg>
           </div>
-          <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">
-              View All Invoices
-            </h3>
-            <p class="text-sm text-gray-600">Browse invoice directory</p>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">Open Invoices</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ openInvoicesCount }}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ formatCurrency(openInvoicesAmount) }}
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Manage Reports Card -->
-      <div class="bg-white rounded-lg shadow p-6">
+      <!-- Overdue Invoices Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200"
+        :class="{
+          'ring-2 ring-red-500': activeFilter === 'overdue',
+        }"
+        @click="filterByStatus('overdue')"
+      >
         <div class="flex items-center">
-          <div class="p-3 bg-purple-100 rounded-lg">
+          <div class="p-3 bg-red-100 rounded-lg">
             <svg
-              class="w-6 h-6 text-purple-600"
+              class="w-6 h-6 text-red-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -72,53 +58,143 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </div>
-          <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">Manage Reports</h3>
-            <p class="text-sm text-gray-600">Generate financial reports</p>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">Overdue Invoices</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ overdueInvoicesCount }}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ formatCurrency(overdueInvoicesAmount) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paid Invoices Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200"
+        :class="{
+          'ring-2 ring-green-500': activeFilter === 'paid',
+        }"
+        @click="filterByStatus('paid')"
+      >
+        <div class="flex items-center">
+          <div class="p-3 bg-green-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">Paid Invoices</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ paidInvoicesCount }}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ formatCurrency(paidInvoicesAmount) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Invoices Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200"
+        :class="{
+          'ring-2 ring-gray-500': activeFilter === 'all',
+        }"
+        @click="filterByStatus('all')"
+      >
+        <div class="flex items-center">
+          <div class="p-3 bg-gray-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+              />
+            </svg>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">All Invoices</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ allInvoicesCount }}
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              ${{ formatCurrency(allInvoicesAmount) }}
+            </p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Invoice Directory Section -->
-    <div class="bg-white rounded-lg shadow">
+    <div class="bg-white rounded-lg shadow-sm">
       <!-- Header Section -->
       <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-semibold text-gray-900">
-              Invoice Directory
-            </h2>
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <!-- Search Filter (Left) -->
+          <div class="flex-1 max-w-md">
+            <div class="relative">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <svg
+                  class="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search invoices..."
+                class="input-field pl-10 w-full"
+              />
+            </div>
           </div>
 
-          <!-- Header Controls -->
-          <div class="flex items-center space-x-4">
-            <!-- Show Paid Checkbox -->
-            <div class="flex items-center">
-              <input
-                id="show-paid"
-                v-model="includePaid"
-                type="checkbox"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              />
-              <label for="show-paid" class="ml-2 text-sm text-gray-600">
-                Show paid
-              </label>
-            </div>
-            <!-- Show Deleted Checkbox -->
-            <div class="flex items-center">
+          <!-- Header Controls (Right) -->
+          <div class="flex items-center space-x-3">
+            <!-- Show Deleted Checkbox - Hidden for residents -->
+            <div v-if="!isResident" class="flex items-center">
               <input
                 id="show-deleted"
-                v-model="includeDeleted"
+                v-model="showDeleted"
                 type="checkbox"
                 class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
               />
-              <label for="show-deleted" class="ml-2 text-sm text-gray-600">
-                Show deleted
+              <label for="show-deleted" class="ml-2 text-sm text-gray-700">
+                Include Deleted
               </label>
             </div>
 
@@ -126,7 +202,7 @@
             <button
               @click="refetch"
               :disabled="isLoading"
-              class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-colors duration-200"
             >
               <svg
                 class="h-4 w-4"
@@ -143,12 +219,35 @@
                 />
               </svg>
             </button>
+
+            <!-- New Invoice Button (Desktop) - Hidden for residents -->
+            <router-link
+              v-if="!isResident"
+              to="/invoices/create"
+              class="hidden md:inline-flex"
+            >
+              <button class="btn-primary btn-sm">
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </button>
+            </router-link>
           </div>
         </div>
       </div>
 
       <!-- Table Section -->
-      <div class="overflow-x-auto">
+      <div class="overflow-hidden">
         <!-- Loading State -->
         <div v-if="isLoading" class="flex items-center justify-center py-12">
           <div class="flex items-center space-x-2">
@@ -226,24 +325,16 @@
               />
             </svg>
             <h3 class="mt-2 text-sm font-medium text-gray-900">
-              {{
-                includeDeleted
-                  ? 'No deleted invoices found'
-                  : includePaid
-                    ? 'No invoices found'
-                    : 'No unpaid invoices found'
-              }}
+              No invoices found
             </h3>
             <p class="mt-1 text-sm text-gray-500">
               {{
-                includeDeleted
-                  ? 'No deleted invoices found.'
-                  : includePaid
-                    ? 'No invoices found.'
-                    : 'No unpaid invoices found. Toggle "Show paid" to see all invoices.'
+                searchQuery
+                  ? 'Try adjusting your search query.'
+                  : 'Get started by creating your first invoice.'
               }}
             </p>
-            <div v-if="!includeDeleted" class="mt-4">
+            <div v-if="!searchQuery && !isResident" class="mt-4">
               <router-link to="/invoices/create">
                 <button
                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -269,154 +360,565 @@
         </div>
 
         <!-- Table with Data -->
-        <table v-else class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table v-else class="w-full divide-y divide-gray-200">
+          <thead class="bg-gray-100 border-b border-gray-200">
             <tr>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                @click="sortBy('invoice')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                INVOICE
+                <div class="flex items-center space-x-1">
+                  <span>INVOICE</span>
+                  <svg
+                    v-if="sortColumn === 'invoice'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                @click="sortBy('unit')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                UNIT
+                <div class="flex items-center space-x-1">
+                  <span>UNIT</span>
+                  <svg
+                    v-if="sortColumn === 'unit'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                @click="sortBy('amount')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden xl:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                AMOUNT
+                <div class="flex items-center space-x-1">
+                  <span>AMOUNT</span>
+                  <svg
+                    v-if="sortColumn === 'amount'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                @click="sortBy('dueDate')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                DUE DATE
+                <div class="flex items-center space-x-1">
+                  <span>DUE DATE</span>
+                  <svg
+                    v-if="sortColumn === 'dueDate'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                @click="sortBy('status')"
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                STATUS
+                <div class="flex items-center space-x-1">
+                  <span>STATUS</span>
+                  <svg
+                    v-if="sortColumn === 'status'"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      v-if="sortDirection === 'asc'"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 15l7-7 7 7"
+                    />
+                    <path
+                      v-else
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                ACTIONS
-              </th>
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+              ></th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr
               v-for="invoice in filteredInvoices"
               :key="invoice.id"
-              class="hover:bg-gray-50"
+              class="table-row-hover"
             >
               <!-- Invoice Column -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10">
-                    <div
-                      class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center"
-                    >
-                      <svg
-                        class="h-5 w-5 text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                      <div
+                        :class="[
+                          'h-10 w-10 rounded-full flex items-center justify-center',
+                          invoice.deleted_at ? 'bg-red-100' : 'bg-gray-100',
+                        ]"
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
+                        <svg
+                          :class="[
+                            'h-5 w-5',
+                            invoice.deleted_at
+                              ? 'text-red-600'
+                              : 'text-gray-600',
+                          ]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">
-                      {{ invoice.invoice_number || `#${invoice.id}` }}
-                    </div>
-                    <div class="text-sm text-gray-500">
-                      {{ formatDate(invoice.created_at) }}
+                    <div class="ml-4">
+                      <div class="flex items-center space-x-2">
+                        <div
+                          :class="[
+                            'text-sm font-medium',
+                            invoice.deleted_at
+                              ? 'text-red-600 line-through'
+                              : 'text-gray-900',
+                          ]"
+                        >
+                          {{ invoice.invoice_number || `#${invoice.id}` }}
+                        </div>
+                        <span
+                          v-if="invoice.deleted_at"
+                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+                        >
+                          Deleted
+                        </span>
+                      </div>
+                      <div
+                        :class="[
+                          'text-sm',
+                          invoice.deleted_at ? 'text-red-400' : 'text-gray-500',
+                        ]"
+                      >
+                        {{ formatDate(invoice.created_at) }}
+                      </div>
+                      <!-- Mobile-only additional info -->
+                      <div class="sm:hidden mt-1">
+                        <div
+                          :class="[
+                            'text-xs',
+                            invoice.deleted_at
+                              ? 'text-red-400'
+                              : 'text-gray-500',
+                          ]"
+                        >
+                          {{ invoice.unit?.title || 'N/A' }} • ${{
+                            formatCurrency(invoice.total)
+                          }}
+                        </div>
+                        <div class="mt-1">
+                          <span
+                            v-if="invoice.deleted_at"
+                            class="badge badge-overdue text-xs"
+                          >
+                            Deleted
+                          </span>
+                          <span
+                            v-else
+                            :class="getStatusBadgeClass(invoice.status)"
+                            class="badge text-xs"
+                          >
+                            {{ getStatusText(invoice.status) }}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </td>
 
               <!-- Unit Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">
+              <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                <div
+                  :class="[
+                    'text-sm',
+                    invoice.deleted_at
+                      ? 'text-red-600 line-through'
+                      : 'text-gray-900',
+                  ]"
+                >
                   {{ invoice.unit?.title || 'N/A' }}
                 </div>
-                <div class="text-sm text-gray-500">
+                <div
+                  :class="[
+                    'text-sm',
+                    invoice.deleted_at ? 'text-red-400' : 'text-gray-500',
+                  ]"
+                >
                   {{ invoice.unit?.address || '' }}
                 </div>
               </td>
 
               <!-- Amount Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">
+              <td class="px-6 py-4 whitespace-nowrap hidden xl:table-cell">
+                <div
+                  :class="[
+                    'text-sm font-medium',
+                    invoice.deleted_at
+                      ? 'text-red-600 line-through'
+                      : 'text-gray-900',
+                  ]"
+                >
                   ${{ formatCurrency(invoice.total) }}
                 </div>
-                <div class="text-sm text-gray-500">
+                <div
+                  :class="[
+                    'text-sm',
+                    invoice.deleted_at ? 'text-red-400' : 'text-gray-500',
+                  ]"
+                >
                   Balance: ${{ formatCurrency(invoice.balance_due) }}
                 </div>
               </td>
 
               <!-- Due Date Column -->
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td
+                :class="[
+                  'px-6 py-4 whitespace-nowrap text-sm hidden lg:table-cell',
+                  invoice.deleted_at ? 'text-red-400' : 'text-gray-900',
+                ]"
+              >
                 {{ formatDate(invoice.start_date) }}
               </td>
 
               <!-- Status Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                <span v-if="invoice.deleted_at" class="badge badge-overdue">
+                  Deleted
+                </span>
                 <span
+                  v-else
                   :class="getStatusBadgeClass(invoice.status)"
-                  class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                  class="badge"
                 >
                   {{ getStatusText(invoice.status) }}
                 </span>
               </td>
 
               <!-- Actions Column -->
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex space-x-2">
-                  <button
-                    @click="viewInvoice(invoice.id)"
-                    class="text-primary hover:text-primary-600"
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <div class="flex items-center justify-end relative">
+                  <!-- Enhanced Kebab Menu - More Visible -->
+                  <DropdownMenu
+                    trigger-class="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
                   >
-                    View
-                  </button>
-                  <button
-                    @click="editInvoice(invoice.id)"
-                    class="text-blue-600 hover:text-blue-900"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    v-if="!invoice.deleted_at"
-                    @click="deleteInvoice(invoice)"
-                    :disabled="deletingInvoiceId === invoice.id"
-                    class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {{
-                      deletingInvoiceId === invoice.id
-                        ? 'Deleting...'
-                        : 'Delete'
-                    }}
-                  </button>
-                  <button
-                    v-else
-                    @click="showRestoreConfirmation(invoice)"
-                    :disabled="restoringInvoiceId === invoice.id"
-                    class="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {{
-                      restoringInvoiceId === invoice.id
-                        ? 'Restoring...'
-                        : 'Restore'
-                    }}
-                  </button>
+                    <template #default="{ close }">
+                      <!-- Actions for deleted invoices -->
+                      <template v-if="invoice.deleted_at">
+                        <button
+                          @click="
+                            () => {
+                              viewInvoice(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          View Preview
+                        </button>
+                        <!-- Restore, Duplicate - Hidden for residents -->
+                        <template v-if="!isResident">
+                          <button
+                            @click="
+                              () => {
+                                restoreInvoice(invoice.id);
+                                close();
+                              }
+                            "
+                            class="dropdown-item"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                              />
+                            </svg>
+                            Restore
+                          </button>
+                          <button
+                            @click="
+                              () => {
+                                duplicateInvoice(invoice.id);
+                                close();
+                              }
+                            "
+                            class="dropdown-item"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                              />
+                            </svg>
+                            Duplicate
+                          </button>
+                        </template>
+                      </template>
+
+                      <!-- Actions for active invoices -->
+                      <template v-else>
+                        <button
+                          @click="
+                            () => {
+                              viewInvoice(invoice.id);
+                              close();
+                            }
+                          "
+                          class="dropdown-item"
+                        >
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          View Preview
+                        </button>
+                        <!-- Edit, Record Payment, Duplicate, Delete - Hidden for residents -->
+                        <template v-if="!isResident">
+                          <button
+                            @click="
+                              () => {
+                                editInvoice(invoice.id);
+                                close();
+                              }
+                            "
+                            class="dropdown-item"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                            Edit
+                          </button>
+                          <button
+                            v-if="invoice.status !== 'paid'"
+                            @click="
+                              () => {
+                                recordPayment(invoice.id);
+                                close();
+                              }
+                            "
+                            class="dropdown-item"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                              />
+                            </svg>
+                            Record Payment
+                          </button>
+                          <button
+                            @click="
+                              () => {
+                                duplicateInvoice(invoice.id);
+                                close();
+                              }
+                            "
+                            class="dropdown-item"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                              />
+                            </svg>
+                            Duplicate
+                          </button>
+                          <div class="border-t border-gray-200 my-1"></div>
+                          <button
+                            @click="
+                              () => {
+                                deleteInvoice(invoice);
+                                close();
+                              }
+                            "
+                            :disabled="deletingInvoiceId === invoice.id"
+                            class="dropdown-item dropdown-item-danger"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                            {{
+                              deletingInvoiceId === invoice.id
+                                ? 'Deleting...'
+                                : 'Delete'
+                            }}
+                          </button>
+                        </template>
+                      </template>
+                    </template>
+                  </DropdownMenu>
                 </div>
               </td>
             </tr>
@@ -429,7 +931,7 @@
     <ConfirmDialog
       :is-open="showDeleteModal"
       title="Delete Invoice"
-      :message="`Are you sure you want to delete ${invoiceToDelete?.invoice_number || 'this invoice'}? This action can be undone by restoring the invoice.`"
+      :message="`Are you sure you want to delete ${invoiceToDelete?.invoice_number || 'this invoice'}?`"
       confirm-text="Delete"
       cancel-text="Cancel"
       type="danger"
@@ -438,42 +940,63 @@
       @cancel="cancelDelete"
     />
 
-    <!-- Restore Confirmation Modal -->
-    <ConfirmDialog
-      :is-open="showRestoreModal"
-      title="Restore Invoice"
-      :message="`Are you sure you want to restore ${invoiceToRestore?.invoice_number || 'this invoice'}? This will make the invoice active again.`"
-      confirm-text="Restore"
-      cancel-text="Cancel"
-      type="info"
-      :is-loading="restoringInvoiceId === invoiceToRestore?.id"
-      @confirm="confirmRestore"
-      @cancel="cancelRestore"
-    />
+    <!-- Mobile Fixed Bottom Button - Hidden for residents -->
+    <div
+      v-if="!isResident"
+      class="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 safe-area-inset-bottom"
+    >
+      <router-link to="/invoices/create" class="block">
+        <button class="btn-primary w-full">
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          New Invoice
+        </button>
+      </router-link>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   useInvoices,
   useDeleteInvoice,
   useRestoreInvoice,
+  useCloneInvoice,
 } from '../composables/useInvoices';
+import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
+import DropdownMenu from '../components/DropdownMenu.vue';
 
 const router = useRouter();
+const authStore = useAuthStore();
+
+// Role check
+const isResident = computed(() => authStore.isResident);
 
 // Local state
-const includeDeleted = ref(false);
-const includePaid = ref(false);
+const searchQuery = ref('');
 const deletingInvoiceId = ref<number | null>(null);
-const restoringInvoiceId = ref<number | null>(null);
 const showDeleteModal = ref(false);
-const showRestoreModal = ref(false);
 const invoiceToDelete = ref<any>(null);
-const invoiceToRestore = ref<any>(null);
+const activeFilter = ref<'open' | 'overdue' | 'paid' | 'all' | null>('open'); // Default to 'open' filter
+const sortColumn = ref<
+  'invoice' | 'unit' | 'amount' | 'dueDate' | 'status' | null
+>(null);
+const sortDirection = ref<'asc' | 'desc'>('asc');
+const showDeleted = ref(false);
 
 // Queries and mutations
 const {
@@ -481,33 +1004,268 @@ const {
   isLoading,
   error,
   refetch: refetchInvoices,
-} = useInvoices({ include_deleted: true }); // Always fetch all invoices including deleted ones
+} = useInvoices({
+  include_deleted: showDeleted, // Pass the showDeleted ref to include deleted invoices
+});
 
 const deleteInvoiceMutation = useDeleteInvoice();
 const restoreInvoiceMutation = useRestoreInvoice();
+const cloneInvoiceMutation = useCloneInvoice();
 
-// Computed properties - filter invoices based on includePaid and includeDeleted
+// Helper function to check if invoice is overdue
+const isInvoiceOverdue = (invoice: any): boolean => {
+  if (
+    !invoice.start_date ||
+    invoice.status === 'paid' ||
+    invoice.status === 'cancelled'
+  ) {
+    return false;
+  }
+  const dueDate = new Date(invoice.start_date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return dueDate < today;
+};
+
+// Helper function to check if invoice is open
+const isInvoiceOpen = (invoice: any): boolean => {
+  return invoice.status !== 'paid' && invoice.status !== 'cancelled';
+};
+
+// Computed properties for summary cards
+const openInvoicesCount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value.filter((invoice: any) => {
+    if (
+      isResident.value &&
+      (invoice.status === 'draft' || invoice.deleted_at)
+    ) {
+      return false;
+    }
+    return isInvoiceOpen(invoice) && !invoice.deleted_at;
+  }).length;
+});
+
+const openInvoicesAmount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value
+    .filter((invoice: any) => {
+      if (
+        isResident.value &&
+        (invoice.status === 'draft' || invoice.deleted_at)
+      ) {
+        return false;
+      }
+      return isInvoiceOpen(invoice) && !invoice.deleted_at;
+    })
+    .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
+});
+
+const overdueInvoicesCount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value.filter((invoice: any) => {
+    if (
+      isResident.value &&
+      (invoice.status === 'draft' || invoice.deleted_at)
+    ) {
+      return false;
+    }
+    return isInvoiceOverdue(invoice) && !invoice.deleted_at;
+  }).length;
+});
+
+const overdueInvoicesAmount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value
+    .filter((invoice: any) => {
+      if (
+        isResident.value &&
+        (invoice.status === 'draft' || invoice.deleted_at)
+      ) {
+        return false;
+      }
+      return isInvoiceOverdue(invoice) && !invoice.deleted_at;
+    })
+    .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
+});
+
+const paidInvoicesCount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value.filter((invoice: any) => {
+    if (
+      isResident.value &&
+      (invoice.status === 'draft' || invoice.deleted_at)
+    ) {
+      return false;
+    }
+    return invoice.status === 'paid';
+  }).length;
+});
+
+const paidInvoicesAmount = computed(() => {
+  if (!invoices.value) return 0;
+  return invoices.value
+    .filter((invoice: any) => {
+      if (
+        isResident.value &&
+        (invoice.status === 'draft' || invoice.deleted_at)
+      ) {
+        return false;
+      }
+      return invoice.status === 'paid';
+    })
+    .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
+});
+
+const allInvoicesCount = computed(() => {
+  if (!invoices.value) return 0;
+  if (isResident.value) {
+    return invoices.value.filter(
+      (invoice: any) => invoice.status !== 'draft' && !invoice.deleted_at
+    ).length;
+  }
+  return invoices.value.length;
+});
+
+const allInvoicesAmount = computed(() => {
+  if (!invoices.value) return 0;
+  if (isResident.value) {
+    return invoices.value
+      .filter(
+        (invoice: any) => invoice.status !== 'draft' && !invoice.deleted_at
+      )
+      .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
+  }
+  return invoices.value.reduce(
+    (sum: number, invoice: any) => sum + (invoice.total || 0),
+    0
+  );
+});
+
+// Computed properties - filter invoices based on activeFilter and search
 const filteredInvoices = computed(() => {
   if (!invoices.value) return [];
 
-  return invoices.value.filter((invoice: any) => {
-    // Filter out paid invoices unless includePaid is true
-    if (invoice.status === 'paid' && !includePaid.value) {
+  let filtered = invoices.value.filter((invoice: any) => {
+    // For members: hide draft invoices and deleted invoices
+    if (isResident.value) {
+      if (invoice.status === 'draft' || invoice.deleted_at) {
+        return false;
+      }
+    }
+
+    // Apply active filter from summary cards
+    if (
+      activeFilter.value === 'open' &&
+      (!isInvoiceOpen(invoice) || invoice.deleted_at)
+    ) {
       return false;
     }
 
-    // Filter out deleted invoices unless includeDeleted is true
-    if (invoice.deleted_at && !includeDeleted.value) {
+    if (
+      activeFilter.value === 'overdue' &&
+      (!isInvoiceOverdue(invoice) || invoice.deleted_at)
+    ) {
       return false;
+    }
+
+    if (activeFilter.value === 'paid' && invoice.status !== 'paid') {
+      return false;
+    }
+
+    // 'all' filter shows all invoices (no additional filtering needed)
+    // If activeFilter is 'all', we don't filter by status
+
+    // Apply search filter
+    if (searchQuery.value.trim()) {
+      const query = searchQuery.value.toLowerCase().trim();
+      const invoiceNumber = (
+        invoice.invoice_number || `#${invoice.id}`
+      ).toLowerCase();
+      const unitTitle = (invoice.unit?.title || '').toLowerCase();
+      const unitAddress = (invoice.unit?.address || '').toLowerCase();
+      const status = (invoice.status || '').toLowerCase();
+      const total = String(invoice.total || '');
+
+      return (
+        invoiceNumber.includes(query) ||
+        unitTitle.includes(query) ||
+        unitAddress.includes(query) ||
+        status.includes(query) ||
+        total.includes(query)
+      );
     }
 
     return true;
   });
+
+  // Apply sorting
+  if (sortColumn.value) {
+    filtered = [...filtered].sort((a: any, b: any) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortColumn.value) {
+        case 'invoice':
+          aValue = a.invoice_number || `#${a.id}`;
+          bValue = b.invoice_number || `#${b.id}`;
+          break;
+        case 'unit':
+          aValue = a.unit?.title || '';
+          bValue = b.unit?.title || '';
+          break;
+        case 'amount':
+          aValue = a.total || 0;
+          bValue = b.total || 0;
+          break;
+        case 'dueDate':
+          aValue = a.start_date ? new Date(a.start_date).getTime() : 0;
+          bValue = b.start_date ? new Date(b.start_date).getTime() : 0;
+          break;
+        case 'status':
+          aValue = a.status || '';
+          bValue = b.status || '';
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortDirection.value === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+  }
+
+  return filtered;
 });
 
 // Methods
 const refetch = () => {
   refetchInvoices();
+};
+
+const filterByStatus = (status: 'open' | 'overdue' | 'paid' | 'all') => {
+  // Toggle filter: if already active, clear it; otherwise, set it
+  if (activeFilter.value === status) {
+    activeFilter.value = null;
+  } else {
+    activeFilter.value = status;
+  }
+};
+
+const sortBy = (
+  column: 'invoice' | 'unit' | 'amount' | 'dueDate' | 'status'
+) => {
+  if (sortColumn.value === column) {
+    // Toggle direction if clicking the same column
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Set new column and default to ascending
+    sortColumn.value = column;
+    sortDirection.value = 'asc';
+  }
 };
 
 const formatDate = (dateString: string) => {
@@ -539,14 +1297,14 @@ const getStatusText = (status: string) => {
 
 const getStatusBadgeClass = (status: string) => {
   const statusClasses: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-800',
-    sent: 'bg-blue-100 text-blue-800',
-    paid: 'bg-green-100 text-green-800',
-    partial: 'bg-yellow-100 text-yellow-800',
-    overdue: 'bg-red-100 text-red-800',
-    cancelled: 'bg-yellow-100 text-yellow-800',
+    draft: 'badge-draft',
+    sent: 'badge-sent',
+    paid: 'badge-paid',
+    partial: 'badge-partial',
+    overdue: 'badge-overdue',
+    cancelled: 'badge-partial',
   };
-  return statusClasses[status] || 'bg-gray-100 text-gray-800';
+  return statusClasses[status] || 'badge-draft';
 };
 
 const viewInvoice = (invoiceId: number) => {
@@ -555,6 +1313,32 @@ const viewInvoice = (invoiceId: number) => {
 
 const editInvoice = (invoiceId: number) => {
   router.push(`/invoices/${invoiceId}/edit`);
+};
+
+const recordPayment = (invoiceId: number) => {
+  router.push(`/invoices/${invoiceId}/payment`);
+};
+
+const restoreInvoice = async (invoiceId: number) => {
+  try {
+    await restoreInvoiceMutation.mutateAsync(invoiceId);
+    console.log('Invoice restored successfully');
+    refetch();
+  } catch (error: any) {
+    console.error('Error restoring invoice:', error);
+    alert(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
+  }
+};
+
+const duplicateInvoice = async (invoiceId: number) => {
+  try {
+    await cloneInvoiceMutation.mutateAsync(invoiceId);
+    console.log('Invoice duplicated successfully');
+    refetch();
+  } catch (error: any) {
+    console.error('Error duplicating invoice:', error);
+    alert(`Failed to duplicate invoice: ${error.message || 'Unknown error'}`);
+  }
 };
 
 const deleteInvoice = (invoice: any) => {
@@ -603,67 +1387,29 @@ const cancelDelete = () => {
   invoiceToDelete.value = null;
 };
 
-const showRestoreConfirmation = (invoice: any) => {
-  invoiceToRestore.value = invoice;
-  showRestoreModal.value = true;
-};
+// Watch for changes in showDeleted to refetch data and update filter
+watch(showDeleted, (newValue: boolean) => {
+  refetchInvoices();
 
-const confirmRestore = async () => {
-  if (!invoiceToRestore.value) return;
-
-  const invoiceId = invoiceToRestore.value.id;
-  restoringInvoiceId.value = invoiceId;
-
-  try {
-    console.log('Starting restore for invoice:', invoiceId);
-    const result = await restoreInvoiceMutation.mutateAsync(invoiceId);
-    console.log('Restore result:', result);
-    // Show success message
-    console.log('Invoice restored successfully');
-    // Close modal
-    showRestoreModal.value = false;
-    invoiceToRestore.value = null;
-    // Refetch data to update the list
-    refetch();
-  } catch (error: any) {
-    console.error('Error restoring invoice:', error);
-
-    // Check if it's an authentication error or invoice not found
-    if (error.message && error.message.includes('Invoice not found')) {
-      // This might be an authentication issue or the invoice was already restored
-      alert(
-        'Invoice not found. It may have already been restored or deleted permanently.'
-      );
-    } else {
-      // Show error message to user
-      alert(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
-    }
-  } finally {
-    // Always reset the loading state
-    restoringInvoiceId.value = null;
-    restoreInvoiceMutation.reset();
+  // When showing deleted invoices, automatically set filter to 'all'
+  if (newValue) {
+    activeFilter.value = 'all';
   }
-};
-
-const cancelRestore = () => {
-  showRestoreModal.value = false;
-  invoiceToRestore.value = null;
-};
-
-// Note: No need to watch includeDeleted as the query automatically refetches when reactive filters change
+});
 
 // Reset mutation states on component mount to clear any stuck states
 onMounted(() => {
   deleteInvoiceMutation.reset();
   restoreInvoiceMutation.reset();
+  cloneInvoiceMutation.reset();
 });
 
 // Global reset function for debugging (can be called from browser console)
 (window as any).resetInvoiceMutations = () => {
   deleteInvoiceMutation.reset();
   restoreInvoiceMutation.reset();
+  cloneInvoiceMutation.reset();
   deletingInvoiceId.value = null;
-  restoringInvoiceId.value = null;
   console.log('Invoice mutations and local state reset');
 };
 </script>

@@ -17,10 +17,22 @@ class VendorController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = Auth::user();
+        $user = $request->user();
         
         if (!$user || !$user->tenant_id) {
             return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
+        // If user is a resident, return empty array (residents cannot see vendors)
+        if ($user->isResident()) {
+            return response()->json([
+                'data' => [],
+                'meta' => [
+                    'total' => 0,
+                    'category' => $request->category,
+                    'include_deleted' => false,
+                ],
+            ]);
         }
         
         $query = Vendor::forTenant($user->tenant_id)

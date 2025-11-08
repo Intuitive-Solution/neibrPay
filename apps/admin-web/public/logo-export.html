@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeibrPay Logo Export</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .logo-preview {
+            margin: 20px 0;
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+        }
+        .variants {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            align-items: center;
+        }
+        h3 {
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .instructions {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            text-align: left;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #1f2937;">NeibrPay Logo - Bonsai Design</h1>
+        
+        <div class="logo-preview">
+            <h3>Full Logo</h3>
+            <div class="variants">
+                <!-- Full Logo -->
+                <svg width="160" height="40" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- House Icon -->
+                    <path d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z" fill="#00C27A"/>
+                    <path d="M4 36C8 34 12 36 16 36C20 36 24 34 28 34C32 34 36 36 36 36" stroke="#00C27A" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                    <!-- Text -->
+                    <text x="50" y="28" style="font-size: 20px; font-weight: 700; fill: #1f2937;">Neibr</text>
+                    <text x="110" y="28" style="font-size: 20px; font-weight: 700; fill: #00C27A;">Pay</text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="logo-preview">
+            <h3>Icon Only</h3>
+            <div class="variants">
+                <!-- Icon Version -->
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z" fill="#00C27A"/>
+                    <path d="M4 36C8 34 12 36 16 36C20 36 24 34 28 34C32 34 36 36 36 36" stroke="#00C27A" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="logo-preview" style="background: #00C27A;">
+            <h3 style="color: white;">On Green Background</h3>
+            <div class="variants">
+                <!-- White version for green background -->
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z" fill="white"/>
+                    <path d="M4 36C8 34 12 36 16 36C20 36 24 34 28 34C32 34 36 36 36 36" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+                </svg>
+                <svg width="160" height="40" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 8L8 18V32C8 33.1046 8.89543 34 10 34H16V26C16 24.8954 16.8954 24 18 24H22C23.1046 24 24 24.8954 24 26V34H30C31.1046 34 32 33.1046 32 32V18L20 8Z" fill="white"/>
+                    <path d="M4 36C8 34 12 36 16 36C20 36 24 34 28 34C32 34 36 36 36 36" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+                    <text x="50" y="28" style="font-size: 20px; font-weight: 700; fill: white;">NeibrPay</text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>How to Export as PNG:</h3>
+            <ol style="color: #6b7280; line-height: 1.8;">
+                <li>Right-click on any logo variant above</li>
+                <li>Select "Inspect Element" or "Inspect"</li>
+                <li>Find the &lt;svg&gt; element in the inspector</li>
+                <li>Right-click on the SVG element → Copy → Copy outerHTML</li>
+                <li>Use an online SVG to PNG converter (like cloudconvert.com)</li>
+                <li>Or use design tools like Figma, Adobe Illustrator to export</li>
+            </ol>
+            <p style="color: #6b7280; margin-top: 16px;">
+                <strong>Recommended Sizes:</strong><br>
+                • Favicon: 32x32px or 64x64px<br>
+                • Apple Touch Icon: 180x180px<br>
+                • App Icon: 512x512px
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

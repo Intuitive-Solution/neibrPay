@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChargeController;
 use App\Http\Controllers\Api\ExpenseAttachmentController;
@@ -9,8 +10,11 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\InvoicePdfController;
 use App\Http\Controllers\Api\ResidentController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\Api\UnitDocumentController;
+use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
@@ -36,23 +40,36 @@ Route::get('/test', function () {
     ]);
 });
 
-
-
-// Authentication routes
+// Authentication routes (public)
 Route::prefix('auth')->group(function () {
-    // Signup routes (no authentication required)
+    // Email-based authentication
+    Route::post('/check-email', [AuthController::class, 'checkEmail']);
+    Route::post('/send-code', [AuthController::class, 'sendCode']);
+    Route::post('/verify-code', [AuthController::class, 'verifyCode']);
     Route::post('/signup', [AuthController::class, 'signup']);
-    Route::post('/google-signup', [AuthController::class, 'googleSignup']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/magic-link', [AuthController::class, 'magicLinkAuth']);
     
-    // Protected routes (require Firebase authentication)
-    Route::middleware('firebase.auth')->group(function () {
+    // Google OAuth (requires sessions for OAuth state)
+    Route::middleware([
+        \App\Http\Middleware\EncryptCookies::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+    ])->group(function () {
+        Route::get('/google/redirect', [AuthController::class, 'redirectToGoogle']);
+        Route::get('/google/callback', [AuthController::class, 'handleGoogleCallback']);
+    });
+    Route::post('/google/signup', [AuthController::class, 'googleSignup']);
+    
+    // Protected routes (require Sanctum authentication)
+    Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
 });
 
-// Protected routes (require Firebase authentication)
-Route::middleware('firebase.auth')->group(function () {
+// Protected routes (require Sanctum authentication)
+Route::middleware('auth:sanctum')->group(function () {
     // Resident management routes
     Route::apiResource('residents', ResidentController::class);
     Route::get('residents/{resident}/units', [ResidentController::class, 'units']);
@@ -61,6 +78,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::delete('residents/{resident}/units/{unit}', [ResidentController::class, 'removeUnit']);
     Route::post('residents/{resident}/restore', [ResidentController::class, 'restore']);
     Route::delete('residents/{resident}/force', [ResidentController::class, 'forceDelete']);
+    Route::post('residents/{resident}/send-invite', [ResidentController::class, 'sendInvite']);
     
     // Unit management routes
     Route::get('units/for-invoices', [UnitsController::class, 'forInvoices']);
@@ -82,7 +100,11 @@ Route::middleware('firebase.auth')->group(function () {
     Route::delete('units/{unit}/documents/{document}/force', [UnitDocumentController::class, 'forceDelete']);
     
     // Invoice management routes
-    Route::apiResource('invoices', InvoiceController::class);
+    Route::get('invoices', [InvoiceController::class, 'index']);
+    Route::post('invoices', [InvoiceController::class, 'store']);
+    Route::get('invoices/{id}', [InvoiceController::class, 'show']); // Custom route to handle deleted invoices
+    Route::put('invoices/{invoice}', [InvoiceController::class, 'update']);
+    Route::delete('invoices/{invoice}', [InvoiceController::class, 'destroy']);
     Route::post('invoices/{id}/restore', [InvoiceController::class, 'restore']);
     Route::delete('invoices/{id}/force', [InvoiceController::class, 'forceDelete']);
     Route::post('invoices/{invoice}/mark-sent', [InvoiceController::class, 'markAsSent']);
@@ -130,6 +152,26 @@ Route::middleware('firebase.auth')->group(function () {
     Route::post('expenses/{expense}/attachments', [ExpenseAttachmentController::class, 'store']);
     Route::get('expenses/{expense}/attachments/{attachment}/download', [ExpenseAttachmentController::class, 'download']);
     Route::delete('expenses/{expense}/attachments/{attachment}', [ExpenseAttachmentController::class, 'destroy']);
+    
+    // HOA Document management routes
+    Route::get('documents', [DocumentController::class, 'index']);
+    Route::post('documents', [DocumentController::class, 'store']);
+    Route::get('documents/{document}', [DocumentController::class, 'show']);
+    Route::put('documents/{document}', [DocumentController::class, 'update']);
+    Route::get('documents/{document}/download', [DocumentController::class, 'download']);
+    Route::delete('documents/{document}', [DocumentController::class, 'destroy']);
+    Route::delete('documents/{document}/force', [DocumentController::class, 'forceDelete']);
+    
+    // Settings routes
+    Route::get('settings', [SettingsController::class, 'index']);
+    
+    // Tenant routes
+    Route::put('tenant', [TenantController::class, 'update']);
+    Route::put('tenant/localization', [TenantController::class, 'updateLocalization']);
+    
+    // Announcement routes
+    Route::get('announcements/for-user', [AnnouncementController::class, 'forUser']);
+    Route::apiResource('announcements', AnnouncementController::class);
 });
 
 // Legacy route for backward compatibility

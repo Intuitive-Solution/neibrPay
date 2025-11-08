@@ -2,11 +2,11 @@
   <div class="space-y-6">
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="card card-hover">
         <div class="flex items-center">
-          <div class="p-3 bg-blue-100 rounded-lg">
+          <div class="p-3 bg-primary-100 rounded-lg">
             <svg
-              class="w-6 h-6 text-blue-600"
+              class="w-6 h-6 text-primary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -20,19 +20,19 @@
             </svg>
           </div>
           <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">Total Payments</h3>
-            <p class="text-2xl font-bold text-gray-900">
+            <h3 class="text-sm font-medium text-gray-600">Total Payments</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
               {{ payments?.length || 0 }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="card card-hover">
         <div class="flex items-center">
-          <div class="p-3 bg-green-100 rounded-lg">
+          <div class="p-3 bg-primary-100 rounded-lg">
             <svg
-              class="w-6 h-6 text-green-600"
+              class="w-6 h-6 text-primary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -46,19 +46,19 @@
             </svg>
           </div>
           <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">Total Amount</h3>
-            <p class="text-2xl font-bold text-gray-900">
+            <h3 class="text-sm font-medium text-gray-600">Total Amount</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
               ${{ formatCurrency(totalAmount) }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="card card-hover">
         <div class="flex items-center">
-          <div class="p-3 bg-yellow-100 rounded-lg">
+          <div class="p-3 bg-primary-100 rounded-lg">
             <svg
-              class="w-6 h-6 text-yellow-600"
+              class="w-6 h-6 text-primary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -72,8 +72,8 @@
             </svg>
           </div>
           <div class="ml-4">
-            <h3 class="text-lg font-semibold text-gray-900">This Month</h3>
-            <p class="text-2xl font-bold text-gray-900">
+            <h3 class="text-sm font-medium text-gray-600">This Month</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
               ${{ formatCurrency(monthlyAmount) }}
             </p>
           </div>
@@ -82,8 +82,8 @@
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-6">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Filters</h3>
+    <div class="card">
+      <h3 class="text-base font-semibold text-gray-900 mb-4">Filters</h3>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label
@@ -95,7 +95,7 @@
             id="start_date"
             v-model="filters.start_date"
             type="date"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            class="input-field mt-1"
           />
         </div>
         <div>
@@ -106,7 +106,7 @@
             id="end_date"
             v-model="filters.end_date"
             type="date"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            class="input-field mt-1"
           />
         </div>
         <div>
@@ -118,7 +118,7 @@
           <select
             id="payment_method"
             v-model="filters.payment_method"
-            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
+            class="input-field mt-1"
           >
             <option value="">All Methods</option>
             <option value="cash">Cash</option>
@@ -129,10 +129,7 @@
           </select>
         </div>
         <div class="flex items-end">
-          <button
-            @click="clearFilters"
-            class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-          >
+          <button @click="clearFilters" class="btn-outline w-full">
             Clear Filters
           </button>
         </div>
@@ -140,34 +137,32 @@
     </div>
 
     <!-- Payments Table -->
-    <div class="bg-white rounded-lg shadow">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-900">All Payments</h2>
-          <button
-            @click="() => refetch()"
-            :disabled="isLoading"
-            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-gray-900">All Payments</h2>
+        <button
+          @click="() => refetch()"
+          :disabled="isLoading"
+          class="btn-outline btn-sm"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            :class="{ 'animate-spin': isLoading }"
           >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              :class="{ 'animate-spin': isLoading }"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </button>
-        </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+        </button>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto -mx-6">
         <!-- Loading State -->
         <div v-if="isLoading" class="flex items-center justify-center py-12">
           <div class="flex items-center space-x-2">
@@ -303,7 +298,7 @@
             <tr
               v-for="payment in payments"
               :key="payment.id"
-              class="hover:bg-gray-50"
+              class="table-row-hover"
             >
               <!-- Invoice Column -->
               <td class="px-6 py-4 whitespace-nowrap">
