@@ -30,4 +30,4 @@ export {
 } from './settings';
 export * from './queryKeys';
 export { announcementKeys } from './queryKeys';
-export { setAuthTokenGetter } from './apiClient';
+export { apiClient, fileUploadClient, setAuthTokenGetter } from './apiClient';
