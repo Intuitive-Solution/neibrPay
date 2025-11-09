@@ -12,7 +12,7 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  withCredentials: true, // Important for Sanctum
+  withCredentials: false, // Using Bearer token auth, not cookies
 });
 
 // Create separate axios instance for file uploads (without Content-Type header)
@@ -21,7 +21,7 @@ export const fileUploadClient = axios.create({
   headers: {
     Accept: 'application/json',
   },
-  withCredentials: true, // Important for Sanctum
+  withCredentials: false, // Using Bearer token auth, not cookies
 });
 
 // Token getter function (will be set by the app)
@@ -31,30 +31,9 @@ export const setAuthTokenGetter = (tokenGetter: () => string | null) => {
   getAuthToken = tokenGetter;
 };
 
-// List of public auth endpoints that don't need credentials/CSRF
-const PUBLIC_AUTH_ENDPOINTS = [
-  '/auth/check-email',
-  '/auth/send-code',
-  '/auth/verify-code',
-  '/auth/signup',
-  '/auth/login',
-  '/auth/magic-link',
-  '/auth/google/signup',
-];
-
 // Add auth interceptor to both clients
 const addAuthInterceptor = (client: typeof apiClient) => {
   client.interceptors.request.use(config => {
-    // Check if this is a public auth endpoint
-    const isPublicAuthEndpoint = PUBLIC_AUTH_ENDPOINTS.some(endpoint =>
-      config.url?.includes(endpoint)
-    );
-
-    // Don't send credentials for public auth endpoints to avoid CSRF issues
-    if (isPublicAuthEndpoint) {
-      config.withCredentials = false;
-    }
-
     if (getAuthToken) {
       const token = getAuthToken();
       if (token) {
