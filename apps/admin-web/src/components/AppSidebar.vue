@@ -13,22 +13,23 @@
       @mouseleave="handleSidebarHover(false)"
       :class="[
         'bg-white shadow-lg flex flex-col transition-all duration-300 ease-in-out',
-        // Desktop responsive behavior
-        'hidden md:flex',
-        // Width logic: collapsed shows icons only (w-16), expanded shows full width (w-64)
-        isExpanded ? 'w-64' : 'w-16',
+        // Width logic:
+        // - Mobile: full width when open (w-64)
+        // - Desktop: collapsed shows icons only (w-16), expanded shows full width (w-64)
+        isMobileMenuOpen ? 'w-64' : isExpanded ? 'w-64' : 'w-16',
         // Position: fixed for desktop to overlap content, mobile drawer
         'fixed inset-y-0 left-0',
         // Z-index: higher when expanded to overlap content
-        isExpanded ? 'z-50' : 'z-40',
+        isExpanded || isMobileMenuOpen ? 'z-50' : 'z-40',
+        // Mobile: slide in/out based on menu state, Desktop: always visible
         isMobileMenuOpen
           ? 'translate-x-0'
           : '-translate-x-full md:translate-x-0',
       ]"
     >
       <!-- Community Header -->
-      <div :class="isExpanded ? 'p-4' : 'p-4'">
-        <div v-if="isExpanded" class="flex flex-col">
+      <div :class="isExpanded || isMobileMenuOpen ? 'p-4' : 'p-4'">
+        <div v-if="isExpanded || isMobileMenuOpen" class="flex flex-col">
           <div class="flex items-center">
             <NeibrPayLogo />
           </div>
@@ -49,18 +50,22 @@
       <nav
         :class="[
           'flex-1 overflow-y-auto',
-          isExpanded ? 'py-6 px-4' : 'py-4 px-2',
+          isExpanded || isMobileMenuOpen ? 'py-6 px-4' : 'py-4 px-2',
         ]"
+        @click="handleNavClick"
       >
         <ul class="space-y-1">
           <li>
             <router-link
               to="/"
               :class="getNavLinkClass('Dashboard')"
-              :title="!isExpanded ? 'Dashboard' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Dashboard' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -72,7 +77,7 @@
                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                 />
               </svg>
-              <span v-if="isExpanded">Dashboard</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Dashboard</span>
             </router-link>
           </li>
 
@@ -80,10 +85,13 @@
             <router-link
               to="/invoices"
               :class="getNavLinkClass('Invoices')"
-              :title="!isExpanded ? 'HOA Dues' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'HOA Dues' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -95,7 +103,7 @@
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span v-if="isExpanded">HOA Dues</span>
+              <span v-if="isExpanded || isMobileMenuOpen">HOA Dues</span>
             </router-link>
           </li>
 
@@ -104,10 +112,13 @@
             <router-link
               to="/charges"
               :class="getNavLinkClass(['Charges', 'AddCharge', 'EditCharge'])"
-              :title="!isExpanded ? 'Charges' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Charges' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -119,7 +130,7 @@
                   d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                 />
               </svg>
-              <span v-if="isExpanded">Charges</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Charges</span>
             </router-link>
           </li>
 
@@ -128,10 +139,13 @@
             <router-link
               to="/people"
               :class="getNavLinkClass('People')"
-              :title="!isExpanded ? 'Residents' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Residents' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -143,7 +157,7 @@
                   d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
                 />
               </svg>
-              <span v-if="isExpanded">Residents</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Residents</span>
             </router-link>
           </li>
 
@@ -151,10 +165,13 @@
             <router-link
               to="/units"
               :class="getNavLinkClass(['Units', 'AddUnit', 'EditUnit'])"
-              :title="!isExpanded ? 'Units' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Units' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -166,7 +183,7 @@
                   d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 />
               </svg>
-              <span v-if="isExpanded">Units</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Units</span>
             </router-link>
           </li>
 
@@ -174,10 +191,13 @@
             <router-link
               to="/payments"
               :class="getNavLinkClass('Payments')"
-              :title="!isExpanded ? 'Payments' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Payments' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -189,7 +209,7 @@
                   d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                 />
               </svg>
-              <span v-if="isExpanded">Payments</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Payments</span>
             </router-link>
           </li>
 
@@ -204,10 +224,13 @@
                   'ExpenseDetail',
                 ])
               "
-              :title="!isExpanded ? 'Expenses' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Expenses' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -219,7 +242,7 @@
                   d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span v-if="isExpanded">Expenses</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Expenses</span>
             </router-link>
           </li>
 
@@ -228,10 +251,13 @@
             <router-link
               to="/vendors"
               :class="getNavLinkClass('Vendors')"
-              :title="!isExpanded ? 'Vendors' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Vendors' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -243,7 +269,7 @@
                   d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 />
               </svg>
-              <span v-if="isExpanded">Vendors</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Vendors</span>
             </router-link>
           </li>
 
@@ -251,10 +277,13 @@
             <router-link
               to="/documents"
               :class="getNavLinkClass('Documents')"
-              :title="!isExpanded ? 'Documents' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Documents' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -266,7 +295,7 @@
                   d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                 />
               </svg>
-              <span v-if="isExpanded">Documents</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Documents</span>
             </router-link>
           </li>
 
@@ -281,10 +310,13 @@
                   'EditAnnouncement',
                 ])
               "
-              :title="!isExpanded ? 'Announcements' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Announcements' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -296,7 +328,7 @@
                   d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3.14a7.5 7.5 0 011.291 7.239M19 13a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span v-if="isExpanded">Announcements</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Announcements</span>
             </router-link>
           </li>
 
@@ -304,10 +336,13 @@
             <router-link
               to="/settings"
               :class="getNavLinkClass('Settings')"
-              :title="!isExpanded ? 'Settings' : ''"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Settings' : ''"
             >
               <svg
-                :class="['w-5 h-5', isExpanded ? 'mr-3' : '']"
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -325,15 +360,23 @@
                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span v-if="isExpanded">Settings</span>
+              <span v-if="isExpanded || isMobileMenuOpen">Settings</span>
             </router-link>
           </li>
         </ul>
       </nav>
 
       <!-- User Info & Logout -->
-      <div :class="['border-t border-gray-200', isExpanded ? 'p-4' : 'p-3']">
-        <div v-if="isExpanded" class="flex items-center space-x-3 mb-4">
+      <div
+        :class="[
+          'border-t border-gray-200',
+          isExpanded || isMobileMenuOpen ? 'p-4' : 'p-3',
+        ]"
+      >
+        <div
+          v-if="isExpanded || isMobileMenuOpen"
+          class="flex items-center space-x-3 mb-4"
+        >
           <div
             class="w-8 h-8 bg-primary rounded-full flex items-center justify-center"
           >
@@ -366,13 +409,13 @@
             'flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed',
             'w-full',
           ]"
-          :title="!isExpanded ? 'Sign Out' : ''"
+          :title="!(isExpanded || isMobileMenuOpen) ? 'Sign Out' : ''"
         >
           <svg
             v-if="isLoading"
             :class="[
               'animate-spin h-4 w-4 text-gray-500',
-              isExpanded ? '-ml-1 mr-2' : '',
+              isExpanded || isMobileMenuOpen ? '-ml-1 mr-2' : '',
             ]"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -394,7 +437,7 @@
           </svg>
           <svg
             v-else
-            :class="['w-4 h-4', isExpanded ? 'mr-2' : '']"
+            :class="['w-4 h-4', isExpanded || isMobileMenuOpen ? 'mr-2' : '']"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -406,7 +449,7 @@
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-          <span v-if="isExpanded">{{
+          <span v-if="isExpanded || isMobileMenuOpen">{{
             isLoading ? 'Signing out...' : 'Sign Out'
           }}</span>
         </button>
@@ -709,6 +752,15 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
 
+// Close mobile menu when clicking on navigation links
+const handleNavClick = (event: Event) => {
+  // Only close if clicking on a router-link (not on the nav container itself)
+  const target = event.target as HTMLElement;
+  if (target.closest('a') && isMobileMenuOpen.value) {
+    closeMobileMenu();
+  }
+};
+
 const toggleCreateDropdown = () => {
   isCreateDropdownOpen.value = !isCreateDropdownOpen.value;
 };
@@ -827,11 +879,12 @@ const pageDescription = computed(() => {
 const getNavLinkClass = (routeNames: string | string[]) => {
   const names = Array.isArray(routeNames) ? routeNames : [routeNames];
   const isActive = names.includes(route.name as string);
+  const showExpanded = isExpanded.value || isMobileMenuOpen.value;
 
   return [
     'flex items-center py-2.5 text-sm font-medium rounded-lg transition-colors duration-200',
     isActive ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100',
-    isExpanded.value ? 'px-4' : 'justify-center px-2',
+    showExpanded ? 'px-4' : 'justify-center px-2',
   ];
 };
 
