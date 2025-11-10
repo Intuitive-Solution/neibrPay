@@ -96,7 +96,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->withTrashed()
             ->with('tenant')
             ->findOrFail($id);
@@ -116,7 +116,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         $units = $resident->ownedUnits()
@@ -141,7 +141,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         // Check if the unit exists and belongs to the same tenant
@@ -167,7 +167,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         // Check if the unit exists and belongs to the same tenant
@@ -215,7 +215,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         // Get all units for the tenant
@@ -250,7 +250,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         // Validate the request
