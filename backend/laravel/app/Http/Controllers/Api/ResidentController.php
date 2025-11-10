@@ -160,6 +160,54 @@ class ResidentController extends Controller
     }
 
     /**
+     * Update the type of a unit for the specified resident.
+     */
+    public function updateUnitType(Request $request, string $id, string $unitId): JsonResponse
+    {
+        $user = $request->user();
+        
+        $resident = User::forTenant($user->tenant_id)
+            ->byRole('resident')
+            ->findOrFail($id);
+        
+        // Check if the unit exists and belongs to the same tenant
+        $unit = \App\Models\Unit::forTenant($user->tenant_id)->findOrFail($unitId);
+        
+        // Validate the request
+        $request->validate([
+            'type' => 'required|in:owner,tenant'
+        ]);
+        
+        // Check if the unit is associated with this resident
+        $isAssociated = $resident->ownedUnits()->where('units.id', $unitId)->exists();
+        
+        if (!$isAssociated) {
+            return response()->json([
+                'message' => 'Unit is not associated with this resident',
+                'errors' => ['unit_id' => ['Unit is not associated with this resident']]
+            ], 422);
+        }
+        
+        // Update the pivot type
+        $resident->ownedUnits()->updateExistingPivot($unitId, [
+            'type' => $request->type
+        ]);
+        
+        // Get the updated unit with pivot data
+        $updatedUnit = $resident->ownedUnits()->where('units.id', $unitId)->first();
+        
+        return response()->json([
+            'message' => 'Unit type updated successfully',
+            'data' => [
+                'resident_id' => $resident->id,
+                'unit_id' => $unitId,
+                'type' => $request->type,
+                'unit' => $updatedUnit,
+            ]
+        ]);
+    }
+
+    /**
      * Get units available to be assigned to the specified resident.
      */
     public function availableUnits(Request $request, string $id): JsonResponse

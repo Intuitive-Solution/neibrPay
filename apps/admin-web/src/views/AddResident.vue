@@ -407,16 +407,23 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
-                      <span
+                      <select
+                        :value="unit.pivot?.type || 'owner'"
+                        @change="handleUnitTypeChange(unit.id, $event)"
+                        :disabled="isUpdatingUnitType === unit.id"
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 focus:ring-2 focus:ring-primary cursor-pointer transition-colors"
                         :class="[
-                          'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
                           unit.pivot?.type === 'owner'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-green-100 text-green-800',
+                            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                            : 'bg-green-100 text-green-800 hover:bg-green-200',
+                          isUpdatingUnitType === unit.id
+                            ? 'opacity-50 cursor-not-allowed'
+                            : '',
                         ]"
                       >
-                        {{ unit.pivot?.type === 'owner' ? 'Owner' : 'Tenant' }}
-                      </span>
+                        <option value="owner">Owner</option>
+                        <option value="tenant">Tenant</option>
+                      </select>
                     </td>
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
@@ -1099,6 +1106,9 @@ const selectedUnits = ref<Array<{ unit_id: number; type: 'owner' | 'tenant' }>>(
 const isAddingUnits = ref(false);
 const addUnitsSearchQuery = ref('');
 
+// Unit type update state
+const isUpdatingUnitType = ref<number | null>(null);
+
 // Tabs configuration
 const tabs = [
   { id: 'units', name: 'Units' },
@@ -1287,6 +1297,34 @@ const confirmAddUnits = async () => {
     alert('Failed to add units. Please try again.');
   } finally {
     isAddingUnits.value = false;
+  }
+};
+
+const handleUnitTypeChange = (unitId: number, event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  const type = target.value as 'owner' | 'tenant';
+  updateUnitTypeForResident(unitId, type);
+};
+
+const updateUnitTypeForResident = async (
+  unitId: number,
+  type: 'owner' | 'tenant'
+) => {
+  if (!residentId.value) return;
+
+  isUpdatingUnitType.value = unitId;
+
+  try {
+    await residentsApi.updateResidentUnitType(residentId.value, unitId, type);
+    // Refresh units to get updated data
+    refetchUnits();
+  } catch (error) {
+    console.error('Error updating unit type:', error);
+    alert('Failed to update unit type. Please try again.');
+    // Refresh units to revert UI state
+    refetchUnits();
+  } finally {
+    isUpdatingUnitType.value = null;
   }
 };
 

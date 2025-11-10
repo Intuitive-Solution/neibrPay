@@ -53,6 +53,19 @@ export const residentsApi = {
   },
 
   /**
+   * Update the type of a unit for a resident
+   */
+  async updateResidentUnitType(
+    residentId: number,
+    unitId: number,
+    type: 'owner' | 'tenant'
+  ): Promise<void> {
+    await apiClient.put(`/residents/${residentId}/units/${unitId}/type`, {
+      type: type,
+    });
+  },
+
+  /**
    * Get units available to be assigned to a resident
    */
   async getAvailableUnitsForResident(id: number): Promise<Unit[]> {
