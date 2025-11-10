@@ -6,8 +6,7 @@ export interface Resident {
   email: string;
   phone: string;
   type: 'owner' | 'tenant' | 'others';
-  member_role: 'admin' | 'member';
-  role: 'resident';
+  role: 'admin' | 'resident' | 'bookkeeper';
   tenant_id: number;
   is_active: boolean;
   deleted_at?: string | null;
@@ -25,7 +24,6 @@ export interface CreateResidentRequest {
   email: string;
   phone: string;
   type: 'owner' | 'tenant' | 'others';
-  member_role: 'admin' | 'member';
 }
 
 export interface UpdateResidentRequest {
@@ -33,7 +31,6 @@ export interface UpdateResidentRequest {
   email?: string;
   phone?: string;
   type?: 'owner' | 'tenant' | 'others';
-  member_role?: 'admin' | 'member';
 }
 
 export interface ResidentsResponse {
@@ -60,7 +57,6 @@ export interface ResidentFormData {
   email: string;
   phone: string;
   type: 'owner' | 'tenant' | 'others';
-  member_role: 'admin' | 'member';
 }
 
 export interface ResidentFormErrors {
@@ -68,6 +64,5 @@ export interface ResidentFormErrors {
   email?: string;
   phone?: string;
   type?: string;
-  member_role?: string;
   general?: string;
 }

@@ -484,13 +484,13 @@
                 </div>
               </th>
               <th
-                @click="sortBy('member_role')"
+                @click="sortBy('role')"
                 class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
                 <div class="flex items-center space-x-1">
                   <span>ROLE</span>
                   <svg
-                    v-if="sortColumn === 'member_role'"
+                    v-if="sortColumn === 'role'"
                     class="w-4 h-4"
                     fill="none"
                     stroke="currentColor"
@@ -655,15 +655,17 @@
               <!-- Role Column -->
               <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                 <span
-                  v-if="resident.member_role"
+                  v-if="resident.role"
                   :class="[
                     'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
-                    resident.member_role === 'admin'
+                    resident.role === 'admin'
                       ? 'bg-purple-100 text-purple-800'
-                      : 'bg-blue-100 text-blue-800',
+                      : resident.role === 'bookkeeper'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-blue-100 text-blue-800',
                   ]"
                 >
-                  {{ formatRole(resident.member_role) }}
+                  {{ formatRole(resident.role) }}
                 </span>
               </td>
 
@@ -865,9 +867,9 @@ const successMessage = ref('');
 const errorMessage = ref('');
 const showSuccessMessage = ref(false);
 const showErrorMessage = ref(false);
-const sortColumn = ref<
-  'name' | 'email' | 'phone' | 'status' | 'member_role' | null
->(null);
+const sortColumn = ref<'name' | 'email' | 'phone' | 'status' | 'role' | null>(
+  null
+);
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
 // Debounced search
@@ -991,9 +993,9 @@ const filteredResidents = computed(() => {
               ? 'active'
               : 'inactive';
           break;
-        case 'member_role':
-          aValue = a.member_role || 'member';
-          bValue = b.member_role || 'member';
+        case 'role':
+          aValue = a.role || 'resident';
+          bValue = b.role || 'resident';
           break;
         default:
           return 0;
@@ -1024,9 +1026,7 @@ const filterByStatus = (status: 'active' | 'all') => {
   }
 };
 
-const sortBy = (
-  column: 'name' | 'email' | 'phone' | 'status' | 'member_role'
-) => {
+const sortBy = (column: 'name' | 'email' | 'phone' | 'status' | 'role') => {
   if (sortColumn.value === column) {
     // Toggle direction if clicking the same column
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
@@ -1059,7 +1059,8 @@ const formatType = (type: string): string => {
 const formatRole = (role: string): string => {
   const roleMap: Record<string, string> = {
     admin: 'Admin',
-    member: 'Member',
+    resident: 'Resident',
+    bookkeeper: 'Bookkeeper',
   };
   return roleMap[role] || role;
 };

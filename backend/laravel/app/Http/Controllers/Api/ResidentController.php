@@ -35,7 +35,7 @@ class ResidentController extends Controller
         }
         
         $query = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->with('tenant');
             
         if ($includeDeleted) {
@@ -72,7 +72,6 @@ class ResidentController extends Controller
             'email' => $request->email,
             'phone_number' => $request->phone,
             'type' => $request->type ?? 'owner',
-            'member_role' => $request->member_role ?? 'member',
             'role' => 'resident',
             'tenant_id' => $user->tenant_id,
             'is_active' => true,
@@ -270,7 +269,6 @@ class ResidentController extends Controller
             'email' => $request->email,
             'phone_number' => $request->phone,
             'type' => $request->type,
-            'member_role' => $request->member_role,
         ]);
         
         $resident->load('tenant');
