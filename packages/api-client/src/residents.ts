@@ -65,9 +65,12 @@ export const residentsApi = {
   /**
    * Add units to a resident
    */
-  async addResidentUnits(residentId: number, unitIds: number[]): Promise<void> {
+  async addResidentUnits(
+    residentId: number,
+    units: Array<{ unit_id: number; type: 'owner' | 'tenant' }>
+  ): Promise<void> {
     await apiClient.post(`/residents/${residentId}/units`, {
-      unit_ids: unitIds,
+      units: units,
     });
   },
 

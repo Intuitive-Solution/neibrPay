@@ -54,11 +54,6 @@ class ResidentRequest extends FormRequest
                 'regex:/^(\(\d{3}\) \d{3}-\d{4}|\d{3}-\d{3}-\d{4})$/',
                 'max:14'
             ],
-            'type' => [
-                'required',
-                'string',
-                Rule::in(['owner', 'tenant', 'others'])
-            ],
             'role' => [
                 'required',
                 'string',
@@ -86,9 +81,6 @@ class ResidentRequest extends FormRequest
             'phone.regex' => 'Please enter a valid US phone number (10 digits).',
             'phone.max' => 'The phone number may not be greater than 14 characters.',
             
-            'type.required' => 'The resident type is required.',
-            'type.in' => 'The resident type must be Owner, Tenant, or Others.',
-            
             'role.required' => 'The role is required.',
             'role.in' => 'The role must be Admin, Resident, or Bookkeeper.',
         ];
@@ -103,7 +95,6 @@ class ResidentRequest extends FormRequest
             'name' => 'resident name',
             'email' => 'email address',
             'phone' => 'phone number',
-            'type' => 'resident type',
             'role' => 'role',
         ];
     }

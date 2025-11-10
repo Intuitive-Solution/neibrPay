@@ -71,7 +71,6 @@ class ResidentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone,
-            'type' => $request->type ?? 'owner',
             'role' => $request->role ?? 'resident',
             'tenant_id' => $user->tenant_id,
             'is_active' => true,
@@ -208,11 +207,13 @@ class ResidentController extends Controller
         
         // Validate the request
         $request->validate([
-            'unit_ids' => 'required|array|min:1',
-            'unit_ids.*' => 'integer|exists:units,id'
+            'units' => 'required|array|min:1',
+            'units.*.unit_id' => 'required|integer|exists:units,id',
+            'units.*.type' => 'required|in:owner,tenant'
         ]);
         
-        $unitIds = $request->input('unit_ids');
+        $unitsData = $request->input('units');
+        $unitIds = array_column($unitsData, 'unit_id');
         
         // Verify all units belong to the same tenant and are active
         $units = \App\Models\Unit::forTenant($user->tenant_id)
@@ -223,7 +224,7 @@ class ResidentController extends Controller
         if ($units->count() !== count($unitIds)) {
             return response()->json([
                 'message' => 'Some units are invalid or not available',
-                'errors' => ['unit_ids' => ['One or more units are invalid or not available']]
+                'errors' => ['units' => ['One or more units are invalid or not available']]
             ], 422);
         }
         
@@ -233,12 +234,18 @@ class ResidentController extends Controller
         if (!empty($existingUnitIds)) {
             return response()->json([
                 'message' => 'Some units are already owned by this resident',
-                'errors' => ['unit_ids' => ['One or more units are already owned by this resident']]
+                'errors' => ['units' => ['One or more units are already owned by this resident']]
             ], 422);
         }
         
-        // Add the relationships
-        $resident->ownedUnits()->attach($unitIds);
+        // Prepare pivot data with type for each unit
+        $pivotData = [];
+        foreach ($unitsData as $unitData) {
+            $pivotData[$unitData['unit_id']] = ['type' => $unitData['type']];
+        }
+        
+        // Add the relationships with pivot data
+        $resident->ownedUnits()->attach($pivotData);
         
         // Get the newly added units with their details
         $addedUnits = $resident->ownedUnits()->whereIn('units.id', $unitIds)->get();
@@ -268,7 +275,6 @@ class ResidentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone,
-            'type' => $request->type,
             'role' => $request->role,
         ]);
         

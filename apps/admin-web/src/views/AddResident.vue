@@ -156,35 +156,6 @@
           </div>
         </div>
 
-        <!-- Type Field -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="type"
-            class="block text-sm font-medium text-gray-700 lg:pt-3"
-          >
-            Type <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2">
-            <select
-              id="type"
-              v-model="form.type"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.type,
-              }"
-            >
-              <option value="owner">Owner</option>
-              <option value="tenant">Tenant</option>
-              <option value="others">Others</option>
-            </select>
-            <p v-if="errors.type" class="mt-2 text-sm text-red-600">
-              {{ errors.type }}
-            </p>
-          </div>
-        </div>
-
         <!-- Role Field -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
           <label
@@ -405,6 +376,11 @@
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
+                      Type
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Action
                     </th>
                   </tr>
@@ -431,6 +407,20 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
+                      <span
+                        :class="[
+                          'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
+                          unit.pivot?.type === 'owner'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-green-100 text-green-800',
+                        ]"
+                      >
+                        {{ unit.pivot?.type === 'owner' ? 'Owner' : 'Tenant' }}
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
                       <button
                         @click="removeUnit(unit)"
                         class="text-red-600 hover:text-red-800"
@@ -442,7 +432,7 @@
                   <!-- Empty State -->
                   <tr v-if="filteredUnits.length === 0">
                     <td
-                      colspan="4"
+                      colspan="5"
                       class="px-6 py-8 text-center text-sm text-gray-500"
                     >
                       <div class="flex flex-col items-center">
@@ -921,15 +911,14 @@
                 <div
                   v-for="unit in availableUnitsForResident"
                   :key="unit.id"
-                  class="p-4 hover:bg-gray-50 cursor-pointer"
-                  @click="toggleUnitSelection(unit.id)"
+                  class="p-4 hover:bg-gray-50"
                 >
-                  <div class="flex items-center">
+                  <div class="flex items-start">
                     <input
-                      :checked="selectedUnits.includes(unit.id)"
+                      :checked="isUnitSelected(unit.id)"
                       type="checkbox"
-                      class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                      @click.stop="toggleUnitSelection(unit.id)"
+                      class="h-4 w-4 mt-1 text-primary focus:ring-primary border-gray-300 rounded"
+                      @change="toggleUnitSelection(unit.id)"
                     />
                     <div class="ml-3 flex-1">
                       <div class="text-sm font-medium text-gray-900">
@@ -944,6 +933,51 @@
                         {{
                           new Date(unit.balance_as_of_date).toLocaleDateString()
                         }}
+                      </div>
+                      <!-- Type selector for selected units -->
+                      <div
+                        v-if="isUnitSelected(unit.id)"
+                        class="mt-3 flex items-center space-x-4"
+                      >
+                        <label class="text-sm font-medium text-gray-700"
+                          >Type:</label
+                        >
+                        <div class="flex space-x-4">
+                          <label class="flex items-center">
+                            <input
+                              type="radio"
+                              name="unit-type-{{
+                                unit.id
+                              }}"
+                              value="owner"
+                              :checked="
+                                getSelectedUnitType(unit.id) === 'owner'
+                              "
+                              @change="updateUnitType(unit.id, 'owner')"
+                              class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                            />
+                            <span class="ml-2 text-sm text-gray-700"
+                              >Owner</span
+                            >
+                          </label>
+                          <label class="flex items-center">
+                            <input
+                              type="radio"
+                              name="unit-type-{{
+                                unit.id
+                              }}"
+                              value="tenant"
+                              :checked="
+                                getSelectedUnitType(unit.id) === 'tenant'
+                              "
+                              @change="updateUnitType(unit.id, 'tenant')"
+                              class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                            />
+                            <span class="ml-2 text-sm text-gray-700"
+                              >Tenant</span
+                            >
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1039,7 +1073,6 @@ const form = ref<ResidentFormData>({
   name: '',
   email: '',
   phone: '',
-  type: 'owner',
   role: 'resident',
 });
 
@@ -1060,7 +1093,9 @@ const isRemovingUnit = ref(false);
 
 // Add units modal state
 const showAddUnitsModal = ref(false);
-const selectedUnits = ref<number[]>([]);
+const selectedUnits = ref<Array<{ unit_id: number; type: 'owner' | 'tenant' }>>(
+  []
+);
 const isAddingUnits = ref(false);
 const addUnitsSearchQuery = ref('');
 
@@ -1202,12 +1237,36 @@ const closeAddUnitsModal = () => {
 };
 
 const toggleUnitSelection = (unitId: number) => {
-  const index = selectedUnits.value.indexOf(unitId);
+  const index = selectedUnits.value.findIndex(
+    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+  );
   if (index > -1) {
     selectedUnits.value.splice(index, 1);
   } else {
-    selectedUnits.value.push(unitId);
+    selectedUnits.value.push({ unit_id: unitId, type: 'owner' });
   }
+};
+
+const updateUnitType = (unitId: number, type: 'owner' | 'tenant') => {
+  const index = selectedUnits.value.findIndex(
+    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+  );
+  if (index > -1) {
+    selectedUnits.value[index].type = type;
+  }
+};
+
+const isUnitSelected = (unitId: number): boolean => {
+  return selectedUnits.value.some(
+    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+  );
+};
+
+const getSelectedUnitType = (unitId: number): 'owner' | 'tenant' => {
+  const selected = selectedUnits.value.find(
+    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+  );
+  return selected?.type || 'owner';
 };
 
 const confirmAddUnits = async () => {
@@ -1245,7 +1304,6 @@ onMounted(() => {
       name: resident.value.name,
       email: resident.value.email,
       phone: resident.value.phone,
-      type: resident.value.type || 'owner',
       role: resident.value.role || 'resident',
     };
   }
@@ -1263,7 +1321,6 @@ watch(resident, (newResident: any) => {
       name: newResident.name,
       email: newResident.email,
       phone: newResident.phone,
-      type: newResident.type || 'owner',
       role: newResident.role || 'resident',
     };
   }

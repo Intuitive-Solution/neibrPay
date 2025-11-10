@@ -5,7 +5,6 @@ export interface Resident {
   name: string;
   email: string;
   phone: string;
-  type: 'owner' | 'tenant' | 'others';
   role: 'admin' | 'resident' | 'bookkeeper';
   tenant_id: number;
   is_active: boolean;
@@ -23,7 +22,6 @@ export interface CreateResidentRequest {
   name: string;
   email: string;
   phone: string;
-  type: 'owner' | 'tenant' | 'others';
   role: 'admin' | 'resident' | 'bookkeeper';
 }
 
@@ -31,7 +29,6 @@ export interface UpdateResidentRequest {
   name?: string;
   email?: string;
   phone?: string;
-  type?: 'owner' | 'tenant' | 'others';
   role?: 'admin' | 'resident' | 'bookkeeper';
 }
 
@@ -58,7 +55,6 @@ export interface ResidentFormData {
   name: string;
   email: string;
   phone: string;
-  type: 'owner' | 'tenant' | 'others';
   role: 'admin' | 'resident' | 'bookkeeper';
 }
 
@@ -66,7 +62,6 @@ export interface ResidentFormErrors {
   name?: string;
   email?: string;
   phone?: string;
-  type?: string;
   role?: string;
   general?: string;
 }

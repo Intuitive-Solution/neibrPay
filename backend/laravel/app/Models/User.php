@@ -25,7 +25,6 @@ class User extends Authenticatable
         'email',
         'role',
         'phone_number',
-        'type',
         'avatar_url',
         'is_active',
         'last_login_at',
@@ -68,6 +67,7 @@ class User extends Authenticatable
     public function ownedUnits(): BelongsToMany
     {
         return $this->belongsToMany(Unit::class, 'unit_owners', 'resident_id', 'unit_id')
+            ->withPivot('type')
             ->withTimestamps();
     }
 

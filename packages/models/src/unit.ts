@@ -23,6 +23,9 @@ export interface Unit {
   };
   owners?: Resident[];
   documents?: UnitDocument[];
+  pivot?: {
+    type: 'owner' | 'tenant';
+  };
 }
 
 export interface UnitWithResident {

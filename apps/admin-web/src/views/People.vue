@@ -566,17 +566,6 @@
                           Deleted
                         </span>
                       </div>
-                      <div
-                        v-if="resident.type"
-                        :class="[
-                          'text-xs mt-1',
-                          resident.deleted_at
-                            ? 'text-red-400'
-                            : 'text-gray-500',
-                        ]"
-                      >
-                        {{ formatType(resident.type) }}
-                      </div>
                       <!-- Mobile-only additional info -->
                       <div class="sm:hidden mt-1">
                         <div
@@ -1045,15 +1034,6 @@ const getStatusText = (resident: Resident) => {
 const getStatusBadgeClass = (resident: Resident) => {
   if (resident.deleted_at) return 'badge-overdue';
   return resident.is_active ? 'badge-paid' : 'badge-draft';
-};
-
-const formatType = (type: string): string => {
-  const typeMap: Record<string, string> = {
-    owner: 'Owner',
-    tenant: 'Tenant',
-    others: 'Others',
-  };
-  return typeMap[type] || type;
 };
 
 const formatRole = (role: string): string => {
