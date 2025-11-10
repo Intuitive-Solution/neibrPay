@@ -89,6 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Unit owner management routes
     Route::post('units/{unit}/owners', [UnitsController::class, 'addOwners']);
+    Route::put('units/{unit}/owners/{owner}/type', [UnitsController::class, 'updateOwnerType']);
     Route::delete('units/{unit}/owners', [UnitsController::class, 'removeOwners']);
     Route::put('units/{unit}/owners', [UnitsController::class, 'syncOwners']);
     

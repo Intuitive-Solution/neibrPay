@@ -96,12 +96,36 @@ export const unitsApi = {
   /**
    * Add owners to a unit
    */
-  async addOwners(id: number, ownerIds: number[]): Promise<Unit> {
+  async addOwners(
+    id: number,
+    owners: Array<{ owner_id: number; type: 'owner' | 'tenant' }> | number[]
+  ): Promise<Unit> {
+    // Support both new format (with type) and legacy format (just IDs)
+    const payload =
+      Array.isArray(owners) &&
+      owners.length > 0 &&
+      typeof owners[0] === 'object'
+        ? { owners: owners }
+        : { owner_ids: owners as number[] };
+
     const response: AxiosResponse<UnitResponse> = await apiClient.post(
       `/units/${id}/owners`,
-      { owner_ids: ownerIds }
+      payload
     );
     return response.data.data;
+  },
+
+  /**
+   * Update the type of an owner for a unit
+   */
+  async updateOwnerType(
+    unitId: number,
+    ownerId: number,
+    type: 'owner' | 'tenant'
+  ): Promise<void> {
+    await apiClient.put(`/units/${unitId}/owners/${ownerId}/type`, {
+      type: type,
+    });
   },
 
   /**
