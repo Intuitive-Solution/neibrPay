@@ -156,59 +156,30 @@
           </div>
         </div>
 
-        <!-- Type Field -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="type"
-            class="block text-sm font-medium text-gray-700 lg:pt-3"
-          >
-            Type <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2">
-            <select
-              id="type"
-              v-model="form.type"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.type,
-              }"
-            >
-              <option value="owner">Owner</option>
-              <option value="tenant">Tenant</option>
-              <option value="others">Others</option>
-            </select>
-            <p v-if="errors.type" class="mt-2 text-sm text-red-600">
-              {{ errors.type }}
-            </p>
-          </div>
-        </div>
-
         <!-- Role Field -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
           <label
-            for="member_role"
+            for="role"
             class="block text-sm font-medium text-gray-700 lg:pt-3"
           >
             Role <span class="text-red-500">*</span>
           </label>
           <div class="lg:col-span-2">
             <select
-              id="member_role"
-              v-model="form.member_role"
+              id="role"
+              v-model="form.role"
               required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.member_role,
+                  errors.role,
               }"
             >
-              <option value="member">Member</option>
+              <option value="resident">Resident</option>
               <option value="admin">Admin</option>
             </select>
-            <p v-if="errors.member_role" class="mt-2 text-sm text-red-600">
-              {{ errors.member_role }}
+            <p v-if="errors.role" class="mt-2 text-sm text-red-600">
+              {{ errors.role }}
             </p>
           </div>
         </div>
@@ -405,6 +376,11 @@
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
+                      Type
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Action
                     </th>
                   </tr>
@@ -431,6 +407,27 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
+                      <select
+                        :value="unit.pivot?.type || 'owner'"
+                        @change="handleUnitTypeChange(unit.id, $event)"
+                        :disabled="isUpdatingUnitType === unit.id"
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 focus:ring-2 focus:ring-primary cursor-pointer transition-colors"
+                        :class="[
+                          unit.pivot?.type === 'owner'
+                            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                            : 'bg-green-100 text-green-800 hover:bg-green-200',
+                          isUpdatingUnitType === unit.id
+                            ? 'opacity-50 cursor-not-allowed'
+                            : '',
+                        ]"
+                      >
+                        <option value="owner">Owner</option>
+                        <option value="tenant">Tenant</option>
+                      </select>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
                       <button
                         @click="removeUnit(unit)"
                         class="text-red-600 hover:text-red-800"
@@ -442,7 +439,7 @@
                   <!-- Empty State -->
                   <tr v-if="filteredUnits.length === 0">
                     <td
-                      colspan="4"
+                      colspan="5"
                       class="px-6 py-8 text-center text-sm text-gray-500"
                     >
                       <div class="flex flex-col items-center">
@@ -475,8 +472,36 @@
 
           <!-- Invoices Tab -->
           <div v-if="activeTab === 'invoices'" class="space-y-4">
+            <!-- Loading State -->
+            <div
+              v-if="isLoadingInvoices"
+              class="flex items-center justify-center py-8"
+            >
+              <svg
+                class="animate-spin h-8 w-8 text-primary"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span class="ml-2 text-gray-600">Loading invoices...</span>
+            </div>
+
             <!-- Invoices Table -->
-            <div class="overflow-hidden sm:rounded-md">
+            <div v-else class="overflow-hidden sm:rounded-md">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
@@ -507,7 +532,7 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                     >
-                      {{ invoice.date }}
+                      {{ new Date(invoice.date).toLocaleDateString() }}
                     </td>
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
@@ -529,7 +554,9 @@
                             ? 'bg-green-100 text-green-800'
                             : invoice.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800',
+                              : invoice.status === 'cancelled'
+                                ? 'bg-gray-100 text-gray-800'
+                                : 'bg-red-100 text-red-800',
                         ]"
                       >
                         {{ invoice.status }}
@@ -557,6 +584,9 @@
                           />
                         </svg>
                         <p class="text-gray-500">No invoices found</p>
+                        <p class="text-gray-400 text-xs mt-1">
+                          This resident has no invoices for their assigned units
+                        </p>
                       </div>
                     </td>
                   </tr>
@@ -921,15 +951,14 @@
                 <div
                   v-for="unit in availableUnitsForResident"
                   :key="unit.id"
-                  class="p-4 hover:bg-gray-50 cursor-pointer"
-                  @click="toggleUnitSelection(unit.id)"
+                  class="p-4 hover:bg-gray-50"
                 >
-                  <div class="flex items-center">
+                  <div class="flex items-start">
                     <input
-                      :checked="selectedUnits.includes(unit.id)"
+                      :checked="isUnitSelected(unit.id)"
                       type="checkbox"
-                      class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                      @click.stop="toggleUnitSelection(unit.id)"
+                      class="h-4 w-4 mt-1 text-primary focus:ring-primary border-gray-300 rounded"
+                      @change="toggleUnitSelection(unit.id)"
                     />
                     <div class="ml-3 flex-1">
                       <div class="text-sm font-medium text-gray-900">
@@ -944,6 +973,51 @@
                         {{
                           new Date(unit.balance_as_of_date).toLocaleDateString()
                         }}
+                      </div>
+                      <!-- Type selector for selected units -->
+                      <div
+                        v-if="isUnitSelected(unit.id)"
+                        class="mt-3 flex items-center space-x-4"
+                      >
+                        <label class="text-sm font-medium text-gray-700"
+                          >Type:</label
+                        >
+                        <div class="flex space-x-4">
+                          <label class="flex items-center">
+                            <input
+                              type="radio"
+                              name="unit-type-{{
+                                unit.id
+                              }}"
+                              value="owner"
+                              :checked="
+                                getSelectedUnitType(unit.id) === 'owner'
+                              "
+                              @change="updateUnitType(unit.id, 'owner')"
+                              class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                            />
+                            <span class="ml-2 text-sm text-gray-700"
+                              >Owner</span
+                            >
+                          </label>
+                          <label class="flex items-center">
+                            <input
+                              type="radio"
+                              name="unit-type-{{
+                                unit.id
+                              }}"
+                              value="tenant"
+                              :checked="
+                                getSelectedUnitType(unit.id) === 'tenant'
+                              "
+                              @change="updateUnitType(unit.id, 'tenant')"
+                              class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                            />
+                            <span class="ml-2 text-sm text-gray-700"
+                              >Tenant</span
+                            >
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1012,6 +1086,7 @@ import {
   useResidentUnits,
   useAvailableUnitsForResident,
 } from '../composables/useResidents';
+import { useInvoices } from '../composables/useInvoices';
 import { residentsApi } from '@neibrpay/api-client';
 import {
   validateResidentForm,
@@ -1021,6 +1096,7 @@ import type {
   ResidentFormData,
   ResidentFormErrors,
   CreateResidentRequest,
+  InvoiceUnit,
 } from '@neibrpay/models';
 
 const route = useRoute();
@@ -1039,8 +1115,7 @@ const form = ref<ResidentFormData>({
   name: '',
   email: '',
   phone: '',
-  type: 'owner',
-  member_role: 'member',
+  role: 'resident',
 });
 
 // Form errors
@@ -1060,14 +1135,19 @@ const isRemovingUnit = ref(false);
 
 // Add units modal state
 const showAddUnitsModal = ref(false);
-const selectedUnits = ref<number[]>([]);
+const selectedUnits = ref<Array<{ unit_id: number; type: 'owner' | 'tenant' }>>(
+  []
+);
 const isAddingUnits = ref(false);
 const addUnitsSearchQuery = ref('');
+
+// Unit type update state
+const isUpdatingUnitType = ref<number | null>(null);
 
 // Tabs configuration
 const tabs = [
   { id: 'units', name: 'Units' },
-  { id: 'invoices', name: 'Invoices' },
+  { id: 'invoices', name: 'HOA Dues' },
   { id: 'history', name: 'History' },
 ];
 
@@ -1085,22 +1165,61 @@ const {
   refetch: refetchAvailableUnits,
 } = useAvailableUnitsForResident(residentId.value!);
 
-const invoices = ref([
-  {
-    id: 1,
-    date: '2024-01-15',
-    description: 'Monthly HOA Fee',
-    amount: '150.00',
-    status: 'paid',
-  },
-  {
-    id: 2,
-    date: '2024-01-10',
-    description: 'Late Fee',
-    amount: '25.00',
-    status: 'pending',
-  },
-]);
+// Get unit IDs for the resident
+const unitIds = computed(() => {
+  if (!units.value || units.value.length === 0) return [];
+  return units.value.map((unit: any) => unit.id);
+});
+
+// Fetch all invoices (will be filtered client-side by unit IDs)
+const { data: allInvoicesData, isLoading: isLoadingInvoices } = useInvoices({
+  include_deleted: false,
+});
+
+// Filter invoices to only show those for the resident's units (excluding drafts)
+const allInvoices = computed(() => {
+  if (!allInvoicesData.value || unitIds.value.length === 0) return [];
+
+  // Filter invoices that belong to the resident's units and exclude drafts
+  const filtered = allInvoicesData.value.filter(
+    (invoice: InvoiceUnit) =>
+      unitIds.value.includes(invoice.unit_id) && invoice.status !== 'draft'
+  );
+
+  // Sort by start_date descending (most recent first)
+  return filtered.sort((a: InvoiceUnit, b: InvoiceUnit) => {
+    const dateA = new Date(a.start_date).getTime();
+    const dateB = new Date(b.start_date).getTime();
+    return dateB - dateA;
+  });
+});
+
+// Transform invoices to display format
+const invoices = computed(() => {
+  return allInvoices.value.map((invoice: InvoiceUnit) => {
+    // Get description from first item or use invoice number
+    const description =
+      invoice.items && invoice.items.length > 0
+        ? invoice.items[0].name
+        : `Invoice ${invoice.invoice_number}`;
+
+    // Map status: 'paid' -> 'paid', others -> 'pending'
+    const displayStatus =
+      invoice.status === 'paid'
+        ? 'paid'
+        : invoice.status === 'cancelled'
+          ? 'cancelled'
+          : 'pending';
+
+    return {
+      id: invoice.id,
+      date: invoice.start_date,
+      description,
+      amount: formatCurrency(invoice.total),
+      status: displayStatus,
+    };
+  });
+});
 
 const residentHistory = ref([
   {
@@ -1202,12 +1321,36 @@ const closeAddUnitsModal = () => {
 };
 
 const toggleUnitSelection = (unitId: number) => {
-  const index = selectedUnits.value.indexOf(unitId);
+  const index = selectedUnits.value.findIndex(
+    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+  );
   if (index > -1) {
     selectedUnits.value.splice(index, 1);
   } else {
-    selectedUnits.value.push(unitId);
+    selectedUnits.value.push({ unit_id: unitId, type: 'owner' });
   }
+};
+
+const updateUnitType = (unitId: number, type: 'owner' | 'tenant') => {
+  const index = selectedUnits.value.findIndex(
+    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+  );
+  if (index > -1) {
+    selectedUnits.value[index].type = type;
+  }
+};
+
+const isUnitSelected = (unitId: number): boolean => {
+  return selectedUnits.value.some(
+    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+  );
+};
+
+const getSelectedUnitType = (unitId: number): 'owner' | 'tenant' => {
+  const selected = selectedUnits.value.find(
+    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+  );
+  return selected?.type || 'owner';
 };
 
 const confirmAddUnits = async () => {
@@ -1231,6 +1374,34 @@ const confirmAddUnits = async () => {
   }
 };
 
+const handleUnitTypeChange = (unitId: number, event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  const type = target.value as 'owner' | 'tenant';
+  updateUnitTypeForResident(unitId, type);
+};
+
+const updateUnitTypeForResident = async (
+  unitId: number,
+  type: 'owner' | 'tenant'
+) => {
+  if (!residentId.value) return;
+
+  isUpdatingUnitType.value = unitId;
+
+  try {
+    await residentsApi.updateResidentUnitType(residentId.value, unitId, type);
+    // Refresh units to get updated data
+    refetchUnits();
+  } catch (error) {
+    console.error('Error updating unit type:', error);
+    alert('Failed to update unit type. Please try again.');
+    // Refresh units to revert UI state
+    refetchUnits();
+  } finally {
+    isUpdatingUnitType.value = null;
+  }
+};
+
 // Queries and mutations
 const { data: resident, isLoading: isLoadingResident } = useResident(
   residentId.value!
@@ -1245,8 +1416,7 @@ onMounted(() => {
       name: resident.value.name,
       email: resident.value.email,
       phone: resident.value.phone,
-      type: resident.value.type || 'owner',
-      member_role: resident.value.member_role || 'member',
+      role: resident.value.role || 'resident',
     };
   }
 
@@ -1263,8 +1433,7 @@ watch(resident, (newResident: any) => {
       name: newResident.name,
       email: newResident.email,
       phone: newResident.phone,
-      type: newResident.type || 'owner',
-      member_role: newResident.member_role || 'member',
+      role: newResident.role || 'resident',
     };
   }
 });
@@ -1282,6 +1451,21 @@ watch(activeTab, (newTab: string) => {
     refetchUnits();
   }
 });
+
+// Watch for units changes - invoices will automatically update when unitIds change
+// because allInvoices computed property filters by unitIds
+watch(units, () => {
+  // Invoices will automatically update when units change
+  // since allInvoices filters by unitIds which is computed from units
+});
+
+// Currency formatting helper
+const formatCurrency = (amount: number | string | null | undefined): string => {
+  if (amount === null || amount === undefined) return '0.00';
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(numAmount)) return '0.00';
+  return numAmount.toFixed(2);
+};
 
 // Phone formatting - match signup form format (XXX-XXX-XXXX)
 const formatPhone = (event: Event) => {

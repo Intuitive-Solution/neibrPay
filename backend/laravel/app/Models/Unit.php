@@ -55,6 +55,7 @@ class Unit extends Model
     public function owners(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'unit_owners', 'unit_id', 'resident_id')
+            ->withPivot('type')
             ->withTimestamps();
     }
 

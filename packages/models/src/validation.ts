@@ -20,16 +20,11 @@ export const createResidentSchema = z.object({
     .string()
     .regex(US_PHONE_REGEX, 'Please enter a valid US phone number (10 digits)')
     .max(14, 'Phone number must not exceed 14 characters'),
-  type: z
-    .enum(['owner', 'tenant', 'others'], {
-      message: 'Type must be Owner, Tenant, or Others',
+  role: z
+    .enum(['admin', 'resident', 'bookkeeper'], {
+      message: 'Role must be Admin, Resident, or Bookkeeper',
     })
-    .default('owner'),
-  member_role: z
-    .enum(['admin', 'member'], {
-      message: 'Member role must be Admin or Member',
-    })
-    .default('member'),
+    .default('resident'),
 });
 
 export const updateResidentSchema = createResidentSchema.partial();
