@@ -2,14 +2,88 @@
 
 A comprehensive cloud-based multi-tenant HOA Management Platform designed for self-managed homeowners associations in the U.S. Built with modern web technologies and a scalable architecture.
 
+## 📖 Quick Links
+
+**Getting Started**
+
+- [🚀 Deployment Status](#-deployment-status) - Production deployment guides
+- [🚀 Getting Started](#-getting-started-1) - Local development setup
+- [📜 Available Scripts](#-available-scripts) - Development commands
+
+**Technical Documentation**
+
+- [🏗️ Architecture](#️-architecture) - Project structure and organization
+- [🛠️ Tech Stack](#️-tech-stack) - Technologies and frameworks
+- [📚 Documentation](#-documentation) - Complete documentation index
+- [🌐 Deployment](#-deployment) - Production deployment architecture
+
+**Project Status**
+
+- [📋 Development Status](#-development-status) - Current progress and roadmap
+- [🔍 Health Checks](#-health-checks) - Testing and monitoring
+- [🆘 Troubleshooting](#-troubleshooting) - Common issues and solutions
+
+## 🚀 Deployment Status
+
+### Production Ready
+
+- **Frontend (Admin)**: Configured for [Netlify](https://netlify.com) deployment
+- **Backend (API)**: Configured for [Railway](https://railway.app) deployment
+- **Deployment Guides**: See [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) for complete setup
+
+### Quick Deploy
+
+```bash
+# 1. Deploy Backend to Railway
+# - Root directory: backend/laravel
+# - Set environment variables (see railway.env.example)
+# - Health check: /api/health
+
+# 2. Deploy Frontend to Netlify
+# - Build command: cd apps/admin-web && npm install && npm run build
+# - Publish directory: apps/admin-web/dist
+# - Set VITE_API_URL to Railway backend URL
+
+# 3. Connect services (see DEPLOYMENT_CHECKLIST.md for details)
+```
+
+📚 **Detailed Guides:**
+
+- [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) - Complete deployment checklist
+- [DEPLOYMENT_NETLIFY.md](DEPLOYMENT_NETLIFY.md) - Frontend deployment guide
+- [DEPLOYMENT_RAILWAY.md](DEPLOYMENT_RAILWAY.md) - Backend deployment guide
+
 ## 🏠 Overview
 
-NeibrPay streamlines HOA operations by providing:
+NeibrPay is a complete HOA management solution that streamlines operations for self-managed communities. Built with modern technologies and designed for ease of use.
 
-- **Manager Dashboard**: Financial management, member administration, reporting
-- **Owner Portal**: Dues payment, document access, community announcements
-- **Multi-tenant Architecture**: Secure, isolated data for each HOA
-- **Modern UI/UX**: Responsive design with intuitive workflows
+### Key Features
+
+**For HOA Managers & Board Members**
+
+- 💰 **Financial Management**: Invoices, payments, charges, and expense tracking
+- 📊 **Dashboard & Reporting**: Real-time financial insights and analytics
+- 🏘️ **Unit Management**: Track properties, residents, and ownership
+- 📄 **Document Management**: Store and share HOA documents securely
+- 🧾 **PDF Generation**: Professional invoices and financial reports
+- 💳 **Payment Tracking**: Record and reconcile all transactions
+
+**For Property Owners & Residents**
+
+- 💳 **Online Payments**: Pay dues and fees online (Stripe integration planned)
+- 📧 **Notifications**: Automated email notifications for important updates
+- 📄 **Document Access**: View HOA documents and governing rules
+- 💵 **Payment History**: Track all payments and outstanding balances
+- 🏠 **Unit Information**: Access property-specific details
+
+**Technical Features**
+
+- 🔒 **Multi-tenant Architecture**: Secure, isolated data for each HOA
+- 🔐 **Firebase Authentication**: Secure email/password authentication
+- 📱 **Responsive Design**: Works on desktop, tablet, and mobile
+- ⚡ **Modern Tech Stack**: Vue 3, Laravel 11, TypeScript
+- 🚀 **Cloud-Ready**: Deployable to Netlify and Railway
+- 📊 **Type-Safe**: Full TypeScript coverage for reliability
 
 ## 🏗️ Architecture
 
@@ -53,10 +127,10 @@ neibrpay/
 
 ### Backend
 
-- **Laravel 10** with Eloquent ORM
+- **Laravel 11** with Eloquent ORM
 - **Laravel Sanctum** for API authentication
-- **SQLite** for development (MySQL for production)
-- **Laravel DomPDF** for PDF generation
+- **SQLite** for development (MySQL/PostgreSQL for production)
+- **Laravel DomPDF** for server-side PDF generation
 - **Firebase PHP SDK** for authentication
 - **Multi-tenant architecture** with tenant scoping
 
@@ -64,18 +138,21 @@ neibrpay/
 
 - **Turbo** for monorepo build orchestration
 - **npm workspaces** for dependency management
-- **TypeScript** for type safety
+- **TypeScript** for type safety across all packages
 - **ESLint** + **Prettier** for code quality
 - **Husky** for Git hooks
 - **Vitest** for testing
 
-### Planned Integrations
+### Cloud Services & Integrations
 
-- **Firebase Auth** for authentication
-- **Stripe** for payment processing
-- **Plaid** for bank integrations
-- **AWS S3** for file storage
-- **SendGrid/SES** for email notifications
+- **Netlify** for frontend hosting
+- **Railway** for backend hosting
+- **Firebase Auth** for authentication (integrated)
+- **n8n** for workflow automation (optional)
+- **Stripe** for payment processing (planned)
+- **Plaid** for bank integrations (planned)
+- **AWS S3** for file storage (planned)
+- **SendGrid/SES** for email notifications (planned)
 
 ## 🚀 Getting Started
 
@@ -226,79 +303,176 @@ php artisan test
 
 ## 📋 Development Status
 
-**Current Phase**: Core Features Implementation (Phases 1-5)
+**Current Phase**: Core MVP Features Complete - Ready for Deployment
 
 ### ✅ Completed
 
-- Monorepo structure with Turbo
-- Vue 3 + Laravel boilerplate
-- Build system configuration
-- TypeScript setup across all packages
-- Firebase authentication integration
-- Multi-tenant database architecture
-- Invoice management with PDF generation
-- Payment tracking and entry
-- Charge management
-- Unit and resident management
-- Expense and vendor management
-- UI redesign (75%+ complete with Bonsai-inspired design)
+**Infrastructure & Setup**
+
+- ✅ Monorepo structure with Turbo build system
+- ✅ Vue 3 + Laravel 11 architecture
+- ✅ TypeScript strict mode across all packages
+- ✅ Deployment configurations (Netlify + Railway)
+- ✅ CORS and authentication setup
+
+**Authentication & Multi-tenancy**
+
+- ✅ Firebase authentication integration (email/password)
+- ✅ Multi-tenant database architecture
+- ✅ Tenant-scoped data isolation
+- ✅ User roles and permissions (Manager, Owner)
+
+**Core HOA Management Features**
+
+- ✅ Invoice management with PDF generation (client + server)
+- ✅ Payment tracking and entry system
+- ✅ Charge management (one-time and recurring)
+- ✅ Unit and resident management
+- ✅ Expense and vendor tracking
+- ✅ Document management with file upload
+
+**UI/UX**
+
+- ✅ Modern Bonsai-inspired design system
+- ✅ Responsive layout (desktop, tablet, mobile)
+- ✅ Dark mode support
+- ✅ Accessible components (WCAG AA)
+- ✅ Loading states and error handling
 
 ### 🔄 In Progress
 
-- Advanced reporting features
-- Email notifications
-- Mobile application development
-- Performance optimization
+- Advanced financial reporting dashboards
+- Email notifications via n8n workflows
+- Performance optimization and caching
+- Comprehensive testing suite
 
 ### 📅 Planned
 
+**Phase 2 - Payments**
+
 - Stripe payment processing integration
-- Advanced document management
-- Email notifications (SendGrid/SES)
-- Mobile application (Capacitor/Ionic)
-- Bank reconciliation features
-- Advanced reporting and analytics
+- ACH/eCheck payments
+- Payment plans and installments
+- Late fee automation
+
+**Phase 3 - Advanced Features**
+
+- Bank reconciliation
+- Budget planning and forecasting
+- Advanced analytics and insights
+- Document signing (DocuSign integration)
+
+**Phase 4 - Mobile & Integrations**
+
+- Native mobile app (Capacitor/Ionic)
+- Plaid bank account linking
+- QuickBooks integration
+- SMS notifications
 
 See [TASKS.md](./md/TASKS.md) for detailed development roadmap.
 
 ## 📚 Documentation
 
+### Deployment Guides
+
+- **[Deployment Checklist](./DEPLOYMENT_CHECKLIST.md)** - Complete deployment walkthrough
+- **[Netlify Deployment](./DEPLOYMENT_NETLIFY.md)** - Frontend deployment guide
+- **[Railway Deployment](./DEPLOYMENT_RAILWAY.md)** - Backend deployment guide
+
+### API & Technical Documentation
+
 - **[API Documentation](./md/INVOICE_API_DOCUMENTATION.md)** - Complete API reference
 - **[PDF Generation Guide](./md/INVOICE_PDF_GENERATION.md)** - PDF implementation details
 - **[Schema Documentation](./md/NeibrPay_Schema_PRD_MVP.md)** - Database schema and relationships
+
+### Product & Design Documentation
+
+- **[HOA MVP PRD](./md/HOA_MVP_PRD.md)** - Product requirements document
 - **[UI/UX Guide](./md/NeibrPay_UIUX_PRD.md)** - Design system and user experience
+- **[Manager Dashboard PRD](./md/NeibrPay_HOA_Manager_Dashboard_PRD.md)** - Dashboard specifications
+- **[Owner Portal PRD](./md/NeibrPay_Owner_Portal_PRD.md)** - Owner portal specifications
+
+### Development Documentation
+
+- **[Development Tasks](./md/TASKS.md)** - Development roadmap and tasks
 - **[Codebase Improvements](./md/CODEBASE_IMPROVEMENTS.md)** - Technical debt and improvements
+- **[n8n Workflow Guides](./docs/)** - Email notification workflow setup
 
 ## 🌐 Deployment
 
-### Current Infrastructure
+### Deployment Architecture
 
-- **Frontend**: Netlify (configured with netlify.toml)
-- **Backend**: Laravel API (development on localhost:8000)
-- **Database**: SQLite for development, MySQL for production
-- **Storage**: Local storage (development), AWS S3 planned
-- **Authentication**: Firebase (integrated)
-- **PDF Generation**: Laravel DomPDF + jsPDF
+**Frontend (Netlify)**
 
-### Planned Infrastructure
+- Platform: Netlify
+- Build: `cd apps/admin-web && npm install && npm run build`
+- Output: `apps/admin-web/dist`
+- Features: Automatic SSL, CDN, Preview deployments
+- Configuration: `apps/admin-web/netlify.toml`
 
-- **Backend**: Railway.app for Laravel API
-- **Database**: MySQL with automated backups
-- **Storage**: AWS S3 for document storage
-- **CDN**: CloudFront for asset delivery
-- **Monitoring**: Sentry for error tracking
+**Backend (Railway)**
 
-### Environment Setup
+- Platform: Railway
+- Root: `backend/laravel`
+- Runtime: PHP 8.2 with Laravel 11
+- Database: SQLite (dev), PostgreSQL (production recommended)
+- Health Check: `/api/health`
+- Configuration: `backend/laravel/railway.toml`
 
-```bash
-# Production environment variables
-FRONTEND_URL=https://app.neibrpay.com
-API_URL=https://api.neibrpay.com
-DATABASE_URL=mysql://...
-STRIPE_SECRET_KEY=sk_live_...
-FIREBASE_PROJECT_ID=neibrpay-hoa
-FIREBASE_CREDENTIALS_JSON={"type":"service_account",...}
+**Key Environment Variables**
+
+Frontend (Netlify):
+
+```env
+VITE_API_URL=https://your-railway-domain.railway.app/api
 ```
+
+Backend (Railway):
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:...
+APP_URL=https://your-railway-domain.railway.app
+FRONTEND_URL=https://your-netlify-domain.netlify.app
+DB_CONNECTION=sqlite
+```
+
+### Deployment Steps
+
+1. **Deploy Backend First**
+
+   ```bash
+   # See DEPLOYMENT_RAILWAY.md for details
+   # Set environment variables on Railway
+   # Verify health endpoint: /api/health
+   ```
+
+2. **Deploy Frontend**
+
+   ```bash
+   # See DEPLOYMENT_NETLIFY.md for details
+   # Set VITE_API_URL to Railway backend URL
+   # Verify CORS configuration
+   ```
+
+3. **Connect Services**
+   ```bash
+   # Update FRONTEND_URL on Railway
+   # Test authentication flow
+   # Verify API connectivity
+   ```
+
+📖 **Complete Guide**: See [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
+
+### Future Infrastructure
+
+- **Database**: PostgreSQL with automated backups
+- **Storage**: AWS S3 for document and PDF storage
+- **CDN**: CloudFront for asset delivery
+- **Email**: SendGrid or AWS SES for notifications
+- **Monitoring**: Sentry for error tracking
+- **Analytics**: PostHog or Mixpanel for product analytics
 
 ## 🤝 Contributing
 
@@ -316,9 +490,63 @@ FIREBASE_CREDENTIALS_JSON={"type":"service_account",...}
 - Write **type-safe** code with TypeScript
 - Include **error handling** and loading states
 
-## Laravel Health check.
+## 🔍 Health Checks
 
-http://localhost:8000/api/health
+**Local Development:**
+
+```bash
+# Backend health check
+curl http://localhost:8000/api/health
+
+# Expected response:
+# {"status":"ok","timestamp":"2024-11-10T12:00:00.000000Z"}
+```
+
+**Production:**
+
+```bash
+# Backend health check
+curl https://your-railway-domain.railway.app/api/health
+
+# Frontend health check
+# Open browser: https://your-netlify-domain.netlify.app
+```
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**Build Errors**
+
+- Ensure all packages are installed: `npm install`
+- Clear cache: `npm run clean && npm install`
+- Check Node.js version: `node --version` (requires >= 18.0.0)
+
+**CORS Errors**
+
+- Verify `FRONTEND_URL` is set on Railway
+- Check `backend/laravel/config/cors.php` configuration
+- Ensure cookies are sent with credentials
+
+**401 Unauthorized**
+
+- Verify Laravel `APP_KEY` is set
+- Check Firebase authentication configuration
+- Ensure Sanctum is configured correctly
+
+**Database Issues**
+
+- Check SQLite file permissions
+- Run migrations: `php artisan migrate`
+- Verify database path in `.env`
+
+**PDF Generation Issues**
+
+- Check DomPDF configuration
+- Verify storage directory permissions
+- Ensure fonts are accessible
+
+See [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) for more troubleshooting tips.
 
 ## 📄 License
 
@@ -327,3 +555,5 @@ Private - All rights reserved
 ---
 
 **NeibrPay** - Streamlining HOA management for modern communities.
+
+For support, questions, or contributions, please refer to the documentation in the `/md` directory or open an issue.
