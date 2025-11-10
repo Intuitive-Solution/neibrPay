@@ -72,7 +72,7 @@ class ResidentController extends Controller
             'email' => $request->email,
             'phone_number' => $request->phone,
             'type' => $request->type ?? 'owner',
-            'role' => 'resident',
+            'role' => $request->role ?? 'resident',
             'tenant_id' => $user->tenant_id,
             'is_active' => true,
         ]);
@@ -261,7 +261,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin', 'bookkeeper'])
             ->findOrFail($id);
         
         $resident->update([
@@ -269,6 +269,7 @@ class ResidentController extends Controller
             'email' => $request->email,
             'phone_number' => $request->phone,
             'type' => $request->type,
+            'role' => $request->role,
         ]);
         
         $resident->load('tenant');

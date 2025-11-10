@@ -185,6 +185,34 @@
           </div>
         </div>
 
+        <!-- Role Field -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
+          <label
+            for="role"
+            class="block text-sm font-medium text-gray-700 lg:pt-3"
+          >
+            Role <span class="text-red-500">*</span>
+          </label>
+          <div class="lg:col-span-2">
+            <select
+              id="role"
+              v-model="form.role"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              :class="{
+                'border-red-300 focus:ring-red-500 focus:border-red-500':
+                  errors.role,
+              }"
+            >
+              <option value="resident">Resident</option>
+              <option value="admin">Admin</option>
+            </select>
+            <p v-if="errors.role" class="mt-2 text-sm text-red-600">
+              {{ errors.role }}
+            </p>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <!-- Spacer for large screens to align with form fields -->
@@ -1012,6 +1040,7 @@ const form = ref<ResidentFormData>({
   email: '',
   phone: '',
   type: 'owner',
+  role: 'resident',
 });
 
 // Form errors
@@ -1217,6 +1246,7 @@ onMounted(() => {
       email: resident.value.email,
       phone: resident.value.phone,
       type: resident.value.type || 'owner',
+      role: resident.value.role || 'resident',
     };
   }
 
@@ -1234,6 +1264,7 @@ watch(resident, (newResident: any) => {
       email: newResident.email,
       phone: newResident.phone,
       type: newResident.type || 'owner',
+      role: newResident.role || 'resident',
     };
   }
 });

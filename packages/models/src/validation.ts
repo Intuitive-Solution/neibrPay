@@ -25,6 +25,11 @@ export const createResidentSchema = z.object({
       message: 'Type must be Owner, Tenant, or Others',
     })
     .default('owner'),
+  role: z
+    .enum(['admin', 'resident', 'bookkeeper'], {
+      message: 'Role must be Admin, Resident, or Bookkeeper',
+    })
+    .default('resident'),
 });
 
 export const updateResidentSchema = createResidentSchema.partial();

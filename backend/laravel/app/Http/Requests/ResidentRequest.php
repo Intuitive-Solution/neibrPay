@@ -59,6 +59,11 @@ class ResidentRequest extends FormRequest
                 'string',
                 Rule::in(['owner', 'tenant', 'others'])
             ],
+            'role' => [
+                'required',
+                'string',
+                Rule::in(['admin', 'resident', 'bookkeeper'])
+            ],
         ];
     }
 
@@ -83,6 +88,9 @@ class ResidentRequest extends FormRequest
             
             'type.required' => 'The resident type is required.',
             'type.in' => 'The resident type must be Owner, Tenant, or Others.',
+            
+            'role.required' => 'The role is required.',
+            'role.in' => 'The role must be Admin, Resident, or Bookkeeper.',
         ];
     }
 
@@ -96,6 +104,7 @@ class ResidentRequest extends FormRequest
             'email' => 'email address',
             'phone' => 'phone number',
             'type' => 'resident type',
+            'role' => 'role',
         ];
     }
 }
