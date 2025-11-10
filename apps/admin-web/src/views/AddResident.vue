@@ -472,8 +472,36 @@
 
           <!-- Invoices Tab -->
           <div v-if="activeTab === 'invoices'" class="space-y-4">
+            <!-- Loading State -->
+            <div
+              v-if="isLoadingInvoices"
+              class="flex items-center justify-center py-8"
+            >
+              <svg
+                class="animate-spin h-8 w-8 text-primary"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span class="ml-2 text-gray-600">Loading invoices...</span>
+            </div>
+
             <!-- Invoices Table -->
-            <div class="overflow-hidden sm:rounded-md">
+            <div v-else class="overflow-hidden sm:rounded-md">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
@@ -504,7 +532,7 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                     >
-                      {{ invoice.date }}
+                      {{ new Date(invoice.date).toLocaleDateString() }}
                     </td>
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
@@ -526,7 +554,9 @@
                             ? 'bg-green-100 text-green-800'
                             : invoice.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800',
+                              : invoice.status === 'cancelled'
+                                ? 'bg-gray-100 text-gray-800'
+                                : 'bg-red-100 text-red-800',
                         ]"
                       >
                         {{ invoice.status }}
@@ -554,6 +584,9 @@
                           />
                         </svg>
                         <p class="text-gray-500">No invoices found</p>
+                        <p class="text-gray-400 text-xs mt-1">
+                          This resident has no invoices for their assigned units
+                        </p>
                       </div>
                     </td>
                   </tr>
@@ -1053,6 +1086,7 @@ import {
   useResidentUnits,
   useAvailableUnitsForResident,
 } from '../composables/useResidents';
+import { useInvoices } from '../composables/useInvoices';
 import { residentsApi } from '@neibrpay/api-client';
 import {
   validateResidentForm,
@@ -1062,6 +1096,7 @@ import type {
   ResidentFormData,
   ResidentFormErrors,
   CreateResidentRequest,
+  InvoiceUnit,
 } from '@neibrpay/models';
 
 const route = useRoute();
@@ -1112,7 +1147,7 @@ const isUpdatingUnitType = ref<number | null>(null);
 // Tabs configuration
 const tabs = [
   { id: 'units', name: 'Units' },
-  { id: 'invoices', name: 'Invoices' },
+  { id: 'invoices', name: 'HOA Dues' },
   { id: 'history', name: 'History' },
 ];
 
@@ -1130,22 +1165,61 @@ const {
   refetch: refetchAvailableUnits,
 } = useAvailableUnitsForResident(residentId.value!);
 
-const invoices = ref([
-  {
-    id: 1,
-    date: '2024-01-15',
-    description: 'Monthly HOA Fee',
-    amount: '150.00',
-    status: 'paid',
-  },
-  {
-    id: 2,
-    date: '2024-01-10',
-    description: 'Late Fee',
-    amount: '25.00',
-    status: 'pending',
-  },
-]);
+// Get unit IDs for the resident
+const unitIds = computed(() => {
+  if (!units.value || units.value.length === 0) return [];
+  return units.value.map((unit: any) => unit.id);
+});
+
+// Fetch all invoices (will be filtered client-side by unit IDs)
+const { data: allInvoicesData, isLoading: isLoadingInvoices } = useInvoices({
+  include_deleted: false,
+});
+
+// Filter invoices to only show those for the resident's units (excluding drafts)
+const allInvoices = computed(() => {
+  if (!allInvoicesData.value || unitIds.value.length === 0) return [];
+
+  // Filter invoices that belong to the resident's units and exclude drafts
+  const filtered = allInvoicesData.value.filter(
+    (invoice: InvoiceUnit) =>
+      unitIds.value.includes(invoice.unit_id) && invoice.status !== 'draft'
+  );
+
+  // Sort by start_date descending (most recent first)
+  return filtered.sort((a: InvoiceUnit, b: InvoiceUnit) => {
+    const dateA = new Date(a.start_date).getTime();
+    const dateB = new Date(b.start_date).getTime();
+    return dateB - dateA;
+  });
+});
+
+// Transform invoices to display format
+const invoices = computed(() => {
+  return allInvoices.value.map((invoice: InvoiceUnit) => {
+    // Get description from first item or use invoice number
+    const description =
+      invoice.items && invoice.items.length > 0
+        ? invoice.items[0].name
+        : `Invoice ${invoice.invoice_number}`;
+
+    // Map status: 'paid' -> 'paid', others -> 'pending'
+    const displayStatus =
+      invoice.status === 'paid'
+        ? 'paid'
+        : invoice.status === 'cancelled'
+          ? 'cancelled'
+          : 'pending';
+
+    return {
+      id: invoice.id,
+      date: invoice.start_date,
+      description,
+      amount: formatCurrency(invoice.total),
+      status: displayStatus,
+    };
+  });
+});
 
 const residentHistory = ref([
   {
@@ -1377,6 +1451,21 @@ watch(activeTab, (newTab: string) => {
     refetchUnits();
   }
 });
+
+// Watch for units changes - invoices will automatically update when unitIds change
+// because allInvoices computed property filters by unitIds
+watch(units, () => {
+  // Invoices will automatically update when units change
+  // since allInvoices filters by unitIds which is computed from units
+});
+
+// Currency formatting helper
+const formatCurrency = (amount: number | string | null | undefined): string => {
+  if (amount === null || amount === undefined) return '0.00';
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(numAmount)) return '0.00';
+  return numAmount.toFixed(2);
+};
 
 // Phone formatting - match signup form format (XXX-XXX-XXXX)
 const formatPhone = (event: Event) => {
