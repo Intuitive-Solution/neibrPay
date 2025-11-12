@@ -297,10 +297,10 @@ class StripePaymentController extends Controller
 
             // Recalculate invoice balance
             $totalPaid = $invoice->payments()->sum('amount');
-            $invoice->balance_due = $invoice->total - $totalPaid;
+            $balanceDue = $invoice->total - $totalPaid;
 
             // Update invoice status
-            if ($invoice->balance_due <= 0) {
+            if ($balanceDue <= 0) {
                 $invoice->status = 'paid';
             } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';

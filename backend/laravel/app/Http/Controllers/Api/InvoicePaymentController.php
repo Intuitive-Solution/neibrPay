@@ -118,10 +118,10 @@ class InvoicePaymentController extends Controller
             
             // Recalculate invoice balance from payments
             $totalPaid = $invoice->payments()->sum('amount');
-            $invoice->balance_due = $invoice->total - $totalPaid;
+            $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on payment
-            if ($invoice->balance_due <= 0) {
+            if ($balanceDue <= 0) {
                 $invoice->status = 'paid';
             } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';
@@ -200,10 +200,10 @@ class InvoicePaymentController extends Controller
             
             // Recalculate invoice balance from payments
             $totalPaid = $invoice->payments()->sum('amount');
-            $invoice->balance_due = $invoice->total - $totalPaid;
+            $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on new payment totals
-            if ($invoice->balance_due <= 0) {
+            if ($balanceDue <= 0) {
                 $invoice->status = 'paid';
             } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';
@@ -254,12 +254,12 @@ class InvoicePaymentController extends Controller
             
             // Recalculate invoice balance from remaining payments
             $totalPaid = $invoice->payments()->sum('amount');
-            $invoice->balance_due = $invoice->total - $totalPaid;
+            $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on remaining payments
             if ($totalPaid <= 0) {
                 $invoice->status = 'sent';
-            } elseif ($invoice->balance_due <= 0) {
+            } elseif ($balanceDue <= 0) {
                 $invoice->status = 'paid';
             } else {
                 $invoice->status = 'partial';

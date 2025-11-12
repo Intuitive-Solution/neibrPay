@@ -1824,14 +1824,25 @@ const pdfViewerUrl = computed(() => {
 // Computed properties for financial summary
 const amountPaid = computed(() => {
   if (!payments.value || payments.value.length === 0) return 0;
-  return payments.value.reduce((sum, payment) => sum + payment.amount, 0);
+  return payments.value.reduce((sum: number, payment: any) => {
+    const amount = payment?.amount || 0;
+    return sum + (typeof amount === 'number' && !isNaN(amount) ? amount : 0);
+  }, 0);
 });
 
 const paymentProgress = computed(() => {
-  if (!invoice.value || invoice.value.total === 0) return 0;
-  const paid = amountPaid.value;
-  const total = invoice.value.total;
-  return Math.min(Math.round((paid / total) * 100), 100);
+  if (!invoice.value || !invoice.value.total) return 0;
+
+  const paid = amountPaid.value || 0;
+  const total = invoice.value.total || 0;
+
+  // Handle edge cases
+  if (total === 0 || isNaN(total) || isNaN(paid)) return 0;
+  if (paid < 0) return 0;
+  if (paid >= total) return 100;
+
+  const percentage = (paid / total) * 100;
+  return Math.min(Math.round(percentage), 100);
 });
 
 // Methods

@@ -463,10 +463,9 @@ class InvoiceController extends Controller
             return response()->json(['message' => 'Invoice is already marked as paid'], 400);
         }
 
-        // Update invoice status and balance
+        // Update invoice status (balance_due is calculated dynamically from payments)
         $invoiceUnit->update([
             'status' => 'paid',
-            'balance_due' => 0, // Set balance_due to 0 when fully paid
         ]);
 
         // Create a payment record
