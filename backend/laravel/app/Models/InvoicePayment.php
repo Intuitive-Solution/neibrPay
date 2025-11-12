@@ -23,6 +23,9 @@ class InvoicePayment extends Model
         'notes',
         'payment_date',
         'recorded_by',
+        'stripe_checkout_session_id',
+        'stripe_payment_intent_id',
+        'stripe_payment_method',
     ];
 
     /**

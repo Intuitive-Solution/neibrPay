@@ -86,7 +86,7 @@ class InvoicePaymentController extends Controller
         
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,other',
+            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,other',
             'payment_reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',

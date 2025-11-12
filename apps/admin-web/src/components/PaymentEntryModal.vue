@@ -168,6 +168,8 @@
                   <option value="check">Check</option>
                   <option value="credit_card">Credit Card</option>
                   <option value="bank_transfer">Bank Transfer</option>
+                  <option value="stripe_card">Stripe (Card)</option>
+                  <option value="stripe_ach">Stripe (ACH)</option>
                   <option value="other">Other</option>
                 </select>
                 <p

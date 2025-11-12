@@ -557,3 +557,14 @@ Private - All rights reserved
 **NeibrPay** - Streamlining HOA management for modern communities.
 
 For support, questions, or contributions, please refer to the documentation in the `/md` directory or open an issue.
+
+**\* Stripe Test account \*\***
+CARDS
+4000 0000 0000 0002 - Card declined
+4000 0000 0000 9995 - Insufficient funds
+4000 0025 0000 3155 - 3D Secure authentication required
+
+ACH Payments
+Test Account Number: 000123456789
+Test Routing Number: 110000000
+Test Account Holder: Any name

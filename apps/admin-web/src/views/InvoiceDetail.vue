@@ -667,6 +667,36 @@
         </div>
       </div>
 
+      <!-- Stripe Payment Section (for residents) -->
+      <div
+        v-if="
+          isResident &&
+          invoice.status !== 'paid' &&
+          invoice.status !== 'cancelled' &&
+          !invoice.deleted_at &&
+          invoice.balance_due > 0
+        "
+        class="mb-6 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200"
+      >
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">
+              Pay Online with Stripe
+            </h3>
+            <p class="text-sm text-gray-600">
+              Secure payment via credit card or ACH bank transfer
+            </p>
+          </div>
+        </div>
+        <StripeCheckoutButton
+          :invoice="invoice"
+          :show-amount-input="true"
+          button-text="Pay Now with Stripe"
+          @success="handleStripePaymentSuccess"
+          @error="handleStripePaymentError"
+        />
+      </div>
+
       <!-- Line Items Section -->
       <div v-if="invoice.items && invoice.items.length > 0" class="card mb-6">
         <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
@@ -1661,7 +1691,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   useInvoice,
@@ -1680,6 +1710,7 @@ import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
+import StripeCheckoutButton from '../components/StripeCheckoutButton.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -1746,6 +1777,39 @@ const pdfRefreshKey = ref(0);
 
 // Tab state
 const activeTab = ref('documents');
+
+// Handle Stripe payment redirects
+onMounted(() => {
+  const paymentStatus = route.query.payment as string;
+  const sessionId = route.query.session_id as string;
+
+  if (paymentStatus === 'success' && sessionId) {
+    showSuccess('Payment processing! Your payment is being confirmed...');
+    // Refetch invoice and payments to get updated status
+    refetchInvoice();
+    // Remove query params from URL
+    router.replace({ query: {} });
+  } else if (paymentStatus === 'cancelled') {
+    showError('Payment was cancelled. You can try again when ready.');
+    // Remove query params from URL
+    router.replace({ query: {} });
+  }
+});
+
+// Watch for invoice updates after Stripe payment
+watch(
+  () => invoice.value?.balance_due,
+  (newBalance, oldBalance) => {
+    if (
+      oldBalance !== undefined &&
+      newBalance !== undefined &&
+      newBalance < oldBalance
+    ) {
+      // Balance decreased, payment likely processed
+      refetchInvoice();
+    }
+  }
+);
 
 const pdfViewerUrl = computed(() => {
   if (!latestPdf.value?.file_path) return '';
@@ -1992,12 +2056,23 @@ const handlePaymentUpdateSuccess = () => {
   pdfRefreshKey.value = Date.now();
 };
 
+const handleStripePaymentSuccess = (sessionId: string) => {
+  // Payment redirect will happen, this is just for logging
+  console.log('Stripe checkout session created:', sessionId);
+};
+
+const handleStripePaymentError = (error: string) => {
+  showError(error || 'Failed to create payment session');
+};
+
 const formatPaymentMethod = (method: string) => {
   const methodMap: Record<string, string> = {
     cash: 'Cash',
     check: 'Check',
     credit_card: 'Credit Card',
     bank_transfer: 'Bank Transfer',
+    stripe_card: 'Stripe (Card)',
+    stripe_ach: 'Stripe (ACH)',
     other: 'Other',
   };
   return methodMap[method] || method;
@@ -2009,6 +2084,8 @@ const getPaymentMethodBadgeClass = (method: string) => {
     check: 'bg-blue-100 text-blue-800',
     credit_card: 'bg-purple-100 text-purple-800',
     bank_transfer: 'bg-indigo-100 text-indigo-800',
+    stripe_card: 'bg-indigo-100 text-indigo-800',
+    stripe_ach: 'bg-indigo-100 text-indigo-800',
     other: 'bg-gray-100 text-gray-800',
   };
   return methodClasses[method] || 'bg-gray-100 text-gray-800';

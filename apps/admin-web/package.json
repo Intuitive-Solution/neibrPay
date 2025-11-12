@@ -12,6 +12,7 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^8.4.0",
     "@tanstack/vue-query": "^5.90.2",
     "@unovis/ts": "^1.6.1",
     "@unovis/vue": "^1.6.1",
