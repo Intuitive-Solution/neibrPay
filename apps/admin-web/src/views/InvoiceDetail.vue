@@ -667,7 +667,7 @@
         </div>
       </div>
 
-      <!-- Stripe Payment Section (for residents) -->
+      <!-- Payment Action Buttons (for residents) -->
       <div
         v-if="
           isResident &&
@@ -676,25 +676,46 @@
           !invoice.deleted_at &&
           invoice.balance_due > 0
         "
-        class="mb-6 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200"
+        class="mb-6 flex flex-wrap gap-3"
       >
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-1">
-              Pay Online with Stripe
-            </h3>
-            <p class="text-sm text-gray-600">
-              Secure payment via credit card or ACH bank transfer
-            </p>
-          </div>
-        </div>
-        <StripeCheckoutButton
-          :invoice="invoice"
-          :show-amount-input="true"
-          button-text="Pay Now with Stripe"
-          @success="handleStripePaymentSuccess"
-          @error="handleStripePaymentError"
-        />
+        <button
+          @click="showStripePaymentModal = true"
+          class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+            />
+          </svg>
+          Pay Now
+        </button>
+        <button
+          @click="showPaymentModal = true"
+          class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Mark as Paid
+        </button>
       </div>
 
       <!-- Line Items Section -->
@@ -1687,6 +1708,15 @@
       @close="showPaymentUpdateModal = false"
       @success="handlePaymentUpdateSuccess"
     />
+
+    <!-- Stripe Payment Modal -->
+    <StripePaymentModal
+      :is-open="showStripePaymentModal"
+      :invoice="invoice || null"
+      @close="showStripePaymentModal = false"
+      @success="handleStripePaymentSuccess"
+      @error="handleStripePaymentError"
+    />
   </div>
 </template>
 
@@ -1710,7 +1740,7 @@ import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
-import StripeCheckoutButton from '../components/StripeCheckoutButton.vue';
+import StripePaymentModal from '../components/StripePaymentModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -1763,6 +1793,7 @@ const isEmailing = computed(() => emailInvoiceMutation.isPending.value);
 const isRestoring = computed(() => restoreInvoiceMutation.isPending.value);
 const showDeleteModal = ref(false);
 const showPaymentModal = ref(false);
+const showStripePaymentModal = ref(false);
 const showPaymentUpdateModal = ref(false);
 const selectedPayment = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
@@ -2113,10 +2144,12 @@ const handlePaymentUpdateSuccess = () => {
 const handleStripePaymentSuccess = (sessionId: string) => {
   // Payment redirect will happen, this is just for logging
   console.log('Stripe checkout session created:', sessionId);
+  // Modal will close automatically when redirecting to Stripe
 };
 
 const handleStripePaymentError = (error: string) => {
   showError(error || 'Failed to create payment session');
+  // Keep modal open on error so user can try again
 };
 
 const formatPaymentMethod = (method: string) => {

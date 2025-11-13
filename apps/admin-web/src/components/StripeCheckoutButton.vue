@@ -26,9 +26,8 @@
         />
       </div>
       <p class="mt-1 text-sm text-gray-500">
-        Leave empty to pay full balance: ${{
-          formatCurrency(invoice?.balance_due || 0)
-        }}
+        Leave empty to pay full balance:
+        {{ formatCurrency(invoice?.balance_due || 0) }}
       </p>
       <p
         v-if="paymentAmount > (invoice?.balance_due || 0)"
@@ -43,8 +42,10 @@
       @click="handleCheckout"
       :disabled="
         isLoading ||
-        (showAmountInput && paymentAmount < 0.5) ||
-        (showAmountInput && paymentAmount > (invoice?.balance_due || 0))
+        (showAmountInput && paymentAmount !== null && paymentAmount < 0.5) ||
+        (showAmountInput &&
+          paymentAmount !== null &&
+          paymentAmount > (invoice?.balance_due || 0))
       "
       class="w-full inline-flex justify-center items-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
