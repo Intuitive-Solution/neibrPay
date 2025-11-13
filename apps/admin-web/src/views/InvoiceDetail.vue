@@ -1159,7 +1159,7 @@
                           ? 'bg-red-500'
                           : invoice.status === 'partial'
                             ? 'bg-yellow-500'
-                            : 'bg-blue-500',
+                            : 'bg-primary',
                       ]"
                       :style="{ width: `${paymentProgress}%` }"
                     ></div>
@@ -1823,11 +1823,41 @@ const pdfViewerUrl = computed(() => {
 
 // Computed properties for financial summary
 const amountPaid = computed(() => {
-  if (!payments.value || payments.value.length === 0) return 0;
-  return payments.value.reduce((sum: number, payment: any) => {
-    const amount = payment?.amount || 0;
-    return sum + (typeof amount === 'number' && !isNaN(amount) ? amount : 0);
+  // Use payments from invoice relationship if available, otherwise use payments query
+  const paymentsList = invoice.value?.payments || payments.value;
+
+  if (
+    !paymentsList ||
+    !Array.isArray(paymentsList) ||
+    paymentsList.length === 0
+  ) {
+    return 0;
+  }
+
+  const total = paymentsList.reduce((sum: number, payment: any) => {
+    // Handle both number and string amounts
+    let amount = payment?.amount;
+
+    // Handle null/undefined
+    if (amount == null) {
+      return sum;
+    }
+
+    // Convert string to number if needed
+    if (typeof amount === 'string') {
+      amount = parseFloat(amount);
+    }
+
+    // Validate it's a valid number
+    if (typeof amount !== 'number' || isNaN(amount) || amount < 0) {
+      console.warn('Invalid payment amount:', payment);
+      return sum;
+    }
+
+    return sum + amount;
   }, 0);
+
+  return total;
 });
 
 const paymentProgress = computed(() => {
