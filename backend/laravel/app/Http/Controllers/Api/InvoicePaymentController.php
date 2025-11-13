@@ -252,8 +252,8 @@ class InvoicePaymentController extends Controller
         try {
             $invoice = $payment->invoiceUnit;
             
-            // Recalculate invoice balance from remaining payments
-            $totalPaid = $invoice->payments()->sum('amount');
+            // Recalculate invoice balance from remaining payments (exclude temporary Stripe payments)
+            $totalPaid = $invoice->payments()->confirmed()->sum('amount');
             $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on remaining payments

@@ -1865,7 +1865,17 @@ const amountPaid = computed(() => {
     return 0;
   }
 
-  const total = paymentsList.reduce((sum: number, payment: any) => {
+  // Filter out temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id)
+  const confirmedPayments = paymentsList.filter((payment: any) => {
+    const isStripePayment =
+      payment?.payment_method === 'stripe_card' ||
+      payment?.payment_method === 'stripe_ach';
+    const hasPaymentIntent = payment?.stripe_payment_intent_id != null;
+    // Include payment if it's not a Stripe payment OR if it has a payment_intent_id (confirmed)
+    return !isStripePayment || hasPaymentIntent;
+  });
+
+  const total = confirmedPayments.reduce((sum: number, payment: any) => {
     // Handle both number and string amounts
     let amount = payment?.amount;
 
