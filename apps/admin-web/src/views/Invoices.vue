@@ -688,6 +688,12 @@
                             Deleted
                           </span>
                           <span
+                            v-else-if="emailingInvoiceId === invoice.id"
+                            class="badge badge-sent text-xs"
+                          >
+                            Sending Email...
+                          </span>
+                          <span
                             v-else
                             :class="getStatusBadgeClass(invoice.status)"
                             class="badge text-xs"
@@ -759,6 +765,12 @@
               <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                 <span v-if="invoice.deleted_at" class="badge badge-overdue">
                   Deleted
+                </span>
+                <span
+                  v-else-if="emailingInvoiceId === invoice.id"
+                  class="badge badge-sent"
+                >
+                  Sending Email...
                 </span>
                 <span
                   v-else
