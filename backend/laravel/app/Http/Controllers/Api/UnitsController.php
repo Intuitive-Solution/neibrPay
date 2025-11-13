@@ -240,13 +240,30 @@ class UnitsController extends Controller
             return response()->json(['message' => 'Unit not found'], 404);
         }
 
-        $validated = $request->validate([
-            'owner_ids' => 'required|array',
-            'owner_ids.*' => 'integer|exists:users,id',
-        ]);
+        // Support both old format (owner_ids array) and new format (owners array with type)
+        if ($request->has('owners')) {
+            $validated = $request->validate([
+                'owners' => 'required|array|min:1',
+                'owners.*.owner_id' => 'required|integer|exists:users,id',
+                'owners.*.type' => 'required|in:owner,tenant'
+            ]);
+
+            $ownersData = $validated['owners'];
+            $ownerIds = array_column($ownersData, 'owner_id');
+        } else {
+            // Legacy support: if owner_ids is provided, default type to 'owner'
+            $validated = $request->validate([
+                'owner_ids' => 'required|array',
+                'owner_ids.*' => 'integer|exists:users,id',
+            ]);
+
+            $ownerIds = $validated['owner_ids'];
+            $ownersData = array_map(function($id) {
+                return ['owner_id' => $id, 'type' => 'owner'];
+            }, $ownerIds);
+        }
 
         // Ensure all owners belong to the same tenant
-        $ownerIds = $validated['owner_ids'];
         $validOwners = \App\Models\User::whereIn('id', $ownerIds)
             ->where('tenant_id', $user->tenant_id)
             ->pluck('id')
@@ -256,13 +273,80 @@ class UnitsController extends Controller
             return response()->json(['message' => 'Some owners do not belong to your tenant'], 400);
         }
 
-        // Sync owners (this will add new ones and keep existing ones)
-        $unit->owners()->syncWithoutDetaching($validOwners);
+        // Prepare pivot data with type for each owner
+        $pivotData = [];
+        foreach ($ownersData as $ownerData) {
+            if (in_array($ownerData['owner_id'], $validOwners)) {
+                $pivotData[$ownerData['owner_id']] = ['type' => $ownerData['type']];
+            }
+        }
+
+        // Attach owners with pivot data (syncWithoutDetaching equivalent with pivot)
+        foreach ($pivotData as $ownerId => $pivot) {
+            if (!$unit->owners()->where('users.id', $ownerId)->exists()) {
+                $unit->owners()->attach($ownerId, $pivot);
+            } else {
+                // Update existing pivot if it exists
+                $unit->owners()->updateExistingPivot($ownerId, $pivot);
+            }
+        }
+
         $unit->load(['tenant', 'owners']);
 
         return response()->json([
             'data' => $unit,
             'message' => 'Owners added successfully',
+        ]);
+    }
+
+    /**
+     * Update the type of an owner for a unit.
+     */
+    public function updateOwnerType(Request $request, Unit $unit, string $ownerId): JsonResponse
+    {
+        $user = $request->user();
+        
+        // Ensure the unit belongs to the user's tenant
+        if ($unit->tenant_id !== $user->tenant_id) {
+            return response()->json(['message' => 'Unit not found'], 404);
+        }
+
+        // Validate the request
+        $request->validate([
+            'type' => 'required|in:owner,tenant'
+        ]);
+
+        // Check if the owner exists and belongs to the same tenant
+        $owner = \App\Models\User::where('id', $ownerId)
+            ->where('tenant_id', $user->tenant_id)
+            ->firstOrFail();
+
+        // Check if the owner is associated with this unit
+        $isAssociated = $unit->owners()->where('users.id', $ownerId)->exists();
+        
+        if (!$isAssociated) {
+            return response()->json([
+                'message' => 'Owner is not associated with this unit',
+                'errors' => ['owner_id' => ['Owner is not associated with this unit']]
+            ], 422);
+        }
+
+        // Update the pivot type
+        $unit->owners()->updateExistingPivot($ownerId, [
+            'type' => $request->type
+        ]);
+
+        // Get the updated owner with pivot data
+        $updatedOwner = $unit->owners()->where('users.id', $ownerId)->first();
+
+        return response()->json([
+            'message' => 'Owner type updated successfully',
+            'data' => [
+                'unit_id' => $unit->id,
+                'owner_id' => $ownerId,
+                'type' => $request->type,
+                'owner' => $updatedOwner,
+            ]
         ]);
     }
 

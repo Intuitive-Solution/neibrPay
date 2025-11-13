@@ -464,6 +464,11 @@
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
+                      Type
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Action
                     </th>
                   </tr>
@@ -483,6 +488,27 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
+                      <select
+                        :value="owner.pivot?.type || 'owner'"
+                        @change="handleOwnerTypeChange(owner.id, $event)"
+                        :disabled="isUpdatingOwnerType === owner.id"
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 focus:ring-2 focus:ring-primary cursor-pointer transition-colors"
+                        :class="[
+                          owner.pivot?.type === 'owner'
+                            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                            : 'bg-green-100 text-green-800 hover:bg-green-200',
+                          isUpdatingOwnerType === owner.id
+                            ? 'opacity-50 cursor-not-allowed'
+                            : '',
+                        ]"
+                      >
+                        <option value="owner">Owner</option>
+                        <option value="tenant">Tenant</option>
+                      </select>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
                       <button
                         @click="openRemoveOwnerModal(owner)"
                         class="text-red-600 hover:text-red-800"
@@ -494,7 +520,7 @@
                   <!-- Empty State -->
                   <tr v-if="filteredOwners.length === 0">
                     <td
-                      colspan="3"
+                      colspan="4"
                       class="px-6 py-8 text-center text-sm text-gray-500"
                     >
                       <div class="flex flex-col items-center">
@@ -1056,6 +1082,11 @@
                     <th
                       class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
+                      Type
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Action
                     </th>
                   </tr>
@@ -1075,6 +1106,30 @@
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                     >
+                      <select
+                        :value="owner.pivot?.type || 'owner'"
+                        @change="handleOwnerTypeChange(owner.id, $event)"
+                        :disabled="
+                          isUpdatingOwnerType === owner.id || !isEditMode
+                        "
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 focus:ring-2 focus:ring-primary cursor-pointer transition-colors"
+                        :class="[
+                          owner.pivot?.type === 'owner'
+                            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                            : 'bg-green-100 text-green-800 hover:bg-green-200',
+                          isUpdatingOwnerType === owner.id
+                            ? 'opacity-50 cursor-not-allowed'
+                            : '',
+                          !isEditMode ? 'opacity-50 cursor-not-allowed' : '',
+                        ]"
+                      >
+                        <option value="owner">Owner</option>
+                        <option value="tenant">Tenant</option>
+                      </select>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
                       <button
                         @click="removeOwner(owner.id)"
                         class="text-red-600 hover:text-red-800"
@@ -1086,7 +1141,7 @@
                   <!-- Empty State -->
                   <tr v-if="filteredOwners.length === 0">
                     <td
-                      colspan="3"
+                      colspan="4"
                       class="px-6 py-8 text-center text-sm text-gray-500"
                     >
                       <div class="flex flex-col items-center">
@@ -1338,27 +1393,56 @@
             v-else
             v-for="person in availablePeople"
             :key="person.id"
-            @click="togglePersonSelection(person.id)"
             :class="[
-              'flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50',
-              selectedPeople.includes(person.id)
-                ? 'bg-blue-50 border-blue-200'
-                : '',
+              'p-4 border-b border-gray-100 hover:bg-gray-50',
+              isPersonSelected(person.id) ? 'bg-blue-50 border-blue-200' : '',
             ]"
           >
-            <div class="flex items-center">
+            <div class="flex items-start">
               <input
                 type="checkbox"
-                :checked="selectedPeople.includes(person.id)"
-                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                @click.stop
+                :checked="isPersonSelected(person.id)"
+                class="h-4 w-4 mt-1 text-primary focus:ring-primary border-gray-300 rounded"
                 @change="togglePersonSelection(person.id)"
               />
-              <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">
-                  {{ person.name }}
-                </p>
-                <p class="text-sm text-gray-500">{{ person.email }}</p>
+              <div class="ml-3 flex-1">
+                <div>
+                  <p class="text-sm font-medium text-gray-900">
+                    {{ person.name }}
+                  </p>
+                  <p class="text-sm text-gray-500">{{ person.email }}</p>
+                </div>
+                <!-- Type selector for selected people -->
+                <div
+                  v-if="isPersonSelected(person.id)"
+                  class="mt-3 flex items-center space-x-4"
+                >
+                  <label class="text-sm font-medium text-gray-700">Type:</label>
+                  <div class="flex space-x-4">
+                    <label class="flex items-center">
+                      <input
+                        type="radio"
+                        :name="`person-type-${person.id}`"
+                        value="owner"
+                        :checked="getSelectedPersonType(person.id) === 'owner'"
+                        @change="updatePersonType(person.id, 'owner')"
+                        class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <span class="ml-2 text-sm text-gray-700">Owner</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input
+                        type="radio"
+                        :name="`person-type-${person.id}`"
+                        value="tenant"
+                        :checked="getSelectedPersonType(person.id) === 'tenant'"
+                        @change="updatePersonType(person.id, 'tenant')"
+                        class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <span class="ml-2 text-sm text-gray-700">Tenant</span>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1545,12 +1629,15 @@ const errors = ref<UnitFormErrors>({});
 const activeTab = ref('owner');
 const searchQuery = ref('');
 const showAddOwnerModal = ref(false);
-const selectedPeople = ref<number[]>([]);
+const selectedPeople = ref<
+  Array<{ owner_id: number; type: 'owner' | 'tenant' }>
+>([]);
 const modalSearchQuery = ref('');
 const isAddingOwners = ref(false);
 const ownersUpdateTrigger = ref(0);
 const showRemoveOwnerModal = ref(false);
 const ownerToRemove = ref<any>(null);
+const isUpdatingOwnerType = ref<number | null>(null);
 
 // Document-related state
 const uploadProgress = ref(0);
@@ -1689,12 +1776,40 @@ const closeRemoveOwnerModal = () => {
 };
 
 const togglePersonSelection = (personId: number) => {
-  const index = selectedPeople.value.indexOf(personId);
+  const index = selectedPeople.value.findIndex(
+    (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+      p.owner_id === personId
+  );
   if (index > -1) {
     selectedPeople.value.splice(index, 1);
   } else {
-    selectedPeople.value.push(personId);
+    selectedPeople.value.push({ owner_id: personId, type: 'owner' });
   }
+};
+
+const updatePersonType = (personId: number, type: 'owner' | 'tenant') => {
+  const index = selectedPeople.value.findIndex(
+    (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+      p.owner_id === personId
+  );
+  if (index > -1) {
+    selectedPeople.value[index].type = type;
+  }
+};
+
+const isPersonSelected = (personId: number): boolean => {
+  return selectedPeople.value.some(
+    (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+      p.owner_id === personId
+  );
+};
+
+const getSelectedPersonType = (personId: number): 'owner' | 'tenant' => {
+  const selected = selectedPeople.value.find(
+    (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+      p.owner_id === personId
+  );
+  return selected?.type || 'owner';
 };
 
 const addSelectedOwners = async () => {
@@ -1703,9 +1818,24 @@ const addSelectedOwners = async () => {
   isAddingOwners.value = true;
 
   try {
-    const newOwners = allPeople.value.filter((person: any) =>
-      selectedPeople.value.includes(person.id)
+    // Get the selected people with their types
+    const selectedOwnerIds = selectedPeople.value.map(
+      (p: { owner_id: number; type: 'owner' | 'tenant' }) => p.owner_id
     );
+    const newOwners = allPeople.value
+      .filter((person: any) => selectedOwnerIds.includes(person.id))
+      .map((person: any) => {
+        const selectedPerson = selectedPeople.value.find(
+          (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+            p.owner_id === person.id
+        );
+        return {
+          ...person,
+          pivot: {
+            type: selectedPerson?.type || 'owner',
+          },
+        };
+      });
 
     // Add new owners to the owners list
     // Use array replacement to ensure reactivity
@@ -1720,8 +1850,8 @@ const addSelectedOwners = async () => {
     // If we're in edit mode and have a unit ID, save to database immediately
     if (isEditMode.value && unitId.value) {
       try {
-        const ownerIds = newOwners.map((owner: any) => owner.id);
-        await unitsApi.addOwners(unitId.value, ownerIds);
+        // Send owners with type information
+        await unitsApi.addOwners(unitId.value, selectedPeople.value);
 
         // Invalidate unit query to refetch latest data
         await queryClient.invalidateQueries({
@@ -1729,7 +1859,7 @@ const addSelectedOwners = async () => {
         });
       } catch (error) {
         // Remove the owners from local state if API call failed
-        const newOwnerIds = newOwners.map((owner: any) => owner.id);
+        const newOwnerIds = selectedOwnerIds;
         owners.value = owners.value.filter(
           (owner: any) => !newOwnerIds.includes(owner.id)
         );
@@ -1784,6 +1914,54 @@ const confirmRemoveOwner = async () => {
 const removeOwner = (ownerId: number) => {
   owners.value = owners.value.filter((owner: any) => owner.id !== ownerId);
   ownersUpdateTrigger.value++;
+};
+
+const handleOwnerTypeChange = (ownerId: number, event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  const type = target.value as 'owner' | 'tenant';
+  updateOwnerTypeForUnit(ownerId, type);
+};
+
+const updateOwnerTypeForUnit = async (
+  ownerId: number,
+  type: 'owner' | 'tenant'
+) => {
+  if (!unitId.value || !isEditMode.value) {
+    // In add mode, just update local state
+    const owner = owners.value.find((o: any) => o.id === ownerId);
+    if (owner) {
+      if (!owner.pivot) {
+        owner.pivot = {};
+      }
+      owner.pivot.type = type;
+      ownersUpdateTrigger.value++;
+    }
+    return;
+  }
+
+  isUpdatingOwnerType.value = ownerId;
+
+  try {
+    await unitsApi.updateOwnerType(unitId.value, ownerId, type);
+    // Refresh unit data to get updated pivot
+    await refetchUnit();
+    // Update local state
+    const owner = owners.value.find((o: any) => o.id === ownerId);
+    if (owner) {
+      if (!owner.pivot) {
+        owner.pivot = {};
+      }
+      owner.pivot.type = type;
+      ownersUpdateTrigger.value++;
+    }
+  } catch (error) {
+    console.error('Error updating owner type:', error);
+    alert('Failed to update owner type. Please try again.');
+    // Refresh to revert UI state
+    await refetchUnit();
+  } finally {
+    isUpdatingOwnerType.value = null;
+  }
 };
 
 const formatZipCode = (event: Event) => {

@@ -230,9 +230,9 @@ npm run dev
 npm run build
 npm run test
 
-# Laravel Backend
-cd backend/laravel
-php artisan serve
+   # Laravel Backend
+   cd backend/laravel
+   php artisan serve
 php artisan test
 ```
 

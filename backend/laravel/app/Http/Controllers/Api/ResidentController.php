@@ -35,7 +35,7 @@ class ResidentController extends Controller
         }
         
         $query = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->with('tenant');
             
         if ($includeDeleted) {
@@ -71,9 +71,7 @@ class ResidentController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone,
-            'type' => $request->type ?? 'owner',
-            'member_role' => $request->member_role ?? 'member',
-            'role' => 'resident',
+            'role' => $request->role ?? 'resident',
             'tenant_id' => $user->tenant_id,
             'is_active' => true,
         ]);
@@ -98,7 +96,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->withTrashed()
             ->with('tenant')
             ->findOrFail($id);
@@ -118,7 +116,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         $units = $resident->ownedUnits()
@@ -143,7 +141,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         // Check if the unit exists and belongs to the same tenant
@@ -162,6 +160,54 @@ class ResidentController extends Controller
     }
 
     /**
+     * Update the type of a unit for the specified resident.
+     */
+    public function updateUnitType(Request $request, string $id, string $unitId): JsonResponse
+    {
+        $user = $request->user();
+        
+        $resident = User::forTenant($user->tenant_id)
+            ->whereIn('role', ['resident', 'admin'])
+            ->findOrFail($id);
+        
+        // Check if the unit exists and belongs to the same tenant
+        $unit = \App\Models\Unit::forTenant($user->tenant_id)->findOrFail($unitId);
+        
+        // Validate the request
+        $request->validate([
+            'type' => 'required|in:owner,tenant'
+        ]);
+        
+        // Check if the unit is associated with this resident
+        $isAssociated = $resident->ownedUnits()->where('units.id', $unitId)->exists();
+        
+        if (!$isAssociated) {
+            return response()->json([
+                'message' => 'Unit is not associated with this resident',
+                'errors' => ['unit_id' => ['Unit is not associated with this resident']]
+            ], 422);
+        }
+        
+        // Update the pivot type
+        $resident->ownedUnits()->updateExistingPivot($unitId, [
+            'type' => $request->type
+        ]);
+        
+        // Get the updated unit with pivot data
+        $updatedUnit = $resident->ownedUnits()->where('units.id', $unitId)->first();
+        
+        return response()->json([
+            'message' => 'Unit type updated successfully',
+            'data' => [
+                'resident_id' => $resident->id,
+                'unit_id' => $unitId,
+                'type' => $request->type,
+                'unit' => $updatedUnit,
+            ]
+        ]);
+    }
+
+    /**
      * Get units available to be assigned to the specified resident.
      */
     public function availableUnits(Request $request, string $id): JsonResponse
@@ -169,7 +215,7 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         // Get all units for the tenant
@@ -204,16 +250,18 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin'])
             ->findOrFail($id);
         
         // Validate the request
         $request->validate([
-            'unit_ids' => 'required|array|min:1',
-            'unit_ids.*' => 'integer|exists:units,id'
+            'units' => 'required|array|min:1',
+            'units.*.unit_id' => 'required|integer|exists:units,id',
+            'units.*.type' => 'required|in:owner,tenant'
         ]);
         
-        $unitIds = $request->input('unit_ids');
+        $unitsData = $request->input('units');
+        $unitIds = array_column($unitsData, 'unit_id');
         
         // Verify all units belong to the same tenant and are active
         $units = \App\Models\Unit::forTenant($user->tenant_id)
@@ -224,7 +272,7 @@ class ResidentController extends Controller
         if ($units->count() !== count($unitIds)) {
             return response()->json([
                 'message' => 'Some units are invalid or not available',
-                'errors' => ['unit_ids' => ['One or more units are invalid or not available']]
+                'errors' => ['units' => ['One or more units are invalid or not available']]
             ], 422);
         }
         
@@ -234,12 +282,18 @@ class ResidentController extends Controller
         if (!empty($existingUnitIds)) {
             return response()->json([
                 'message' => 'Some units are already owned by this resident',
-                'errors' => ['unit_ids' => ['One or more units are already owned by this resident']]
+                'errors' => ['units' => ['One or more units are already owned by this resident']]
             ], 422);
         }
         
-        // Add the relationships
-        $resident->ownedUnits()->attach($unitIds);
+        // Prepare pivot data with type for each unit
+        $pivotData = [];
+        foreach ($unitsData as $unitData) {
+            $pivotData[$unitData['unit_id']] = ['type' => $unitData['type']];
+        }
+        
+        // Add the relationships with pivot data
+        $resident->ownedUnits()->attach($pivotData);
         
         // Get the newly added units with their details
         $addedUnits = $resident->ownedUnits()->whereIn('units.id', $unitIds)->get();
@@ -262,15 +316,14 @@ class ResidentController extends Controller
         $user = $request->user();
         
         $resident = User::forTenant($user->tenant_id)
-            ->byRole('resident')
+            ->whereIn('role', ['resident', 'admin', 'bookkeeper'])
             ->findOrFail($id);
         
         $resident->update([
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone,
-            'type' => $request->type,
-            'member_role' => $request->member_role,
+            'role' => $request->role,
         ]);
         
         $resident->load('tenant');
