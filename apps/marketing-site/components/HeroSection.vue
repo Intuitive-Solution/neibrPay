@@ -21,7 +21,11 @@
         <div
           class="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
-          <a :href="adminWebUrl + '/auth'" class="btn-primary btn-lg">
+          <a
+            :href="adminWebUrl + '/auth'"
+            class="btn-primary btn-lg"
+            @click="trackGetStarted"
+          >
             Get Started
           </a>
           <a
@@ -29,6 +33,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="btn-outline btn-lg"
+            @click="trackBookDemo"
           >
             Book a Demo
           </a>
@@ -50,4 +55,24 @@
 const config = useRuntimeConfig();
 const adminWebUrl = config.public.adminWebUrl;
 const calendlyUrl = config.public.calendlyUrl;
+const { $posthog } = useNuxtApp();
+
+// Track CTA clicks
+const trackGetStarted = () => {
+  if (process.client && $posthog) {
+    $posthog.capture('marketing_cta_clicked', {
+      cta_type: 'get_started',
+      cta_location: 'hero',
+    });
+  }
+};
+
+const trackBookDemo = () => {
+  if (process.client && $posthog) {
+    $posthog.capture('marketing_cta_clicked', {
+      cta_type: 'book_demo',
+      cta_location: 'hero',
+    });
+  }
+};
 </script>
