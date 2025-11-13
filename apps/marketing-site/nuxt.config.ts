@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  devServer: {
+    port: 3002,
+  },
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/google-fonts'],
   googleFonts: {
     families: {
@@ -27,10 +30,12 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      adminWebUrl: process.env.ADMIN_WEB_URL || 'http://localhost:5173',
+      adminWebUrl: process.env.ADMIN_WEB_URL || 'http://localhost:3000',
       calendlyUrl:
         process.env.CALENDLY_URL ||
         'https://calendly.com/imailtahir/neibrpay-demo',
+      posthogKey: process.env.POSTHOG_KEY || '',
+      posthogHost: process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
     },
   },
 });

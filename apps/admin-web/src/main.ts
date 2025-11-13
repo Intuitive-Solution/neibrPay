@@ -7,6 +7,7 @@ import { VueQueryPlugin } from '@tanstack/vue-query';
 import { queryClient } from './config/queryClient';
 import { setAuthTokenGetter } from '@neibrpay/api-client';
 import { setupAuthGuards } from './router/guards';
+import { usePostHog } from './composables/usePostHog';
 import './style.css';
 
 const app = createApp(App);
@@ -25,5 +26,8 @@ authStore.initializeAuth();
 
 // Set up API client token getter
 setAuthTokenGetter(() => authStore.token);
+
+// Initialize PostHog tracking
+usePostHog();
 
 app.mount('#app');
