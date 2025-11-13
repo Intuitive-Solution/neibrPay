@@ -116,7 +116,7 @@
         {{ error.message || 'Failed to load invoice details' }}
       </p>
       <button @click="router.push('/invoices')" class="btn-primary">
-        Back to Invoices
+        Back to HOA Dues
       </button>
     </div>
 
@@ -246,7 +246,7 @@
                   d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
               </svg>
-              Back to Invoices
+              Back to HOA Dues
             </button>
           </div>
         </div>
@@ -2061,14 +2061,27 @@ const cloneInvoice = () => {
   const footer =
     invoice.value.notes?.find((n: any) => n.type === 'footer')?.content || '';
 
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+
   // Store cloned data in sessionStorage for persistence across navigation
   const clonedData = {
     frequency: invoice.value.frequency,
     remaining_cycles: invoice.value.remaining_cycles,
-    start_date: invoice.value.start_date,
+    start_date: today, // Set start date to today
     due_date: invoice.value.due_date,
     items: invoice.value.items,
     tax_rate: invoice.value.tax_rate,
+    early_payment_discount_enabled:
+      invoice.value.early_payment_discount_enabled,
+    early_payment_discount_amount: invoice.value.early_payment_discount_amount,
+    early_payment_discount_type: invoice.value.early_payment_discount_type,
+    early_payment_discount_by_date:
+      invoice.value.early_payment_discount_by_date,
+    late_fee_enabled: invoice.value.late_fee_enabled,
+    late_fee_amount: invoice.value.late_fee_amount,
+    late_fee_type: invoice.value.late_fee_type,
+    late_fee_applies_on_date: invoice.value.late_fee_applies_on_date,
     public_notes: publicNotes,
     terms: terms,
     footer: footer,

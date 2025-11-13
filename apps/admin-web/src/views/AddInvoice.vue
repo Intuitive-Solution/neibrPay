@@ -2666,6 +2666,14 @@ const handleSubmit = async () => {
     remaining_cycles: '',
     due_date: '',
     invoice_number: '',
+    early_payment_discount_enabled: '',
+    early_payment_discount_amount: '',
+    early_payment_discount_type: '',
+    early_payment_discount_by_date: '',
+    late_fee_enabled: '',
+    late_fee_amount: '',
+    late_fee_type: '',
+    late_fee_applies_on_date: '',
   };
 
   // Basic validation
@@ -2941,6 +2949,47 @@ onMounted(() => {
     // Populate tax rate
     if (clonedData.tax_rate !== undefined && clonedData.tax_rate !== null) {
       taxRate.value = parseFloat(clonedData.tax_rate) || 0;
+    }
+
+    // Populate early payment discount fields
+    form.value.early_payment_discount_enabled =
+      clonedData.early_payment_discount_enabled || false;
+    if (clonedData.early_payment_discount_amount !== undefined) {
+      form.value.early_payment_discount_amount =
+        clonedData.early_payment_discount_amount?.toString() || '';
+    }
+    form.value.early_payment_discount_type =
+      clonedData.early_payment_discount_type || 'amount';
+    // Format date for HTML5 date input (YYYY-MM-DD)
+    if (clonedData.early_payment_discount_by_date) {
+      const date = new Date(clonedData.early_payment_discount_by_date);
+      if (!isNaN(date.getTime())) {
+        form.value.early_payment_discount_by_date = date
+          .toISOString()
+          .split('T')[0];
+      } else {
+        form.value.early_payment_discount_by_date = '';
+      }
+    } else {
+      form.value.early_payment_discount_by_date = '';
+    }
+
+    // Populate late fee fields
+    form.value.late_fee_enabled = clonedData.late_fee_enabled || false;
+    if (clonedData.late_fee_amount !== undefined) {
+      form.value.late_fee_amount = clonedData.late_fee_amount?.toString() || '';
+    }
+    form.value.late_fee_type = clonedData.late_fee_type || 'amount';
+    // Format date for HTML5 date input (YYYY-MM-DD)
+    if (clonedData.late_fee_applies_on_date) {
+      const date = new Date(clonedData.late_fee_applies_on_date);
+      if (!isNaN(date.getTime())) {
+        form.value.late_fee_applies_on_date = date.toISOString().split('T')[0];
+      } else {
+        form.value.late_fee_applies_on_date = '';
+      }
+    } else {
+      form.value.late_fee_applies_on_date = '';
     }
 
     // Populate invoice items

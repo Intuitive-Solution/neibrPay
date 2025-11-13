@@ -754,7 +754,7 @@
                           <button
                             @click="
                               () => {
-                                duplicateInvoice(invoice.id);
+                                duplicateInvoice(invoice);
                                 close();
                               }
                             "
@@ -864,7 +864,7 @@
                           <button
                             @click="
                               () => {
-                                duplicateInvoice(invoice.id);
+                                duplicateInvoice(invoice);
                                 close();
                               }
                             "
@@ -974,7 +974,6 @@ import {
   useInvoices,
   useDeleteInvoice,
   useRestoreInvoice,
-  useCloneInvoice,
 } from '../composables/useInvoices';
 import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -1010,7 +1009,6 @@ const {
 
 const deleteInvoiceMutation = useDeleteInvoice();
 const restoreInvoiceMutation = useRestoreInvoice();
-const cloneInvoiceMutation = useCloneInvoice();
 
 // Helper function to check if invoice is overdue
 const isInvoiceOverdue = (invoice: any): boolean => {
@@ -1330,15 +1328,45 @@ const restoreInvoice = async (invoiceId: number) => {
   }
 };
 
-const duplicateInvoice = async (invoiceId: number) => {
-  try {
-    await cloneInvoiceMutation.mutateAsync(invoiceId);
-    console.log('Invoice duplicated successfully');
-    refetch();
-  } catch (error: any) {
-    console.error('Error duplicating invoice:', error);
-    alert(`Failed to duplicate invoice: ${error.message || 'Unknown error'}`);
-  }
+const duplicateInvoice = (invoice: any) => {
+  if (!invoice) return;
+
+  // Extract notes by type
+  const publicNotes =
+    invoice.notes?.find((n: any) => n.type === 'public_notes')?.content || '';
+  const terms =
+    invoice.notes?.find((n: any) => n.type === 'terms')?.content || '';
+  const footer =
+    invoice.notes?.find((n: any) => n.type === 'footer')?.content || '';
+
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+
+  // Store cloned data in sessionStorage for persistence across navigation
+  const clonedData = {
+    frequency: invoice.frequency,
+    remaining_cycles: invoice.remaining_cycles,
+    start_date: today, // Set start date to today
+    due_date: invoice.due_date,
+    items: invoice.items,
+    tax_rate: invoice.tax_rate,
+    early_payment_discount_enabled: invoice.early_payment_discount_enabled,
+    early_payment_discount_amount: invoice.early_payment_discount_amount,
+    early_payment_discount_type: invoice.early_payment_discount_type,
+    early_payment_discount_by_date: invoice.early_payment_discount_by_date,
+    late_fee_enabled: invoice.late_fee_enabled,
+    late_fee_amount: invoice.late_fee_amount,
+    late_fee_type: invoice.late_fee_type,
+    late_fee_applies_on_date: invoice.late_fee_applies_on_date,
+    public_notes: publicNotes,
+    terms: terms,
+    footer: footer,
+  };
+
+  sessionStorage.setItem('clonedInvoice', JSON.stringify(clonedData));
+
+  // Navigate to create invoice
+  router.push('/invoices/create');
 };
 
 const deleteInvoice = (invoice: any) => {
@@ -1401,14 +1429,12 @@ watch(showDeleted, (newValue: boolean) => {
 onMounted(() => {
   deleteInvoiceMutation.reset();
   restoreInvoiceMutation.reset();
-  cloneInvoiceMutation.reset();
 });
 
 // Global reset function for debugging (can be called from browser console)
 (window as any).resetInvoiceMutations = () => {
   deleteInvoiceMutation.reset();
   restoreInvoiceMutation.reset();
-  cloneInvoiceMutation.reset();
   deletingInvoiceId.value = null;
   console.log('Invoice mutations and local state reset');
 };
