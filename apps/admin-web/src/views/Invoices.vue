@@ -1,5 +1,89 @@
 <template>
   <div class="space-y-6">
+    <!-- Success Message -->
+    <div
+      v-if="showSuccessMessage"
+      class="p-4 bg-green-50 border border-green-200 rounded-lg"
+    >
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-green-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-green-800">{{ successMessage }}</p>
+        </div>
+        <div class="ml-auto pl-3">
+          <div class="-mx-1.5 -my-1.5">
+            <button
+              @click="showSuccessMessage = false"
+              class="inline-flex bg-green-50 rounded-md p-1.5 text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600"
+            >
+              <span class="sr-only">Dismiss</span>
+              <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div
+      v-if="showErrorMessage"
+      class="p-4 bg-red-50 border border-red-200 rounded-lg"
+    >
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg
+            class="h-5 w-5 text-red-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-red-800">{{ errorMessage }}</p>
+        </div>
+        <div class="ml-auto pl-3">
+          <div class="-mx-1.5 -my-1.5">
+            <button
+              @click="showErrorMessage = false"
+              class="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+            >
+              <span class="sr-only">Dismiss</span>
+              <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <!-- Open Invoices Card -->
@@ -864,6 +948,38 @@
                           <button
                             @click="
                               () => {
+                                emailInvoice(invoice);
+                                close();
+                              }
+                            "
+                            :disabled="
+                              emailingInvoiceId === invoice.id ||
+                              invoice.status === 'paid'
+                            "
+                            class="dropdown-item"
+                          >
+                            <svg
+                              class="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
+                            </svg>
+                            {{
+                              emailingInvoiceId === invoice.id
+                                ? 'Sending...'
+                                : 'Email Invoice'
+                            }}
+                          </button>
+                          <button
+                            @click="
+                              () => {
                                 duplicateInvoice(invoice);
                                 close();
                               }
@@ -974,6 +1090,7 @@ import {
   useInvoices,
   useDeleteInvoice,
   useRestoreInvoice,
+  useEmailInvoice,
 } from '../composables/useInvoices';
 import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
@@ -988,8 +1105,13 @@ const isResident = computed(() => authStore.isResident);
 // Local state
 const searchQuery = ref('');
 const deletingInvoiceId = ref<number | null>(null);
+const emailingInvoiceId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const invoiceToDelete = ref<any>(null);
+const showSuccessMessage = ref(false);
+const showErrorMessage = ref(false);
+const successMessage = ref('');
+const errorMessage = ref('');
 const activeFilter = ref<'open' | 'overdue' | 'paid' | 'all' | null>('open'); // Default to 'open' filter
 const sortColumn = ref<
   'invoice' | 'unit' | 'amount' | 'dueDate' | 'status' | null
@@ -1009,6 +1131,7 @@ const {
 
 const deleteInvoiceMutation = useDeleteInvoice();
 const restoreInvoiceMutation = useRestoreInvoice();
+const emailInvoiceMutation = useEmailInvoice();
 
 // Helper function to check if invoice is overdue
 const isInvoiceOverdue = (invoice: any): boolean => {
@@ -1322,9 +1445,32 @@ const restoreInvoice = async (invoiceId: number) => {
     await restoreInvoiceMutation.mutateAsync(invoiceId);
     console.log('Invoice restored successfully');
     refetch();
+    showSuccess('Invoice restored successfully!');
   } catch (error: any) {
     console.error('Error restoring invoice:', error);
-    alert(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
+    showError(`Failed to restore invoice: ${error.message || 'Unknown error'}`);
+  }
+};
+
+const emailInvoice = async (invoice: any) => {
+  if (!invoice || invoice.deleted_at) return;
+
+  const invoiceId = invoice.id;
+  emailingInvoiceId.value = invoiceId;
+
+  try {
+    await emailInvoiceMutation.mutateAsync({
+      id: invoiceId,
+      email: invoice.unit?.owners?.[0]?.email,
+    });
+    // Refresh invoice data to show updated status
+    refetch();
+    showSuccess('Invoice email sent successfully!');
+  } catch (error: any) {
+    console.error('Error sending email:', error);
+    showError(`Failed to send email: ${error.message || 'Unknown error'}`);
+  } finally {
+    emailingInvoiceId.value = null;
   }
 };
 
@@ -1398,10 +1544,12 @@ const confirmDelete = async () => {
     // Check if it's an authentication error
     if (error.message && error.message.includes('Invoice not found')) {
       // This might be an authentication issue
-      alert('Authentication error. Please refresh the page and try again.');
+      showError('Authentication error. Please refresh the page and try again.');
     } else {
       // Show error message to user
-      alert(`Failed to delete invoice: ${error.message || 'Unknown error'}`);
+      showError(
+        `Failed to delete invoice: ${error.message || 'Unknown error'}`
+      );
     }
   } finally {
     // Always reset the loading state
@@ -1429,13 +1577,33 @@ watch(showDeleted, (newValue: boolean) => {
 onMounted(() => {
   deleteInvoiceMutation.reset();
   restoreInvoiceMutation.reset();
+  emailInvoiceMutation.reset();
 });
+
+// Helper functions for showing messages
+const showSuccess = (message: string) => {
+  successMessage.value = message;
+  showSuccessMessage.value = true;
+  setTimeout(() => {
+    showSuccessMessage.value = false;
+  }, 5000);
+};
+
+const showError = (message: string) => {
+  errorMessage.value = message;
+  showErrorMessage.value = true;
+  setTimeout(() => {
+    showErrorMessage.value = false;
+  }, 5000);
+};
 
 // Global reset function for debugging (can be called from browser console)
 (window as any).resetInvoiceMutations = () => {
   deleteInvoiceMutation.reset();
   restoreInvoiceMutation.reset();
+  emailInvoiceMutation.reset();
   deletingInvoiceId.value = null;
+  emailingInvoiceId.value = null;
   console.log('Invoice mutations and local state reset');
 };
 </script>
