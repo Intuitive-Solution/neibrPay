@@ -444,8 +444,8 @@ class StripePaymentController extends Controller
             // Reload invoice to get updated payments relationship
             $invoice->refresh();
             
-            // Calculate total paid and balance due
-            $totalPaid = $invoice->payments()->sum('amount');
+            // Calculate total paid and balance due (exclude temporary Stripe payments)
+            $totalPaid = $invoice->payments()->confirmed()->sum('amount');
             $balanceDue = $invoice->balance_due; // Use accessor which calculates: total - sum(payments)
 
             // Update invoice status based on balance due

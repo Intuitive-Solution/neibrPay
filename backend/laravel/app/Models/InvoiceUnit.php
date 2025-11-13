@@ -205,15 +205,22 @@ class InvoiceUnit extends Model
 
     /**
      * Get the balance due (calculated dynamically from payments).
+     * Excludes temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id).
      */
     public function getBalanceDueAttribute(): float
     {
         // Use loaded payments if available (more efficient)
         if ($this->relationLoaded('payments')) {
-            $totalPaid = $this->payments->sum('amount');
+            // Filter out temporary Stripe payments from loaded collection
+            // Exclude payments where payment_method is stripe_card/stripe_ach AND stripe_payment_intent_id is null
+            $confirmedPayments = $this->payments->filter(function ($payment) {
+                return !in_array($payment->payment_method, ['stripe_card', 'stripe_ach']) 
+                    || $payment->stripe_payment_intent_id !== null;
+            });
+            $totalPaid = $confirmedPayments->sum('amount');
         } else {
-            // Fall back to query if payments aren't loaded
-            $totalPaid = $this->payments()->sum('amount');
+            // Fall back to query if payments aren't loaded - use confirmed scope
+            $totalPaid = $this->payments()->confirmed()->sum('amount');
         }
         
         return (float) max(0, ($this->total ?? 0) - $totalPaid);

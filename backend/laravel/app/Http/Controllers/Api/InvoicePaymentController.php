@@ -116,8 +116,8 @@ class InvoicePaymentController extends Controller
                 'recorded_by' => $user->id,
             ]);
             
-            // Recalculate invoice balance from payments
-            $totalPaid = $invoice->payments()->sum('amount');
+            // Recalculate invoice balance from payments (exclude temporary Stripe payments)
+            $totalPaid = $invoice->payments()->confirmed()->sum('amount');
             $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on payment
@@ -198,8 +198,8 @@ class InvoicePaymentController extends Controller
             // Update the payment
             $payment->update($validated);
             
-            // Recalculate invoice balance from payments
-            $totalPaid = $invoice->payments()->sum('amount');
+            // Recalculate invoice balance from payments (exclude temporary Stripe payments)
+            $totalPaid = $invoice->payments()->confirmed()->sum('amount');
             $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on new payment totals
