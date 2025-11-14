@@ -16,9 +16,12 @@
               </a>
             </li>
             <li>
-              <a href="#contact" class="text-gray-600 hover:text-primary-600">
+              <NuxtLink
+                to="/contact"
+                class="text-gray-600 hover:text-primary-600"
+              >
                 Contact
-              </a>
+              </NuxtLink>
             </li>
           </ul>
         </div>
