@@ -74,9 +74,12 @@
               </a>
             </li>
             <li>
-              <a href="#support" class="text-gray-600 hover:text-primary-600">
+              <NuxtLink
+                to="/support"
+                class="text-gray-600 hover:text-primary-600"
+              >
                 Support
-              </a>
+              </NuxtLink>
             </li>
           </ul>
         </div>
@@ -90,14 +93,20 @@
           </h3>
           <ul class="space-y-2">
             <li>
-              <a href="#privacy" class="text-gray-600 hover:text-primary-600">
+              <NuxtLink
+                to="/privacy"
+                class="text-gray-600 hover:text-primary-600"
+              >
                 Privacy Policy
-              </a>
+              </NuxtLink>
             </li>
             <li>
-              <a href="#terms" class="text-gray-600 hover:text-primary-600">
+              <NuxtLink
+                to="/terms"
+                class="text-gray-600 hover:text-primary-600"
+              >
                 Terms of Service
-              </a>
+              </NuxtLink>
             </li>
           </ul>
         </div>
