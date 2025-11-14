@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\VerificationCode;
 use App\Services\VerificationCodeService;
+use App\Services\AnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -20,10 +21,12 @@ use Illuminate\Support\Facades\Cache;
 class AuthController extends Controller
 {
     protected VerificationCodeService $verificationCodeService;
+    protected AnalyticsService $analytics;
 
-    public function __construct(VerificationCodeService $verificationCodeService)
+    public function __construct(VerificationCodeService $verificationCodeService, AnalyticsService $analytics)
     {
         $this->verificationCodeService = $verificationCodeService;
+        $this->analytics = $analytics;
     }
 
     /**
@@ -215,6 +218,26 @@ class AuthController extends Controller
 
                 DB::commit();
 
+                // Identify user in PostHog
+                $this->analytics->identifyUser($user->id, [
+                    'email' => $user->email,
+                    'name' => $user->name,
+                    'role' => $user->role,
+                    'tenant_id' => $tenant->id,
+                    'tenant_name' => $tenant->name,
+                    'signup_date' => $user->created_at->toIso8601String(),
+                    'is_admin' => $user->role === 'admin',
+                ]);
+
+                // Track user registration event
+                $this->analytics->captureEvent('user_registered_backend', $user->id, [
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'tenant_id' => $tenant->id,
+                    'tenant_name' => $tenant->name,
+                    'plan_type' => 'starter', // Default plan
+                ]);
+
                 return response()->json([
                     'message' => 'Account created successfully',
                     'user' => [
@@ -288,6 +311,24 @@ class AuthController extends Controller
             Cache::forget("verification_token:{$validated['verification_token']}");
 
             $user->load('tenant');
+
+            // Identify user in PostHog
+            $this->analytics->identifyUser($user->id, [
+                'email' => $user->email,
+                'name' => $user->name,
+                'role' => $user->role,
+                'tenant_id' => $user->tenant_id,
+                'tenant_name' => $user->tenant?->name,
+                'is_admin' => $user->role === 'admin',
+                'last_login_at' => $user->last_login_at?->toIso8601String(),
+            ]);
+
+            // Track login event
+            $this->analytics->captureEvent('user_login_backend', $user->id, [
+                'email' => $user->email,
+                'user_type' => $user->role,
+                'tenant_id' => $user->tenant_id,
+            ]);
 
             return response()->json([
                 'message' => 'Login successful',
