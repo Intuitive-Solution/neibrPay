@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Documents List -->
-    <div class="bg-white rounded-lg shadow-sm">
+    <div class="card-modern bg-white rounded-lg shadow-sm">
       <!-- Header -->
       <div class="px-6 py-4 border-b border-gray-200">
         <div

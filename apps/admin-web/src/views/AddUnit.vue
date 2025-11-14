@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="card-modern bg-white rounded-lg shadow p-6 mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -42,9 +42,9 @@
     </div>
 
     <!-- Edit Mode: Form + Tabs Interface -->
-    <div v-if="isEditMode" class="space-y-6">
+    <div v-if="isEditMode" class="card-modern space-y-6">
       <!-- Edit Form -->
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="card-modern bg-white shadow rounded-lg p-6">
         <!-- Error Message -->
         <div
           v-if="errors.general"
@@ -348,7 +348,7 @@
       </div>
 
       <!-- Tabs Section with Distinct Background -->
-      <div class="bg-white rounded-lg p-6">
+      <div class="card-modern bg-white rounded-lg p-6">
         <!-- Tabs Navigation -->
         <div class="border-b border-gray-200 mb-6">
           <nav class="-mb-px flex space-x-8">
@@ -369,7 +369,7 @@
         </div>
 
         <!-- Tab Content -->
-        <div>
+        <div class="card-modern">
           <!-- Owner Tab -->
           <div v-if="activeTab === 'owner'" class="space-y-4">
             <!-- Search Bar and Add Button -->

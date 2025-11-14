@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl">
     <!-- Header Section -->
-    <div class="card mb-6">
+    <div class="card-modern card mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -64,7 +64,7 @@
     </div>
 
     <!-- Form -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="card-modern bg-white rounded-lg shadow p-6">
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- To Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">

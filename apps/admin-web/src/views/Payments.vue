@@ -82,7 +82,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="card">
+    <div class="card-modern">
       <h3 class="text-base font-semibold text-gray-900 mb-4">Filters</h3>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
@@ -137,7 +137,7 @@
     </div>
 
     <!-- Payments Table -->
-    <div class="card">
+    <div class="card-modern">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-base font-semibold text-gray-900">All Payments</h2>
         <button
