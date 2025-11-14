@@ -22,11 +22,15 @@ export {
   useUpdateUserProfile,
   useUpdatePassword,
   useUpdateLocalization,
+  useUpdateStripeSettings,
+  useUpdatePayPalSettings,
   type SettingsData,
   type UpdateTenantSettingsRequest,
   type UpdateUserProfileRequest,
   type UpdatePasswordRequest,
   type UpdateLocalizationRequest,
+  type UpdateStripeSettingsRequest,
+  type UpdatePayPalSettingsRequest,
 } from './settings';
 export * from './queryKeys';
 export { announcementKeys } from './queryKeys';

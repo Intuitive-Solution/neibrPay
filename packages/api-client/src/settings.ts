@@ -14,6 +14,19 @@ export interface SettingsData {
       timezone: string;
       date_format: string;
       first_month_of_year: string;
+      stripe?: {
+        enabled: boolean;
+        key?: string;
+        secret?: string;
+        webhook_secret?: string;
+      };
+      paypal?: {
+        enabled: boolean;
+        client_id?: string;
+        client_secret?: string;
+        mode?: 'sandbox' | 'live';
+        webhook_id?: string;
+      };
     };
   };
   user: {
@@ -50,6 +63,21 @@ export interface UpdateLocalizationRequest {
   first_month_of_year?: string;
 }
 
+export interface UpdateStripeSettingsRequest {
+  enabled?: boolean;
+  key?: string;
+  secret?: string;
+  webhook_secret?: string;
+}
+
+export interface UpdatePayPalSettingsRequest {
+  enabled?: boolean;
+  client_id?: string;
+  client_secret?: string;
+  mode?: 'sandbox' | 'live';
+  webhook_id?: string;
+}
+
 export interface SettingsResponse {
   tenant: SettingsData['tenant'];
   user: SettingsData['user'];
@@ -83,6 +111,27 @@ export interface LocalizationUpdateResponse {
     timezone: string;
     date_format: string;
     first_month_of_year: string;
+  };
+}
+
+export interface StripeUpdateResponse {
+  message: string;
+  stripe: {
+    enabled: boolean;
+    key?: string;
+    secret?: string;
+    webhook_secret?: string;
+  };
+}
+
+export interface PayPalUpdateResponse {
+  message: string;
+  paypal: {
+    enabled: boolean;
+    client_id?: string;
+    client_secret?: string;
+    mode?: 'sandbox' | 'live';
+    webhook_id?: string;
   };
 }
 
@@ -139,6 +188,32 @@ export const settingsApi = {
   ): Promise<LocalizationUpdateResponse> {
     const response = await apiClient.put<LocalizationUpdateResponse>(
       '/tenant/localization',
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Update Stripe settings
+   */
+  async updateStripeSettings(
+    data: UpdateStripeSettingsRequest
+  ): Promise<StripeUpdateResponse> {
+    const response = await apiClient.put<StripeUpdateResponse>(
+      '/tenant/stripe',
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Update PayPal settings
+   */
+  async updatePayPalSettings(
+    data: UpdatePayPalSettingsRequest
+  ): Promise<PayPalUpdateResponse> {
+    const response = await apiClient.put<PayPalUpdateResponse>(
+      '/tenant/paypal',
       data
     );
     return response.data;
@@ -204,6 +279,36 @@ export function useUpdateLocalization() {
   return useMutation({
     mutationFn: (data: UpdateLocalizationRequest) =>
       settingsApi.updateLocalization(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
+ * TanStack Query mutation to update Stripe settings
+ */
+export function useUpdateStripeSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateStripeSettingsRequest) =>
+      settingsApi.updateStripeSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
+ * TanStack Query mutation to update PayPal settings
+ */
+export function useUpdatePayPalSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdatePayPalSettingsRequest) =>
+      settingsApi.updatePayPalSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
     },

@@ -126,6 +126,18 @@
             Localization
           </button>
           <button
+            v-if="!isResident"
+            @click="activeTab = 'payments'"
+            :class="[
+              activeTab === 'payments'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+              'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+            ]"
+          >
+            Payments
+          </button>
+          <button
             @click="activeTab = 'security'"
             :class="[
               activeTab === 'security'
@@ -331,6 +343,239 @@
           </div>
         </div>
 
+        <!-- Payments Tab -->
+        <div v-if="activeTab === 'payments'" class="space-y-8">
+          <!-- Stripe Payment Settings -->
+          <div class="space-y-4">
+            <h2 class="text-base font-semibold text-gray-900">
+              Stripe Payment Settings
+            </h2>
+            <div class="space-y-4">
+              <!-- Enable Stripe Toggle -->
+              <div class="flex items-center">
+                <input
+                  id="stripe-enabled"
+                  v-model="stripeForm.enabled"
+                  type="checkbox"
+                  class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <label
+                  for="stripe-enabled"
+                  class="ml-2 block text-sm font-medium text-gray-700"
+                >
+                  Enable Stripe Payments
+                </label>
+              </div>
+
+              <!-- Stripe Configuration Fields (shown when enabled) -->
+              <div
+                v-if="stripeForm.enabled"
+                class="space-y-4 border-t border-gray-200 pt-4"
+              >
+                <div>
+                  <label
+                    for="stripe-key"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Stripe Publishable Key <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="stripe-key"
+                    v-model="stripeForm.key"
+                    type="text"
+                    class="input-field"
+                    placeholder="Enter Stripe Publishable Key (pk_...)"
+                    required
+                  />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Get this from your Stripe Dashboard → Developers → API keys
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    for="stripe-secret"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Stripe Secret Key <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="stripe-secret"
+                    v-model="stripeForm.secret"
+                    type="password"
+                    class="input-field"
+                    placeholder="Enter Stripe Secret Key (sk_...)"
+                    required
+                  />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Keep this secure. Get this from your Stripe Dashboard →
+                    Developers → API keys
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    for="stripe-webhook-secret"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Stripe Webhook Secret
+                  </label>
+                  <input
+                    id="stripe-webhook-secret"
+                    v-model="stripeForm.webhook_secret"
+                    type="password"
+                    class="input-field"
+                    placeholder="Enter Stripe Webhook Secret (whsec_...)"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Webhook secret for payment notifications (optional but
+                    recommended)
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-end pt-4 border-t border-gray-200">
+              <button
+                @click="saveStripeSettings"
+                :disabled="
+                  isSavingStripe ||
+                  (stripeForm.enabled &&
+                    (!stripeForm.key || !stripeForm.secret))
+                "
+                class="btn-primary"
+              >
+                <span v-if="isSavingStripe">Saving...</span>
+                <span v-else>Save Stripe Settings</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- PayPal Payment Settings -->
+          <div class="space-y-4">
+            <h2 class="text-base font-semibold text-gray-900">
+              PayPal Payment Settings
+            </h2>
+            <div class="space-y-4">
+              <!-- Enable PayPal Toggle -->
+              <div class="flex items-center">
+                <input
+                  id="paypal-enabled"
+                  v-model="paypalForm.enabled"
+                  type="checkbox"
+                  class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <label
+                  for="paypal-enabled"
+                  class="ml-2 block text-sm font-medium text-gray-700"
+                >
+                  Enable PayPal Payments
+                </label>
+              </div>
+
+              <!-- PayPal Configuration Fields (shown when enabled) -->
+              <div
+                v-if="paypalForm.enabled"
+                class="space-y-4 border-t border-gray-200 pt-4"
+              >
+                <div>
+                  <label
+                    for="paypal-client-id"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    PayPal Client ID <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="paypal-client-id"
+                    v-model="paypalForm.client_id"
+                    type="text"
+                    class="input-field"
+                    placeholder="Enter PayPal Client ID"
+                    required
+                  />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Get this from your PayPal Developer Dashboard
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    for="paypal-client-secret"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    PayPal Client Secret <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="paypal-client-secret"
+                    v-model="paypalForm.client_secret"
+                    type="password"
+                    class="input-field"
+                    placeholder="Enter PayPal Client Secret"
+                    required
+                  />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Keep this secure. Get this from your PayPal Developer
+                    Dashboard
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    for="paypal-mode"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    PayPal Mode
+                  </label>
+                  <select
+                    id="paypal-mode"
+                    v-model="paypalForm.mode"
+                    class="input-field"
+                  >
+                    <option value="sandbox">Sandbox (Testing)</option>
+                    <option value="live">Live (Production)</option>
+                  </select>
+                  <p class="mt-1 text-xs text-gray-500">
+                    Use Sandbox for testing, Live for production payments
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    for="paypal-webhook-id"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    PayPal Webhook ID
+                  </label>
+                  <input
+                    id="paypal-webhook-id"
+                    v-model="paypalForm.webhook_id"
+                    type="text"
+                    class="input-field"
+                    placeholder="Enter PayPal Webhook ID (optional)"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Webhook ID for payment notifications (optional but
+                    recommended)
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-end pt-4 border-t border-gray-200">
+              <button
+                @click="savePayPalSettings"
+                :disabled="
+                  isSavingPayPal ||
+                  (paypalForm.enabled &&
+                    (!paypalForm.client_id || !paypalForm.client_secret))
+                "
+                class="btn-primary"
+              >
+                <span v-if="isSavingPayPal">Saving...</span>
+                <span v-else>Save PayPal Settings</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Security Tab -->
         <div v-if="activeTab === 'security'" class="space-y-6">
           <h2 class="text-base font-semibold text-gray-900">
@@ -409,6 +654,8 @@ import {
   useUpdateUserProfile,
   useUpdatePassword,
   useUpdateLocalization,
+  useUpdateStripeSettings,
+  useUpdatePayPalSettings,
   type SettingsData,
 } from '@neibrpay/api-client';
 import { useAuthStore } from '../stores/auth';
@@ -418,16 +665,21 @@ const authStore = useAuthStore();
 const isResident = computed(() => authStore.isResident);
 
 // Tab state
-const activeTab = ref<'hoa' | 'user' | 'localization' | 'security'>('hoa');
+const activeTab = ref<
+  'hoa' | 'user' | 'localization' | 'payments' | 'security'
+>('hoa');
 
-// Redirect to 'user' tab if resident tries to access 'localization'
+// Redirect to 'user' tab if resident tries to access 'localization' or 'payments'
 watch(
   [isResident, activeTab],
   ([isResidentValue, currentTab]: [
     boolean,
-    'hoa' | 'user' | 'localization' | 'security',
+    'hoa' | 'user' | 'localization' | 'payments' | 'security',
   ]) => {
-    if (isResidentValue && currentTab === 'localization') {
+    if (
+      isResidentValue &&
+      (currentTab === 'localization' || currentTab === 'payments')
+    ) {
       activeTab.value = 'user';
     }
   },
@@ -467,6 +719,21 @@ const passwordForm = ref({
   new_password_confirmation: '',
 });
 
+const stripeForm = ref({
+  enabled: false,
+  key: '',
+  secret: '',
+  webhook_secret: '',
+});
+
+const paypalForm = ref({
+  enabled: false,
+  client_id: '',
+  client_secret: '',
+  mode: 'sandbox' as 'sandbox' | 'live',
+  webhook_id: '',
+});
+
 // Months array
 const months = [
   'January',
@@ -489,6 +756,8 @@ const updateTenantMutation = useUpdateTenantSettings();
 const updateUserMutation = useUpdateUserProfile();
 const updatePasswordMutation = useUpdatePassword();
 const updateLocalizationMutation = useUpdateLocalization();
+const updateStripeMutation = useUpdateStripeSettings();
+const updatePayPalMutation = useUpdatePayPalSettings();
 
 // Loading states
 const isSavingHoa = computed(() => updateTenantMutation.isPending.value);
@@ -497,6 +766,8 @@ const isSavingPassword = computed(() => updatePasswordMutation.isPending.value);
 const isSavingLocalization = computed(
   () => updateLocalizationMutation.isPending.value
 );
+const isSavingStripe = computed(() => updateStripeMutation.isPending.value);
+const isSavingPayPal = computed(() => updatePayPalMutation.isPending.value);
 
 // Password form validation
 const isPasswordFormValid = computed(() => {
@@ -535,6 +806,25 @@ watch(
         date_format: data.tenant.settings.date_format || 'MM/DD/YYYY',
         first_month_of_year:
           data.tenant.settings.first_month_of_year || 'January',
+      };
+
+      // Populate Stripe form
+      const stripeSettings = data.tenant.settings.stripe;
+      stripeForm.value = {
+        enabled: stripeSettings?.enabled || false,
+        key: stripeSettings?.key || '',
+        secret: stripeSettings?.secret || '',
+        webhook_secret: stripeSettings?.webhook_secret || '',
+      };
+
+      // Populate PayPal form
+      const paypalSettings = data.tenant.settings.paypal;
+      paypalForm.value = {
+        enabled: paypalSettings?.enabled || false,
+        client_id: paypalSettings?.client_id || '',
+        client_secret: paypalSettings?.client_secret || '',
+        mode: paypalSettings?.mode || 'sandbox',
+        webhook_id: paypalSettings?.webhook_id || '',
       };
     }
   },
@@ -603,6 +893,24 @@ const savePassword = async () => {
     };
   } catch (error: any) {
     showError(error.message || 'Failed to update password');
+  }
+};
+
+const saveStripeSettings = async () => {
+  try {
+    await updateStripeMutation.mutateAsync(stripeForm.value);
+    showSuccess('Stripe settings updated successfully');
+  } catch (error: any) {
+    showError(error.message || 'Failed to update Stripe settings');
+  }
+};
+
+const savePayPalSettings = async () => {
+  try {
+    await updatePayPalMutation.mutateAsync(paypalForm.value);
+    showSuccess('PayPal settings updated successfully');
+  } catch (error: any) {
+    showError(error.message || 'Failed to update PayPal settings');
   }
 };
 </script>

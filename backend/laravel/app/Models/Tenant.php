@@ -124,4 +124,81 @@ class Tenant extends Model
         $this->settings = $settings;
         $this->save();
     }
+
+    /**
+     * Check if PayPal is enabled for this tenant.
+     */
+    public function getPayPalEnabled(): bool
+    {
+        return (bool) data_get($this->settings, 'paypal.enabled', false);
+    }
+
+    /**
+     * Get PayPal configuration for this tenant.
+     */
+    public function getPayPalConfig(): ?array
+    {
+        $paypalConfig = data_get($this->settings, 'paypal');
+        
+        if (!$paypalConfig || !isset($paypalConfig['enabled']) || !$paypalConfig['enabled']) {
+            return null;
+        }
+
+        return [
+            'enabled' => (bool) ($paypalConfig['enabled'] ?? false),
+            'client_id' => $paypalConfig['client_id'] ?? null,
+            'client_secret' => $paypalConfig['client_secret'] ?? null,
+            'mode' => $paypalConfig['mode'] ?? 'sandbox',
+            'webhook_id' => $paypalConfig['webhook_id'] ?? null,
+        ];
+    }
+
+    /**
+     * Set PayPal configuration for this tenant.
+     */
+    public function setPayPalConfig(array $config): void
+    {
+        $settings = $this->settings ?? [];
+        $settings['paypal'] = $config;
+        $this->settings = $settings;
+        $this->save();
+    }
+
+    /**
+     * Check if Stripe is enabled for this tenant.
+     */
+    public function getStripeEnabled(): bool
+    {
+        return (bool) data_get($this->settings, 'stripe.enabled', false);
+    }
+
+    /**
+     * Get Stripe configuration for this tenant.
+     */
+    public function getStripeConfig(): ?array
+    {
+        $stripeConfig = data_get($this->settings, 'stripe');
+        
+        if (!$stripeConfig || !isset($stripeConfig['enabled']) || !$stripeConfig['enabled']) {
+            return null;
+        }
+
+        return [
+            'enabled' => (bool) ($stripeConfig['enabled'] ?? false),
+            'key' => $stripeConfig['key'] ?? null,
+            'secret' => $stripeConfig['secret'] ?? null,
+            'webhook_secret' => $stripeConfig['webhook_secret'] ?? null,
+        ];
+    }
+
+    /**
+     * Set Stripe configuration for this tenant.
+     */
+    public function setStripeConfig(array $config): void
+    {
+        $settings = $this->settings ?? [];
+        $settings['stripe'] = $config;
+        $this->settings = $settings;
+        $this->save();
+    }
 }

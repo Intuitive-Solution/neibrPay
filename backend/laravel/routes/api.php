@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\InvoicePdfController;
 use App\Http\Controllers\Api\StripePaymentController;
+use App\Http\Controllers\Api\PayPalPaymentController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TenantController;
@@ -142,6 +143,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('invoices/{id}/stripe/checkout', [StripePaymentController::class, 'createCheckoutSession']);
     Route::get('invoices/{id}/stripe/status', [StripePaymentController::class, 'getPaymentStatus']);
     
+    // PayPal payment routes
+    Route::post('invoices/{id}/paypal/checkout', [PayPalPaymentController::class, 'createCheckoutSession']);
+    Route::get('invoices/{id}/paypal/status', [PayPalPaymentController::class, 'getPaymentStatus']);
+    
     // Charge management routes
     Route::apiResource('charges', ChargeController::class);
     Route::post('charges/{charge}/restore', [ChargeController::class, 'restore']);
@@ -175,6 +180,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tenant routes
     Route::put('tenant', [TenantController::class, 'update']);
     Route::put('tenant/localization', [TenantController::class, 'updateLocalization']);
+    Route::put('tenant/stripe', [TenantController::class, 'updateStripeSettings']);
+    Route::put('tenant/paypal', [TenantController::class, 'updatePayPalSettings']);
     
     // Announcement routes
     Route::get('announcements/for-user', [AnnouncementController::class, 'forUser']);
@@ -183,6 +190,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Stripe webhook route (public, no auth - uses signature verification)
 Route::post('stripe/webhook', [StripePaymentController::class, 'handleWebhook']);
+
+// PayPal webhook route (public, no auth - uses webhook verification)
+Route::post('paypal/webhook', [PayPalPaymentController::class, 'handleWebhook']);
 
 // Legacy route for backward compatibility
 Route::get('/user', function (Request $request) {

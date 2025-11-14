@@ -15,6 +15,9 @@ export interface PaymentFilters {
     | 'bank_transfer'
     | 'stripe_card'
     | 'stripe_ach'
+    | 'paypal_balance'
+    | 'paypal_card'
+    | 'paypal_bank_account'
     | 'other';
   start_date?: string;
   end_date?: string;
@@ -32,6 +35,22 @@ export interface StripePaymentStatus {
     id: number;
     amount: number;
     session_id: string;
+    created_at: string;
+  }>;
+}
+
+export interface PayPalCheckoutResponse {
+  checkout_url: string;
+  order_id: string;
+  payment_id: number;
+}
+
+export interface PayPalPaymentStatus {
+  has_pending_payments: boolean;
+  pending_payments: Array<{
+    id: number;
+    amount: number;
+    order_id: string;
     created_at: string;
   }>;
 }
@@ -109,6 +128,32 @@ export const paymentsApi = {
   ): Promise<StripePaymentStatus> => {
     const response = await apiClient.get<{ data: StripePaymentStatus }>(
       `/invoices/${invoiceId}/stripe/status`
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Create a PayPal Checkout session for an invoice
+   */
+  createPayPalCheckout: async (
+    invoiceId: number,
+    amount?: number
+  ): Promise<PayPalCheckoutResponse> => {
+    const response = await apiClient.post<{ data: PayPalCheckoutResponse }>(
+      `/invoices/${invoiceId}/paypal/checkout`,
+      amount ? { amount } : {}
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get PayPal payment status for an invoice
+   */
+  getPayPalPaymentStatus: async (
+    invoiceId: number
+  ): Promise<PayPalPaymentStatus> => {
+    const response = await apiClient.get<{ data: PayPalPaymentStatus }>(
+      `/invoices/${invoiceId}/paypal/status`
     );
     return response.data.data;
   },

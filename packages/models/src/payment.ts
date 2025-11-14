@@ -9,6 +9,9 @@ export const PaymentMethodSchema = z.enum([
   'bank_transfer',
   'stripe_card',
   'stripe_ach',
+  'paypal_balance',
+  'paypal_card',
+  'paypal_bank_account',
   'other',
 ]);
 
@@ -51,6 +54,13 @@ export const PaymentSchema = z.object({
   stripe_checkout_session_id: z.string().nullable().optional(),
   stripe_payment_intent_id: z.string().nullable().optional(),
   stripe_payment_method: z.enum(['card', 'ach_debit']).nullable().optional(),
+  // PayPal fields
+  paypal_order_id: z.string().nullable().optional(),
+  paypal_payment_id: z.string().nullable().optional(),
+  paypal_payment_method: z
+    .enum(['paypal_balance', 'card', 'bank_account'])
+    .nullable()
+    .optional(),
   // Relationships
   invoiceUnit: InvoiceUnitSchema.optional(),
   recorder: z

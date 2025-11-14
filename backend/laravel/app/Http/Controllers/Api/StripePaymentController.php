@@ -20,14 +20,26 @@ use Stripe\Webhook;
 
 class StripePaymentController extends Controller
 {
-    private StripeClient $stripe;
     protected AnalyticsService $analytics;
 
     public function __construct(AnalyticsService $analytics)
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
         $this->analytics = $analytics;
+    }
+
+    /**
+     * Get Stripe client for a tenant.
+     */
+    private function getStripeClient($tenant): StripeClient
+    {
+        $stripeConfig = $tenant->getStripeConfig();
+        
+        if (!$stripeConfig || !$stripeConfig['secret']) {
+            throw new \Exception('Stripe is not configured for this tenant.');
+        }
+
+        Stripe::setApiKey($stripeConfig['secret']);
+        return new StripeClient($stripeConfig['secret']);
     }
 
     /**
@@ -39,6 +51,14 @@ class StripePaymentController extends Controller
 
         // Verify invoice exists and belongs to user's tenant
         $invoice = InvoiceUnit::forTenant($user->tenant_id)->findOrFail($invoiceId);
+
+        // Get tenant and check Stripe is enabled
+        $tenant = $user->tenant;
+        if (!$tenant->getStripeEnabled()) {
+            return response()->json([
+                'message' => 'Stripe is not enabled for this organization.',
+            ], 403);
+        }
 
         // If user is a resident, verify they own the unit associated with the invoice
         if ($user->isResident()) {
@@ -79,11 +99,14 @@ class StripePaymentController extends Controller
         }
 
         try {
+            // Get Stripe client for tenant
+            $stripe = $this->getStripeClient($tenant);
+            
             // Get frontend URL from env (set in .env file)
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
 
             // Create Stripe Checkout Session
-            $checkoutSession = $this->stripe->checkout->sessions->create([
+            $checkoutSession = $stripe->checkout->sessions->create([
                 'payment_method_types' => ['card', 'us_bank_account', 'link'], // Card, ACH, and Link
                 'payment_method_options' => [
                     'us_bank_account' => [
@@ -168,7 +191,56 @@ class StripePaymentController extends Controller
     {
         $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
-        $webhookSecret = config('services.stripe.webhook_secret');
+        
+        // Try to identify tenant from payload first (for webhook verification)
+        // We'll verify with tenant-specific secret after identifying tenant
+        $payloadData = json_decode($payload, true);
+        $tenantId = null;
+        
+        // Try to get tenant_id from event data
+        if (isset($payloadData['data']['object'])) {
+            $object = $payloadData['data']['object'];
+            if (isset($object['metadata']['tenant_id'])) {
+                $tenantId = $object['metadata']['tenant_id'];
+            } elseif (isset($object['metadata']['invoice_id'])) {
+                // Try to get tenant from invoice
+                try {
+                    $invoice = InvoiceUnit::find($object['metadata']['invoice_id']);
+                    if ($invoice) {
+                        $tenantId = $invoice->tenant_id;
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Could not find invoice for webhook', ['invoice_id' => $object['metadata']['invoice_id'] ?? null]);
+                }
+            }
+        }
+
+        // If we can't identify tenant, try to verify with any tenant's webhook secret
+        // This is a fallback - ideally tenant_id should be in metadata
+        if (!$tenantId) {
+            // Try to verify with first available tenant's webhook secret as fallback
+            // Or use global config as fallback for backward compatibility
+            $webhookSecret = config('services.stripe.webhook_secret');
+            
+            if (!$webhookSecret) {
+                Log::error('Stripe webhook secret not configured and tenant not identified');
+                return response()->json(['error' => 'Webhook secret not configured'], 500);
+            }
+        } else {
+            // Get tenant-specific webhook secret
+            $tenant = \App\Models\Tenant::find($tenantId);
+            if ($tenant) {
+                $stripeConfig = $tenant->getStripeConfig();
+                $webhookSecret = $stripeConfig['webhook_secret'] ?? null;
+                
+                if (!$webhookSecret) {
+                    // Fallback to global config
+                    $webhookSecret = config('services.stripe.webhook_secret');
+                }
+            } else {
+                $webhookSecret = config('services.stripe.webhook_secret');
+            }
+        }
 
         if (!$webhookSecret) {
             Log::error('Stripe webhook secret not configured');
@@ -259,6 +331,16 @@ class StripePaymentController extends Controller
             return;
         }
 
+        // Get tenant and Stripe client
+        $tenant = \App\Models\Tenant::find($invoice->tenant_id);
+        if (!$tenant) {
+            Log::warning('Tenant not found for checkout session', [
+                'session_id' => $session->id,
+                'tenant_id' => $invoice->tenant_id,
+            ]);
+            return;
+        }
+
         // Update payment with payment intent ID if available
         if ($session->payment_intent) {
             $payment->stripe_payment_intent_id = $session->payment_intent;
@@ -266,7 +348,8 @@ class StripePaymentController extends Controller
             
             // Update payment intent metadata with checkout session ID for reliable lookup
             try {
-                $this->stripe->paymentIntents->update($session->payment_intent, [
+                $stripe = $this->getStripeClient($tenant);
+                $stripe->paymentIntents->update($session->payment_intent, [
                     'metadata' => [
                         'checkout_session_id' => $session->id,
                         'invoice_id' => $invoiceId,
@@ -320,11 +403,18 @@ class StripePaymentController extends Controller
         // Ensure payment intent metadata includes checkout session ID for reliable lookup
         if ($payment->stripe_checkout_session_id && !isset($paymentIntent->metadata->checkout_session_id)) {
             try {
-                $this->stripe->paymentIntents->update($paymentIntent->id, [
-                    'metadata' => array_merge($paymentIntent->metadata->toArray(), [
-                        'checkout_session_id' => $payment->stripe_checkout_session_id,
-                    ]),
-                ]);
+                $invoice = InvoiceUnit::find($payment->invoice_unit_id);
+                if ($invoice) {
+                    $tenant = \App\Models\Tenant::find($invoice->tenant_id);
+                    if ($tenant) {
+                        $stripe = $this->getStripeClient($tenant);
+                        $stripe->paymentIntents->update($paymentIntent->id, [
+                            'metadata' => array_merge($paymentIntent->metadata->toArray(), [
+                                'checkout_session_id' => $payment->stripe_checkout_session_id,
+                            ]),
+                        ]);
+                    }
+                }
             } catch (\Exception $e) {
                 Log::warning('Failed to update payment intent metadata in payment_intent.succeeded', [
                     'payment_intent_id' => $paymentIntent->id,
@@ -353,53 +443,90 @@ class StripePaymentController extends Controller
 
         // If not found, try to find by checkout session ID via payment intent metadata
         if (!$payment && $charge->payment_intent) {
-            try {
-                // Retrieve payment intent to get checkout session ID from metadata
-                $paymentIntent = $this->stripe->paymentIntents->retrieve($charge->payment_intent);
-                $checkoutSessionId = $paymentIntent->metadata->checkout_session_id ?? null;
-                
-                if ($checkoutSessionId) {
-                    $payment = InvoicePayment::where('stripe_checkout_session_id', $checkoutSessionId)
-                        ->first();
-                    
-                    Log::info('Payment found by checkout session ID from metadata', [
-                        'payment' => $payment,
-                        'checkout_session_id' => $checkoutSessionId,
-                    ]);
+            // First, try to find any payment with this payment intent to get tenant
+            $tempPayment = InvoicePayment::where('stripe_payment_intent_id', $charge->payment_intent)
+                ->orWhereHas('invoiceUnit', function($q) use ($charge) {
+                    // Try to find via invoice metadata if available
+                })
+                ->first();
+            
+            $tenant = null;
+            if ($tempPayment) {
+                $invoice = InvoiceUnit::find($tempPayment->invoice_unit_id);
+                if ($invoice) {
+                    $tenant = \App\Models\Tenant::find($invoice->tenant_id);
                 }
+            }
+            
+            // If we can't find tenant, try to get from any payment with matching payment intent
+            if (!$tenant) {
+                // Try to find payment by searching all payments
+                $allPayments = InvoicePayment::whereNotNull('stripe_payment_intent_id')
+                    ->orWhereNotNull('stripe_checkout_session_id')
+                    ->get();
                 
-                // If still not found, try to retrieve checkout session from Stripe
-                if (!$payment) {
-                    try {
-                        // Search for checkout sessions with this payment intent
-                        $checkoutSessions = $this->stripe->checkout->sessions->all([
-                            'payment_intent' => $charge->payment_intent,
-                            'limit' => 1,
-                        ]);
-                        
-                        if (!empty($checkoutSessions->data)) {
-                            $checkoutSessionId = $checkoutSessions->data[0]->id;
-                            $payment = InvoicePayment::where('stripe_checkout_session_id', $checkoutSessionId)
-                                ->first();
-                            
-                            Log::info('Payment found by checkout session ID from Stripe API', [
-                                'payment' => $payment,
-                                'checkout_session_id' => $checkoutSessionId,
-                            ]);
+                foreach ($allPayments as $p) {
+                    if ($p->stripe_payment_intent_id === $charge->payment_intent) {
+                        $invoice = InvoiceUnit::find($p->invoice_unit_id);
+                        if ($invoice) {
+                            $tenant = \App\Models\Tenant::find($invoice->tenant_id);
+                            break;
                         }
-                    } catch (\Exception $e) {
-                        Log::warning('Failed to retrieve checkout session from Stripe', [
-                            'payment_intent_id' => $charge->payment_intent,
-                            'error' => $e->getMessage(),
-                        ]);
                     }
                 }
-            } catch (\Exception $e) {
-                Log::warning('Failed to retrieve payment intent for charge', [
-                    'charge_id' => $charge->id,
-                    'payment_intent_id' => $charge->payment_intent,
-                    'error' => $e->getMessage(),
-                ]);
+            }
+            
+            if ($tenant) {
+                try {
+                    $stripe = $this->getStripeClient($tenant);
+                    
+                    // Retrieve payment intent to get checkout session ID from metadata
+                    $paymentIntent = $stripe->paymentIntents->retrieve($charge->payment_intent);
+                    $checkoutSessionId = $paymentIntent->metadata->checkout_session_id ?? null;
+                    
+                    if ($checkoutSessionId) {
+                        $payment = InvoicePayment::where('stripe_checkout_session_id', $checkoutSessionId)
+                            ->first();
+                        
+                        Log::info('Payment found by checkout session ID from metadata', [
+                            'payment' => $payment,
+                            'checkout_session_id' => $checkoutSessionId,
+                        ]);
+                    }
+                    
+                    // If still not found, try to retrieve checkout session from Stripe
+                    if (!$payment) {
+                        try {
+                            // Search for checkout sessions with this payment intent
+                            $checkoutSessions = $stripe->checkout->sessions->all([
+                                'payment_intent' => $charge->payment_intent,
+                                'limit' => 1,
+                            ]);
+                            
+                            if (!empty($checkoutSessions->data)) {
+                                $checkoutSessionId = $checkoutSessions->data[0]->id;
+                                $payment = InvoicePayment::where('stripe_checkout_session_id', $checkoutSessionId)
+                                    ->first();
+                                
+                                Log::info('Payment found by checkout session ID from Stripe API', [
+                                    'payment' => $payment,
+                                    'checkout_session_id' => $checkoutSessionId,
+                                ]);
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning('Failed to retrieve checkout session from Stripe', [
+                                'payment_intent_id' => $charge->payment_intent,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to retrieve payment intent for charge', [
+                        'charge_id' => $charge->id,
+                        'payment_intent_id' => $charge->payment_intent,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 

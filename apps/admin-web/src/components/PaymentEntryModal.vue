@@ -170,6 +170,11 @@
                   <option value="bank_transfer">Bank Transfer</option>
                   <option value="stripe_card">Stripe (Card)</option>
                   <option value="stripe_ach">Stripe (ACH)</option>
+                  <option value="paypal_balance">PayPal (Balance)</option>
+                  <option value="paypal_card">PayPal (Card)</option>
+                  <option value="paypal_bank_account">
+                    PayPal (Bank Account)
+                  </option>
                   <option value="other">Other</option>
                 </select>
                 <p

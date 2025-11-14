@@ -42,6 +42,19 @@ class SettingsController extends Controller
                         'timezone' => $settings['timezone'] ?? 'UTC',
                         'date_format' => $settings['date_format'] ?? 'MM/DD/YYYY',
                         'first_month_of_year' => $settings['first_month_of_year'] ?? 'January',
+                        'stripe' => $settings['stripe'] ?? [
+                            'enabled' => false,
+                            'key' => null,
+                            'secret' => null,
+                            'webhook_secret' => null,
+                        ],
+                        'paypal' => $settings['paypal'] ?? [
+                            'enabled' => false,
+                            'client_id' => null,
+                            'client_secret' => null,
+                            'mode' => 'sandbox',
+                            'webhook_id' => null,
+                        ],
                     ],
                 ],
                 'user' => [

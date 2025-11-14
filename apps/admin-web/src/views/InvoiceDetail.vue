@@ -679,6 +679,7 @@
         class="mb-6 flex flex-wrap gap-3"
       >
         <button
+          v-if="isStripeEnabled"
           @click="showStripePaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
         >
@@ -695,7 +696,19 @@
               d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
             />
           </svg>
-          Pay Now
+          Pay with Stripe
+        </button>
+        <button
+          v-if="isPayPalEnabled"
+          @click="showPayPalPaymentModal = true"
+          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.174 1.351.96 3.3.869 4.717l-.003.015v.002c-.09 1.303-.228 3.266 1.088 4.855 1.31 1.577 3.956 2.144 6.158 2.144h2.141a.64.64 0 0 1 .633.74l-1.533 8.94a.642.642 0 0 1-.63.525l-2.724-.027a.376.376 0 0 0-.374.44l.36 2.844a.64.64 0 0 1-.63.74H16.33a.48.48 0 0 0-.48.6l.664 3.96a.64.64 0 0 1-.63.74l-2.9.027a.48.48 0 0 0-.48.6l.66 3.94a.64.64 0 0 1-.63.74l-4.73.044zm.46-3.027l1.93-.018a.48.48 0 0 0 .48-.6l-.66-3.94a.64.64 0 0 1 .63-.74l2.9-.027a.48.48 0 0 0 .48-.6l-.664-3.96a.64.64 0 0 1 .63-.74h5.35a.376.376 0 0 0 .374-.44l-.36-2.844a.64.64 0 0 1 .63-.74h-2.141c-1.918 0-3.968-.445-4.863-1.528-.893-1.075-1.01-2.614-1.032-3.15l.003-.016v-.002c.09-1.303.228-3.266-1.088-4.855-1.31-1.577-3.956-2.144-6.158-2.144H6.998l-2.706 15.758h4.606l-.664-3.96a.64.64 0 0 1 .63-.74l2.9-.027a.48.48 0 0 0 .48-.6l-.66-3.94a.64.64 0 0 1 .63-.74l4.73-.044z"
+            />
+          </svg>
+          Pay with PayPal
         </button>
         <button
           @click="showPaymentModal = true"
@@ -1717,6 +1730,92 @@
       @success="handleStripePaymentSuccess"
       @error="handleStripePaymentError"
     />
+
+    <!-- PayPal Payment Modal -->
+    <div
+      v-if="showPayPalPaymentModal"
+      class="fixed inset-0 z-50 overflow-y-auto"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+      >
+        <!-- Background overlay -->
+        <div
+          class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          aria-hidden="true"
+          @click="showPayPalPaymentModal = false"
+        ></div>
+
+        <!-- This element is to trick the browser into centering the modal contents. -->
+        <span
+          class="hidden sm:inline-block sm:align-middle sm:h-screen"
+          aria-hidden="true"
+          >&#8203;</span
+        >
+
+        <!-- Modal panel -->
+        <div
+          class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+        >
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div
+                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10"
+              >
+                <svg
+                  class="h-6 w-6 text-blue-600"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.174 1.351.96 3.3.869 4.717l-.003.015v.002c-.09 1.303-.228 3.266 1.088 4.855 1.31 1.577 3.956 2.144 6.158 2.144h2.141a.64.64 0 0 1 .633.74l-1.533 8.94a.642.642 0 0 1-.63.525l-2.724-.027a.376.376 0 0 0-.374.44l.36 2.844a.64.64 0 0 1-.63.74H16.33a.48.48 0 0 0-.48.6l.664 3.96a.64.64 0 0 1-.63.74l-2.9.027a.48.48 0 0 0-.48.6l.66 3.94a.64.64 0 0 1-.63.74l-4.73.044zm.46-3.027l1.93-.018a.48.48 0 0 0 .48-.6l-.66-3.94a.64.64 0 0 1 .63-.74l2.9-.027a.48.48 0 0 0 .48-.6l-.664-3.96a.64.64 0 0 1 .63-.74h5.35a.376.376 0 0 0 .374-.44l-.36-2.844a.64.64 0 0 1 .63-.74h-2.141c-1.918 0-3.968-.445-4.863-1.528-.893-1.075-1.01-2.614-1.032-3.15l.003-.016v-.002c.09-1.303.228-3.266-1.088-4.855-1.31-1.577-3.956-2.144-6.158-2.144H6.998l-2.706 15.758h4.606l-.664-3.96a.64.64 0 0 1 .63-.74l2.9-.027a.48.48 0 0 0 .48-.6l-.66-3.94a.64.64 0 0 1 .63-.74l4.73-.044z"
+                  />
+                </svg>
+              </div>
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                <h3
+                  class="text-lg leading-6 font-medium text-gray-900"
+                  id="modal-title"
+                >
+                  Pay Online with PayPal
+                </h3>
+                <div class="mt-2">
+                  <p class="text-sm text-gray-500">
+                    Secure payment via PayPal balance, credit card, or bank
+                    account
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- PayPal Checkout Component -->
+            <div class="mt-6" v-if="invoice">
+              <PayPalCheckoutButton
+                :invoice="invoice"
+                :show-amount-input="true"
+                button-text="Pay Now with PayPal"
+                @success="handlePayPalPaymentSuccess"
+                @error="handlePayPalPaymentError"
+              />
+            </div>
+          </div>
+
+          <!-- Modal Actions -->
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              @click="showPayPalPaymentModal = false"
+              class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1741,6 +1840,8 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
 import StripePaymentModal from '../components/StripePaymentModal.vue';
+import PayPalCheckoutButton from '../components/PayPalCheckoutButton.vue';
+import { useSettings } from '@neibrpay/api-client';
 
 const route = useRoute();
 const router = useRouter();
@@ -1794,9 +1895,19 @@ const isRestoring = computed(() => restoreInvoiceMutation.isPending.value);
 const showDeleteModal = ref(false);
 const showPaymentModal = ref(false);
 const showStripePaymentModal = ref(false);
+const showPayPalPaymentModal = ref(false);
 const showPaymentUpdateModal = ref(false);
 const selectedPayment = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
+
+// Get settings to check if Stripe and PayPal are enabled
+const { data: settingsData } = useSettings();
+const isStripeEnabled = computed(() => {
+  return settingsData.value?.tenant?.settings?.stripe?.enabled === true;
+});
+const isPayPalEnabled = computed(() => {
+  return settingsData.value?.tenant?.settings?.paypal?.enabled === true;
+});
 
 // Success/Error messages
 const successMessage = ref('');
@@ -1809,12 +1920,13 @@ const pdfRefreshKey = ref(0);
 // Tab state
 const activeTab = ref('documents');
 
-// Handle Stripe payment redirects
+// Handle Stripe/PayPal payment redirects
 onMounted(() => {
   const paymentStatus = route.query.payment as string;
   const sessionId = route.query.session_id as string;
+  const orderId = route.query.order_id as string;
 
-  if (paymentStatus === 'success' && sessionId) {
+  if (paymentStatus === 'success' && (sessionId || orderId)) {
     showSuccess('Payment processing! Your payment is being confirmed...');
     // Refetch invoice and payments to get updated status
     refetchInvoice();
@@ -2162,6 +2274,17 @@ const handleStripePaymentError = (error: string) => {
   // Keep modal open on error so user can try again
 };
 
+const handlePayPalPaymentSuccess = (orderId: string) => {
+  // Payment redirect will happen, this is just for logging
+  console.log('PayPal checkout order created:', orderId);
+  // Modal will close automatically when redirecting to PayPal
+};
+
+const handlePayPalPaymentError = (error: string) => {
+  showError(error || 'Failed to create payment session');
+  // Keep modal open on error so user can try again
+};
+
 const formatPaymentMethod = (method: string) => {
   const methodMap: Record<string, string> = {
     cash: 'Cash',
@@ -2170,6 +2293,9 @@ const formatPaymentMethod = (method: string) => {
     bank_transfer: 'Bank Transfer',
     stripe_card: 'Stripe (Card)',
     stripe_ach: 'Stripe (ACH)',
+    paypal_balance: 'PayPal (Balance)',
+    paypal_card: 'PayPal (Card)',
+    paypal_bank_account: 'PayPal (Bank Account)',
     other: 'Other',
   };
   return methodMap[method] || method;
@@ -2183,6 +2309,9 @@ const getPaymentMethodBadgeClass = (method: string) => {
     bank_transfer: 'bg-indigo-100 text-indigo-800',
     stripe_card: 'bg-indigo-100 text-indigo-800',
     stripe_ach: 'bg-indigo-100 text-indigo-800',
+    paypal_balance: 'bg-blue-100 text-blue-800',
+    paypal_card: 'bg-blue-100 text-blue-800',
+    paypal_bank_account: 'bg-blue-100 text-blue-800',
     other: 'bg-gray-100 text-gray-800',
   };
   return methodClasses[method] || 'bg-gray-100 text-gray-800';

@@ -26,6 +26,9 @@ class InvoicePayment extends Model
         'stripe_checkout_session_id',
         'stripe_payment_intent_id',
         'stripe_payment_method',
+        'paypal_order_id',
+        'paypal_payment_id',
+        'paypal_payment_method',
     ];
 
     /**
@@ -71,15 +74,24 @@ class InvoicePayment extends Model
     }
 
     /**
-     * Scope a query to only include confirmed payments (exclude temporary Stripe payments).
+     * Scope a query to only include confirmed payments (exclude temporary Stripe/PayPal payments).
      * Temporary Stripe payments are those with payment_method='stripe_card' or 'stripe_ach' 
      * and stripe_payment_intent_id=null.
+     * Temporary PayPal payments are those with payment_method starting with 'paypal_' 
+     * and paypal_payment_id=null.
      */
     public function scopeConfirmed($query)
     {
         return $query->where(function ($q) {
-            $q->whereNotIn('payment_method', ['stripe_card', 'stripe_ach'])
-                ->orWhereNotNull('stripe_payment_intent_id');
+            $q->whereNotIn('payment_method', ['stripe_card', 'stripe_ach', 'paypal_balance', 'paypal_card', 'paypal_bank_account'])
+                ->orWhere(function ($subQ) {
+                    $subQ->whereIn('payment_method', ['stripe_card', 'stripe_ach'])
+                        ->whereNotNull('stripe_payment_intent_id');
+                })
+                ->orWhere(function ($subQ) {
+                    $subQ->whereIn('payment_method', ['paypal_balance', 'paypal_card', 'paypal_bank_account'])
+                        ->whereNotNull('paypal_payment_id');
+                });
         });
     }
 }

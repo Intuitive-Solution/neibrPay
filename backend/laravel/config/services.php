@@ -28,6 +28,8 @@ return [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        // Note: Stripe configuration is now per-tenant and stored in tenant.settings.stripe
+        // These env values are kept as fallback for backward compatibility
     ],
 
 ];
