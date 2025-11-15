@@ -71,7 +71,7 @@
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="handleSubmit" class="space-y-6">
+        <form @submit.prevent="handleSubmit" class="card-modern space-y-6">
           <!-- Title Field -->
           <div
             class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
@@ -113,16 +113,18 @@
             </label>
             <div class="lg:col-span-2">
               <input
-                id="address"
+                id="address-edit"
+                ref="addressInputRef"
                 v-model="form.address"
                 type="text"
                 required
+                autocomplete="street-address"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
                     errors.address,
                 }"
-                placeholder="Enter full address"
+                placeholder="Start typing an address..."
               />
               <p v-if="errors.address" class="mt-2 text-sm text-red-600">
                 {{ errors.address }}
@@ -723,16 +725,18 @@
             </label>
             <div class="lg:col-span-2">
               <input
-                id="address"
+                id="address-add"
+                ref="addressInputRef"
                 v-model="form.address"
                 type="text"
                 required
+                autocomplete="street-address"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                 :class="{
                   'border-red-300 focus:ring-red-500 focus:border-red-500':
                     errors.address,
                 }"
-                placeholder="Enter full address"
+                placeholder="Start typing an address..."
               />
               <p v-if="errors.address" class="mt-2 text-sm text-red-600">
                 {{ errors.address }}
@@ -1596,7 +1600,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCreateUnit, useUpdateUnit, useUnit } from '../composables/useUnits';
 import { useResidents } from '../composables/useResidents';
@@ -1723,6 +1727,10 @@ const form = ref<UnitFormData>({
   starting_balance: 0,
   balance_as_of_date: new Date().toISOString().split('T')[0], // Today's date
 });
+// Google Places Autocomplete refs
+const addressInputRef = ref<HTMLInputElement | null>(null);
+const autocompleteRef = ref<google.maps.places.Autocomplete | null>(null);
+const isGoogleMapsLoaded = ref(false);
 
 // Queries and mutations
 const queryClient = useQueryClient();
@@ -1744,8 +1752,66 @@ const {
 } = useUnitDocuments(unitId.value || 0);
 
 // Methods
+// Methods
 const goBack = () => {
   router.push('/units');
+};
+
+// Initialize Google Places Autocomplete (NEW GOOGLE API)
+const initGooglePlacesAutocomplete = async () => {
+  try {
+    await google.maps.importLibrary('places');
+
+    if (!addressInputRef.value) return;
+
+    const autocomplete = new google.maps.places.Autocomplete(
+      addressInputRef.value,
+      {
+        fields: ['formatted_address', 'address_components', 'geometry'],
+        types: ['address'],
+        componentRestrictions: { country: 'us' },
+      }
+    );
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place || !place.address_components) return;
+
+      let streetNumber = '';
+      let route = '';
+      let city = '';
+      let state = '';
+      let zipCode = '';
+
+      place.address_components.forEach(component => {
+        if (component.types.includes('street_number')) {
+          streetNumber = component.long_name;
+        }
+        if (component.types.includes('route')) {
+          route = component.long_name;
+        }
+        if (component.types.includes('locality')) {
+          city = component.long_name;
+        }
+        if (component.types.includes('administrative_area_level_1')) {
+          state = component.short_name;
+        }
+        if (component.types.includes('postal_code')) {
+          zipCode = component.long_name;
+        }
+      });
+
+      form.value.address =
+        streetNumber && route
+          ? `${streetNumber} ${route}`
+          : place.formatted_address;
+      form.value.city = city;
+      form.value.state = state;
+      form.value.zip_code = zipCode;
+    });
+  } catch (error) {
+    console.error('Google Maps failed to load:', error);
+  }
 };
 
 const openAddOwnerModal = () => {
@@ -2086,6 +2152,10 @@ watch(
 
 // Load existing unit data for editing
 onMounted(async () => {
+  // Initialize Google Places Autocomplete
+  await nextTick(); // Wait for DOM to be ready
+  await initGooglePlacesAutocomplete();
+
   if (isEditMode.value && unitId.value) {
     // Force refetch to get latest data from database
     await refetchUnit();
@@ -2106,6 +2176,13 @@ onMounted(async () => {
         owners.value = existingUnit.value.owners;
       }
     }
+  }
+});
+
+onUnmounted(() => {
+  // Clean up autocomplete listeners
+  if (autocompleteRef.value) {
+    google.maps.event.clearInstanceListeners(autocompleteRef.value);
   }
 });
 </script>
