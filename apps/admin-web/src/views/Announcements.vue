@@ -496,7 +496,17 @@
               class="table-row-hover"
             >
               <!-- Subject Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td
+                @click.stop="
+                  !announcement.deleted_at && viewAnnouncement(announcement.id)
+                "
+                :class="[
+                  'px-6 py-4 whitespace-nowrap',
+                  !announcement.deleted_at
+                    ? 'cursor-pointer hover:bg-gray-50 transition-colors'
+                    : '',
+                ]"
+              >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">

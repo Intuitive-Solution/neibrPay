@@ -610,8 +610,13 @@
             >
               <!-- Invoice Column -->
               <td
-                @click="viewInvoice(invoice.id)"
-                class="px-6 py-4 whitespace-nowrap cursor-pointer hover:bg-gray-50 transition-colors"
+                @click.stop="!invoice.deleted_at && viewInvoice(invoice.id)"
+                :class="[
+                  'px-6 py-4 whitespace-nowrap',
+                  !invoice.deleted_at
+                    ? 'cursor-pointer hover:bg-gray-50 transition-colors'
+                    : '',
+                ]"
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center">
