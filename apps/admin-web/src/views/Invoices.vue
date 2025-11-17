@@ -609,7 +609,10 @@
               class="table-row-hover"
             >
               <!-- Invoice Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td
+                @click="viewInvoice(invoice.id)"
+                class="px-6 py-4 whitespace-nowrap cursor-pointer hover:bg-gray-50 transition-colors"
+              >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
@@ -819,7 +822,7 @@
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                             />
                           </svg>
-                          View Preview
+                          View
                         </button>
                         <!-- Restore, Duplicate - Hidden for residents -->
                         <template v-if="!isResident">
@@ -904,7 +907,7 @@
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                             />
                           </svg>
-                          View Preview
+                          View
                         </button>
                         <!-- Edit, Record Payment, Duplicate, Delete - Hidden for residents -->
                         <template v-if="!isResident">
