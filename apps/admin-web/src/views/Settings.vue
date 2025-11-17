@@ -162,13 +162,14 @@
               <label class="block text-sm font-medium text-gray-700 mb-2"
                 >Address</label
               >
-              <textarea
+              <input
                 id="hoa-address"
                 v-model="hoaForm.address"
+                type="text"
                 class="input-field"
-                rows="3"
-                placeholder="Enter community address"
-              ></textarea>
+                autocomplete="off"
+                placeholder="Start typing address..."
+              />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2"
