@@ -551,10 +551,12 @@ import { useAuthStore } from '../stores/auth';
 import NeibrPayLogo from '../components/NeibrPayLogo.vue';
 import VerificationCodeInput from '../components/VerificationCodeInput.vue';
 import { authService } from '../services/auth';
+import { usePostHog } from '../composables/usePostHog';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { trackOnboardingEvent } = usePostHog();
 
 // Step management
 type Step = 'email' | 'code' | 'signup' | 'google-signup';
@@ -621,8 +623,20 @@ const handleEmailSubmit = async () => {
     // Check if email exists
     const checkResult = await authService.checkEmail(emailValue);
 
+    // Track: User entered email (signup started)
+    trackOnboardingEvent('signup_email_entered', {
+      email: emailValue,
+      step: 'email_entry',
+    });
+
     // Send verification code
     await authService.sendVerificationCode(emailValue);
+
+    // Track: Verification code sent
+    trackOnboardingEvent('verification_code_sent', {
+      email: emailValue,
+      step: 'code_sent',
+    });
 
     // Start countdown
     startCountdown(60);
@@ -652,6 +666,12 @@ const handleCodeSubmit = async (code: string) => {
     const token = await authService.verifyCode(emailValue, code);
     verificationToken.value = token;
 
+    // Track: Email verified
+    trackOnboardingEvent('email_verified', {
+      email: emailValue,
+      step: 'code_verified',
+    });
+
     // Check if user exists
     const checkResult = await authService.checkEmail(emailValue);
 
@@ -661,6 +681,11 @@ const handleCodeSubmit = async (code: string) => {
     } else {
       // New user - show signup form
       step.value = 'signup';
+      // Track: Signup form shown
+      trackOnboardingEvent('signup_form_shown', {
+        email: emailValue,
+        step: 'signup_form',
+      });
     }
   } catch (error) {
     errorMessage.value =
@@ -687,6 +712,12 @@ const handleLogin = async () => {
       verificationToken.value
     );
     authStore.setAuth(result);
+
+    // Track: Login completed
+    trackOnboardingEvent('login_completed', {
+      email: email.value.trim().toLowerCase(),
+      step: 'login_complete',
+    });
 
     // Redirect to dashboard
     router.push('/');
@@ -732,6 +763,13 @@ const handleSignup = async () => {
     );
 
     authStore.setAuth(result);
+
+    // Track: Signup completed
+    trackOnboardingEvent('signup_completed', {
+      email: email.value.trim().toLowerCase(),
+      community_name: communityName.value.trim(),
+      step: 'signup_complete',
+    });
 
     // Redirect to dashboard
     router.push('/');

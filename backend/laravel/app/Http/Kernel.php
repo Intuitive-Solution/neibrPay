@@ -43,6 +43,7 @@ class Kernel extends HttpKernel
             // If you need cookie-based auth, add it back and configure CORS properly
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\IdentifyPosthogUser::class,
         ],
     ];
 

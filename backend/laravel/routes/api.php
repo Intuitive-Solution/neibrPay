@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\InvoiceAttachmentController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\InvoicePdfController;
+use App\Http\Controllers\Api\StripePaymentController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TenantController;
@@ -137,6 +138,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('payments/{id}', [InvoicePaymentController::class, 'update']);
     Route::delete('payments/{id}', [InvoicePaymentController::class, 'destroy']);
     
+    // Stripe payment routes
+    Route::post('invoices/{id}/stripe/checkout', [StripePaymentController::class, 'createCheckoutSession']);
+    Route::get('invoices/{id}/stripe/status', [StripePaymentController::class, 'getPaymentStatus']);
+    
     // Charge management routes
     Route::apiResource('charges', ChargeController::class);
     Route::post('charges/{charge}/restore', [ChargeController::class, 'restore']);
@@ -175,6 +180,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('announcements/for-user', [AnnouncementController::class, 'forUser']);
     Route::apiResource('announcements', AnnouncementController::class);
 });
+
+// Stripe webhook route (public, no auth - uses signature verification)
+Route::post('stripe/webhook', [StripePaymentController::class, 'handleWebhook']);
 
 // Legacy route for backward compatibility
 Route::get('/user', function (Request $request) {

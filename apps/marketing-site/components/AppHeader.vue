@@ -26,10 +26,17 @@
             target="_blank"
             rel="noopener noreferrer"
             class="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+            @click="trackHeaderCTA('book_demo')"
           >
             Book a Demo
           </a>
-          <a :href="adminWebUrl + '/auth'" class="btn-primary"> Get Started </a>
+          <a
+            :href="adminWebUrl + '/auth'"
+            class="btn-primary"
+            @click="trackHeaderCTA('get_started')"
+          >
+            Get Started
+          </a>
         </div>
 
         <!-- Mobile Menu Button -->
@@ -82,7 +89,10 @@
           :href="calendlyUrl"
           target="_blank"
           rel="noopener noreferrer"
-          @click="mobileMenuOpen = false"
+          @click="
+            mobileMenuOpen = false;
+            trackHeaderCTA('book_demo');
+          "
           class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md font-medium"
         >
           Book a Demo
@@ -90,6 +100,7 @@
         <a
           :href="adminWebUrl + '/auth'"
           class="block btn-primary text-center mt-2"
+          @click="trackHeaderCTA('get_started')"
         >
           Get Started
         </a>
@@ -104,6 +115,16 @@ import { ref } from 'vue';
 const config = useRuntimeConfig();
 const adminWebUrl = config.public.adminWebUrl;
 const calendlyUrl = config.public.calendlyUrl;
+const { $posthog } = useNuxtApp();
 
 const mobileMenuOpen = ref(false);
+
+// Track header CTA clicks
+const trackHeaderCTA = (type: string) => {
+  if (process.client && $posthog) {
+    $posthog.capture('header_cta_clicked', {
+      cta_type: type,
+    });
+  }
+};
 </script>

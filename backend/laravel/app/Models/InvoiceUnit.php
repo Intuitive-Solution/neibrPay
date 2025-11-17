@@ -40,7 +40,6 @@ class InvoiceUnit extends Model
         'tax_rate',
         'tax_amount',
         'total',
-        'balance_due',
         'status',
         'parent_invoice_id',
         'created_by',
@@ -60,7 +59,6 @@ class InvoiceUnit extends Model
         'tax_rate' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total' => 'decimal:2',
-        'balance_due' => 'decimal:2',
         'early_payment_discount_amount' => 'decimal:2',
         'late_fee_amount' => 'decimal:2',
         'early_payment_discount_enabled' => 'boolean',
@@ -196,9 +194,36 @@ class InvoiceUnit extends Model
         $this->subtotal = (float) $subtotal;
         $this->tax_amount = (float) (($subtotal * $this->tax_rate) / 100);
         $this->total = (float) ($subtotal + $this->tax_amount);
-        // Calculate balance_due from payments
-        $totalPaid = $this->payments()->sum('amount');
-        $this->balance_due = (float) ($this->total - $totalPaid);
+    }
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['balance_due'];
+
+    /**
+     * Get the balance due (calculated dynamically from payments).
+     * Excludes temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id).
+     */
+    public function getBalanceDueAttribute(): float
+    {
+        // Use loaded payments if available (more efficient)
+        if ($this->relationLoaded('payments')) {
+            // Filter out temporary Stripe payments from loaded collection
+            // Exclude payments where payment_method is stripe_card/stripe_ach AND stripe_payment_intent_id is null
+            $confirmedPayments = $this->payments->filter(function ($payment) {
+                return !in_array($payment->payment_method, ['stripe_card', 'stripe_ach']) 
+                    || $payment->stripe_payment_intent_id !== null;
+            });
+            $totalPaid = $confirmedPayments->sum('amount');
+        } else {
+            // Fall back to query if payments aren't loaded - use confirmed scope
+            $totalPaid = $this->payments()->confirmed()->sum('amount');
+        }
+        
+        return (float) max(0, ($this->total ?? 0) - $totalPaid);
     }
 
     /**
@@ -297,7 +322,7 @@ class InvoiceUnit extends Model
                 break;
         }
 
-        return $dueDate->isPast() && $this->balance_due > 0;
+        return $dueDate->isPast() && $this->getBalanceDueAttribute() > 0;
     }
 
     /**
