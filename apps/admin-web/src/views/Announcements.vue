@@ -4,7 +4,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <!-- Active Announcements Card -->
       <div
-        class="card card-hover cursor-pointer transition-all duration-200"
+        class="card-modern card-hover cursor-pointer transition-all duration-200"
         :class="{
           'ring-2 ring-green-500': activeFilter === 'active',
         }"
@@ -128,7 +128,7 @@
     </div>
 
     <!-- Announcements Directory Section -->
-    <div class="bg-white rounded-lg shadow-sm">
+    <div class="card-modern bg-white rounded-lg shadow-sm">
       <!-- Header Section -->
       <div class="px-6 py-4 border-b border-gray-200">
         <div

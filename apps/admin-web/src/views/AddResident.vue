@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="card-modern bg-white rounded-lg shadow p-6 mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
         <div class="mb-4 lg:mb-0">
           <div class="flex items-center gap-4 mb-2">
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Form -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="card-modern bg-white rounded-lg shadow p-6">
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <!-- Name Field -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
@@ -247,7 +247,7 @@
     <!-- Tabs Section (only in edit mode) -->
     <div v-if="isEditMode" class="mt-8">
       <!-- Single White Container with Tabs and Content -->
-      <div class="bg-white rounded-lg shadow">
+      <div class="card-modern bg-white rounded-lg shadow">
         <!-- Tabs Navigation -->
         <div class="border-b border-gray-200">
           <nav class="-mb-px flex space-x-8 px-6 pt-4">

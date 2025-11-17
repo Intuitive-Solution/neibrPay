@@ -70,7 +70,7 @@
     </div>
 
     <!-- Vendors Directory Section -->
-    <div class="bg-white rounded-lg shadow-sm">
+    <div class="card-modern bg-white rounded-lg shadow-sm">
       <!-- Header Section -->
       <div class="px-6 py-4 border-b border-gray-200">
         <div

@@ -430,7 +430,7 @@
     </div>
 
     <!-- Quick Actions (Hidden for residents) -->
-    <div v-if="!isResident" class="card">
+    <div v-if="!isResident" class="card-modern">
       <h3 class="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <router-link to="/invoices/create" class="block">
@@ -520,7 +520,7 @@
     </div>
 
     <!-- Recent Activity -->
-    <div class="card">
+    <div class="card-modern">
       <h3 class="text-base font-semibold text-gray-900 mb-4">
         Recent Activity
       </h3>

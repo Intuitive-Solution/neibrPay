@@ -795,7 +795,7 @@
       </div>
 
       <!-- Invoice Items Section with Tabs -->
-      <div class="mt-8 card">
+      <div class="mt-8 card-modern">
         <!-- Tab Navigation -->
         <div class="bg-gray-100 rounded-t-lg">
           <nav class="flex space-x-8 px-6" aria-label="Tabs">
@@ -1179,7 +1179,7 @@
       <!-- Tabs and Total Panel Section -->
       <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Section: Tabs and Rich Text Editor -->
-        <div class="lg:col-span-2 bg-white rounded-lg shadow">
+        <div class="card-modern lg:col-span-2 bg-white rounded-lg shadow">
           <!-- Tabs -->
           <div class="bg-gray-100 border-b border-gray-200 rounded-t-lg">
             <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
@@ -1441,7 +1441,7 @@
         </div>
 
         <!-- Right Section: Total Panel -->
-        <div class="card">
+        <div class="card-modern">
           <!-- Card Title -->
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <h3 class="text-lg font-medium text-gray-900">Invoice Summary</h3>
@@ -1597,18 +1597,20 @@
       </div>
 
       <!-- Invoice Template Preview -->
-      <div class="preview-container">
-        <InvoiceTemplate
-          :form="previewForm"
-          :invoice-items="invoiceItems"
-          :subtotal="subtotal"
-          :tax-rate="taxRate"
-          :tax-amount="taxAmount"
-          :total="total"
-          :balance-due="balanceDue"
-          :tab-content="tabContent"
-          :units="units"
-        />
+      <div class="mt-8 card-modern">
+        <div class="preview-container">
+          <InvoiceTemplate
+            :form="previewForm"
+            :invoice-items="invoiceItems"
+            :subtotal="subtotal"
+            :tax-rate="taxRate"
+            :tax-amount="taxAmount"
+            :total="total"
+            :balance-due="balanceDue"
+            :tab-content="tabContent"
+            :units="units"
+          />
+        </div>
       </div>
     </div>
   </div>

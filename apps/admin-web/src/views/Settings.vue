@@ -140,7 +140,7 @@
       </div>
 
       <!-- Tab Content -->
-      <div class="card">
+      <div class="card-modern">
         <!-- HOA Tab -->
         <div v-if="activeTab === 'hoa'" class="space-y-6">
           <h2 class="text-base font-semibold text-gray-900">

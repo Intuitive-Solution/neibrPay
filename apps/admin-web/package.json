@@ -12,6 +12,7 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^2.0.2",
     "@stripe/stripe-js": "^8.4.0",
     "@tanstack/vue-query": "^5.90.2",
     "@unovis/ts": "^1.6.1",
