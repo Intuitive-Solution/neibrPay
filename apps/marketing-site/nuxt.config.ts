@@ -37,5 +37,11 @@ export default defineNuxtConfig({
       posthogKey: process.env.POSTHOG_KEY || '',
       posthogHost: process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
     },
+    // Server-side only (not exposed to client)
+    smtpHost: process.env.SMTP_HOST || 'smtp.hostinger.com',
+    smtpPort: process.env.SMTP_PORT || '465',
+    smtpUser: process.env.SMTP_USER || 'support@neibrpay.com',
+    smtpPassword: process.env.SMTP_PASSWORD || '',
+    supportEmail: process.env.SUPPORT_EMAIL || 'support@neibrpay.com',
   },
 });

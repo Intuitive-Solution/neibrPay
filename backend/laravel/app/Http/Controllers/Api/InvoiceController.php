@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InvoiceUnit;
 use App\Models\Unit;
 use App\Services\InvoicePdfService;
+use App\Services\AnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -18,10 +19,12 @@ use Illuminate\Validation\Rule;
 class InvoiceController extends Controller
 {
     protected $pdfService;
+    protected $analytics;
 
-    public function __construct(InvoicePdfService $pdfService)
+    public function __construct(InvoicePdfService $pdfService, AnalyticsService $analytics)
     {
         $this->pdfService = $pdfService;
+        $this->analytics = $analytics;
     }
 
     /**
@@ -154,6 +157,19 @@ class InvoiceController extends Controller
             }
             
             DB::commit();
+            
+            // Track invoice creation in PostHog
+            foreach ($createdInvoices as $invoice) {
+                $this->analytics->captureEvent('invoice_created_backend', $user->id, [
+                    'invoice_id' => $invoice->id,
+                    'amount' => $invoice->total,
+                    'unit_id' => $invoice->unit_id,
+                    'unit_count' => count($unitIds),
+                    'frequency' => $validated['frequency'],
+                    'source' => 'api',
+                    'tenant_id' => $user->tenant_id,
+                ]);
+            }
             
             // Generate PDF for each created invoice
             foreach ($createdInvoices as $invoice) {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\InvoicePayment;
 use App\Models\InvoiceUnit;
+use App\Services\AnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,12 @@ use Illuminate\Validation\Rule;
 
 class InvoicePaymentController extends Controller
 {
+    protected $analytics;
+
+    public function __construct(AnalyticsService $analytics)
+    {
+        $this->analytics = $analytics;
+    }
     /**
      * Display a listing of payments.
      */
@@ -130,6 +137,19 @@ class InvoicePaymentController extends Controller
             $invoice->save();
             
             DB::commit();
+            
+            // Track payment in PostHog
+            $this->analytics->captureEvent('invoice_paid_backend', $user->id, [
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'amount' => $payment->amount,
+                'payment_method' => $payment->payment_method,
+                'invoice_total' => $invoice->total,
+                'balance_due' => $balanceDue,
+                'invoice_status' => $invoice->status,
+                'days_outstanding' => $invoice->created_at->diffInDays(now()),
+                'tenant_id' => $user->tenant_id,
+            ]);
             
             // Load relationships for response
             $payment->load(['invoiceUnit.unit', 'recorder']);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\InvoicePayment;
 use App\Models\InvoiceUnit;
+use App\Services\AnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,11 +21,13 @@ use Stripe\Webhook;
 class StripePaymentController extends Controller
 {
     private StripeClient $stripe;
+    protected AnalyticsService $analytics;
 
-    public function __construct()
+    public function __construct(AnalyticsService $analytics)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
         $this->stripe = new StripeClient(config('services.stripe.secret'));
+        $this->analytics = $analytics;
     }
 
     /**
@@ -123,6 +126,16 @@ class StripePaymentController extends Controller
                 'payment_date' => now(),
                 'recorded_by' => $user->id,
                 'notes' => 'Stripe Checkout payment - pending confirmation',
+            ]);
+
+            // Track payment initiation
+            $this->analytics->captureEvent('payment_initiated', $user->id, [
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'amount' => $amount,
+                'method' => 'stripe',
+                'currency' => 'USD',
+                'tenant_id' => $user->tenant_id,
             ]);
 
             Log::info('Payment created', ['payment' => $payment]);
@@ -461,6 +474,23 @@ class StripePaymentController extends Controller
 
             DB::commit();
 
+            // Track successful payment
+            $userId = $payment->recorder?->id ?? $invoice->creator?->id;
+            if ($userId) {
+                $this->analytics->captureEvent('payment_succeeded', $userId, [
+                    'payment_id' => $payment->id,
+                    'invoice_id' => $invoice->id,
+                    'amount' => $payment->amount,
+                    'method' => $paymentMethodType,
+                    'charge_id' => $charge->id,
+                    'invoice_total' => $invoice->total,
+                    'balance_due' => $balanceDue,
+                    'invoice_status' => $invoice->status,
+                    'days_outstanding' => $invoice->created_at->diffInDays(now()),
+                    'tenant_id' => $invoice->tenant_id,
+                ]);
+            }
+
             Log::info('Payment processed successfully via charge.succeeded', [
                 'payment_id' => $payment->id,
                 'invoice_id' => $invoice->id,
@@ -503,6 +533,21 @@ class StripePaymentController extends Controller
         $failureReason = $paymentIntent->last_payment_error->message ?? 'Payment failed';
         $payment->notes = "Stripe payment failed: {$failureReason}";
         $payment->save();
+
+        // Track payment failure
+        $invoice = $payment->invoiceUnit;
+        $userId = $payment->recorder?->id ?? $invoice->creator?->id;
+        if ($userId) {
+            $this->analytics->captureEvent('payment_failed', $userId, [
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'amount' => $payment->amount,
+                'reason' => $failureReason,
+                'error_code' => $paymentIntent->last_payment_error->code ?? 'unknown',
+                'payment_intent_id' => $paymentIntent->id,
+                'tenant_id' => $invoice->tenant_id,
+            ]);
+        }
 
         Log::warning('Payment failed', [
             'payment_id' => $payment->id,
