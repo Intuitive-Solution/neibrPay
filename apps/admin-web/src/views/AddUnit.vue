@@ -1767,13 +1767,36 @@ async function initGooglePlacesAutocomplete() {
     if (!input) return;
 
     const autocomplete = new google.maps.places.Autocomplete(input, {
-      fields: ['formatted_address', 'geometry', 'address_components'],
+      fields: ['formatted_address', 'address_components'],
       componentRestrictions: { country: ['us'] },
     });
 
     autocomplete.addListener('place_changed', () => {
       const place = autocomplete.getPlace();
-      console.log('Selected place:', place);
+      if (!place?.address_components) return;
+
+      let street = '';
+      let city = '';
+      let state = '';
+      let zip = '';
+
+      place.address_components.forEach(c => {
+        if (c.types.includes('street_number')) street = c.long_name;
+        if (c.types.includes('route')) street += ' ' + c.long_name;
+        if (c.types.includes('locality')) city = c.long_name;
+        if (c.types.includes('administrative_area_level_1'))
+          state = c.short_name;
+        if (c.types.includes('postal_code')) zip = c.long_name;
+        if (c.types.includes('postal_code_suffix')) zip += '-' + c.long_name;
+      });
+
+      // Fill form fields
+      form.value.address = place.formatted_address;
+      form.value.city = city;
+      form.value.state = state;
+      form.value.zip_code = zip;
+
+      console.log({ street, city, state, zip });
     });
   } catch (error) {
     console.error('Autocomplete init error:', error);

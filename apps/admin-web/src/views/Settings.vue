@@ -163,6 +163,7 @@
                 >Address</label
               >
               <textarea
+                id="hoa-address"
                 v-model="hoaForm.address"
                 class="input-field"
                 rows="3"
@@ -417,6 +418,63 @@ import { useAuthStore } from '../stores/auth';
 const authStore = useAuthStore();
 const isResident = computed(() => authStore.isResident);
 
+// ---------------- GOOGLE AUTOCOMPLETE FOR HOA ADDRESS ----------------
+
+async function loadGoogleMapsScript() {
+  return new Promise((resolve, reject) => {
+    // Already loaded?
+    if (window.google && window.google.maps) {
+      resolve(true);
+      return;
+    }
+
+    // Script exists but waiting
+    const existingScript = document.getElementById('google-maps-script');
+    if (existingScript) {
+      existingScript.addEventListener('load', resolve);
+      return;
+    }
+
+    // Create script tag
+    const script = document.createElement('script');
+    script.id = 'google-maps-script';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${
+      import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+    }&libraries=places`;
+    script.async = true;
+
+    script.onload = resolve;
+    script.onerror = reject;
+
+    document.head.appendChild(script);
+  });
+}
+
+async function initHoaAddressAutocomplete() {
+  try {
+    await google.maps.importLibrary('places');
+
+    const input = document.getElementById('hoa-address') as HTMLTextAreaElement;
+    if (!input) return;
+
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      fields: ['formatted_address'],
+      componentRestrictions: { country: ['us'] },
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place?.formatted_address) return;
+
+      hoaForm.value.address = place.formatted_address;
+
+      console.log('HOA Address Autocomplete:', place.formatted_address);
+    });
+  } catch (err) {
+    console.error('HOA address autocomplete error:', err);
+  }
+}
+
 // Tab state
 const activeTab = ref<'hoa' | 'user' | 'localization' | 'security'>('hoa');
 
@@ -540,6 +598,24 @@ watch(
   },
   { immediate: true }
 );
+
+import { onMounted, nextTick } from 'vue';
+
+onMounted(async () => {
+  await loadGoogleMapsScript();
+
+  if (activeTab.value === 'hoa') {
+    await nextTick();
+    initHoaAddressAutocomplete();
+  }
+});
+
+watch(activeTab, async tab => {
+  if (tab === 'hoa') {
+    await nextTick();
+    initHoaAddressAutocomplete();
+  }
+});
 
 // Helper functions
 const showSuccess = (message: string) => {
