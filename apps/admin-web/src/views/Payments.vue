@@ -415,7 +415,15 @@ const deletePaymentMutation = useDeletePayment();
 // Computed properties
 const totalAmount = computed(() => {
   if (!payments.value) return 0;
-  return payments.value.reduce(
+  // Filter out temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id)
+  const confirmedPayments = payments.value.filter((payment: any) => {
+    const isStripePayment =
+      payment?.payment_method === 'stripe_card' ||
+      payment?.payment_method === 'stripe_ach';
+    const hasPaymentIntent = payment?.stripe_payment_intent_id != null;
+    return !isStripePayment || hasPaymentIntent;
+  });
+  return confirmedPayments.reduce(
     (sum: number, payment: any) => sum + payment.amount,
     0
   );
@@ -426,7 +434,16 @@ const monthlyAmount = computed(() => {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  return payments.value
+  // Filter out temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id)
+  const confirmedPayments = payments.value.filter((payment: any) => {
+    const isStripePayment =
+      payment?.payment_method === 'stripe_card' ||
+      payment?.payment_method === 'stripe_ach';
+    const hasPaymentIntent = payment?.stripe_payment_intent_id != null;
+    return !isStripePayment || hasPaymentIntent;
+  });
+
+  return confirmedPayments
     .filter((payment: any) => new Date(payment.payment_date) >= startOfMonth)
     .reduce((sum: number, payment: any) => sum + payment.amount, 0);
 });

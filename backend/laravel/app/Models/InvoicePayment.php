@@ -23,6 +23,9 @@ class InvoicePayment extends Model
         'notes',
         'payment_date',
         'recorded_by',
+        'stripe_checkout_session_id',
+        'stripe_payment_intent_id',
+        'stripe_payment_method',
     ];
 
     /**
@@ -65,5 +68,18 @@ class InvoicePayment extends Model
     public function scopeByMethod($query, $method)
     {
         return $query->where('payment_method', $method);
+    }
+
+    /**
+     * Scope a query to only include confirmed payments (exclude temporary Stripe payments).
+     * Temporary Stripe payments are those with payment_method='stripe_card' or 'stripe_ach' 
+     * and stripe_payment_intent_id=null.
+     */
+    public function scopeConfirmed($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNotIn('payment_method', ['stripe_card', 'stripe_ach'])
+                ->orWhereNotNull('stripe_payment_intent_id');
+        });
     }
 }

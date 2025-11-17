@@ -13,7 +13,10 @@
       <div class="flex justify-center mb-12">
         <div class="inline-flex items-center bg-gray-100 rounded-lg p-1">
           <button
-            @click="isAnnual = false"
+            @click="
+              isAnnual = false;
+              trackPricingToggle(false);
+            "
             :class="[
               'px-6 py-2 rounded-md font-medium transition-all',
               !isAnnual
@@ -24,7 +27,10 @@
             Monthly
           </button>
           <button
-            @click="isAnnual = true"
+            @click="
+              isAnnual = true;
+              trackPricingToggle(true);
+            "
             :class="[
               'px-6 py-2 rounded-md font-medium transition-all relative',
               isAnnual
@@ -134,6 +140,7 @@
           <a
             :href="adminWebUrl + '/auth'"
             class="btn-primary w-full text-center block"
+            @click="trackPricingCTA('starter', 'pricing_card')"
           >
             Get Started
           </a>
@@ -249,6 +256,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="btn-primary w-full text-center block"
+            @click="trackPricingCTA('enterprise', 'pricing_card')"
           >
             Talk to Us
           </a>
@@ -264,10 +272,29 @@ import { ref, computed } from 'vue';
 const config = useRuntimeConfig();
 const adminWebUrl = config.public.adminWebUrl;
 const calendlyUrl = config.public.calendlyUrl;
+const { $posthog } = useNuxtApp();
 
 const isAnnual = ref(false);
 
 const monthlyPrice = computed(() => {
   return isAnnual.value ? '16.67' : '19.99';
 });
+
+// Track pricing interactions
+const trackPricingToggle = (isAnnualValue: boolean) => {
+  if (process.client && $posthog) {
+    $posthog.capture('pricing_toggle', {
+      billing_period: isAnnualValue ? 'annual' : 'monthly',
+    });
+  }
+};
+
+const trackPricingCTA = (plan: string, location: string) => {
+  if (process.client && $posthog) {
+    $posthog.capture('pricing_cta_clicked', {
+      plan,
+      location,
+    });
+  }
+};
 </script>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\InvoicePayment;
 use App\Models\InvoiceUnit;
+use App\Services\AnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,12 @@ use Illuminate\Validation\Rule;
 
 class InvoicePaymentController extends Controller
 {
+    protected $analytics;
+
+    public function __construct(AnalyticsService $analytics)
+    {
+        $this->analytics = $analytics;
+    }
     /**
      * Display a listing of payments.
      */
@@ -86,7 +93,7 @@ class InvoicePaymentController extends Controller
         
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,other',
+            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,other',
             'payment_reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',
@@ -116,12 +123,12 @@ class InvoicePaymentController extends Controller
                 'recorded_by' => $user->id,
             ]);
             
-            // Recalculate invoice balance from payments
-            $totalPaid = $invoice->payments()->sum('amount');
-            $invoice->balance_due = $invoice->total - $totalPaid;
+            // Recalculate invoice balance from payments (exclude temporary Stripe payments)
+            $totalPaid = $invoice->payments()->confirmed()->sum('amount');
+            $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on payment
-            if ($invoice->balance_due <= 0) {
+            if ($balanceDue <= 0) {
                 $invoice->status = 'paid';
             } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';
@@ -130,6 +137,19 @@ class InvoicePaymentController extends Controller
             $invoice->save();
             
             DB::commit();
+            
+            // Track payment in PostHog
+            $this->analytics->captureEvent('invoice_paid_backend', $user->id, [
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'amount' => $payment->amount,
+                'payment_method' => $payment->payment_method,
+                'invoice_total' => $invoice->total,
+                'balance_due' => $balanceDue,
+                'invoice_status' => $invoice->status,
+                'days_outstanding' => $invoice->created_at->diffInDays(now()),
+                'tenant_id' => $user->tenant_id,
+            ]);
             
             // Load relationships for response
             $payment->load(['invoiceUnit.unit', 'recorder']);
@@ -198,12 +218,12 @@ class InvoicePaymentController extends Controller
             // Update the payment
             $payment->update($validated);
             
-            // Recalculate invoice balance from payments
-            $totalPaid = $invoice->payments()->sum('amount');
-            $invoice->balance_due = $invoice->total - $totalPaid;
+            // Recalculate invoice balance from payments (exclude temporary Stripe payments)
+            $totalPaid = $invoice->payments()->confirmed()->sum('amount');
+            $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on new payment totals
-            if ($invoice->balance_due <= 0) {
+            if ($balanceDue <= 0) {
                 $invoice->status = 'paid';
             } elseif ($totalPaid > 0) {
                 $invoice->status = 'partial';
@@ -252,14 +272,14 @@ class InvoicePaymentController extends Controller
         try {
             $invoice = $payment->invoiceUnit;
             
-            // Recalculate invoice balance from remaining payments
-            $totalPaid = $invoice->payments()->sum('amount');
-            $invoice->balance_due = $invoice->total - $totalPaid;
+            // Recalculate invoice balance from remaining payments (exclude temporary Stripe payments)
+            $totalPaid = $invoice->payments()->confirmed()->sum('amount');
+            $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on remaining payments
             if ($totalPaid <= 0) {
                 $invoice->status = 'sent';
-            } elseif ($invoice->balance_due <= 0) {
+            } elseif ($balanceDue <= 0) {
                 $invoice->status = 'paid';
             } else {
                 $invoice->status = 'partial';

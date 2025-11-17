@@ -116,7 +116,7 @@
         {{ error.message || 'Failed to load invoice details' }}
       </p>
       <button @click="router.push('/invoices')" class="btn-primary">
-        Back to Invoices
+        Back to HOA Dues
       </button>
     </div>
 
@@ -246,7 +246,7 @@
                   d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
               </svg>
-              Back to Invoices
+              Back to HOA Dues
             </button>
           </div>
         </div>
@@ -665,6 +665,57 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Payment Action Buttons (for residents) -->
+      <div
+        v-if="
+          isResident &&
+          invoice.status !== 'paid' &&
+          invoice.status !== 'cancelled' &&
+          !invoice.deleted_at &&
+          invoice.balance_due > 0
+        "
+        class="mb-6 flex flex-wrap gap-3"
+      >
+        <button
+          @click="showStripePaymentModal = true"
+          class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+            />
+          </svg>
+          Pay Now
+        </button>
+        <button
+          @click="showPaymentModal = true"
+          class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Mark as Paid
+        </button>
       </div>
 
       <!-- Line Items Section -->
@@ -1129,7 +1180,7 @@
                           ? 'bg-red-500'
                           : invoice.status === 'partial'
                             ? 'bg-yellow-500'
-                            : 'bg-blue-500',
+                            : 'bg-primary',
                       ]"
                       :style="{ width: `${paymentProgress}%` }"
                     ></div>
@@ -1657,11 +1708,20 @@
       @close="showPaymentUpdateModal = false"
       @success="handlePaymentUpdateSuccess"
     />
+
+    <!-- Stripe Payment Modal -->
+    <StripePaymentModal
+      :is-open="showStripePaymentModal"
+      :invoice="invoice || null"
+      @close="showStripePaymentModal = false"
+      @success="handleStripePaymentSuccess"
+      @error="handleStripePaymentError"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   useInvoice,
@@ -1680,6 +1740,7 @@ import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
+import StripePaymentModal from '../components/StripePaymentModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -1732,6 +1793,7 @@ const isEmailing = computed(() => emailInvoiceMutation.isPending.value);
 const isRestoring = computed(() => restoreInvoiceMutation.isPending.value);
 const showDeleteModal = ref(false);
 const showPaymentModal = ref(false);
+const showStripePaymentModal = ref(false);
 const showPaymentUpdateModal = ref(false);
 const selectedPayment = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
@@ -1747,6 +1809,39 @@ const pdfRefreshKey = ref(0);
 // Tab state
 const activeTab = ref('documents');
 
+// Handle Stripe payment redirects
+onMounted(() => {
+  const paymentStatus = route.query.payment as string;
+  const sessionId = route.query.session_id as string;
+
+  if (paymentStatus === 'success' && sessionId) {
+    showSuccess('Payment processing! Your payment is being confirmed...');
+    // Refetch invoice and payments to get updated status
+    refetchInvoice();
+    // Remove query params from URL
+    router.replace({ query: {} });
+  } else if (paymentStatus === 'cancelled') {
+    showError('Payment was cancelled. You can try again when ready.');
+    // Remove query params from URL
+    router.replace({ query: {} });
+  }
+});
+
+// Watch for invoice updates after Stripe payment
+watch(
+  () => invoice.value?.balance_due,
+  (newBalance, oldBalance) => {
+    if (
+      oldBalance !== undefined &&
+      newBalance !== undefined &&
+      newBalance < oldBalance
+    ) {
+      // Balance decreased, payment likely processed
+      refetchInvoice();
+    }
+  }
+);
+
 const pdfViewerUrl = computed(() => {
   if (!latestPdf.value?.file_path) return '';
   // Use direct storage path to the PDF file from Laravel backend
@@ -1759,15 +1854,66 @@ const pdfViewerUrl = computed(() => {
 
 // Computed properties for financial summary
 const amountPaid = computed(() => {
-  if (!payments.value || payments.value.length === 0) return 0;
-  return payments.value.reduce((sum, payment) => sum + payment.amount, 0);
+  // Use payments from invoice relationship if available, otherwise use payments query
+  const paymentsList = invoice.value?.payments || payments.value;
+
+  if (
+    !paymentsList ||
+    !Array.isArray(paymentsList) ||
+    paymentsList.length === 0
+  ) {
+    return 0;
+  }
+
+  // Filter out temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id)
+  const confirmedPayments = paymentsList.filter((payment: any) => {
+    const isStripePayment =
+      payment?.payment_method === 'stripe_card' ||
+      payment?.payment_method === 'stripe_ach';
+    const hasPaymentIntent = payment?.stripe_payment_intent_id != null;
+    // Include payment if it's not a Stripe payment OR if it has a payment_intent_id (confirmed)
+    return !isStripePayment || hasPaymentIntent;
+  });
+
+  const total = confirmedPayments.reduce((sum: number, payment: any) => {
+    // Handle both number and string amounts
+    let amount = payment?.amount;
+
+    // Handle null/undefined
+    if (amount == null) {
+      return sum;
+    }
+
+    // Convert string to number if needed
+    if (typeof amount === 'string') {
+      amount = parseFloat(amount);
+    }
+
+    // Validate it's a valid number
+    if (typeof amount !== 'number' || isNaN(amount) || amount < 0) {
+      console.warn('Invalid payment amount:', payment);
+      return sum;
+    }
+
+    return sum + amount;
+  }, 0);
+
+  return total;
 });
 
 const paymentProgress = computed(() => {
-  if (!invoice.value || invoice.value.total === 0) return 0;
-  const paid = amountPaid.value;
-  const total = invoice.value.total;
-  return Math.min(Math.round((paid / total) * 100), 100);
+  if (!invoice.value || !invoice.value.total) return 0;
+
+  const paid = amountPaid.value || 0;
+  const total = invoice.value.total || 0;
+
+  // Handle edge cases
+  if (total === 0 || isNaN(total) || isNaN(paid)) return 0;
+  if (paid < 0) return 0;
+  if (paid >= total) return 100;
+
+  const percentage = (paid / total) * 100;
+  return Math.min(Math.round(percentage), 100);
 });
 
 // Methods
@@ -1956,14 +2102,27 @@ const cloneInvoice = () => {
   const footer =
     invoice.value.notes?.find((n: any) => n.type === 'footer')?.content || '';
 
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+
   // Store cloned data in sessionStorage for persistence across navigation
   const clonedData = {
     frequency: invoice.value.frequency,
     remaining_cycles: invoice.value.remaining_cycles,
-    start_date: invoice.value.start_date,
+    start_date: today, // Set start date to today
     due_date: invoice.value.due_date,
     items: invoice.value.items,
     tax_rate: invoice.value.tax_rate,
+    early_payment_discount_enabled:
+      invoice.value.early_payment_discount_enabled,
+    early_payment_discount_amount: invoice.value.early_payment_discount_amount,
+    early_payment_discount_type: invoice.value.early_payment_discount_type,
+    early_payment_discount_by_date:
+      invoice.value.early_payment_discount_by_date,
+    late_fee_enabled: invoice.value.late_fee_enabled,
+    late_fee_amount: invoice.value.late_fee_amount,
+    late_fee_type: invoice.value.late_fee_type,
+    late_fee_applies_on_date: invoice.value.late_fee_applies_on_date,
     public_notes: publicNotes,
     terms: terms,
     footer: footer,
@@ -1992,12 +2151,25 @@ const handlePaymentUpdateSuccess = () => {
   pdfRefreshKey.value = Date.now();
 };
 
+const handleStripePaymentSuccess = (sessionId: string) => {
+  // Payment redirect will happen, this is just for logging
+  console.log('Stripe checkout session created:', sessionId);
+  // Modal will close automatically when redirecting to Stripe
+};
+
+const handleStripePaymentError = (error: string) => {
+  showError(error || 'Failed to create payment session');
+  // Keep modal open on error so user can try again
+};
+
 const formatPaymentMethod = (method: string) => {
   const methodMap: Record<string, string> = {
     cash: 'Cash',
     check: 'Check',
     credit_card: 'Credit Card',
     bank_transfer: 'Bank Transfer',
+    stripe_card: 'Stripe (Card)',
+    stripe_ach: 'Stripe (ACH)',
     other: 'Other',
   };
   return methodMap[method] || method;
@@ -2009,6 +2181,8 @@ const getPaymentMethodBadgeClass = (method: string) => {
     check: 'bg-blue-100 text-blue-800',
     credit_card: 'bg-purple-100 text-purple-800',
     bank_transfer: 'bg-indigo-100 text-indigo-800',
+    stripe_card: 'bg-indigo-100 text-indigo-800',
+    stripe_ach: 'bg-indigo-100 text-indigo-800',
     other: 'bg-gray-100 text-gray-800',
   };
   return methodClasses[method] || 'bg-gray-100 text-gray-800';
