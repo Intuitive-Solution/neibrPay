@@ -274,14 +274,16 @@
         <!-- ZIP Code Field -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
           <label
-            for="zip_code"
+            for="np_vendor_zip"
             class="block text-sm font-medium text-gray-700 lg:pt-3"
           >
             ZIP Code <span class="text-red-500">*</span>
           </label>
+
           <div class="lg:col-span-2">
             <input
-              id="zip_code"
+              id="np_vendor_zip"
+              autocomplete="off"
               v-model="form.zip_code"
               type="text"
               required
@@ -291,7 +293,6 @@
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.zip_code,
               }"
-              placeholder="12345 or 12345-6789"
             />
             <p v-if="errors.zip_code" class="mt-2 text-sm text-red-600">
               {{ errors.zip_code }}
@@ -497,7 +498,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import {
+  ref,
+  reactive,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted,
+  nextTick,
+} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { vendorsApi, queryKeys } from '@neibrpay/api-client';
@@ -508,6 +517,8 @@ import {
   getVendorCategoryOptions,
   getUSStates,
 } from '@neibrpay/models';
+
+const vendorAddressRef = ref<HTMLInputElement | null>(null);
 
 const route = useRoute();
 const router = useRouter();
@@ -606,6 +617,116 @@ const { mutate: updateVendor, isPending: isUpdating } = useMutation({
 });
 
 const isSubmitting = computed(() => isCreating.value || isUpdating.value);
+
+// Google Autocomplete
+
+async function initVendorAutocomplete() {
+  try {
+    await google.maps.importLibrary('places');
+
+    const input = document.getElementById('street_address') as HTMLInputElement;
+    if (!input) return;
+
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      fields: ['formatted_address', 'address_components'],
+      componentRestrictions: { country: ['us'] },
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place || !place.address_components) return;
+
+      // Always reset before parsing
+      let streetNumber = '';
+      let routeName = '';
+      let city = '';
+      let state = '';
+      let zip = '';
+
+      place.address_components.forEach(c => {
+        const types = c.types;
+
+        if (types.includes('street_number')) {
+          streetNumber = c.long_name;
+        }
+
+        if (types.includes('route')) {
+          routeName = c.long_name;
+        }
+
+        if (types.includes('locality')) {
+          city = c.long_name;
+        }
+
+        if (types.includes('administrative_area_level_1')) {
+          state = c.short_name;
+        }
+
+        if (types.includes('postal_code')) {
+          zip = c.long_name;
+        }
+
+        if (types.includes('postal_code_suffix')) {
+          zip = zip + '-' + c.long_name;
+        }
+      });
+
+      // Construct street ADDRESS properly
+      const streetAddress =
+        streetNumber && routeName
+          ? `${streetNumber} ${routeName}`
+          : routeName || streetNumber;
+
+      // Assign to form
+      form.street_address = streetAddress.trim();
+      form.city = city;
+      form.state = state;
+      form.zip_code = zip;
+
+      console.log('Parsed street:', streetAddress);
+      console.log('Parsed zip:', zip);
+      console.log('Final form:', form);
+    });
+  } catch (err) {
+    console.error('Vendor autocomplete error:', err);
+  }
+}
+
+// Google Maps Script Loader
+
+function loadGoogleMapsScript() {
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) {
+      resolve(true);
+      return;
+    }
+
+    if (document.getElementById('google-maps-script')) {
+      document
+        .getElementById('google-maps-script')!
+        .addEventListener('load', resolve);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'google-maps-script';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${
+      import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+    }&libraries=places`;
+    script.async = true;
+
+    script.onload = resolve;
+    script.onerror = reject;
+
+    document.head.appendChild(script);
+  });
+}
+
+onMounted(async () => {
+  await loadGoogleMapsScript();
+  await nextTick();
+  await initVendorAutocomplete();
+});
 
 // Form validation
 const validateForm = (): boolean => {
