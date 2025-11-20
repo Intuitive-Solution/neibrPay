@@ -1493,6 +1493,11 @@
                       <th
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
+                        Status
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Reference
                       </th>
                       <th
@@ -1533,6 +1538,14 @@
                           {{ formatPaymentMethod(payment.payment_method) }}
                         </span>
                       </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span
+                          :class="getPaymentStatusBadgeClass(payment.status)"
+                          class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                        >
+                          {{ getPaymentStatusText(payment.status) }}
+                        </span>
+                      </td>
                       <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                       >
@@ -1548,14 +1561,48 @@
                       >
                         <div class="flex space-x-2">
                           <button
+                            v-if="!isAdmin && payment.status === 'rejected'"
+                            @click="
+                              selectedPaymentForReview = payment;
+                              showPaymentModal = true;
+                            "
+                            class="text-green-600 hover:text-green-900"
+                          >
+                            Resubmit
+                          </button>
+                          <button
+                            v-else-if="
+                              isAdmin && payment.status === 'in_review'
+                            "
+                            @click="reviewPayment(payment)"
+                            class="text-blue-600 hover:text-blue-900"
+                          >
+                            Review
+                          </button>
+                          <button
+                            v-else
                             @click="viewPayment(payment)"
                             class="text-primary hover:text-primary-600"
                           >
                             View
                           </button>
                           <button
+                            v-if="
+                              payment.admin_comment_public &&
+                              payment.status === 'rejected'
+                            "
+                            @click="alert(payment.admin_comment_public)"
+                            class="text-amber-600 hover:text-amber-900"
+                            title="View rejection reason"
+                          >
+                            Reason
+                          </button>
+                          <button
                             @click="deletePayment(payment)"
-                            :disabled="deletingPaymentId === payment.id"
+                            :disabled="
+                              deletingPaymentId === payment.id ||
+                              payment.status === 'approved'
+                            "
                             class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {{
@@ -1697,6 +1744,7 @@
     <PaymentEntryModal
       :is-open="showPaymentModal"
       :invoice="invoice || null"
+      :existing-payment="selectedPaymentForReview"
       @close="showPaymentModal = false"
       @success="handlePaymentSuccess"
     />
@@ -1707,6 +1755,15 @@
       :payment="selectedPayment"
       @close="showPaymentUpdateModal = false"
       @success="handlePaymentUpdateSuccess"
+    />
+
+    <!-- Payment Review Modal (Admin) -->
+    <PaymentReviewModal
+      :is-open="showPaymentReviewModal"
+      :payment="selectedPaymentForReview"
+      @close="showPaymentReviewModal = false"
+      @approved="handlePaymentApproved"
+      @rejected="handlePaymentRejected"
     />
 
     <!-- Stripe Payment Modal -->
@@ -1740,6 +1797,7 @@ import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
+import PaymentReviewModal from '../components/PaymentReviewModal.vue';
 import StripePaymentModal from '../components/StripePaymentModal.vue';
 
 const route = useRoute();
@@ -1795,7 +1853,9 @@ const showDeleteModal = ref(false);
 const showPaymentModal = ref(false);
 const showStripePaymentModal = ref(false);
 const showPaymentUpdateModal = ref(false);
+const showPaymentReviewModal = ref(false);
 const selectedPayment = ref<any>(null);
+const selectedPaymentForReview = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
 
 // Success/Error messages
@@ -1943,6 +2003,8 @@ const getStatusText = (status: string, deletedAt?: string) => {
     partial: 'Partial',
     overdue: 'Overdue',
     cancelled: 'Cancelled',
+    in_review: 'In Review',
+    payment_rejected: 'Payment Rejected',
   };
   return statusMap[status] || 'Unknown';
 };
@@ -1958,6 +2020,8 @@ const getStatusBadgeClass = (status: string, deletedAt?: string) => {
     partial: 'badge-partial',
     overdue: 'badge-overdue',
     cancelled: 'badge-partial',
+    in_review: 'badge-sent', // Use blue styling (same as sent)
+    payment_rejected: 'badge-overdue', // Use red styling (same as overdue)
   };
   return statusClasses[status] || 'badge-draft';
 };
@@ -2188,9 +2252,54 @@ const getPaymentMethodBadgeClass = (method: string) => {
   return methodClasses[method] || 'bg-gray-100 text-gray-800';
 };
 
+const getPaymentStatusBadgeClass = (status: string | undefined | null) => {
+  if (!status) return 'bg-green-100 text-green-800'; // Default to approved for backward compatibility
+
+  const statusClasses: Record<string, string> = {
+    pending: 'bg-gray-100 text-gray-800',
+    in_review: 'bg-blue-100 text-blue-800',
+    approved: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800',
+  };
+
+  // Convert to lowercase in case of case mismatch
+  const normalizedStatus = String(status).toLowerCase();
+  return statusClasses[normalizedStatus] || 'bg-green-100 text-green-800';
+};
+
+const getPaymentStatusText = (status: string | undefined | null) => {
+  if (!status) return 'Approved'; // Default to approved for backward compatibility
+
+  const statusMap: Record<string, string> = {
+    pending: 'Pending',
+    in_review: 'In Review',
+    approved: 'Approved',
+    rejected: 'Rejected',
+  };
+
+  // Convert to lowercase in case of case mismatch
+  const normalizedStatus = String(status).toLowerCase();
+  return statusMap[normalizedStatus] || 'Approved';
+};
+
 const viewPayment = (payment: any) => {
   selectedPayment.value = payment;
   showPaymentUpdateModal.value = true;
+};
+
+const reviewPayment = (payment: any) => {
+  selectedPaymentForReview.value = payment;
+  showPaymentReviewModal.value = true;
+};
+
+const handlePaymentApproved = () => {
+  showSuccess('Payment approved successfully!');
+  pdfRefreshKey.value = Date.now();
+};
+
+const handlePaymentRejected = () => {
+  showSuccess('Payment rejected successfully!');
+  pdfRefreshKey.value = Date.now();
 };
 
 const deletePayment = async (payment: any) => {

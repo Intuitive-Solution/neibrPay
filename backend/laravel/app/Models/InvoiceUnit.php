@@ -347,4 +347,20 @@ class InvoiceUnit extends Model
                 return $dueDate->copy()->addDays(30); // Default to net 30
         }
     }
+
+    /**
+     * Check if this invoice has payments in review.
+     */
+    public function hasPaymentsInReview(): bool
+    {
+        return $this->payments()->inReview()->exists();
+    }
+
+    /**
+     * Check if this invoice has rejected payments.
+     */
+    public function hasRejectedPayments(): bool
+    {
+        return $this->payments()->rejected()->exists();
+    }
 }

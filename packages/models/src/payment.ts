@@ -51,6 +51,12 @@ export const PaymentSchema = z.object({
   stripe_checkout_session_id: z.string().nullable().optional(),
   stripe_payment_intent_id: z.string().nullable().optional(),
   stripe_payment_method: z.enum(['card', 'ach_debit']).nullable().optional(),
+  // Payment review fields
+  status: z.enum(['pending', 'in_review', 'approved', 'rejected']).optional(),
+  admin_comment_public: z.string().nullable().optional(),
+  admin_comment_private: z.string().nullable().optional(),
+  reviewed_by: z.number().int().positive().nullable().optional(),
+  reviewed_at: z.string().nullable().optional(),
   // Relationships
   invoiceUnit: InvoiceUnitSchema.optional(),
   recorder: z
@@ -59,6 +65,14 @@ export const PaymentSchema = z.object({
       name: z.string(),
       email: z.string(),
     })
+    .optional(),
+  reviewer: z
+    .object({
+      id: z.number().int().positive(),
+      name: z.string(),
+      email: z.string(),
+    })
+    .nullable()
     .optional(),
 });
 
