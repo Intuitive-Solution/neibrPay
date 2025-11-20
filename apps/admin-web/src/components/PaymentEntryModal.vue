@@ -125,33 +125,22 @@
                   </div>
                   <input
                     id="amount"
-                    v-model.number="form.amount"
+                    :value="invoice?.total || 0"
                     type="number"
                     step="0.01"
-                    min="0.01"
-                    :max="invoice?.balance_due || 0"
-                    :disabled="isResident"
-                    :readonly="isResident"
-                    required
-                    class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm disabled:bg-gray-50 disabled:text-gray-600"
-                    :class="{ 'border-red-300': errors.amount }"
+                    disabled
+                    readonly
+                    class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm sm:text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
                     placeholder="0.00"
                   />
                 </div>
                 <p v-if="errors.amount" class="mt-1 text-sm text-red-600">
                   {{ errors.amount }}
                 </p>
-                <p v-if="isResident" class="mt-1 text-sm text-blue-600">
-                  ℹ️ Full payment required: ${{
-                    formatCurrency(invoice?.balance_due || 0)
+                <p class="mt-1 text-sm text-gray-600">
+                  ℹ️ Full invoice amount: ${{
+                    formatCurrency(invoice?.total || 0)
                   }}
-                </p>
-                <p
-                  v-else-if="form.amount > (invoice?.balance_due || 0)"
-                  class="mt-1 text-sm text-yellow-600"
-                >
-                  ⚠️ Amount exceeds balance due. This will result in an
-                  overpayment.
                 </p>
               </div>
 
@@ -436,27 +425,19 @@ watch(
     if (isOpen && props.invoice) {
       nextTick(() => {
         // Handle resubmission flow
+        // Always set amount to invoice total (non-editable)
+        form.value.amount = props.invoice!.total;
+
         if (
           props.existingPayment?.status === 'rejected' &&
           props.existingPayment?.id
         ) {
-          form.value.amount = props.existingPayment.amount;
+          // For resubmission, fill other details from existing payment
           form.value.payment_method = props.existingPayment.payment_method;
           form.value.payment_reference =
             props.existingPayment.payment_reference || '';
           form.value.notes = props.existingPayment.notes || '';
           form.value.payment_date = props.existingPayment.payment_date;
-        } else {
-          // For residents, auto-fill amount to balance due
-          if (isResident.value) {
-            form.value.amount = props.invoice!.balance_due;
-          } else if (
-            // For admins, set default amount to balance due if reasonable
-            props.invoice!.balance_due > 0 &&
-            props.invoice!.balance_due <= 10000
-          ) {
-            form.value.amount = props.invoice!.balance_due;
-          }
         }
       });
     } else {

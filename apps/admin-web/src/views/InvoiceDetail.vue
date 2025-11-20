@@ -1560,6 +1560,7 @@
                         class="px-6 py-4 whitespace-nowrap text-sm font-medium"
                       >
                         <div class="flex space-x-2">
+                          <!-- Resubmit button for residents on rejected payments -->
                           <button
                             v-if="!isAdmin && payment.status === 'rejected'"
                             @click="
@@ -1570,22 +1571,29 @@
                           >
                             Resubmit
                           </button>
+
+                          <!-- Review button for admins on in-review payments -->
                           <button
-                            v-else-if="
-                              isAdmin && payment.status === 'in_review'
-                            "
+                            v-if="isAdmin && payment.status === 'in_review'"
                             @click="reviewPayment(payment)"
                             class="text-blue-600 hover:text-blue-900"
                           >
                             Review
                           </button>
+
+                          <!-- View button for all other cases -->
                           <button
-                            v-else
+                            v-if="
+                              !(isAdmin && payment.status === 'in_review') &&
+                              !(!isAdmin && payment.status === 'rejected')
+                            "
                             @click="viewPayment(payment)"
                             class="text-primary hover:text-primary-600"
                           >
                             View
                           </button>
+
+                          <!-- Reason button for rejected payments -->
                           <button
                             v-if="
                               payment.admin_comment_public &&
@@ -1597,6 +1605,8 @@
                           >
                             Reason
                           </button>
+
+                          <!-- Delete button -->
                           <button
                             @click="deletePayment(payment)"
                             :disabled="
@@ -1806,6 +1816,7 @@ const authStore = useAuthStore();
 
 // Role check
 const isResident = computed(() => authStore.isResident);
+const isAdmin = computed(() => authStore.isAdmin);
 
 // Get invoice ID from route params
 const invoiceId = computed(() => parseInt(route.params.id as string));

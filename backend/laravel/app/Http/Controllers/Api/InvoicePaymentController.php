@@ -617,39 +617,36 @@ class InvoicePaymentController extends Controller
                 return;
             }
             
-            $subject = "Payment Approved - Invoice {$invoice->invoice_number}";
+            $tenant = $invoice->community; // Assuming relationship exists
+            $tenantName = $tenant ? $tenant->name : 'NeibrPay';
             
-            $emailBody = "
-Dear {$resident->name},
-
-Your payment of \${$payment->amount} for Invoice #{$invoice->invoice_number} has been approved.
-
-Payment Details:
-- Amount: \${$payment->amount}
-- Payment Method: " . $this->formatPaymentMethod($payment->payment_method) . "
-- Payment Date: {$payment->payment_date}
-- Invoice Number: {$invoice->invoice_number}
-
-";
+            // Trigger n8n webhook for payment approval email
+            $payload = [
+                'type' => 'payment_approval',
+                'resident_name' => $resident->name,
+                'resident_email' => $resident->email,
+                'recipient' => [
+                    'name' => $resident->name,
+                    'email' => $resident->email
+                ],
+                'invoice_number' => $invoice->invoice_number,
+                'amount' => $payment->amount,
+                'payment_method' => $this->formatPaymentMethod($payment->payment_method),
+                'payment_date' => $payment->payment_date,
+                'public_comment' => $payment->admin_comment_public,
+                'tenant_name' => $tenantName,
+                'currency' => '$',
+                'frontend_url' => config('app.frontend_url', 'https://app.neibrpay.com/dashboard')
+            ];
             
-            if ($payment->admin_comment_public) {
-                $emailBody .= "Admin Comment: {$payment->admin_comment_public}\n\n";
-            }
+            // Send to n8n webhook
+            $n8nWebhookUrl = config('services.n8n.webhook_url', 'https://n8n.srv986579.hstgr.cloud/webhook/invoice-notification');
             
-            $emailBody .= "
-If you have any questions, please contact the HOA administrator.
-
-Best regards,
-NeibrPay Team
-";
+            \Http::post($n8nWebhookUrl, $payload);
             
-            \Mail::raw($emailBody, function ($message) use ($subject, $resident) {
-                $message->to($resident->email)
-                    ->subject($subject);
-            });
         } catch (\Exception $e) {
             // Log email error but don't fail the payment approval
-            \Log::error('Failed to send payment approval email', [
+            \Log::error('Failed to send payment approval email via n8n', [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage()
             ]);
@@ -667,37 +664,37 @@ NeibrPay Team
                 return;
             }
             
-            $subject = "Payment Rejected - Invoice {$invoice->invoice_number}";
+            $tenant = $invoice->community; // Assuming relationship exists
+            $tenantName = $tenant ? $tenant->name : 'NeibrPay';
             
-            $emailBody = "
-Dear {$resident->name},
-
-Your payment of \${$payment->amount} for Invoice #{$invoice->invoice_number} has been rejected and requires revision.
-
-Payment Details:
-- Amount: \${$payment->amount}
-- Payment Method: " . $this->formatPaymentMethod($payment->payment_method) . "
-- Payment Date: {$payment->payment_date}
-- Invoice Number: {$invoice->invoice_number}
-
-Reason for Rejection:
-{$payment->admin_comment_public}
-
-Please review the rejection reason above and resubmit your payment with the necessary corrections.
-
-If you have any questions, please contact the HOA administrator.
-
-Best regards,
-NeibrPay Team
-";
+            // Trigger n8n webhook for payment rejection email
+            $payload = [
+                'type' => 'payment_rejection',
+                'resident_name' => $resident->name,
+                'resident_email' => $resident->email,
+                'recipient' => [
+                    'name' => $resident->name,
+                    'email' => $resident->email
+                ],
+                'invoice_number' => $invoice->invoice_number,
+                'amount' => $payment->amount,
+                'payment_method' => $this->formatPaymentMethod($payment->payment_method),
+                'payment_date' => $payment->payment_date,
+                'rejection_reason' => $payment->admin_comment_public,
+                'public_comment' => $payment->admin_comment_public,
+                'tenant_name' => $tenantName,
+                'currency' => '$',
+                'frontend_url' => config('app.frontend_url', 'https://app.neibrpay.com/dashboard')
+            ];
             
-            \Mail::raw($emailBody, function ($message) use ($subject, $resident) {
-                $message->to($resident->email)
-                    ->subject($subject);
-            });
+            // Send to n8n webhook
+            $n8nWebhookUrl = config('services.n8n.webhook_url', 'https://n8n.srv986579.hstgr.cloud/webhook/invoice-notification');
+            
+            \Http::post($n8nWebhookUrl, $payload);
+            
         } catch (\Exception $e) {
             // Log email error but don't fail the payment rejection
-            \Log::error('Failed to send payment rejection email', [
+            \Log::error('Failed to send payment rejection email via n8n', [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage()
             ]);
