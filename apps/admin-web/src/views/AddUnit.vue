@@ -1752,67 +1752,84 @@ const {
 } = useUnitDocuments(unitId.value || 0);
 
 // Methods
-// Methods
 const goBack = () => {
   router.push('/units');
 };
 
-// Initialize Google Places Autocomplete (NEW GOOGLE API)
-const initGooglePlacesAutocomplete = async () => {
+async function initGooglePlacesAutocomplete() {
   try {
     await google.maps.importLibrary('places');
 
-    if (!addressInputRef.value) return;
+    const input =
+      (document.getElementById('address-add') as HTMLInputElement) ||
+      (document.getElementById('address-edit') as HTMLInputElement);
 
-    const autocomplete = new google.maps.places.Autocomplete(
-      addressInputRef.value,
-      {
-        fields: ['formatted_address', 'address_components', 'geometry'],
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-      }
-    );
+    if (!input) return;
+
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      fields: ['formatted_address', 'address_components'],
+      componentRestrictions: { country: ['us'] },
+    });
 
     autocomplete.addListener('place_changed', () => {
       const place = autocomplete.getPlace();
-      if (!place || !place.address_components) return;
+      if (!place?.address_components) return;
 
-      let streetNumber = '';
-      let route = '';
+      let street = '';
       let city = '';
       let state = '';
-      let zipCode = '';
+      let zip = '';
 
-      place.address_components.forEach(component => {
-        if (component.types.includes('street_number')) {
-          streetNumber = component.long_name;
-        }
-        if (component.types.includes('route')) {
-          route = component.long_name;
-        }
-        if (component.types.includes('locality')) {
-          city = component.long_name;
-        }
-        if (component.types.includes('administrative_area_level_1')) {
-          state = component.short_name;
-        }
-        if (component.types.includes('postal_code')) {
-          zipCode = component.long_name;
-        }
+      place.address_components.forEach(c => {
+        if (c.types.includes('street_number')) street = c.long_name;
+        if (c.types.includes('route')) street += ' ' + c.long_name;
+        if (c.types.includes('locality')) city = c.long_name;
+        if (c.types.includes('administrative_area_level_1'))
+          state = c.short_name;
+        if (c.types.includes('postal_code')) zip = c.long_name;
+        if (c.types.includes('postal_code_suffix')) zip += '-' + c.long_name;
       });
 
-      form.value.address =
-        streetNumber && route
-          ? `${streetNumber} ${route}`
-          : place.formatted_address;
+      // Fill form fields
+      form.value.address = place.formatted_address;
       form.value.city = city;
       form.value.state = state;
-      form.value.zip_code = zipCode;
+      form.value.zip_code = zip;
+
+      console.log({ street, city, state, zip });
     });
   } catch (error) {
-    console.error('Google Maps failed to load:', error);
+    console.error('Autocomplete init error:', error);
   }
-};
+}
+
+function loadGoogleMapsScript() {
+  return new Promise((resolve, reject) => {
+    // already loaded?
+    if (window.google && window.google.maps) {
+      resolve(true);
+      return;
+    }
+
+    // script exists but not loaded yet
+    if (document.getElementById('google-maps-script')) {
+      document
+        .getElementById('google-maps-script')!
+        .addEventListener('load', resolve);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'google-maps-script';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.async = true;
+
+    script.onload = resolve;
+    script.onerror = reject;
+
+    document.head.appendChild(script);
+  });
+}
 
 const openAddOwnerModal = () => {
   showAddOwnerModal.value = true;
@@ -2179,10 +2196,9 @@ onMounted(async () => {
   }
 });
 
-onUnmounted(() => {
-  // Clean up autocomplete listeners
-  if (autocompleteRef.value) {
-    google.maps.event.clearInstanceListeners(autocompleteRef.value);
-  }
+onMounted(async () => {
+  await loadGoogleMapsScript();
+  await nextTick();
+  await initGooglePlacesAutocomplete();
 });
 </script>

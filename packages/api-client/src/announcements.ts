@@ -55,9 +55,9 @@ export const announcementsApi = {
   /**
    * Get a single announcement by ID (admin only)
    */
-  get: async (id: number): Promise<AnnouncementResponse> => {
+  get: async (id: number): Promise<AnnouncementResponse['data']> => {
     const response = await apiClient.get(`/announcements/${id}`);
-    return response.data;
+    return response.data.data;
   },
 
   /**

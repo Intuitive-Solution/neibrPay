@@ -525,7 +525,15 @@
               class="table-row-hover"
             >
               <!-- Name Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td
+                @click.stop="!resident.deleted_at && editResident(resident.id)"
+                :class="[
+                  'px-6 py-4 whitespace-nowrap',
+                  !resident.deleted_at
+                    ? 'cursor-pointer hover:bg-gray-50 transition-colors'
+                    : '',
+                ]"
+              >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">

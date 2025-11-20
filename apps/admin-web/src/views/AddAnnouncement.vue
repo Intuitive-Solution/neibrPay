@@ -483,6 +483,7 @@ const errors = ref({
 // Loading states
 const isSubmitting = ref(false);
 const showRecipientModal = ref(false);
+const showDatePicker = ref(false);
 
 // Rich text editor
 const editorRef = ref<HTMLElement | null>(null);
@@ -504,7 +505,7 @@ const formatState = ref({
 
 // Get announcement if editing
 const { data: announcement, isLoading: isLoadingAnnouncement } =
-  useAnnouncement(announcementId.value!);
+  useAnnouncement(announcementId);
 
 // Watch for announcement data
 watch(
