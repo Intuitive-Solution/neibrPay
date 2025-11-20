@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { announcementsApi, announcementKeys } from '@neibrpay/api-client';
-import { computed, type Ref } from 'vue';
+import { computed, unref, type Ref, type ComputedRef } from 'vue';
 import type {
   Announcement,
   CreateAnnouncementDto,
@@ -35,11 +35,24 @@ export function useUserAnnouncements() {
   });
 }
 
-export function useAnnouncement(id: number) {
+export function useAnnouncement(
+  id: Ref<number | null> | ComputedRef<number | null> | number | null
+) {
   return useQuery({
-    queryKey: announcementKeys.detail(id),
-    queryFn: () => announcementsApi.get(id),
-    enabled: !!id,
+    queryKey: computed(() => {
+      const idValue = unref(id);
+      return idValue
+        ? announcementKeys.detail(idValue)
+        : ['announcements', 'detail', null];
+    }),
+    queryFn: () => {
+      const idValue = unref(id);
+      if (!idValue) {
+        throw new Error('Announcement ID is required');
+      }
+      return announcementsApi.get(idValue);
+    },
+    enabled: computed(() => !!unref(id)),
   });
 }
 

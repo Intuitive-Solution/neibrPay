@@ -511,7 +511,15 @@
               class="table-row-hover"
             >
               <!-- Invoice Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td
+                @click.stop="!expense.deleted_at && viewExpense(expense.id)"
+                :class="[
+                  'px-6 py-4 whitespace-nowrap',
+                  !expense.deleted_at
+                    ? 'cursor-pointer hover:bg-gray-50 transition-colors'
+                    : '',
+                ]"
+              >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">

@@ -301,17 +301,17 @@
               class="table-row-hover"
             >
               <!-- Invoice Column -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td
+                @click.stop="viewInvoice(payment.invoice_unit_id)"
+                class="px-6 py-4 whitespace-nowrap cursor-pointer hover:bg-gray-50 transition-colors"
+              >
                 <div class="text-sm font-medium text-gray-900">
-                  <router-link
-                    :to="`/invoices/${payment.invoice_unit_id}`"
-                    class="text-primary hover:text-primary-600"
-                  >
+                  <span class="text-primary hover:text-primary-600">
                     {{
                       payment.invoiceUnit?.invoice_number ||
                       `#${payment.invoice_unit_id}`
                     }}
-                  </router-link>
+                  </span>
                 </div>
               </td>
 
@@ -389,8 +389,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { usePayments, useDeletePayment } from '../composables/usePayments';
 import type { PaymentFilters } from '@neibrpay/models';
+
+const router = useRouter();
 
 // Local state
 const filters = ref<PaymentFilters>({
@@ -492,6 +495,10 @@ const clearFilters = () => {
     end_date: '',
     payment_method: undefined,
   };
+};
+
+const viewInvoice = (invoiceId: number) => {
+  router.push(`/invoices/${invoiceId}`);
 };
 
 const viewPayment = (payment: any) => {
