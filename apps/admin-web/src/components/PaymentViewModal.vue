@@ -78,7 +78,11 @@
                 <div>
                   <span class="font-medium text-gray-600">Invoice Number:</span>
                   <p class="text-gray-900 mt-1">
-                    {{ payment?.invoiceUnit?.invoice_number || 'N/A' }}
+                    {{
+                      payment?.invoiceUnit?.invoice_number ||
+                      invoice?.invoice_number ||
+                      'N/A'
+                    }}
                   </p>
                 </div>
                 <div>
@@ -214,6 +218,7 @@ import { useAuthStore } from '../stores/auth';
 const props = defineProps<{
   isOpen: boolean;
   payment: any;
+  invoice?: any;
 }>();
 
 const emit = defineEmits<{

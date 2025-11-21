@@ -679,6 +679,10 @@
         class="mb-6 flex flex-wrap gap-3"
       >
         <button
+          v-if="
+            invoice.status !== 'in_review' &&
+            invoice.status !== 'payment_rejected'
+          "
           @click="showStripePaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
         >
@@ -697,7 +701,47 @@
           </svg>
           Pay Now
         </button>
+        <!-- View Payment button for residents when invoice is in_review or payment_rejected -->
         <button
+          v-if="
+            isResident &&
+            (invoice.status === 'in_review' ||
+              invoice.status === 'payment_rejected') &&
+            paymentInReviewOrRejected
+          "
+          @click="viewPayment(paymentInReviewOrRejected)"
+          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+          View Payment
+        </button>
+        <!-- Mark as Paid button - hidden for residents when invoice is in_review or payment_rejected -->
+        <button
+          v-else-if="
+            !(
+              isResident &&
+              (invoice.status === 'in_review' ||
+                invoice.status === 'payment_rejected')
+            )
+          "
           @click="showPaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
         >
@@ -1780,6 +1824,7 @@
     <PaymentViewModal
       :is-open="showPaymentViewModal"
       :payment="selectedPaymentForView"
+      :invoice="invoice"
       @close="showPaymentViewModal = false"
     />
 
@@ -2001,6 +2046,21 @@ const paymentProgress = computed(() => {
 
   const percentage = (paid / total) * 100;
   return Math.min(Math.round(percentage), 100);
+});
+
+// Find payment in review or rejected for residents to view
+const paymentInReviewOrRejected = computed(() => {
+  if (!isResident.value) return null;
+  const paymentsList = invoice.value?.payments || payments.value;
+  if (!paymentsList || !Array.isArray(paymentsList)) return null;
+
+  // Find payment with status 'in_review' or 'rejected'
+  return (
+    paymentsList.find(
+      (payment: any) =>
+        payment?.status === 'in_review' || payment?.status === 'rejected'
+    ) || null
+  );
 });
 
 // Methods
