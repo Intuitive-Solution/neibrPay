@@ -88,6 +88,28 @@
                 </div>
               </div>
 
+              <!-- Rejection Reason (Public Comment) - Show for residents resubmitting -->
+              <div
+                v-if="
+                  isResident &&
+                  existingPayment?.status === 'rejected' &&
+                  existingPayment?.admin_comment_public
+                "
+              >
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for Rejection:
+                </label>
+                <div class="bg-red-50 p-4 rounded-md border-l-4 border-red-400">
+                  <p class="text-sm text-gray-900 whitespace-pre-wrap">
+                    {{ existingPayment.admin_comment_public }}
+                  </p>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                  Please review the reason above and make the necessary
+                  corrections before resubmitting.
+                </p>
+              </div>
+
               <!-- Payment Date -->
               <div>
                 <label

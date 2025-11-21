@@ -1776,6 +1776,13 @@
       @rejected="handlePaymentRejected"
     />
 
+    <!-- Payment View Modal -->
+    <PaymentViewModal
+      :is-open="showPaymentViewModal"
+      :payment="selectedPaymentForView"
+      @close="showPaymentViewModal = false"
+    />
+
     <!-- Stripe Payment Modal -->
     <StripePaymentModal
       :is-open="showStripePaymentModal"
@@ -1808,6 +1815,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
 import PaymentReviewModal from '../components/PaymentReviewModal.vue';
+import PaymentViewModal from '../components/PaymentViewModal.vue';
 import StripePaymentModal from '../components/StripePaymentModal.vue';
 
 const route = useRoute();
@@ -1865,8 +1873,10 @@ const showPaymentModal = ref(false);
 const showStripePaymentModal = ref(false);
 const showPaymentUpdateModal = ref(false);
 const showPaymentReviewModal = ref(false);
+const showPaymentViewModal = ref(false);
 const selectedPayment = ref<any>(null);
 const selectedPaymentForReview = ref<any>(null);
+const selectedPaymentForView = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
 
 // Success/Error messages
@@ -1936,8 +1946,14 @@ const amountPaid = computed(() => {
     return 0;
   }
 
-  // Filter out temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id)
+  // Filter out temporary Stripe payments AND only include approved payments
+  // Only count payments with status = 'approved' (exclude in_review, rejected, pending)
   const confirmedPayments = paymentsList.filter((payment: any) => {
+    // Only count approved payments
+    if (payment?.status !== 'approved') {
+      return false;
+    }
+    // Filter out temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id)
     const isStripePayment =
       payment?.payment_method === 'stripe_card' ||
       payment?.payment_method === 'stripe_ach';
@@ -2294,8 +2310,8 @@ const getPaymentStatusText = (status: string | undefined | null) => {
 };
 
 const viewPayment = (payment: any) => {
-  selectedPayment.value = payment;
-  showPaymentUpdateModal.value = true;
+  selectedPaymentForView.value = payment;
+  showPaymentViewModal.value = true;
 };
 
 const reviewPayment = (payment: any) => {

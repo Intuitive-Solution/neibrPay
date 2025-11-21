@@ -196,6 +196,17 @@ class InvoicePaymentController extends Controller
                 ? 'Payment submitted for admin review.'
                 : 'Payment recorded successfully.';
             
+            // Send email notification to resident
+            if ($isResident) {
+                // Resident submitted payment - notify about submission for review
+                $this->sendPaymentSubmissionEmail($payment, $invoice);
+            } else {
+                // Admin recorded payment - send invoice paid notification to resident
+                if ($payment->status === 'approved') {
+                    $this->sendInvoicePaidEmail($payment, $invoice);
+                }
+            }
+            
             return response()->json([
                 'data' => $payment,
                 'message' => $message,
@@ -609,6 +620,134 @@ class InvoicePaymentController extends Controller
     /**
      * Send approval notification email to resident.
      */
+    /**
+     * Send invoice paid notification to resident (when admin records payment).
+     */
+    private function sendInvoicePaidEmail(InvoicePayment $payment, InvoiceUnit $invoice): void
+    {
+        try {
+            // Get the resident from the invoice unit
+            $unit = $invoice->unit;
+            if (!$unit) {
+                return;
+            }
+            
+            // Get the resident/owner of the unit (first owner)
+            $resident = $unit->owners()->first();
+            if (!$resident || !$resident->email) {
+                // If no owner found, try to get from payment recorder (fallback)
+                $resident = $payment->recorder;
+                if (!$resident || !$resident->email) {
+                    return;
+                }
+            }
+            
+            $tenant = $invoice->tenant;
+            $tenantName = $tenant ? $tenant->name : 'NeibrPay';
+            
+            // Trigger n8n webhook for invoice paid email
+            $payload = [
+                'type' => 'invoice_paid',
+                'resident_name' => $resident->name,
+                'resident_email' => $resident->email,
+                'recipient' => [
+                    'name' => $resident->name,
+                    'email' => $resident->email
+                ],
+                'invoice_number' => $invoice->invoice_number,
+                'amount' => $payment->amount,
+                'payment_method' => $this->formatPaymentMethod($payment->payment_method),
+                'payment_date' => $payment->payment_date,
+                'invoice_total' => $invoice->total,
+                'tenant_name' => $tenantName,
+                'currency' => '$',
+                'frontend_url' => config('app.frontend_url', 'https://app.neibrpay.com/dashboard')
+            ];
+            
+            // Send to n8n webhook
+            $n8nWebhookUrl = config('services.n8n.webhook_url', 'https://n8n.srv986579.hstgr.cloud/webhook/invoice-notification');
+            
+            \Http::post($n8nWebhookUrl, $payload);
+            
+        } catch (\Exception $e) {
+            // Log email error but don't fail the payment recording
+            \Log::error('Failed to send invoice paid email via n8n', [
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send payment submission notification to all admins (when resident submits for review).
+     */
+    private function sendPaymentSubmissionEmail(InvoicePayment $payment, InvoiceUnit $invoice): void
+    {
+        try {
+            $resident = $payment->recorder;
+            if (!$resident) {
+                return;
+            }
+            
+            $tenant = $invoice->tenant;
+            $tenantName = $tenant ? $tenant->name : 'NeibrPay';
+            
+            // Get all admin users for this tenant
+            $admins = \App\Models\User::where('tenant_id', $invoice->tenant_id)
+                ->where('role', 'admin')
+                ->where('is_active', true)
+                ->get();
+            
+            if ($admins->isEmpty()) {
+                \Log::warning('No active admins found to notify about payment submission', [
+                    'payment_id' => $payment->id,
+                    'tenant_id' => $invoice->tenant_id
+                ]);
+                return;
+            }
+            
+            // Build admin email list
+            $adminEmails = $admins->pluck('email')->filter()->toArray();
+            $adminNames = $admins->pluck('name')->filter()->toArray();
+            
+            // Build invoice link
+            $invoiceLink = config('app.frontend_url', 'https://app.neibrpay.com') . '/invoices/' . $invoice->id;
+            
+            // Trigger n8n webhook for payment submission notification to admins
+            $payload = [
+                'type' => 'payment_submission',
+                'resident_name' => $resident->name,
+                'resident_email' => $resident->email,
+                'admin_emails' => $adminEmails,
+                'admin_names' => $adminNames,
+                'to' => $adminEmails, // Primary recipients
+                'bcc' => $adminEmails, // Use BCC to send to all admins
+                'invoice_number' => $invoice->invoice_number,
+                'invoice_id' => $invoice->id,
+                'amount' => $payment->amount,
+                'payment_method' => $this->formatPaymentMethod($payment->payment_method),
+                'payment_date' => $payment->payment_date,
+                'tenant_name' => $tenantName,
+                'currency' => '$',
+                'invoice_link' => $invoiceLink,
+                'frontend_url' => config('app.frontend_url', 'https://app.neibrpay.com/dashboard')
+            ];
+            
+            // Send to n8n webhook
+            $n8nWebhookUrl = config('services.n8n.webhook_url', 'https://n8n.srv986579.hstgr.cloud/webhook/invoice-notification');
+            
+            \Http::post($n8nWebhookUrl, $payload);
+            
+        } catch (\Exception $e) {
+            // Log email error but don't fail the payment submission
+            \Log::error('Failed to send payment submission email via n8n', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
     private function sendPaymentApprovalEmail(InvoicePayment $payment, InvoiceUnit $invoice): void
     {
         try {
@@ -617,7 +756,7 @@ class InvoicePaymentController extends Controller
                 return;
             }
             
-            $tenant = $invoice->community; // Assuming relationship exists
+            $tenant = $invoice->tenant;
             $tenantName = $tenant ? $tenant->name : 'NeibrPay';
             
             // Trigger n8n webhook for payment approval email
@@ -664,7 +803,7 @@ class InvoicePaymentController extends Controller
                 return;
             }
             
-            $tenant = $invoice->community; // Assuming relationship exists
+            $tenant = $invoice->tenant;
             $tenantName = $tenant ? $tenant->name : 'NeibrPay';
             
             // Trigger n8n webhook for payment rejection email
