@@ -736,10 +736,12 @@
         "
         class="mb-6 flex flex-wrap gap-3"
       >
+        <!-- Pay Now button - show for residents when invoice is payment_rejected, hide for in_review -->
         <button
           v-if="
-            invoice.status !== 'in_review' &&
-            invoice.status !== 'payment_rejected'
+            (invoice.status !== 'in_review' &&
+              invoice.status !== 'payment_rejected') ||
+            (isResident && invoice.status === 'payment_rejected')
           "
           @click="showStripePaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
@@ -759,12 +761,39 @@
           </svg>
           Pay Now
         </button>
-        <!-- View Payment button for residents when invoice is in_review or payment_rejected -->
+        <!-- Resubmit button for residents when invoice is payment_rejected -->
         <button
           v-if="
             isResident &&
-            (invoice.status === 'in_review' ||
-              invoice.status === 'payment_rejected') &&
+            invoice.status === 'payment_rejected' &&
+            paymentInReviewOrRejected
+          "
+          @click="
+            selectedPaymentForReview = paymentInReviewOrRejected;
+            showPaymentModal = true;
+          "
+          class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          Resubmit Payment
+        </button>
+        <!-- View Payment button for residents when invoice is in_review (not payment_rejected) -->
+        <button
+          v-if="
+            isResident &&
+            invoice.status === 'in_review' &&
             paymentInReviewOrRejected
           "
           @click="viewPayment(paymentInReviewOrRejected)"
@@ -1693,19 +1722,6 @@
                             class="text-primary hover:text-primary-600"
                           >
                             View
-                          </button>
-
-                          <!-- Reason button for rejected payments -->
-                          <button
-                            v-if="
-                              payment.admin_comment_public &&
-                              payment.status === 'rejected'
-                            "
-                            @click="alert(payment.admin_comment_public)"
-                            class="text-amber-600 hover:text-amber-900"
-                            title="View rejection reason"
-                          >
-                            Reason
                           </button>
 
                           <!-- Delete button -->
