@@ -52,11 +52,11 @@
                   class="text-lg leading-6 font-medium text-gray-900"
                   id="modal-title"
                 >
-                  Record Payment
+                  {{ modalTitle }}
                 </h3>
                 <div class="mt-2">
                   <p class="text-sm text-gray-500">
-                    Record a payment for Invoice #{{ invoice?.invoice_number }}
+                    {{ modalDescription }}
                   </p>
                 </div>
               </div>
@@ -86,6 +86,28 @@
                     ${{ formatCurrency(invoice?.balance_due || 0) }}
                   </div>
                 </div>
+              </div>
+
+              <!-- Rejection Reason (Public Comment) - Show for residents resubmitting -->
+              <div
+                v-if="
+                  isResident &&
+                  existingPayment?.status === 'rejected' &&
+                  existingPayment?.admin_comment_public
+                "
+              >
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for Rejection:
+                </label>
+                <div class="bg-red-50 p-4 rounded-md border-l-4 border-red-400">
+                  <p class="text-sm text-gray-900 whitespace-pre-wrap">
+                    {{ existingPayment.admin_comment_public }}
+                  </p>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                  Please review the reason above and make the necessary
+                  corrections before resubmitting.
+                </p>
               </div>
 
               <!-- Payment Date -->
@@ -125,26 +147,22 @@
                   </div>
                   <input
                     id="amount"
-                    v-model.number="form.amount"
+                    :value="invoice?.total || 0"
                     type="number"
                     step="0.01"
-                    min="0.01"
-                    :max="invoice?.balance_due || 0"
-                    required
-                    class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm"
-                    :class="{ 'border-red-300': errors.amount }"
+                    disabled
+                    readonly
+                    class="block w-full pl-7 pr-12 border-gray-300 rounded-md shadow-sm sm:text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
                     placeholder="0.00"
                   />
                 </div>
                 <p v-if="errors.amount" class="mt-1 text-sm text-red-600">
                   {{ errors.amount }}
                 </p>
-                <p
-                  v-if="form.amount > (invoice?.balance_due || 0)"
-                  class="mt-1 text-sm text-yellow-600"
-                >
-                  ⚠️ Amount exceeds balance due. This will result in an
-                  overpayment.
+                <p class="mt-1 text-sm text-gray-600">
+                  ℹ️ Full invoice amount: ${{
+                    formatCurrency(invoice?.total || 0)
+                  }}
                 </p>
               </div>
 
@@ -243,7 +261,7 @@
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              {{ isSubmitting ? 'Recording...' : 'Record Payment' }}
+              {{ buttonText }}
             </button>
             <button
               type="button"
@@ -262,24 +280,41 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, defineProps, defineEmits } from 'vue';
-import { useCreatePayment } from '../composables/usePayments';
-import type { InvoiceUnit, CreatePaymentRequest } from '@neibrpay/models';
+import {
+  useCreatePayment,
+  useResubmitPayment,
+} from '../composables/usePayments';
+import { useAuthStore } from '../stores/auth';
+import type {
+  InvoiceUnit,
+  CreatePaymentRequest,
+  Payment,
+} from '@neibrpay/models';
 
 interface Props {
   isOpen: boolean;
   invoice: InvoiceUnit | null;
+  existingPayment?: Payment | null;
 }
 
 interface Emits {
   (e: 'close'): void;
-  (e: 'success'): void;
+  (e: 'success', payment: any): void;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+// Auth store
+const authStore = useAuthStore();
+
+// Computed auth properties
+const isAdmin = computed(() => authStore.isAdmin);
+const isResident = computed(() => authStore.isResident);
+
 // Composables
 const createPaymentMutation = useCreatePayment();
+const resubmitPaymentMutation = useResubmitPayment();
 
 // Form state
 const form = ref<CreatePaymentRequest>({
@@ -292,6 +327,36 @@ const form = ref<CreatePaymentRequest>({
 
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
+
+// Modal title/description based on role
+const modalTitle = computed(() => {
+  if (props.existingPayment?.status === 'rejected') {
+    return 'Resubmit Payment';
+  }
+  return isResident.value ? 'Submit Payment for Review' : 'Record Payment';
+});
+
+const modalDescription = computed(() => {
+  if (props.existingPayment?.status === 'rejected') {
+    return `Resubmit payment for Invoice #${props.invoice?.invoice_number}`;
+  }
+  if (isResident.value) {
+    return `Submit full payment for Invoice #${props.invoice?.invoice_number} for admin review`;
+  }
+  return `Record a payment for Invoice #${props.invoice?.invoice_number}`;
+});
+
+const buttonText = computed(() => {
+  if (isSubmitting.value) {
+    return props.existingPayment?.status === 'rejected'
+      ? 'Resubmitting...'
+      : 'Recording...';
+  }
+  if (props.existingPayment?.status === 'rejected') {
+    return 'Resubmit for Review';
+  }
+  return isResident.value ? 'Submit for Review' : 'Record Payment';
+});
 
 // Computed properties
 const isFormValid = computed(() => {
@@ -335,21 +400,35 @@ const handleSubmit = async () => {
   errors.value = {};
 
   try {
-    await createPaymentMutation.mutateAsync({
-      invoiceId: props.invoice.id,
-      data: form.value,
-    });
+    let payment;
 
-    emit('success');
+    if (
+      props.existingPayment?.status === 'rejected' &&
+      props.existingPayment?.id
+    ) {
+      // Resubmit rejected payment
+      payment = await resubmitPaymentMutation.mutateAsync({
+        paymentId: props.existingPayment.id,
+        data: form.value,
+      });
+    } else {
+      // Create new payment
+      payment = await createPaymentMutation.mutateAsync({
+        invoiceId: props.invoice.id,
+        data: form.value,
+      });
+    }
+
+    emit('success', payment);
     closeModal();
   } catch (error: any) {
-    console.error('Error creating payment:', error);
+    console.error('Error processing payment:', error);
 
     // Handle validation errors from the API
     if (error.response?.data?.errors) {
       errors.value = error.response.data.errors;
     } else {
-      errors.value.general = error.message || 'Failed to record payment';
+      errors.value.general = error.message || 'Failed to process payment';
     }
   } finally {
     isSubmitting.value = false;
@@ -357,16 +436,7 @@ const handleSubmit = async () => {
 };
 
 const closeModal = () => {
-  // Reset form
-  form.value = {
-    amount: 0,
-    payment_method: 'cash',
-    payment_reference: '',
-    notes: '',
-    payment_date: new Date().toISOString().split('T')[0],
-  };
-  errors.value = {};
-
+  resetForm();
   emit('close');
 };
 
@@ -376,15 +446,37 @@ watch(
   (isOpen: boolean) => {
     if (isOpen && props.invoice) {
       nextTick(() => {
-        // Set default amount to balance due if it's a reasonable amount
+        // Handle resubmission flow
+        // Always set amount to invoice total (non-editable)
+        form.value.amount = props.invoice!.total;
+
         if (
-          props.invoice!.balance_due > 0 &&
-          props.invoice!.balance_due <= 10000
+          props.existingPayment?.status === 'rejected' &&
+          props.existingPayment?.id
         ) {
-          form.value.amount = props.invoice!.balance_due;
+          // For resubmission, fill other details from existing payment
+          form.value.payment_method = props.existingPayment.payment_method;
+          form.value.payment_reference =
+            props.existingPayment.payment_reference || '';
+          form.value.notes = props.existingPayment.notes || '';
+          form.value.payment_date = props.existingPayment.payment_date;
         }
       });
+    } else {
+      // Reset form when modal closes
+      resetForm();
     }
   }
 );
+
+const resetForm = () => {
+  form.value = {
+    amount: 0,
+    payment_method: 'cash',
+    payment_reference: '',
+    notes: '',
+    payment_date: new Date().toISOString().split('T')[0],
+  };
+  errors.value = {};
+};
 </script>

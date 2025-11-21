@@ -1432,6 +1432,7 @@ const getStatusText = (status: string) => {
     partial: 'Partial',
     overdue: 'Overdue',
     cancelled: 'Cancelled',
+    in_review: 'In Review',
   };
   return statusMap[status] || 'Unknown';
 };

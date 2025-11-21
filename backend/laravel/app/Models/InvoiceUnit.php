@@ -211,9 +211,15 @@ class InvoiceUnit extends Model
     {
         // Use loaded payments if available (more efficient)
         if ($this->relationLoaded('payments')) {
-            // Filter out temporary Stripe payments from loaded collection
+            // Filter out temporary Stripe payments AND only include approved payments
             // Exclude payments where payment_method is stripe_card/stripe_ach AND stripe_payment_intent_id is null
+            // Also exclude payments that are not approved (in_review, rejected, pending)
             $confirmedPayments = $this->payments->filter(function ($payment) {
+                // Only count approved payments
+                if ($payment->status !== 'approved') {
+                    return false;
+                }
+                // Filter out temporary Stripe payments
                 return !in_array($payment->payment_method, ['stripe_card', 'stripe_ach']) 
                     || $payment->stripe_payment_intent_id !== null;
             });
@@ -346,5 +352,21 @@ class InvoiceUnit extends Model
             default:
                 return $dueDate->copy()->addDays(30); // Default to net 30
         }
+    }
+
+    /**
+     * Check if this invoice has payments in review.
+     */
+    public function hasPaymentsInReview(): bool
+    {
+        return $this->payments()->inReview()->exists();
+    }
+
+    /**
+     * Check if this invoice has rejected payments.
+     */
+    public function hasRejectedPayments(): bool
+    {
+        return $this->payments()->rejected()->exists();
     }
 }
