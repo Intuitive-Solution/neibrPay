@@ -71,7 +71,11 @@
                     >Invoice Number</label
                   >
                   <p class="mt-1 text-sm font-medium text-gray-900">
-                    {{ payment?.invoiceUnit?.invoice_number || '-' }}
+                    {{
+                      payment?.invoiceUnit?.invoice_number ||
+                      invoice?.invoice_number ||
+                      '-'
+                    }}
                   </p>
                 </div>
                 <div>
@@ -289,6 +293,7 @@ import type { Payment } from '@neibrpay/models';
 interface Props {
   isOpen: boolean;
   payment: Payment | null;
+  invoice?: any;
 }
 
 interface Emits {

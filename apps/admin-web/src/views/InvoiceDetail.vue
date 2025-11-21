@@ -364,8 +364,66 @@
               Edit
             </button>
 
+            <!-- Review Payment button for admins when invoice is in_review -->
             <button
-              v-if="invoice.status !== 'paid'"
+              v-if="
+                isAdmin && invoice.status === 'in_review' && paymentInReview
+              "
+              @click="reviewPayment(paymentInReview)"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                />
+              </svg>
+              Review Payment
+            </button>
+            <!-- View Payment button for admins when invoice is paid -->
+            <button
+              v-if="
+                isAdmin &&
+                invoice.status === 'paid' &&
+                approvedPayments.length > 0
+              "
+              @click="viewPayment(approvedPayments[0])"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              View Payment
+            </button>
+            <!-- Record Payment button - hidden for admins when invoice is in_review -->
+            <button
+              v-else-if="
+                invoice.status !== 'paid' &&
+                !(isAdmin && invoice.status === 'in_review')
+              "
               @click="showPaymentModal = true"
               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
             >
@@ -1815,6 +1873,7 @@
     <PaymentReviewModal
       :is-open="showPaymentReviewModal"
       :payment="selectedPaymentForReview"
+      :invoice="invoice"
       @close="showPaymentReviewModal = false"
       @approved="handlePaymentApproved"
       @rejected="handlePaymentRejected"
@@ -2061,6 +2120,34 @@ const paymentInReviewOrRejected = computed(() => {
         payment?.status === 'in_review' || payment?.status === 'rejected'
     ) || null
   );
+});
+
+// Find payment in review for admins to review
+const paymentInReview = computed(() => {
+  if (!isAdmin.value) return null;
+  const paymentsList = invoice.value?.payments || payments.value;
+  if (!paymentsList || !Array.isArray(paymentsList)) return null;
+
+  // Find payment with status 'in_review'
+  return (
+    paymentsList.find((payment: any) => payment?.status === 'in_review') || null
+  );
+});
+
+// Find approved payment(s) for paid invoices (for admins to view)
+const approvedPayments = computed(() => {
+  if (!isAdmin.value) return [];
+  const paymentsList = invoice.value?.payments || payments.value;
+  if (!paymentsList || !Array.isArray(paymentsList)) return [];
+
+  // Find all approved payments, sorted by date (most recent first)
+  return paymentsList
+    .filter((payment: any) => payment?.status === 'approved')
+    .sort((a: any, b: any) => {
+      const dateA = new Date(a.payment_date || a.created_at || 0).getTime();
+      const dateB = new Date(b.payment_date || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
 });
 
 // Methods
