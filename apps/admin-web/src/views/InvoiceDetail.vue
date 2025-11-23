@@ -678,7 +678,9 @@
         "
         class="mb-6 flex flex-wrap gap-3"
       >
+        <!-- Pay Now Button (Only shown if Stripe is configured) -->
         <button
+          v-if="isStripeConfigured && invoice?.balance_due > 0"
           @click="showStripePaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
         >
@@ -697,6 +699,28 @@
           </svg>
           Pay Now
         </button>
+
+        <!-- Stripe Not Configured Message -->
+        <div
+          v-else-if="invoice?.balance_due > 0"
+          class="inline-flex items-center px-4 py-3 bg-gray-100 text-gray-600 rounded-lg font-medium text-sm"
+        >
+          <svg
+            class="w-5 h-5 mr-2 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Online payments not available
+        </div>
+
         <button
           @click="showPaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
@@ -1736,6 +1760,7 @@ import {
   useDownloadInvoiceAttachment,
 } from '../composables/useInvoiceAttachments';
 import { usePayments, useDeletePayment } from '../composables/usePayments';
+import { useSettings } from '@neibrpay/api-client';
 import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
@@ -1779,6 +1804,9 @@ const {
   error: paymentsError,
 } = usePayments({ invoice_id: invoiceId.value });
 
+// Fetch tenant settings to check Stripe status
+const { data: settingsData } = useSettings();
+
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
 const emailInvoiceMutation = useEmailInvoice();
@@ -1797,6 +1825,14 @@ const showStripePaymentModal = ref(false);
 const showPaymentUpdateModal = ref(false);
 const selectedPayment = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
+
+// Check if Stripe is configured for the tenant
+const isStripeConfigured = computed(() => {
+  return !!(
+    settingsData.value?.tenant?.settings?.stripe_connect_id &&
+    settingsData.value?.tenant?.settings?.charges_enabled
+  );
+});
 
 // Success/Error messages
 const successMessage = ref('');

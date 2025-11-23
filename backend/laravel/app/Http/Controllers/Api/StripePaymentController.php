@@ -82,8 +82,24 @@ class StripePaymentController extends Controller
             // Get frontend URL from env (set in .env file)
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
 
-            // Create Stripe Checkout Session
-            $checkoutSession = $this->stripe->checkout->sessions->create([
+            // Check if tenant has Stripe Connect set up
+            $tenant = $invoice->tenant;
+            $stripeConnectId = $tenant->getSetting('stripe_connect_id');
+            $chargesEnabled = $tenant->getSetting('charges_enabled', false);
+
+            if (!$stripeConnectId || !$chargesEnabled) {
+                return response()->json([
+                    'message' => 'Stripe payment processing is not available. Please contact the HOA administrator.',
+                    'error' => 'stripe_not_configured',
+                ], 400);
+            }
+
+            // Calculate platform fee (1% of payment amount)
+            $amountInCents = (int)($amount * 100);
+            $platformFeeInCents = (int)round($amountInCents * 0.01);
+
+            // Build checkout session params
+            $checkoutParams = [
                 'payment_method_types' => ['card', 'us_bank_account', 'link'], // Card, ACH, and Link
                 'payment_method_options' => [
                     'us_bank_account' => [
@@ -99,7 +115,7 @@ class StripePaymentController extends Controller
                             'name' => 'HOA Dues Payment',
                             'description' => "Invoice #{$invoice->invoice_number} - {$invoice->unit->title}",
                         ],
-                        'unit_amount' => (int)($amount * 100), // Convert to cents
+                        'unit_amount' => $amountInCents,
                     ],
                     'quantity' => 1,
                 ]],
@@ -114,7 +130,21 @@ class StripePaymentController extends Controller
                     'user_id' => $user->id,
                 ],
                 'customer_email' => $user->email,
-            ]);
+            ];
+
+            // Add payment intent data with application fee for platform
+            if ($platformFeeInCents > 0) {
+                $checkoutParams['payment_intent_data'] = [
+                    'application_fee_amount' => $platformFeeInCents,
+                ];
+            }
+
+            // Create Stripe Checkout Session
+            // stripe_account must be passed as second parameter, not in the params array
+            $checkoutSession = $this->stripe->checkout->sessions->create(
+                $checkoutParams,
+                ['stripe_account' => $stripeConnectId]
+            );
 
             // Create a pending payment record
             $payment = InvoicePayment::create([

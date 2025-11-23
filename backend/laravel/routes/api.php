@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\InvoicePdfController;
 use App\Http\Controllers\Api\StripePaymentController;
+use App\Http\Controllers\Api\StripeConnectController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TenantController;
@@ -141,6 +142,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Stripe payment routes
     Route::post('invoices/{id}/stripe/checkout', [StripePaymentController::class, 'createCheckoutSession']);
     Route::get('invoices/{id}/stripe/status', [StripePaymentController::class, 'getPaymentStatus']);
+    
+    // Stripe Connect routes (admin only)
+    Route::post('stripe/connect', [StripeConnectController::class, 'connect']);
+    Route::post('stripe/dashboard', [StripeConnectController::class, 'dashboard']);
+    Route::post('stripe/verify', [StripeConnectController::class, 'verify']);
+    Route::post('stripe/disconnect', [StripeConnectController::class, 'disconnect']);
     
     // Charge management routes
     Route::apiResource('charges', ChargeController::class);
