@@ -389,11 +389,7 @@
             </button>
             <!-- View Payment button for admins when invoice is paid -->
             <button
-              v-if="
-                isAdmin &&
-                invoice.status === 'paid' &&
-                approvedPayments.length > 0
-              "
+              v-if="invoice.status === 'paid' && approvedPayments.length > 0"
               @click="viewPayment(approvedPayments[0])"
               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
             >
@@ -738,8 +734,10 @@
       >
         <!-- Pay Now button - show for residents when invoice is payment_rejected, hide for in_review -->
         <button
-          v-if="isStripeConfigured && invoice?.balance_due > 0 &&
-            (invoice.status !== 'in_review' &&
+          v-if="
+            (isStripeConfigured &&
+              invoice?.balance_due > 0 &&
+              invoice.status !== 'in_review' &&
               invoice.status !== 'payment_rejected') ||
             (isResident && invoice.status === 'payment_rejected')
           "
@@ -846,6 +844,43 @@
             />
           </svg>
           Mark as Paid
+        </button>
+      </div>
+
+      <!-- View Payment Button for Residents (Paid Invoices) -->
+      <div
+        v-if="
+          isResident &&
+          invoice.status === 'paid' &&
+          !invoice.deleted_at &&
+          approvedPayments.length > 0
+        "
+        class="mb-6 flex flex-wrap gap-3"
+      >
+        <button
+          @click="viewPayment(approvedPayments[0])"
+          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+          View Payment
         </button>
       </div>
 
@@ -2162,9 +2197,8 @@ const paymentInReview = computed(() => {
   );
 });
 
-// Find approved payment(s) for paid invoices (for admins to view)
+// Find approved payment(s) for paid invoices (for admins and residents to view)
 const approvedPayments = computed(() => {
-  if (!isAdmin.value) return [];
   const paymentsList = invoice.value?.payments || payments.value;
   if (!paymentsList || !Array.isArray(paymentsList)) return [];
 
