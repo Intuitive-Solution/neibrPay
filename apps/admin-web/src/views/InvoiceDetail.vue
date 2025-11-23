@@ -364,8 +364,66 @@
               Edit
             </button>
 
+            <!-- Review Payment button for admins when invoice is in_review -->
             <button
-              v-if="invoice.status !== 'paid'"
+              v-if="
+                isAdmin && invoice.status === 'in_review' && paymentInReview
+              "
+              @click="reviewPayment(paymentInReview)"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                />
+              </svg>
+              Review Payment
+            </button>
+            <!-- View Payment button for admins when invoice is paid -->
+            <button
+              v-if="
+                isAdmin &&
+                invoice.status === 'paid' &&
+                approvedPayments.length > 0
+              "
+              @click="viewPayment(approvedPayments[0])"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              View Payment
+            </button>
+            <!-- Record Payment button - hidden for admins when invoice is in_review -->
+            <button
+              v-else-if="
+                invoice.status !== 'paid' &&
+                !(isAdmin && invoice.status === 'in_review')
+              "
               @click="showPaymentModal = true"
               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
             >
@@ -678,9 +736,13 @@
         "
         class="mb-6 flex flex-wrap gap-3"
       >
-        <!-- Pay Now Button (Only shown if Stripe is configured) -->
+        <!-- Pay Now button - show for residents when invoice is payment_rejected, hide for in_review -->
         <button
-          v-if="isStripeConfigured && invoice?.balance_due > 0"
+          v-if="isStripeConfigured && invoice?.balance_due > 0 &&
+            (invoice.status !== 'in_review' &&
+              invoice.status !== 'payment_rejected') ||
+            (isResident && invoice.status === 'payment_rejected')
+          "
           @click="showStripePaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
         >
@@ -699,14 +761,21 @@
           </svg>
           Pay Now
         </button>
-
-        <!-- Stripe Not Configured Message -->
-        <div
-          v-else-if="invoice?.balance_due > 0"
-          class="inline-flex items-center px-4 py-3 bg-gray-100 text-gray-600 rounded-lg font-medium text-sm"
+        <!-- Resubmit button for residents when invoice is payment_rejected -->
+        <button
+          v-if="
+            isResident &&
+            invoice.status === 'payment_rejected' &&
+            paymentInReviewOrRejected
+          "
+          @click="
+            selectedPaymentForReview = paymentInReviewOrRejected;
+            showPaymentModal = true;
+          "
+          class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
         >
           <svg
-            class="w-5 h-5 mr-2 text-gray-400"
+            class="w-5 h-5 mr-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -715,13 +784,51 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
           </svg>
-          Online payments not available
-        </div>
-
+          Resubmit Payment
+        </button>
+        <!-- View Payment button for residents when invoice is in_review (not payment_rejected) -->
         <button
+          v-if="
+            isResident &&
+            invoice.status === 'in_review' &&
+            paymentInReviewOrRejected
+          "
+          @click="viewPayment(paymentInReviewOrRejected)"
+          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+          View Payment
+        </button>
+        <!-- Mark as Paid button - hidden for residents when invoice is in_review or payment_rejected -->
+        <button
+          v-else-if="
+            !(
+              isResident &&
+              (invoice.status === 'in_review' ||
+                invoice.status === 'payment_rejected')
+            )
+          "
           @click="showPaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
         >
@@ -1517,6 +1624,11 @@
                       <th
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
+                        Status
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Reference
                       </th>
                       <th
@@ -1557,6 +1669,14 @@
                           {{ formatPaymentMethod(payment.payment_method) }}
                         </span>
                       </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span
+                          :class="getPaymentStatusBadgeClass(payment.status)"
+                          class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                        >
+                          {{ getPaymentStatusText(payment.status) }}
+                        </span>
+                      </td>
                       <td
                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
                       >
@@ -1571,15 +1691,46 @@
                         class="px-6 py-4 whitespace-nowrap text-sm font-medium"
                       >
                         <div class="flex space-x-2">
+                          <!-- Resubmit button for residents on rejected payments -->
                           <button
+                            v-if="!isAdmin && payment.status === 'rejected'"
+                            @click="
+                              selectedPaymentForReview = payment;
+                              showPaymentModal = true;
+                            "
+                            class="text-green-600 hover:text-green-900"
+                          >
+                            Resubmit
+                          </button>
+
+                          <!-- Review button for admins on in-review payments -->
+                          <button
+                            v-if="isAdmin && payment.status === 'in_review'"
+                            @click="reviewPayment(payment)"
+                            class="text-blue-600 hover:text-blue-900"
+                          >
+                            Review
+                          </button>
+
+                          <!-- View button for all other cases -->
+                          <button
+                            v-if="
+                              !(isAdmin && payment.status === 'in_review') &&
+                              !(!isAdmin && payment.status === 'rejected')
+                            "
                             @click="viewPayment(payment)"
                             class="text-primary hover:text-primary-600"
                           >
                             View
                           </button>
+
+                          <!-- Delete button -->
                           <button
                             @click="deletePayment(payment)"
-                            :disabled="deletingPaymentId === payment.id"
+                            :disabled="
+                              deletingPaymentId === payment.id ||
+                              payment.status === 'approved'
+                            "
                             class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {{
@@ -1721,6 +1872,7 @@
     <PaymentEntryModal
       :is-open="showPaymentModal"
       :invoice="invoice || null"
+      :existing-payment="selectedPaymentForReview"
       @close="showPaymentModal = false"
       @success="handlePaymentSuccess"
     />
@@ -1731,6 +1883,24 @@
       :payment="selectedPayment"
       @close="showPaymentUpdateModal = false"
       @success="handlePaymentUpdateSuccess"
+    />
+
+    <!-- Payment Review Modal (Admin) -->
+    <PaymentReviewModal
+      :is-open="showPaymentReviewModal"
+      :payment="selectedPaymentForReview"
+      :invoice="invoice"
+      @close="showPaymentReviewModal = false"
+      @approved="handlePaymentApproved"
+      @rejected="handlePaymentRejected"
+    />
+
+    <!-- Payment View Modal -->
+    <PaymentViewModal
+      :is-open="showPaymentViewModal"
+      :payment="selectedPaymentForView"
+      :invoice="invoice"
+      @close="showPaymentViewModal = false"
     />
 
     <!-- Stripe Payment Modal -->
@@ -1765,6 +1935,8 @@ import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
 import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
+import PaymentReviewModal from '../components/PaymentReviewModal.vue';
+import PaymentViewModal from '../components/PaymentViewModal.vue';
 import StripePaymentModal from '../components/StripePaymentModal.vue';
 
 const route = useRoute();
@@ -1773,6 +1945,7 @@ const authStore = useAuthStore();
 
 // Role check
 const isResident = computed(() => authStore.isResident);
+const isAdmin = computed(() => authStore.isAdmin);
 
 // Get invoice ID from route params
 const invoiceId = computed(() => parseInt(route.params.id as string));
@@ -1823,7 +1996,11 @@ const showDeleteModal = ref(false);
 const showPaymentModal = ref(false);
 const showStripePaymentModal = ref(false);
 const showPaymentUpdateModal = ref(false);
+const showPaymentReviewModal = ref(false);
+const showPaymentViewModal = ref(false);
 const selectedPayment = ref<any>(null);
+const selectedPaymentForReview = ref<any>(null);
+const selectedPaymentForView = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
 
 // Check if Stripe is configured for the tenant
@@ -1901,8 +2078,14 @@ const amountPaid = computed(() => {
     return 0;
   }
 
-  // Filter out temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id)
+  // Filter out temporary Stripe payments AND only include approved payments
+  // Only count payments with status = 'approved' (exclude in_review, rejected, pending)
   const confirmedPayments = paymentsList.filter((payment: any) => {
+    // Only count approved payments
+    if (payment?.status !== 'approved') {
+      return false;
+    }
+    // Filter out temporary Stripe payments (stripe_card/stripe_ach with null payment_intent_id)
     const isStripePayment =
       payment?.payment_method === 'stripe_card' ||
       payment?.payment_method === 'stripe_ach';
@@ -1952,6 +2135,49 @@ const paymentProgress = computed(() => {
   return Math.min(Math.round(percentage), 100);
 });
 
+// Find payment in review or rejected for residents to view
+const paymentInReviewOrRejected = computed(() => {
+  if (!isResident.value) return null;
+  const paymentsList = invoice.value?.payments || payments.value;
+  if (!paymentsList || !Array.isArray(paymentsList)) return null;
+
+  // Find payment with status 'in_review' or 'rejected'
+  return (
+    paymentsList.find(
+      (payment: any) =>
+        payment?.status === 'in_review' || payment?.status === 'rejected'
+    ) || null
+  );
+});
+
+// Find payment in review for admins to review
+const paymentInReview = computed(() => {
+  if (!isAdmin.value) return null;
+  const paymentsList = invoice.value?.payments || payments.value;
+  if (!paymentsList || !Array.isArray(paymentsList)) return null;
+
+  // Find payment with status 'in_review'
+  return (
+    paymentsList.find((payment: any) => payment?.status === 'in_review') || null
+  );
+});
+
+// Find approved payment(s) for paid invoices (for admins to view)
+const approvedPayments = computed(() => {
+  if (!isAdmin.value) return [];
+  const paymentsList = invoice.value?.payments || payments.value;
+  if (!paymentsList || !Array.isArray(paymentsList)) return [];
+
+  // Find all approved payments, sorted by date (most recent first)
+  return paymentsList
+    .filter((payment: any) => payment?.status === 'approved')
+    .sort((a: any, b: any) => {
+      const dateA = new Date(a.payment_date || a.created_at || 0).getTime();
+      const dateB = new Date(b.payment_date || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+});
+
 // Methods
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A';
@@ -1979,6 +2205,8 @@ const getStatusText = (status: string, deletedAt?: string) => {
     partial: 'Partial',
     overdue: 'Overdue',
     cancelled: 'Cancelled',
+    in_review: 'In Review',
+    payment_rejected: 'Payment Rejected',
   };
   return statusMap[status] || 'Unknown';
 };
@@ -1994,6 +2222,8 @@ const getStatusBadgeClass = (status: string, deletedAt?: string) => {
     partial: 'badge-partial',
     overdue: 'badge-overdue',
     cancelled: 'badge-partial',
+    in_review: 'badge-sent', // Use blue styling (same as sent)
+    payment_rejected: 'badge-overdue', // Use red styling (same as overdue)
   };
   return statusClasses[status] || 'badge-draft';
 };
@@ -2224,9 +2454,54 @@ const getPaymentMethodBadgeClass = (method: string) => {
   return methodClasses[method] || 'bg-gray-100 text-gray-800';
 };
 
+const getPaymentStatusBadgeClass = (status: string | undefined | null) => {
+  if (!status) return 'bg-green-100 text-green-800'; // Default to approved for backward compatibility
+
+  const statusClasses: Record<string, string> = {
+    pending: 'bg-gray-100 text-gray-800',
+    in_review: 'bg-blue-100 text-blue-800',
+    approved: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800',
+  };
+
+  // Convert to lowercase in case of case mismatch
+  const normalizedStatus = String(status).toLowerCase();
+  return statusClasses[normalizedStatus] || 'bg-green-100 text-green-800';
+};
+
+const getPaymentStatusText = (status: string | undefined | null) => {
+  if (!status) return 'Approved'; // Default to approved for backward compatibility
+
+  const statusMap: Record<string, string> = {
+    pending: 'Pending',
+    in_review: 'In Review',
+    approved: 'Approved',
+    rejected: 'Rejected',
+  };
+
+  // Convert to lowercase in case of case mismatch
+  const normalizedStatus = String(status).toLowerCase();
+  return statusMap[normalizedStatus] || 'Approved';
+};
+
 const viewPayment = (payment: any) => {
-  selectedPayment.value = payment;
-  showPaymentUpdateModal.value = true;
+  selectedPaymentForView.value = payment;
+  showPaymentViewModal.value = true;
+};
+
+const reviewPayment = (payment: any) => {
+  selectedPaymentForReview.value = payment;
+  showPaymentReviewModal.value = true;
+};
+
+const handlePaymentApproved = () => {
+  showSuccess('Payment approved successfully!');
+  pdfRefreshKey.value = Date.now();
+};
+
+const handlePaymentRejected = () => {
+  showSuccess('Payment rejected successfully!');
+  pdfRefreshKey.value = Date.now();
 };
 
 const deletePayment = async (payment: any) => {

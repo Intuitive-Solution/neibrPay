@@ -31,7 +31,7 @@ class InvoicePaymentController extends Controller
         $endDate = $request->get('end_date');
         
         $query = InvoicePayment::query()
-            ->with(['invoiceUnit.unit', 'recorder'])
+            ->with(['invoiceUnit.unit', 'recorder', 'reviewer'])
             ->whereHas('invoiceUnit', function ($q) use ($user) {
                 $q->where('tenant_id', $user->tenant_id);
                 
@@ -65,7 +65,14 @@ class InvoicePaymentController extends Controller
         
         $payments = $query->orderBy('payment_date', 'desc')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($payment) {
+                // Ensure status is set (for backward compatibility with old payments)
+                if (!$payment->status) {
+                    $payment->status = 'approved';
+                }
+                return $payment;
+            });
         
         return response()->json([
             'data' => $payments,
@@ -99,14 +106,35 @@ class InvoicePaymentController extends Controller
             'payment_date' => 'required|date',
         ]);
         
-        // Validate that payment amount doesn't exceed remaining balance
-        if ($validated['amount'] > $invoice->balance_due) {
-            return response()->json([
-                'message' => 'Payment amount cannot exceed the remaining balance.',
-                'errors' => [
-                    'amount' => ['Payment amount cannot exceed the remaining balance of $' . number_format((float)$invoice->balance_due, 2)]
-                ]
-            ], 422);
+        // Check user role: residents can only pay full amount, admins can pay any amount
+        $isResident = $user->isResident();
+        
+        if ($isResident) {
+            // Residents can only submit full payment
+            if ($validated['amount'] != $invoice->balance_due) {
+                return response()->json([
+                    'message' => 'Resident can only submit full payment amount.',
+                    'errors' => [
+                        'amount' => ['Amount must equal ' . number_format((float)$invoice->balance_due, 2) . ' (full balance due)']
+                    ]
+                ], 422);
+            }
+            
+            $paymentStatus = 'in_review';
+            $invoiceStatus = 'in_review';
+        } else {
+            // Admin submitting payment - validate doesn't exceed balance
+            if ($validated['amount'] > $invoice->balance_due) {
+                return response()->json([
+                    'message' => 'Payment amount cannot exceed the remaining balance.',
+                    'errors' => [
+                        'amount' => ['Payment amount cannot exceed the remaining balance of $' . number_format((float)$invoice->balance_due, 2)]
+                    ]
+                ], 422);
+            }
+            
+            $paymentStatus = 'approved';
+            $invoiceStatus = null; // Will be set based on payment calculation
         }
         
         DB::beginTransaction();
@@ -121,6 +149,9 @@ class InvoicePaymentController extends Controller
                 'notes' => $validated['notes'],
                 'payment_date' => $validated['payment_date'],
                 'recorded_by' => $user->id,
+                'status' => $paymentStatus,
+                'reviewed_by' => $isResident ? null : $user->id,
+                'reviewed_at' => $isResident ? null : now(),
             ]);
             
             // Recalculate invoice balance from payments (exclude temporary Stripe payments)
@@ -128,10 +159,15 @@ class InvoicePaymentController extends Controller
             $balanceDue = $invoice->total - $totalPaid;
             
             // Update invoice status based on payment
-            if ($balanceDue <= 0) {
-                $invoice->status = 'paid';
-            } elseif ($totalPaid > 0) {
-                $invoice->status = 'partial';
+            if ($isResident) {
+                $invoice->status = $invoiceStatus;
+            } else {
+                // Admin payment
+                if ($balanceDue <= 0) {
+                    $invoice->status = 'paid';
+                } elseif ($totalPaid > 0) {
+                    $invoice->status = 'partial';
+                }
             }
             
             $invoice->save();
@@ -144,19 +180,36 @@ class InvoicePaymentController extends Controller
                 'invoice_id' => $invoice->id,
                 'amount' => $payment->amount,
                 'payment_method' => $payment->payment_method,
+                'payment_status' => $payment->status,
                 'invoice_total' => $invoice->total,
                 'balance_due' => $balanceDue,
                 'invoice_status' => $invoice->status,
                 'days_outstanding' => $invoice->created_at->diffInDays(now()),
                 'tenant_id' => $user->tenant_id,
+                'is_resident' => $isResident,
             ]);
             
             // Load relationships for response
             $payment->load(['invoiceUnit.unit', 'recorder']);
             
+            $message = $isResident 
+                ? 'Payment submitted for admin review.'
+                : 'Payment recorded successfully.';
+            
+            // Send email notification to resident
+            if ($isResident) {
+                // Resident submitted payment - notify about submission for review
+                $this->sendPaymentSubmissionEmail($payment, $invoice);
+            } else {
+                // Admin recorded payment - send invoice paid notification to resident
+                if ($payment->status === 'approved') {
+                    $this->sendInvoicePaidEmail($payment, $invoice);
+                }
+            }
+            
             return response()->json([
                 'data' => $payment,
-                'message' => 'Payment recorded successfully.',
+                'message' => $message,
             ], 201);
             
         } catch (\Exception $e) {
@@ -176,11 +229,16 @@ class InvoicePaymentController extends Controller
     {
         $user = $request->user();
         
-        $payment = InvoicePayment::with(['invoiceUnit.unit', 'recorder'])
+        $payment = InvoicePayment::with(['invoiceUnit.unit', 'recorder', 'reviewer'])
             ->whereHas('invoiceUnit', function ($q) use ($user) {
                 $q->where('tenant_id', $user->tenant_id);
             })
             ->findOrFail($id);
+        
+        // Ensure status is set (for backward compatibility)
+        if (!$payment->status) {
+            $payment->status = 'approved';
+        }
         
         return response()->json([
             'data' => $payment,
@@ -200,9 +258,16 @@ class InvoicePaymentController extends Controller
             })
             ->findOrFail($id);
         
+        // Only allow updates if payment is pending or in_review
+        if (!in_array($payment->status, ['pending', 'in_review'])) {
+            return response()->json([
+                'message' => 'Cannot update approved or rejected payments. Use the resubmit endpoint for rejected payments.',
+            ], 422);
+        }
+        
         $validated = $request->validate([
             'amount' => 'sometimes|numeric|min:0.01',
-            'payment_method' => 'sometimes|in:cash,check,credit_card,bank_transfer,other',
+            'payment_method' => 'sometimes|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,other',
             'payment_reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'sometimes|date',
@@ -267,6 +332,20 @@ class InvoicePaymentController extends Controller
             })
             ->findOrFail($id);
         
+        // Prevent deletion of approved payments
+        if ($payment->status === 'approved') {
+            return response()->json([
+                'message' => 'Cannot delete approved payments.',
+            ], 422);
+        }
+        
+        // Non-admins can only delete their own pending/rejected payments
+        if ($user->isResident() && $payment->recorded_by !== $user->id) {
+            return response()->json([
+                'message' => 'You can only delete your own payments.',
+            ], 403);
+        }
+        
         DB::beginTransaction();
         
         try {
@@ -304,5 +383,478 @@ class InvoicePaymentController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Approve a payment (admin only).
+     */
+    public function approve(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        
+        // Only admins can approve payments
+        if (!$user->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only admins can approve payments.',
+            ], 403);
+        }
+        
+        $payment = InvoicePayment::with(['invoiceUnit', 'invoiceUnit.unit'])
+            ->whereHas('invoiceUnit', function ($q) use ($user) {
+                $q->where('tenant_id', $user->tenant_id);
+            })
+            ->findOrFail($id);
+        
+        // Payment must be in review to be approved
+        if (!$payment->canBeReviewed()) {
+            return response()->json([
+                'message' => 'Payment cannot be approved. It must be in review status.',
+            ], 422);
+        }
+        
+        $validated = $request->validate([
+            'admin_comment_public' => 'nullable|string',
+            'admin_comment_private' => 'nullable|string',
+        ]);
+        
+        DB::beginTransaction();
+        
+        try {
+            // Update payment
+            $payment->status = 'approved';
+            $payment->admin_comment_public = $validated['admin_comment_public'] ?? null;
+            $payment->admin_comment_private = $validated['admin_comment_private'] ?? null;
+            $payment->reviewed_by = $user->id;
+            $payment->reviewed_at = now();
+            $payment->save();
+            
+            // Recalculate invoice balance from payments
+            $invoice = $payment->invoiceUnit;
+            $totalPaid = $invoice->payments()->confirmed()->sum('amount');
+            $balanceDue = $invoice->total - $totalPaid;
+            
+            // Update invoice status based on payment
+            if ($balanceDue <= 0) {
+                $invoice->status = 'paid';
+            } elseif ($totalPaid > 0) {
+                $invoice->status = 'partial';
+            }
+            
+            $invoice->save();
+            
+            DB::commit();
+            
+            // Send approval notification email
+            $this->sendPaymentApprovalEmail($payment, $invoice);
+            
+            // Load relationships for response
+            $payment->load(['invoiceUnit.unit', 'reviewer']);
+            
+            return response()->json([
+                'data' => $payment,
+                'message' => 'Payment approved successfully.',
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Failed to approve payment.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reject a payment (admin only).
+     */
+    public function reject(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        
+        // Only admins can reject payments
+        if (!$user->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only admins can reject payments.',
+            ], 403);
+        }
+        
+        $payment = InvoicePayment::with(['invoiceUnit', 'invoiceUnit.unit'])
+            ->whereHas('invoiceUnit', function ($q) use ($user) {
+                $q->where('tenant_id', $user->tenant_id);
+            })
+            ->findOrFail($id);
+        
+        // Payment must be in review to be rejected
+        if (!$payment->canBeReviewed()) {
+            return response()->json([
+                'message' => 'Payment cannot be rejected. It must be in review status.',
+            ], 422);
+        }
+        
+        $validated = $request->validate([
+            'admin_comment_public' => 'required|string',
+            'admin_comment_private' => 'nullable|string',
+        ]);
+        
+        DB::beginTransaction();
+        
+        try {
+            // Update payment
+            $payment->status = 'rejected';
+            $payment->admin_comment_public = $validated['admin_comment_public'];
+            $payment->admin_comment_private = $validated['admin_comment_private'] ?? null;
+            $payment->reviewed_by = $user->id;
+            $payment->reviewed_at = now();
+            $payment->save();
+            
+            // Update invoice status to payment_rejected
+            $invoice = $payment->invoiceUnit;
+            $invoice->status = 'payment_rejected';
+            $invoice->save();
+            
+            DB::commit();
+            
+            // Send rejection notification email
+            $this->sendPaymentRejectionEmail($payment, $invoice);
+            
+            // Load relationships for response
+            $payment->load(['invoiceUnit.unit', 'reviewer']);
+            
+            return response()->json([
+                'data' => $payment,
+                'message' => 'Payment rejected successfully.',
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Failed to reject payment.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Resubmit a rejected payment (resident only).
+     */
+    public function resubmit(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        
+        // Residents can only resubmit their own payments
+        $payment = InvoicePayment::with('invoiceUnit')
+            ->whereHas('invoiceUnit', function ($q) use ($user) {
+                $q->where('tenant_id', $user->tenant_id);
+            })
+            ->findOrFail($id);
+        
+        // Payment must be rejected to be resubmitted
+        if (!$payment->canBeResubmitted()) {
+            return response()->json([
+                'message' => 'Payment cannot be resubmitted. It must be in rejected status.',
+            ], 422);
+        }
+        
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,other',
+            'payment_reference' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'payment_date' => 'required|date',
+        ]);
+        
+        // Validate that amount equals balance due (full payment only for residents)
+        $invoice = $payment->invoiceUnit;
+        if ($validated['amount'] != $invoice->balance_due) {
+            return response()->json([
+                'message' => 'Resident can only submit full payment amount.',
+                'errors' => [
+                    'amount' => ['Amount must equal ' . $invoice->balance_due . ' (full balance due)']
+                ]
+            ], 422);
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            // Update the payment
+            $payment->update([
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'payment_reference' => $validated['payment_reference'],
+                'notes' => $validated['notes'],
+                'payment_date' => $validated['payment_date'],
+                'status' => 'in_review',
+                'admin_comment_public' => null,
+                'admin_comment_private' => null,
+                'reviewed_by' => null,
+                'reviewed_at' => null,
+            ]);
+            
+            // Update invoice status back to in_review
+            $invoice->status = 'in_review';
+            $invoice->save();
+            
+            DB::commit();
+            
+            // Load relationships for response
+            $payment->load(['invoiceUnit.unit', 'recorder']);
+            
+            return response()->json([
+                'data' => $payment,
+                'message' => 'Payment resubmitted successfully for review.',
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Failed to resubmit payment.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Send approval notification email to resident.
+     */
+    /**
+     * Send invoice paid notification to resident (when admin records payment).
+     */
+    private function sendInvoicePaidEmail(InvoicePayment $payment, InvoiceUnit $invoice): void
+    {
+        try {
+            // Get the resident from the invoice unit
+            $unit = $invoice->unit;
+            if (!$unit) {
+                return;
+            }
+            
+            // Get the resident/owner of the unit (first owner)
+            $resident = $unit->owners()->first();
+            if (!$resident || !$resident->email) {
+                // If no owner found, try to get from payment recorder (fallback)
+                $resident = $payment->recorder;
+                if (!$resident || !$resident->email) {
+                    return;
+                }
+            }
+            
+            $tenant = $invoice->tenant;
+            $tenantName = $tenant ? $tenant->name : 'NeibrPay';
+            
+            // Trigger n8n webhook for invoice paid email
+            $payload = [
+                'type' => 'invoice_paid',
+                'resident_name' => $resident->name,
+                'resident_email' => $resident->email,
+                'recipient' => [
+                    'name' => $resident->name,
+                    'email' => $resident->email
+                ],
+                'invoice_number' => $invoice->invoice_number,
+                'amount' => $payment->amount,
+                'payment_method' => $this->formatPaymentMethod($payment->payment_method),
+                'payment_date' => $payment->payment_date,
+                'invoice_total' => $invoice->total,
+                'tenant_name' => $tenantName,
+                'currency' => '$',
+                'frontend_url' => config('app.frontend_url', 'https://app.neibrpay.com/dashboard')
+            ];
+            
+            // Send to n8n webhook
+            $n8nWebhookUrl = config('services.n8n.webhook_url', 'https://n8n.srv986579.hstgr.cloud/webhook/invoice-notification');
+            
+            \Http::post($n8nWebhookUrl, $payload);
+            
+        } catch (\Exception $e) {
+            // Log email error but don't fail the payment recording
+            \Log::error('Failed to send invoice paid email via n8n', [
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send payment submission notification to all admins (when resident submits for review).
+     */
+    private function sendPaymentSubmissionEmail(InvoicePayment $payment, InvoiceUnit $invoice): void
+    {
+        try {
+            $resident = $payment->recorder;
+            if (!$resident) {
+                return;
+            }
+            
+            $tenant = $invoice->tenant;
+            $tenantName = $tenant ? $tenant->name : 'NeibrPay';
+            
+            // Get all admin users for this tenant
+            $admins = \App\Models\User::where('tenant_id', $invoice->tenant_id)
+                ->where('role', 'admin')
+                ->where('is_active', true)
+                ->get();
+            
+            if ($admins->isEmpty()) {
+                \Log::warning('No active admins found to notify about payment submission', [
+                    'payment_id' => $payment->id,
+                    'tenant_id' => $invoice->tenant_id
+                ]);
+                return;
+            }
+            
+            // Build admin email list
+            $adminEmails = $admins->pluck('email')->filter()->toArray();
+            $adminNames = $admins->pluck('name')->filter()->toArray();
+            
+            // Build invoice link
+            $invoiceLink = config('app.frontend_url', 'https://app.neibrpay.com') . '/invoices/' . $invoice->id;
+            
+            // Trigger n8n webhook for payment submission notification to admins
+            $payload = [
+                'type' => 'payment_submission',
+                'resident_name' => $resident->name,
+                'resident_email' => $resident->email,
+                'admin_emails' => $adminEmails,
+                'admin_names' => $adminNames,
+                'to' => $adminEmails, // Primary recipients
+                'bcc' => $adminEmails, // Use BCC to send to all admins
+                'invoice_number' => $invoice->invoice_number,
+                'invoice_id' => $invoice->id,
+                'amount' => $payment->amount,
+                'payment_method' => $this->formatPaymentMethod($payment->payment_method),
+                'payment_date' => $payment->payment_date,
+                'tenant_name' => $tenantName,
+                'currency' => '$',
+                'invoice_link' => $invoiceLink,
+                'frontend_url' => config('app.frontend_url', 'https://app.neibrpay.com/dashboard')
+            ];
+            
+            // Send to n8n webhook
+            $n8nWebhookUrl = config('services.n8n.webhook_url', 'https://n8n.srv986579.hstgr.cloud/webhook/invoice-notification');
+            
+            \Http::post($n8nWebhookUrl, $payload);
+            
+        } catch (\Exception $e) {
+            // Log email error but don't fail the payment submission
+            \Log::error('Failed to send payment submission email via n8n', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function sendPaymentApprovalEmail(InvoicePayment $payment, InvoiceUnit $invoice): void
+    {
+        try {
+            $resident = $payment->recorder;
+            if (!$resident || !$resident->email) {
+                return;
+            }
+            
+            $tenant = $invoice->tenant;
+            $tenantName = $tenant ? $tenant->name : 'NeibrPay';
+            
+            // Trigger n8n webhook for payment approval email
+            $payload = [
+                'type' => 'payment_approval',
+                'resident_name' => $resident->name,
+                'resident_email' => $resident->email,
+                'recipient' => [
+                    'name' => $resident->name,
+                    'email' => $resident->email
+                ],
+                'invoice_number' => $invoice->invoice_number,
+                'amount' => $payment->amount,
+                'payment_method' => $this->formatPaymentMethod($payment->payment_method),
+                'payment_date' => $payment->payment_date,
+                'public_comment' => $payment->admin_comment_public,
+                'tenant_name' => $tenantName,
+                'currency' => '$',
+                'frontend_url' => config('app.frontend_url', 'https://app.neibrpay.com/dashboard')
+            ];
+            
+            // Send to n8n webhook
+            $n8nWebhookUrl = config('services.n8n.webhook_url', 'https://n8n.srv986579.hstgr.cloud/webhook/invoice-notification');
+            
+            \Http::post($n8nWebhookUrl, $payload);
+            
+        } catch (\Exception $e) {
+            // Log email error but don't fail the payment approval
+            \Log::error('Failed to send payment approval email via n8n', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send rejection notification email to resident.
+     */
+    private function sendPaymentRejectionEmail(InvoicePayment $payment, InvoiceUnit $invoice): void
+    {
+        try {
+            $resident = $payment->recorder;
+            if (!$resident || !$resident->email) {
+                return;
+            }
+            
+            $tenant = $invoice->tenant;
+            $tenantName = $tenant ? $tenant->name : 'NeibrPay';
+            
+            // Trigger n8n webhook for payment rejection email
+            $payload = [
+                'type' => 'payment_rejection',
+                'resident_name' => $resident->name,
+                'resident_email' => $resident->email,
+                'recipient' => [
+                    'name' => $resident->name,
+                    'email' => $resident->email
+                ],
+                'invoice_number' => $invoice->invoice_number,
+                'amount' => $payment->amount,
+                'payment_method' => $this->formatPaymentMethod($payment->payment_method),
+                'payment_date' => $payment->payment_date,
+                'rejection_reason' => $payment->admin_comment_public,
+                'public_comment' => $payment->admin_comment_public,
+                'tenant_name' => $tenantName,
+                'currency' => '$',
+                'frontend_url' => config('app.frontend_url', 'https://app.neibrpay.com/dashboard')
+            ];
+            
+            // Send to n8n webhook
+            $n8nWebhookUrl = config('services.n8n.webhook_url', 'https://n8n.srv986579.hstgr.cloud/webhook/invoice-notification');
+            
+            \Http::post($n8nWebhookUrl, $payload);
+            
+        } catch (\Exception $e) {
+            // Log email error but don't fail the payment rejection
+            \Log::error('Failed to send payment rejection email via n8n', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Format payment method for display.
+     */
+    private function formatPaymentMethod(string $method): string
+    {
+        $methods = [
+            'cash' => 'Cash',
+            'check' => 'Check',
+            'credit_card' => 'Credit Card',
+            'bank_transfer' => 'Bank Transfer',
+            'stripe_card' => 'Stripe (Card)',
+            'stripe_ach' => 'Stripe (ACH)',
+            'other' => 'Other',
+        ];
+        
+        return $methods[$method] ?? $method;
     }
 }

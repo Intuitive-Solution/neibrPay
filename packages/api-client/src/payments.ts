@@ -112,4 +112,52 @@ export const paymentsApi = {
     );
     return response.data.data;
   },
+
+  /**
+   * Approve a payment (admin only)
+   */
+  approve: async (
+    paymentId: number,
+    data: {
+      admin_comment_public?: string;
+      admin_comment_private?: string;
+    }
+  ): Promise<Payment> => {
+    const response = await apiClient.post<{ data: Payment }>(
+      `/payments/${paymentId}/approve`,
+      data
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Reject a payment (admin only)
+   */
+  reject: async (
+    paymentId: number,
+    data: {
+      admin_comment_public: string;
+      admin_comment_private?: string;
+    }
+  ): Promise<Payment> => {
+    const response = await apiClient.post<{ data: Payment }>(
+      `/payments/${paymentId}/reject`,
+      data
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Resubmit a rejected payment (resident only)
+   */
+  resubmit: async (
+    paymentId: number,
+    data: UpdatePaymentRequest
+  ): Promise<Payment> => {
+    const response = await apiClient.post<{ data: Payment }>(
+      `/payments/${paymentId}/resubmit`,
+      data
+    );
+    return response.data.data;
+  },
 };

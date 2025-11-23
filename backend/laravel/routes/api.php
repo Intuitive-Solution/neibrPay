@@ -139,6 +139,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('payments/{id}', [InvoicePaymentController::class, 'update']);
     Route::delete('payments/{id}', [InvoicePaymentController::class, 'destroy']);
     
+    // Invoice payment review routes (admin approval workflow)
+    Route::post('payments/{id}/approve', [InvoicePaymentController::class, 'approve']);
+    Route::post('payments/{id}/reject', [InvoicePaymentController::class, 'reject']);
+    Route::post('payments/{id}/resubmit', [InvoicePaymentController::class, 'resubmit']);
+    
     // Stripe payment routes
     Route::post('invoices/{id}/stripe/checkout', [StripePaymentController::class, 'createCheckoutSession']);
     Route::get('invoices/{id}/stripe/status', [StripePaymentController::class, 'getPaymentStatus']);
