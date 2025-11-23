@@ -167,6 +167,7 @@ class StripePaymentController extends Controller
                 'payment_date' => now(),
                 'recorded_by' => $user->id,
                 'notes' => 'Stripe Checkout payment - pending confirmation',
+                'status' => 'pending', // Will be updated to 'approved' when charge succeeds
             ]);
 
             // Track payment initiation
@@ -574,6 +575,8 @@ class StripePaymentController extends Controller
             $payment->stripe_payment_method = $stripePaymentMethod;
             $payment->payment_reference = $charge->id; // Use charge ID as reference
             $payment->notes = 'Stripe payment confirmed - ' . ($stripePaymentMethod === 'ach_debit' ? 'ACH' : 'Card') . ' (Charge: ' . $charge->id . ')';
+            // Set status to 'approved' since Stripe has confirmed the payment
+            $payment->status = 'approved';
             $payment->save();
 
             // Reload invoice and explicitly reload payments relationship to recalculate balance
