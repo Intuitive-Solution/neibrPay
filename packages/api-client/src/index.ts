@@ -10,6 +10,11 @@ export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';
 export { announcementsApi } from './announcements';
 export { documentsApi } from './documents';
+export {
+  stripeApi,
+  type StripeConnectResponse,
+  type StripeConnectStatus,
+} from './stripe';
 export type {
   HoaDocument,
   CreateDocumentRequest,

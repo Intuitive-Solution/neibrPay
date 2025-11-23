@@ -14,6 +14,10 @@ export interface SettingsData {
       timezone: string;
       date_format: string;
       first_month_of_year: string;
+      stripe_connect_id: string | null;
+      stripe_connect_status: 'not_connected' | 'pending' | 'active';
+      charges_enabled: boolean;
+      details_submitted: boolean;
     };
   };
   user: {

@@ -42,6 +42,10 @@ class SettingsController extends Controller
                         'timezone' => $settings['timezone'] ?? 'UTC',
                         'date_format' => $settings['date_format'] ?? 'MM/DD/YYYY',
                         'first_month_of_year' => $settings['first_month_of_year'] ?? 'January',
+                        'stripe_connect_id' => $settings['stripe_connect_id'] ?? null,
+                        'stripe_connect_status' => $settings['stripe_connect_status'] ?? 'not_connected',
+                        'charges_enabled' => $settings['charges_enabled'] ?? false,
+                        'details_submitted' => $settings['details_submitted'] ?? false,
                     ],
                 ],
                 'user' => [

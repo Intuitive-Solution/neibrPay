@@ -738,7 +738,7 @@
       >
         <!-- Pay Now button - show for residents when invoice is payment_rejected, hide for in_review -->
         <button
-          v-if="
+          v-if="isStripeConfigured && invoice?.balance_due > 0 &&
             (invoice.status !== 'in_review' &&
               invoice.status !== 'payment_rejected') ||
             (isResident && invoice.status === 'payment_rejected')
@@ -1930,6 +1930,7 @@ import {
   useDownloadInvoiceAttachment,
 } from '../composables/useInvoiceAttachments';
 import { usePayments, useDeletePayment } from '../composables/usePayments';
+import { useSettings } from '@neibrpay/api-client';
 import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
@@ -1976,6 +1977,9 @@ const {
   error: paymentsError,
 } = usePayments({ invoice_id: invoiceId.value });
 
+// Fetch tenant settings to check Stripe status
+const { data: settingsData } = useSettings();
+
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
 const emailInvoiceMutation = useEmailInvoice();
@@ -1998,6 +2002,14 @@ const selectedPayment = ref<any>(null);
 const selectedPaymentForReview = ref<any>(null);
 const selectedPaymentForView = ref<any>(null);
 const deletingPaymentId = ref<number | null>(null);
+
+// Check if Stripe is configured for the tenant
+const isStripeConfigured = computed(() => {
+  return !!(
+    settingsData.value?.tenant?.settings?.stripe_connect_id &&
+    settingsData.value?.tenant?.settings?.charges_enabled
+  );
+});
 
 // Success/Error messages
 const successMessage = ref('');

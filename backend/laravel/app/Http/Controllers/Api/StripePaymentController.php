@@ -82,8 +82,24 @@ class StripePaymentController extends Controller
             // Get frontend URL from env (set in .env file)
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
 
-            // Create Stripe Checkout Session
-            $checkoutSession = $this->stripe->checkout->sessions->create([
+            // Check if tenant has Stripe Connect set up
+            $tenant = $invoice->tenant;
+            $stripeConnectId = $tenant->getSetting('stripe_connect_id');
+            $chargesEnabled = $tenant->getSetting('charges_enabled', false);
+
+            if (!$stripeConnectId || !$chargesEnabled) {
+                return response()->json([
+                    'message' => 'Stripe payment processing is not available. Please contact the HOA administrator.',
+                    'error' => 'stripe_not_configured',
+                ], 400);
+            }
+
+            // Calculate platform fee (1% of payment amount)
+            $amountInCents = (int)($amount * 100);
+            $platformFeeInCents = (int)round($amountInCents * 0.01);
+
+            // Build checkout session params
+            $checkoutParams = [
                 'payment_method_types' => ['card', 'us_bank_account', 'link'], // Card, ACH, and Link
                 'payment_method_options' => [
                     'us_bank_account' => [
@@ -99,7 +115,7 @@ class StripePaymentController extends Controller
                             'name' => 'HOA Dues Payment',
                             'description' => "Invoice #{$invoice->invoice_number} - {$invoice->unit->title}",
                         ],
-                        'unit_amount' => (int)($amount * 100), // Convert to cents
+                        'unit_amount' => $amountInCents,
                     ],
                     'quantity' => 1,
                 ]],
@@ -114,7 +130,32 @@ class StripePaymentController extends Controller
                     'user_id' => $user->id,
                 ],
                 'customer_email' => $user->email,
-            ]);
+            ];
+
+            // Add payment intent data with application fee for platform
+            // Also include metadata so it's available in webhooks
+            $paymentIntentData = [
+                'metadata' => [
+                    'invoice_id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'tenant_id' => $invoice->tenant_id,
+                    'unit_id' => $invoice->unit_id,
+                    'user_id' => $user->id,
+                ],
+            ];
+            
+            if ($platformFeeInCents > 0) {
+                $paymentIntentData['application_fee_amount'] = $platformFeeInCents;
+            }
+            
+            $checkoutParams['payment_intent_data'] = $paymentIntentData;
+
+            // Create Stripe Checkout Session
+            // stripe_account must be passed as second parameter, not in the params array
+            $checkoutSession = $this->stripe->checkout->sessions->create(
+                $checkoutParams,
+                ['stripe_account' => $stripeConnectId]
+            );
 
             // Create a pending payment record
             $payment = InvoicePayment::create([
@@ -264,15 +305,28 @@ class StripePaymentController extends Controller
             $payment->stripe_payment_intent_id = $session->payment_intent;
             $payment->save();
             
+            // Determine if we need connected account context
+            $stripeAccountId = $invoice->tenant->getSetting('stripe_connect_id');
+            
             // Update payment intent metadata with checkout session ID for reliable lookup
             try {
-                $this->stripe->paymentIntents->update($session->payment_intent, [
+                $updateParams = [
                     'metadata' => [
                         'checkout_session_id' => $session->id,
                         'invoice_id' => $invoiceId,
                         'tenant_id' => $session->metadata->tenant_id ?? null,
                     ],
-                ]);
+                ];
+                
+                if ($stripeAccountId) {
+                    $this->stripe->paymentIntents->update(
+                        $session->payment_intent,
+                        $updateParams,
+                        ['stripe_account' => $stripeAccountId]
+                    );
+                } else {
+                    $this->stripe->paymentIntents->update($session->payment_intent, $updateParams);
+                }
             } catch (\Exception $e) {
                 Log::warning('Failed to update payment intent metadata', [
                     'payment_intent_id' => $session->payment_intent,
@@ -320,11 +374,25 @@ class StripePaymentController extends Controller
         // Ensure payment intent metadata includes checkout session ID for reliable lookup
         if ($payment->stripe_checkout_session_id && !isset($paymentIntent->metadata->checkout_session_id)) {
             try {
-                $this->stripe->paymentIntents->update($paymentIntent->id, [
+                // Get connected account context from payment's invoice
+                $invoice = $payment->invoiceUnit;
+                $stripeAccountId = $invoice ? $invoice->tenant->getSetting('stripe_connect_id') : null;
+                
+                $updateParams = [
                     'metadata' => array_merge($paymentIntent->metadata->toArray(), [
                         'checkout_session_id' => $payment->stripe_checkout_session_id,
                     ]),
-                ]);
+                ];
+                
+                if ($stripeAccountId) {
+                    $this->stripe->paymentIntents->update(
+                        $paymentIntent->id,
+                        $updateParams,
+                        ['stripe_account' => $stripeAccountId]
+                    );
+                } else {
+                    $this->stripe->paymentIntents->update($paymentIntent->id, $updateParams);
+                }
             } catch (\Exception $e) {
                 Log::warning('Failed to update payment intent metadata in payment_intent.succeeded', [
                     'payment_intent_id' => $paymentIntent->id,
@@ -354,8 +422,53 @@ class StripePaymentController extends Controller
         // If not found, try to find by checkout session ID via payment intent metadata
         if (!$payment && $charge->payment_intent) {
             try {
-                // Retrieve payment intent to get checkout session ID from metadata
-                $paymentIntent = $this->stripe->paymentIntents->retrieve($charge->payment_intent);
+                // Determine if this is a connected account charge by checking if application is set
+                $stripeAccountId = null;
+                if (isset($charge->application) && $charge->application) {
+                    // This is a charge on a connected account
+                    // We need to find which tenant this belongs to
+                    try {
+                        // Try to find invoice from charge metadata first (most direct)
+                        $invoiceId = $charge->metadata->invoice_id ?? null;
+                        
+                        if (!$invoiceId) {
+                            // Try payment intent from platform account if charge metadata is empty
+                            try {
+                                $tempPaymentIntent = $this->stripe->paymentIntents->retrieve($charge->payment_intent);
+                                $invoiceId = $tempPaymentIntent->metadata->invoice_id ?? null;
+                            } catch (\Exception $piError) {
+                                // Ignore - will try other methods
+                            }
+                        }
+                        
+                        if ($invoiceId) {
+                            $invoice = InvoiceUnit::find($invoiceId);
+                            if ($invoice && $invoice->tenant) {
+                                $stripeAccountId = $invoice->tenant->getSetting('stripe_connect_id');
+                                Log::info('Found stripe account from metadata', [
+                                    'invoice_id' => $invoiceId,
+                                    'stripe_account_id' => $stripeAccountId,
+                                ]);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Could not determine stripe account from charge/payment intent', [
+                            'charge_id' => $charge->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+                
+                // Retrieve payment intent with or without connected account context
+                if ($stripeAccountId) {
+                    $paymentIntent = $this->stripe->paymentIntents->retrieve(
+                        $charge->payment_intent,
+                        [],
+                        ['stripe_account' => $stripeAccountId]
+                    );
+                } else {
+                    $paymentIntent = $this->stripe->paymentIntents->retrieve($charge->payment_intent);
+                }
                 $checkoutSessionId = $paymentIntent->metadata->checkout_session_id ?? null;
                 
                 if ($checkoutSessionId) {
@@ -371,11 +484,20 @@ class StripePaymentController extends Controller
                 // If still not found, try to retrieve checkout session from Stripe
                 if (!$payment) {
                     try {
-                        // Search for checkout sessions with this payment intent
-                        $checkoutSessions = $this->stripe->checkout->sessions->all([
+                        // Search for checkout sessions with this payment intent (with account context if available)
+                        $sessionListParams = [
                             'payment_intent' => $charge->payment_intent,
                             'limit' => 1,
-                        ]);
+                        ];
+                        
+                        if ($stripeAccountId) {
+                            $checkoutSessions = $this->stripe->checkout->sessions->all(
+                                $sessionListParams,
+                                ['stripe_account' => $stripeAccountId]
+                            );
+                        } else {
+                            $checkoutSessions = $this->stripe->checkout->sessions->all($sessionListParams);
+                        }
                         
                         if (!empty($checkoutSessions->data)) {
                             $checkoutSessionId = $checkoutSessions->data[0]->id;
@@ -454,23 +576,46 @@ class StripePaymentController extends Controller
             $payment->notes = 'Stripe payment confirmed - ' . ($stripePaymentMethod === 'ach_debit' ? 'ACH' : 'Card') . ' (Charge: ' . $charge->id . ')';
             $payment->save();
 
-            // Reload invoice to get updated payments relationship
+            // Reload invoice and explicitly reload payments relationship to recalculate balance
             $invoice->refresh();
+            $invoice->load('payments');
             
             // Calculate total paid and balance due (exclude temporary Stripe payments)
             $totalPaid = $invoice->payments()->confirmed()->sum('amount');
             $balanceDue = $invoice->balance_due; // Use accessor which calculates: total - sum(payments)
 
+            Log::info('Invoice balance calculation after payment', [
+                'invoice_id' => $invoice->id,
+                'invoice_total' => $invoice->total,
+                'total_paid' => $totalPaid,
+                'balance_due' => $balanceDue,
+                'current_status' => $invoice->status,
+            ]);
+
             // Update invoice status based on balance due
             // If balance due is 0 or less (amount paid equals or exceeds total), mark as paid
             if ($balanceDue <= 0) {
                 $invoice->status = 'paid';
+                Log::info('Marking invoice as paid', [
+                    'invoice_id' => $invoice->id,
+                    'balance_due' => $balanceDue,
+                ]);
             } elseif ($totalPaid > 0) {
                 // If there are payments but balance remains, mark as partial
                 $invoice->status = 'partial';
+                Log::info('Marking invoice as partial', [
+                    'invoice_id' => $invoice->id,
+                    'total_paid' => $totalPaid,
+                    'balance_due' => $balanceDue,
+                ]);
             }
 
             $invoice->save();
+            
+            Log::info('Invoice status updated', [
+                'invoice_id' => $invoice->id,
+                'new_status' => $invoice->status,
+            ]);
 
             DB::commit();
 

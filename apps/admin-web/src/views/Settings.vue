@@ -136,6 +136,18 @@
           >
             Security
           </button>
+          <button
+            v-if="!isResident"
+            @click="activeTab = 'payments'"
+            :class="[
+              activeTab === 'payments'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+              'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+            ]"
+          >
+            Payments
+          </button>
         </nav>
       </div>
 
@@ -398,6 +410,206 @@
             </button>
           </div>
         </div>
+
+        <!-- Payments Tab -->
+        <div v-if="activeTab === 'payments'" class="space-y-6">
+          <h2 class="text-base font-semibold text-gray-900">
+            Payment Settings
+          </h2>
+          <div class="space-y-4">
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 class="font-medium text-blue-900 mb-2">Stripe Connect</h3>
+              <p class="text-sm text-blue-800 mb-4">
+                Connect your Stripe account to accept online payments from
+                residents.
+              </p>
+
+              <!-- Not Connected State -->
+              <div v-if="!stripeConnectId" class="space-y-4">
+                <p class="text-sm text-gray-600">
+                  Status:
+                  <span class="font-semibold text-red-600">Not Connected</span>
+                </p>
+                <button
+                  @click="connectStripe"
+                  :disabled="isConnectingStripe"
+                  class="btn-primary"
+                >
+                  <span v-if="isConnectingStripe">Connecting...</span>
+                  <span v-else>Connect Stripe Account</span>
+                </button>
+              </div>
+
+              <!-- Connected State -->
+              <div v-else class="space-y-4">
+                <div class="space-y-2">
+                  <p class="text-sm text-gray-600">
+                    Status:
+                    <span
+                      :class="[
+                        'font-semibold',
+                        stripeConnectStatus === 'active'
+                          ? 'text-green-600'
+                          : 'text-yellow-600',
+                      ]"
+                    >
+                      {{
+                        stripeConnectStatus === 'active' ? 'Active' : 'Pending'
+                      }}
+                    </span>
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    Account ID: {{ stripeConnectId }}
+                  </p>
+                </div>
+
+                <!-- Pending Details -->
+                <div
+                  v-if="stripeConnectStatus !== 'active'"
+                  class="p-3 bg-yellow-50 border border-yellow-200 rounded"
+                >
+                  <p class="text-sm text-yellow-800">
+                    {{
+                      !chargesEnabled
+                        ? 'Your account is being reviewed. Payments cannot be processed yet.'
+                        : 'Please complete your account setup.'
+                    }}
+                  </p>
+                </div>
+
+                <!-- Active Details -->
+                <div
+                  v-else
+                  class="space-y-2 p-3 bg-green-50 border border-green-200 rounded"
+                >
+                  <p class="text-sm text-green-800 font-medium">
+                    ✓ Your account is ready to accept payments
+                  </p>
+                  <p class="text-xs text-green-700">
+                    Platform fee: 1% of each transaction
+                  </p>
+                </div>
+
+                <div class="flex gap-2 pt-2 flex-wrap">
+                  <button
+                    @click="openStripeDashboard"
+                    :disabled="isLoadingDashboard"
+                    class="btn-primary flex-1 min-w-[120px]"
+                  >
+                    <span v-if="isLoadingDashboard">Loading...</span>
+                    <span v-else>Open Dashboard</span>
+                  </button>
+                  <button
+                    @click="verifyStripeStatus"
+                    :disabled="isVerifyingStatus"
+                    class="btn-secondary flex-1 min-w-[120px]"
+                  >
+                    <span v-if="isVerifyingStatus">Checking...</span>
+                    <span v-else>Refresh Status</span>
+                  </button>
+                  <button
+                    @click="showDisconnectConfirmation = true"
+                    :disabled="isDisconnecting"
+                    class="btn-secondary flex-1 min-w-[120px] text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  >
+                    <span v-if="isDisconnecting">Disconnecting...</span>
+                    <span v-else>Disconnect</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stripe Disconnect Confirmation Modal -->
+  <div
+    v-if="showDisconnectConfirmation"
+    class="fixed inset-0 z-50 overflow-y-auto"
+  >
+    <div
+      class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+    >
+      <!-- Background overlay -->
+      <div
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+        @click="showDisconnectConfirmation = false"
+      ></div>
+
+      <!-- Modal -->
+      <div
+        class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+      >
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div
+              class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
+            >
+              <svg
+                class="h-6 w-6 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4v2m0 4v2M6.343 17.657a8 8 0 1111.314 0M12 5a1 1 0 110-2 1 1 0 010 2z"
+                />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+              <h3
+                class="text-lg leading-6 font-medium text-gray-900"
+                id="modal-title"
+              >
+                Disconnect Stripe Account?
+              </h3>
+              <div class="mt-2 space-y-3">
+                <p class="text-sm text-gray-500">
+                  This will permanently disconnect your Stripe Express account
+                  and clear all payment settings.
+                </p>
+                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p class="text-xs text-yellow-800">
+                    <strong>Warning:</strong> After disconnection:
+                  </p>
+                  <ul
+                    class="text-xs text-yellow-800 mt-2 space-y-1 list-disc list-inside"
+                  >
+                    <li>Residents will not be able to pay invoices online</li>
+                    <li>You can reconnect a different Stripe account later</li>
+                    <li>This action cannot be undone immediately</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div
+          class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2"
+        >
+          <button
+            @click="disconnectStripe"
+            :disabled="isDisconnecting"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:text-sm transition-colors"
+          >
+            <span v-if="isDisconnecting">Disconnecting...</span>
+            <span v-else>Yes, Disconnect</span>
+          </button>
+          <button
+            @click="showDisconnectConfirmation = false"
+            :disabled="isDisconnecting"
+            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto sm:text-sm transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -411,6 +623,7 @@ import {
   useUpdateUserProfile,
   useUpdatePassword,
   useUpdateLocalization,
+  stripeApi,
   type SettingsData,
 } from '@neibrpay/api-client';
 import { useAuthStore } from '../stores/auth';
@@ -477,16 +690,21 @@ async function initHoaAddressAutocomplete() {
 }
 
 // Tab state
-const activeTab = ref<'hoa' | 'user' | 'localization' | 'security'>('hoa');
+const activeTab = ref<
+  'hoa' | 'user' | 'localization' | 'security' | 'payments'
+>('hoa');
 
-// Redirect to 'user' tab if resident tries to access 'localization'
+// Redirect to 'user' tab if resident tries to access admin-only tabs
 watch(
   [isResident, activeTab],
   ([isResidentValue, currentTab]: [
     boolean,
-    'hoa' | 'user' | 'localization' | 'security',
+    'hoa' | 'user' | 'localization' | 'security' | 'payments',
   ]) => {
-    if (isResidentValue && currentTab === 'localization') {
+    if (
+      isResidentValue &&
+      (currentTab === 'localization' || currentTab === 'payments')
+    ) {
       activeTab.value = 'user';
     }
   },
@@ -682,4 +900,127 @@ const savePassword = async () => {
     showError(error.message || 'Failed to update password');
   }
 };
+
+// ============ STRIPE PAYMENTS SECTION ============
+
+// Stripe state
+const stripeConnectId = computed(
+  () => settingsData.value?.tenant?.settings?.stripe_connect_id || null
+);
+const stripeConnectStatus = computed(
+  () =>
+    settingsData.value?.tenant?.settings?.stripe_connect_status ||
+    'not_connected'
+);
+const chargesEnabled = computed(
+  () => settingsData.value?.tenant?.settings?.charges_enabled || false
+);
+
+// Stripe loading states
+const isConnectingStripe = ref(false);
+const isLoadingDashboard = ref(false);
+const isVerifyingStatus = ref(false);
+const isDisconnecting = ref(false);
+const showDisconnectConfirmation = ref(false);
+
+/**
+ * Initiate Stripe Connect account creation
+ */
+const connectStripe = async () => {
+  isConnectingStripe.value = true;
+  try {
+    const response = await stripeApi.connect();
+    if (response.onboarding_url) {
+      // Redirect to Stripe onboarding
+      window.location.href = response.onboarding_url;
+    } else {
+      showError('Failed to get onboarding URL');
+    }
+  } catch (error: any) {
+    showError(error.message || 'Failed to connect Stripe account');
+  } finally {
+    isConnectingStripe.value = false;
+  }
+};
+
+/**
+ * Open Stripe Express dashboard
+ */
+const openStripeDashboard = async () => {
+  isLoadingDashboard.value = true;
+  try {
+    const response = await stripeApi.getDashboardLink();
+    if (response.dashboard_url) {
+      window.open(response.dashboard_url, '_blank');
+    } else {
+      showError('Failed to get dashboard link');
+    }
+  } catch (error: any) {
+    showError(error.message || 'Failed to load Stripe dashboard');
+  } finally {
+    isLoadingDashboard.value = false;
+  }
+};
+
+/**
+ * Verify Stripe account status
+ */
+const verifyStripeStatus = async () => {
+  isVerifyingStatus.value = true;
+  try {
+    const response = await stripeApi.verifyStatus();
+    showSuccess('Account status updated');
+    // Invalidate settings query to refresh the UI
+    // The mutation will handle this automatically
+  } catch (error: any) {
+    showError(error.message || 'Failed to verify account status');
+  } finally {
+    isVerifyingStatus.value = false;
+  }
+};
+
+/**
+ * Disconnect Stripe account
+ */
+const disconnectStripe = async () => {
+  isDisconnecting.value = true;
+  try {
+    await stripeApi.disconnect();
+    showSuccess(
+      'Stripe account disconnected successfully. You can now connect a new account.'
+    );
+    showDisconnectConfirmation.value = false;
+    // Small delay to allow settings to update
+    setTimeout(() => {
+      // The settings query will automatically refetch via TanStack Query
+    }, 500);
+  } catch (error: any) {
+    showError(error.message || 'Failed to disconnect Stripe account');
+  } finally {
+    isDisconnecting.value = false;
+  }
+};
+
+/**
+ * Check if returning from Stripe onboarding (on mount)
+ */
+const checkStripeReturn = () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('stripe_connect') === 'success') {
+    showSuccess('Stripe account connected! Verifying status...');
+    // Verify status immediately
+    verifyStripeStatus();
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (params.get('stripe_connect') === 'refresh') {
+    showError('Stripe onboarding was refreshed. Please try again.');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+};
+
+// Check for Stripe return on mount
+import { onBeforeMount } from 'vue';
+onBeforeMount(() => {
+  checkStripeReturn();
+});
 </script>
