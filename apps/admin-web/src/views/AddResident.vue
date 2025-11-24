@@ -245,7 +245,7 @@
     </div>
 
     <!-- Tabs Section (only in edit mode) -->
-    <div v-if="isEditMode" class="mt-8">
+    <div class="mt-8">
       <!-- Single White Container with Tabs and Content -->
       <div class="card-modern bg-white rounded-lg shadow">
         <!-- Tabs Navigation -->
