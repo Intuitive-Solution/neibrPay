@@ -1585,15 +1585,6 @@
             </select>
           </div>
         </div>
-
-        <div class="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-          <p class="font-medium text-blue-800">PDF Generation</p>
-          <p>
-            PDFs are automatically generated on the server when invoices are
-            created. You can view and download them from the invoice detail
-            page.
-          </p>
-        </div>
       </div>
 
       <!-- Invoice Template Preview -->

@@ -552,43 +552,35 @@ class InvoiceController extends Controller
         $tenantPhone = $tenant?->phone ?? '';
         $tenantEmail = $tenant?->email ?? '';
         
-        // Format tenant address HTML
-        // Street address on first line, city/state/zip on second line
-        $tenantAddressHtml = '';
+        // Extract street address - always get first part before the first comma
+        $streetAddress = htmlspecialchars($tenantAddress);
+        $cityStateZipFromAddress = '';
         
-        // Extract street address (first part before comma if address contains full formatted address)
-        $streetAddress = $tenantAddress;
-        if ($streetAddress && (strpos($streetAddress, ',') !== false)) {
-            // Address contains commas, might be full formatted address
-            // If we have separate city/state/zip fields, extract just the street part
-            if ($tenantCity || $tenantState || $tenantZipCode) {
-                $addressParts = array_map('trim', explode(',', $streetAddress));
-                $streetAddress = $addressParts[0]; // First part is street address
-            }
-        }
-        
-        // First line: street address
-        if ($streetAddress) {
-            $tenantAddressHtml .= "<p>" . htmlspecialchars($streetAddress) . "</p>";
-        }
-        
-        // Second line: city, state zip
-        $cityStateZip = trim(implode(', ', array_filter([$tenantCity, $tenantState, $tenantZipCode])));
-        if ($cityStateZip) {
-            $tenantAddressHtml .= "<p>" . htmlspecialchars($cityStateZip) . "</p>";
-        } elseif ($tenantAddress && strpos($tenantAddress, ',') !== false && !$tenantCity && !$tenantState && !$tenantZipCode) {
-            // No separate fields but address has commas - use everything after first comma as second line
+        if ($tenantAddress && (strpos($tenantAddress, ',') !== false)) {
+            // Address contains commas - split it
             $addressParts = array_map('trim', explode(',', $tenantAddress));
+            $streetAddress = htmlspecialchars($addressParts[0]); // First part is street address
+            
+            // Get the rest for fallback use
             if (count($addressParts) > 1) {
-                $tenantAddressHtml .= "<p>" . htmlspecialchars(implode(', ', array_slice($addressParts, 1))) . "</p>";
+                $cityStateZipFromAddress = implode(', ', array_slice($addressParts, 1));
             }
         }
-        if ($tenantPhone) {
-            $tenantAddressHtml .= "<p>Phone: " . htmlspecialchars($tenantPhone) . "</p>";
+        
+        // Build city, state, zip line - prioritize separate fields, fallback to address parsing
+        $cityStateZip = '';
+        if (!empty($tenantCity) || !empty($tenantState) || !empty($tenantZipCode)) {
+            // Use separate fields if any are provided
+            $cityStateZip = trim(implode(', ', array_filter([$tenantCity, $tenantState, $tenantZipCode])));
+        } elseif (!empty($cityStateZipFromAddress)) {
+            // Fallback: use the part after first comma from address
+            $cityStateZip = $cityStateZipFromAddress;
         }
-        if ($tenantEmail) {
-            $tenantAddressHtml .= "<p>Email: " . htmlspecialchars($tenantEmail) . "</p>";
-        }
+        $cityStateZip = htmlspecialchars($cityStateZip);
+        
+        // Build contact info divs (optional)
+        $phoneHtml = $tenantPhone ? "<div class=\"address-phone\">Phone: " . htmlspecialchars($tenantPhone) . "</div>" : '';
+        $emailHtml = $tenantEmail ? "<div class=\"address-email\">Email: " . htmlspecialchars($tenantEmail) . "</div>" : '';
         
         $unit = $invoiceUnit->unit;
         $unitTitle = $unit ? $unit->title : "Unit {$invoiceUnit->unit_id}";
@@ -749,7 +741,11 @@ class InvoiceController extends Controller
                 .invoice-header { width: 100%; margin-bottom: 25px; border-bottom: 3px solid #2563eb; padding-bottom: 15px; overflow: hidden; position: relative; }
                 .company-info { float: left; width: 55%; }
                 .company-name { font-size: 18px; font-weight: bold; color: #2563eb; margin: 0 0 4px 0; }
-                .company-details p { margin: 1px 0; font-size: 9px; color: #666; }
+                .company-details { margin: 0; }
+                .address-line-1 { margin: 1px 0; font-size: 9px; color: #666; font-weight: 500; }
+                .address-line-2 { margin: 1px 0; font-size: 9px; color: #666; }
+                .address-phone { margin: 1px 0; font-size: 9px; color: #666; }
+                .address-email { margin: 1px 0; font-size: 9px; color: #666; }
                 .invoice-meta { float: right; width: 40%; text-align: right; padding-right: 5mm; }
                 .invoice-title { font-size: 18px; font-weight: bold; color: #1f2937; margin: 0 0 6px 0; }
                 .invoice-details p { margin: 1px 0; font-size: 9px; }
@@ -791,7 +787,12 @@ class InvoiceController extends Controller
                     {$paidStampHtml}
                     <div class=\"company-info\">
                         <h1 class=\"company-name\">{$tenantName}</h1>
-                        <div class=\"company-details\">{$tenantAddressHtml}</div>
+                        <div class=\"company-details\">
+                            <div class=\"address-line-1\">{$streetAddress}</div>
+                            <div class=\"address-line-2\">{$cityStateZip}</div>
+                            {$phoneHtml}
+                            {$emailHtml}
+                        </div>
                     </div>
                     <div class=\"invoice-meta\">
                         <h2 class=\"invoice-title\">INVOICE</h2>
