@@ -573,3 +573,8 @@ ACH Payments
 Test Account Number: 000123456789
 Test Routing Number: 110000000
 Test Account Holder: Any name
+
+---
+
+**N8N MCP**
+npx n8n-mcp
