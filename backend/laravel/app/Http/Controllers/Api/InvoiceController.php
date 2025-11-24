@@ -859,7 +859,6 @@ class InvoiceController extends Controller
                     <div class=\"payment-details\">
                         <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p>
                         <p><strong>Make checks payable to:</strong> {$tenantName}</p>
-                        <p><strong>For questions about this invoice, contact:</strong> (555) 123-4567</p>
                     </div>
                 </div>
             </div>
