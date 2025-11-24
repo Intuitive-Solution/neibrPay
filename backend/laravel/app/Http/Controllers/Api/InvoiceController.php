@@ -175,7 +175,7 @@ class InvoiceController extends Controller
             foreach ($createdInvoices as $invoice) {
                 try {
                     // Load the invoice with necessary relationships for PDF generation
-                    $invoice->load(['unit', 'notes']);
+                    $invoice->load(['unit', 'notes', 'tenant']);
                     
                     // Generate HTML for the invoice
                     $html = $this->generateInvoiceHtml($invoice);
@@ -331,7 +331,7 @@ class InvoiceController extends Controller
                 $invoiceUnit->pdfs()->update(['is_latest' => false]);
                 
                 // Load the invoice with necessary relationships for PDF generation
-                $invoiceUnit->load(['unit', 'notes']);
+                $invoiceUnit->load(['unit', 'notes', 'tenant']);
                 
                 // Generate HTML for the invoice
                 $html = $this->generateInvoiceHtml($invoiceUnit);
@@ -538,6 +538,50 @@ class InvoiceController extends Controller
      */
     private function generateInvoiceHtml(InvoiceUnit $invoiceUnit, $payment = null): string
     {
+        // Load tenant relationship if not already loaded
+        if (!$invoiceUnit->relationLoaded('tenant')) {
+            $invoiceUnit->load('tenant');
+        }
+        
+        $tenant = $invoiceUnit->tenant;
+        $tenantName = $tenant?->name ?? 'Community';
+        $tenantAddress = $tenant?->address ?? '';
+        $tenantCity = $tenant?->city ?? '';
+        $tenantState = $tenant?->state ?? '';
+        $tenantZipCode = $tenant?->zip_code ?? '';
+        $tenantPhone = $tenant?->phone ?? '';
+        $tenantEmail = $tenant?->email ?? '';
+        
+        // Extract street address - always get first part before the first comma
+        $streetAddress = htmlspecialchars($tenantAddress);
+        $cityStateZipFromAddress = '';
+        
+        if ($tenantAddress && (strpos($tenantAddress, ',') !== false)) {
+            // Address contains commas - split it
+            $addressParts = array_map('trim', explode(',', $tenantAddress));
+            $streetAddress = htmlspecialchars($addressParts[0]); // First part is street address
+            
+            // Get the rest for fallback use
+            if (count($addressParts) > 1) {
+                $cityStateZipFromAddress = implode(', ', array_slice($addressParts, 1));
+            }
+        }
+        
+        // Build city, state, zip line - prioritize separate fields, fallback to address parsing
+        $cityStateZip = '';
+        if (!empty($tenantCity) || !empty($tenantState) || !empty($tenantZipCode)) {
+            // Use separate fields if any are provided
+            $cityStateZip = trim(implode(', ', array_filter([$tenantCity, $tenantState, $tenantZipCode])));
+        } elseif (!empty($cityStateZipFromAddress)) {
+            // Fallback: use the part after first comma from address
+            $cityStateZip = $cityStateZipFromAddress;
+        }
+        $cityStateZip = htmlspecialchars($cityStateZip);
+        
+        // Build contact info divs (optional)
+        $phoneHtml = $tenantPhone ? "<div class=\"address-phone\">Phone: " . htmlspecialchars($tenantPhone) . "</div>" : '';
+        $emailHtml = $tenantEmail ? "<div class=\"address-email\">Email: " . htmlspecialchars($tenantEmail) . "</div>" : '';
+        
         $unit = $invoiceUnit->unit;
         $unitTitle = $unit ? $unit->title : "Unit {$invoiceUnit->unit_id}";
         $unitAddress = $unit ? "{$unit->address}, {$unit->city}" : '';
@@ -679,10 +723,10 @@ class InvoiceController extends Controller
 
         // Conditional CSS for payment details
         $paymentDetailsCss = $payment ? '
-                .payment-details-section { margin-bottom: 20px; padding: 15px 15px 15px 15px; margin-right: 5mm; background-color: #f0fdf4; border: 2px solid #10b981; border-radius: 6px; }
-                .payment-details-content p { margin: 4px 0; font-size: 10px; color: #1f2937; }
+                .payment-details-section { margin-bottom: 10px; padding: 10px 12px; margin-right: 5mm; background-color: #f0fdf4; border: 2px solid #10b981; border-radius: 4px; page-break-inside: avoid; }
+                .payment-details-content p { margin: 2px 0; font-size: 8px; color: #1f2937; }
                 .paid-stamp { position: absolute; top: 10px; right: 15mm; z-index: 10; }
-                .paid-stamp-content { background: #10b981; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold; font-size: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transform: rotate(-15deg); }' : '';
+                .paid-stamp-content { background: #10b981; color: white; padding: 3px 6px; border-radius: 2px; font-weight: bold; font-size: 11px; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transform: rotate(-15deg); }' : '';
 
         return "
         <!DOCTYPE html>
@@ -692,20 +736,24 @@ class InvoiceController extends Controller
             <title>Invoice {$invoiceUnit->invoice_number}</title>
             <style>
                 * { box-sizing: border-box; }
-                body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
-                .invoice-template { width: 180mm; max-width: 180mm; min-height: 297mm; padding: 10mm 8mm 10mm 10mm; font-family: Arial, sans-serif; background: white; color: #333; line-height: 1.3; overflow: hidden; }
-                .invoice-header { width: 100%; margin-bottom: 25px; border-bottom: 3px solid #2563eb; padding-bottom: 15px; overflow: hidden; position: relative; }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }
+                .invoice-template { width: 180mm; max-width: 180mm; min-height: auto; padding: 10mm 8mm 20mm 10mm; font-family: Arial, sans-serif; background: white; color: #333; line-height: 1.3; }
+                .invoice-header { width: 100%; margin-bottom: 25px; border-bottom: 3px solid #2563eb; padding-bottom: 15px; overflow: hidden; position: relative; page-break-inside: avoid; }
                 .company-info { float: left; width: 55%; }
                 .company-name { font-size: 18px; font-weight: bold; color: #2563eb; margin: 0 0 4px 0; }
-                .company-details p { margin: 1px 0; font-size: 9px; color: #666; }
+                .company-details { margin: 0; }
+                .address-line-1 { margin: 1px 0; font-size: 9px; color: #666; font-weight: 500; }
+                .address-line-2 { margin: 1px 0; font-size: 9px; color: #666; }
+                .address-phone { margin: 1px 0; font-size: 9px; color: #666; }
+                .address-email { margin: 1px 0; font-size: 9px; color: #666; }
                 .invoice-meta { float: right; width: 40%; text-align: right; padding-right: 5mm; }
                 .invoice-title { font-size: 18px; font-weight: bold; color: #1f2937; margin: 0 0 6px 0; }
                 .invoice-details p { margin: 1px 0; font-size: 9px; }
-                .bill-to-section { margin-bottom: 25px; }
+                .bill-to-section { margin-bottom: 25px; page-break-inside: avoid; }
                 .section-title { font-size: 12px; font-weight: bold; color: #1f2937; margin: 0 0 6px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; }
                 .unit-header h4 { font-size: 12px; font-weight: bold; margin: 0 0 3px 0; color: #1f2937; }
                 .unit-details p { margin: 1px 0; font-size: 10px; color: #666; }
-                .items-section { margin-bottom: 25px; }
+                .items-section { margin-bottom: 25px; page-break-inside: avoid; }
                 .items-table { width: 100%; border-collapse: collapse; margin: 0; table-layout: fixed; }
                 .items-table th { background-color: #f8fafc; color: #1f2937; font-weight: bold; padding: 6px 4px; text-align: left; border: 1px solid #e5e7eb; font-size: 10px; }
                 .items-table td { padding: 6px 4px; border: 1px solid #e5e7eb; font-size: 10px; vertical-align: top; word-wrap: break-word; }
@@ -714,7 +762,7 @@ class InvoiceController extends Controller
                 .item-cost { width: 15%; text-align: right; }
                 .item-quantity { width: 10%; text-align: right; }
                 .item-total { width: 15%; text-align: right; font-weight: 500; }
-                .totals-section { margin-bottom: 25px; }
+                .totals-section { margin-bottom: 15px; page-break-inside: avoid; }
                 .totals-container { max-width: 220px; margin-left: auto; margin-right: 5mm; }
                 .total-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
                 .total-label { font-size: 10px; color: #6b7280; }
@@ -723,27 +771,28 @@ class InvoiceController extends Controller
                 .final-total .total-label, .final-total .total-value { font-size: 12px; font-weight: bold; }
                 .balance-due { background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 3px; padding: 8px 12px; margin-top: 8px; }
                 .balance-due .total-label, .balance-due .total-value { color: #dc2626; font-weight: bold; }
-                .payment-section { margin-top: 20px; padding-top: 12px; border-top: 1px solid #e5e7eb; }
-                .payment-details p { margin: 3px 0; font-size: 9px; color: #4b5563; }
-                .notes-section, .terms-section { margin-bottom: 15px; }
-                .notes-content, .terms-content { font-size: 10px; line-height: 1.4; color: #4b5563; margin-top: 6px; }
-                .footer-section { margin-bottom: 15px; padding-top: 12px; border-top: 1px solid #e5e7eb; }
-                .footer-content { font-size: 9px; color: #6b7280; text-align: center; }
+                .payment-section { margin-top: 10px; padding-top: 8px; border-top: 1px solid #e5e7eb; page-break-inside: avoid; }
+                .payment-details p { margin: 2px 0; font-size: 8px; color: #4b5563; }
+                .notes-section, .terms-section { margin-bottom: 10px; border: 1px solid #000000; page-break-inside: avoid; }
+                .notes-content, .terms-content { font-size: 9px; line-height: 1.3; color: #4b5563; margin-top: 4px; border: 1px solid #000000; }
+                .footer-section { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; padding: 8px 10mm; background: white; border-top: 1px solid #e5e7eb; z-index: 1000; }
+                .footer-content { font-size: 8px; color: #6b7280; text-align: center; }
                 .clearfix::after { content: \"\"; display: table; clear: both; }
                 {$paymentDetailsCss}
             </style>
         </head>
         <body>
+            {$footerHtml}
             <div class=\"invoice-template\">
                 <div class=\"invoice-header clearfix\">
                     {$paidStampHtml}
                     <div class=\"company-info\">
-                        <h1 class=\"company-name\">NeibrPay HOA</h1>
+                        <h1 class=\"company-name\">{$tenantName}</h1>
                         <div class=\"company-details\">
-                            <p>123 HOA Management Street</p>
-                            <p>Property City, PC 12345</p>
-                            <p>Phone: (555) 123-4567</p>
-                            <p>Email: info@neibrpay.com</p>
+                            <div class=\"address-line-1\">{$streetAddress}</div>
+                            <div class=\"address-line-2\">{$cityStateZip}</div>
+                            {$phoneHtml}
+                            {$emailHtml}
                         </div>
                     </div>
                     <div class=\"invoice-meta\">
@@ -804,14 +853,12 @@ class InvoiceController extends Controller
 
                 {$notesHtml}
                 {$termsHtml}
-                {$footerHtml}
 
                 <div class=\"payment-section\">
                     <h3 class=\"section-title\">Payment Information</h3>
                     <div class=\"payment-details\">
                         <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p>
-                        <p><strong>Make checks payable to:</strong> NeibrPay HOA</p>
-                        <p><strong>For questions about this invoice, contact:</strong> (555) 123-4567</p>
+                        <p><strong>Make checks payable to:</strong> {$tenantName}</p>
                     </div>
                 </div>
             </div>

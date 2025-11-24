@@ -233,6 +233,27 @@
                     v-if="isDropdownOpen"
                     class="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
                   >
+                    <!-- Add New Unit Option -->
+                    <div
+                      class="px-3 py-2 text-sm font-medium text-primary border-b border-gray-100 cursor-pointer hover:bg-primary/5 transition-colors duration-150 flex items-center sticky top-0 bg-white z-10"
+                      @click="openAddUnitPage"
+                    >
+                      <svg
+                        class="h-4 w-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Add New Unit
+                    </div>
+
                     <!-- Select All Option (hidden in edit mode) -->
                     <div
                       v-if="!isEditMode"
@@ -898,6 +919,27 @@
                       v-if="itemDropdowns[index]"
                       class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
                     >
+                      <!-- Add New Charge Option -->
+                      <div
+                        class="px-3 py-2 text-sm font-medium text-primary border-b border-gray-100 cursor-pointer hover:bg-primary/5 transition-colors duration-150 flex items-center sticky top-0 bg-white z-10"
+                        @mousedown.prevent="openAddChargePage"
+                      >
+                        <svg
+                          class="h-4 w-4 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                        Add New Charge
+                      </div>
+
                       <!-- Charges List -->
                       <div v-if="filteredCharges.length > 0">
                         <div
@@ -1585,32 +1627,22 @@
             </select>
           </div>
         </div>
-
-        <div class="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-          <p class="font-medium text-blue-800">PDF Generation</p>
-          <p>
-            PDFs are automatically generated on the server when invoices are
-            created. You can view and download them from the invoice detail
-            page.
-          </p>
-        </div>
       </div>
 
       <!-- Invoice Template Preview -->
-      <div class="mt-8 card-modern">
-        <div class="preview-container">
-          <InvoiceTemplate
-            :form="previewForm"
-            :invoice-items="invoiceItems"
-            :subtotal="subtotal"
-            :tax-rate="taxRate"
-            :tax-amount="taxAmount"
-            :total="total"
-            :balance-due="balanceDue"
-            :tab-content="tabContent"
-            :units="units"
-          />
-        </div>
+
+      <div class="preview-container">
+        <InvoiceTemplate
+          :form="previewForm"
+          :invoice-items="invoiceItems"
+          :subtotal="subtotal"
+          :tax-rate="taxRate"
+          :tax-amount="taxAmount"
+          :total="total"
+          :balance-due="balanceDue"
+          :tab-content="tabContent"
+          :units="units"
+        />
       </div>
     </div>
   </div>
@@ -2138,6 +2170,14 @@ const closeDropdown = () => {
   isDropdownOpen.value = false;
   highlightedIndex.value = -1;
   searchQuery.value = '';
+};
+
+const openAddUnitPage = () => {
+  router.push('/units/add');
+};
+
+const openAddChargePage = () => {
+  router.push('/charges/create');
 };
 
 const toggleSelectAll = () => {

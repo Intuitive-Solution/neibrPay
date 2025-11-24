@@ -35,7 +35,7 @@
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Back to People
+            Back to Residents
           </button>
         </div>
       </div>
@@ -1027,48 +1027,74 @@
           </div>
 
           <!-- Modal footer -->
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <div
+            class="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between"
+          >
+            <!-- Left aligned Add Unit button -->
             <button
-              @click="confirmAddUnits"
-              :disabled="selectedUnits.length === 0 || isAddingUnits"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="openAddUnitPage"
+              class="text-primary hover:text-primary-600 font-medium text-sm flex items-center mb-3 sm:mb-0"
             >
-              <span v-if="isAddingUnits" class="flex items-center">
-                <svg
-                  class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  ></circle>
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Adding...
-              </span>
-              <span v-else
-                >Add {{ selectedUnits.length }} Unit{{
-                  selectedUnits.length !== 1 ? 's' : ''
-                }}</span
+              <svg
+                class="h-4 w-4 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add New Unit
             </button>
-            <button
-              @click="closeAddUnitsModal"
-              :disabled="isAddingUnits"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
+
+            <!-- Right aligned action buttons -->
+            <div class="sm:flex sm:flex-row-reverse">
+              <button
+                @click="confirmAddUnits"
+                :disabled="selectedUnits.length === 0 || isAddingUnits"
+                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span v-if="isAddingUnits" class="flex items-center">
+                  <svg
+                    class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Adding...
+                </span>
+                <span v-else
+                  >Add {{ selectedUnits.length }} Unit{{
+                    selectedUnits.length !== 1 ? 's' : ''
+                  }}</span
+                >
+              </button>
+              <button
+                @click="closeAddUnitsModal"
+                :disabled="isAddingUnits"
+                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1318,6 +1344,13 @@ const closeAddUnitsModal = () => {
   selectedUnits.value = [];
   addUnitsSearchQuery.value = '';
   isAddingUnits.value = false;
+};
+
+const openAddUnitPage = () => {
+  // Navigate to add unit page
+  // If we're in edit mode (adding unit to existing resident), we might want to return here
+  // For now, just simple navigation
+  router.push('/units/add');
 };
 
 const toggleUnitSelection = (unitId: number) => {
