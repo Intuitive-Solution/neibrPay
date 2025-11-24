@@ -10,10 +10,11 @@
       <div class="company-info">
         <h1 class="company-name">{{ communityName }}</h1>
         <div class="company-details">
-          <p>123 HOA Management Street</p>
-          <p>Property City, PC 12345</p>
-          <p>Phone: (555) 123-4567</p>
-          <p>Email: info@neibrpay.com</p>
+          <p v-for="(line, index) in formattedAddress" :key="index">
+            {{ line }}
+          </p>
+          <p v-if="communityPhone">Phone: {{ communityPhone }}</p>
+          <p v-if="communityEmail">Email: {{ communityEmail }}</p>
         </div>
       </div>
       <div class="invoice-meta">
@@ -148,6 +149,7 @@
 import { computed } from 'vue';
 import type { UnitWithResident } from '@neibrpay/models';
 import { useAuthStore } from '../stores/auth';
+import { useSettings } from '@neibrpay/api-client';
 
 // Props
 interface Props {
@@ -186,6 +188,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const authStore = useAuthStore();
+const { data: settingsData } = useSettings();
 
 // Computed properties
 const invoiceNumber = computed(() => props.form.invoice_number);
@@ -194,6 +197,65 @@ const startDate = computed(() => props.form.start_date);
 const dueDate = computed(() => props.form.due_date || props.form.start_date);
 const unitIds = computed(() => props.form.unit_ids);
 const communityName = computed(() => authStore.tenantName || 'Community');
+const communityAddress = computed(
+  () => settingsData.value?.tenant?.address || ''
+);
+const communityCity = computed(() => settingsData.value?.tenant?.city || '');
+const communityState = computed(() => settingsData.value?.tenant?.state || '');
+const communityZipCode = computed(
+  () => settingsData.value?.tenant?.zip_code || ''
+);
+const communityPhone = computed(() => settingsData.value?.tenant?.phone || '');
+const communityEmail = computed(() => settingsData.value?.tenant?.email || '');
+
+// Format full address - street address on first line, city/state/zip on second line
+const formattedAddress = computed(() => {
+  const parts = [];
+
+  // Extract street address (first part before comma, or use full address if no city/state/zip available)
+  let streetAddress = communityAddress.value || '';
+
+  // If we have separate city/state/zip fields, use them for the second line
+  // Otherwise, try to parse the address field
+  if (communityCity.value || communityState.value || communityZipCode.value) {
+    // We have separate fields, so use address as street and city/state/zip as second line
+    if (streetAddress) {
+      // If address contains commas, it might be the full address - extract just the street part
+      const addressParts = streetAddress
+        .split(',')
+        .map((s: string) => s.trim());
+      if (addressParts.length > 1) {
+        // First part is likely the street address
+        streetAddress = addressParts[0];
+      }
+    }
+    parts.push(streetAddress);
+
+    // Second line: city, state zip
+    const cityStateZip = [
+      communityCity.value,
+      communityState.value,
+      communityZipCode.value,
+    ]
+      .filter(Boolean)
+      .join(', ');
+    if (cityStateZip) parts.push(cityStateZip);
+  } else if (streetAddress) {
+    // No separate fields, try to parse the address string
+    const addressParts = streetAddress.split(',').map((s: string) => s.trim());
+    if (addressParts.length >= 2) {
+      // First part is street address
+      parts.push(addressParts[0]);
+      // Rest is city, state, zip, country
+      parts.push(addressParts.slice(1).join(', '));
+    } else {
+      // Just one part, use as is
+      parts.push(streetAddress);
+    }
+  }
+
+  return parts;
+});
 
 const publicNotes = computed(() => props.tabContent['public-notes']);
 const terms = computed(() => props.tabContent.terms);

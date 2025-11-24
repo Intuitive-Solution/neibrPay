@@ -543,7 +543,53 @@ class InvoiceController extends Controller
             $invoiceUnit->load('tenant');
         }
         
-        $tenantName = $invoiceUnit->tenant?->name ?? 'Community';
+        $tenant = $invoiceUnit->tenant;
+        $tenantName = $tenant?->name ?? 'Community';
+        $tenantAddress = $tenant?->address ?? '';
+        $tenantCity = $tenant?->city ?? '';
+        $tenantState = $tenant?->state ?? '';
+        $tenantZipCode = $tenant?->zip_code ?? '';
+        $tenantPhone = $tenant?->phone ?? '';
+        $tenantEmail = $tenant?->email ?? '';
+        
+        // Format tenant address HTML
+        // Street address on first line, city/state/zip on second line
+        $tenantAddressHtml = '';
+        
+        // Extract street address (first part before comma if address contains full formatted address)
+        $streetAddress = $tenantAddress;
+        if ($streetAddress && (strpos($streetAddress, ',') !== false)) {
+            // Address contains commas, might be full formatted address
+            // If we have separate city/state/zip fields, extract just the street part
+            if ($tenantCity || $tenantState || $tenantZipCode) {
+                $addressParts = array_map('trim', explode(',', $streetAddress));
+                $streetAddress = $addressParts[0]; // First part is street address
+            }
+        }
+        
+        // First line: street address
+        if ($streetAddress) {
+            $tenantAddressHtml .= "<p>" . htmlspecialchars($streetAddress) . "</p>";
+        }
+        
+        // Second line: city, state zip
+        $cityStateZip = trim(implode(', ', array_filter([$tenantCity, $tenantState, $tenantZipCode])));
+        if ($cityStateZip) {
+            $tenantAddressHtml .= "<p>" . htmlspecialchars($cityStateZip) . "</p>";
+        } elseif ($tenantAddress && strpos($tenantAddress, ',') !== false && !$tenantCity && !$tenantState && !$tenantZipCode) {
+            // No separate fields but address has commas - use everything after first comma as second line
+            $addressParts = array_map('trim', explode(',', $tenantAddress));
+            if (count($addressParts) > 1) {
+                $tenantAddressHtml .= "<p>" . htmlspecialchars(implode(', ', array_slice($addressParts, 1))) . "</p>";
+            }
+        }
+        if ($tenantPhone) {
+            $tenantAddressHtml .= "<p>Phone: " . htmlspecialchars($tenantPhone) . "</p>";
+        }
+        if ($tenantEmail) {
+            $tenantAddressHtml .= "<p>Email: " . htmlspecialchars($tenantEmail) . "</p>";
+        }
+        
         $unit = $invoiceUnit->unit;
         $unitTitle = $unit ? $unit->title : "Unit {$invoiceUnit->unit_id}";
         $unitAddress = $unit ? "{$unit->address}, {$unit->city}" : '';
@@ -745,12 +791,7 @@ class InvoiceController extends Controller
                     {$paidStampHtml}
                     <div class=\"company-info\">
                         <h1 class=\"company-name\">{$tenantName}</h1>
-                        <div class=\"company-details\">
-                            <p>123 HOA Management Street</p>
-                            <p>Property City, PC 12345</p>
-                            <p>Phone: (555) 123-4567</p>
-                            <p>Email: info@neibrpay.com</p>
-                        </div>
+                        <div class=\"company-details\">{$tenantAddressHtml}</div>
                     </div>
                     <div class=\"invoice-meta\">
                         <h2 class=\"invoice-title\">INVOICE</h2>

@@ -35,7 +35,11 @@ class SettingsController extends Controller
                     'id' => $tenant->id,
                     'name' => $tenant->name,
                     'address' => $tenant->address ?? '',
+                    'city' => $tenant->city ?? '',
+                    'state' => $tenant->state ?? '',
+                    'zip_code' => $tenant->zip_code ?? '',
                     'phone' => $tenant->phone ?? '',
+                    'email' => $tenant->email ?? '',
                     'settings' => [
                         'currency' => $settings['currency'] ?? 'USD',
                         'currency_format' => $settings['currency_format'] ?? '$#,##0.00',
