@@ -736,7 +736,7 @@ class InvoiceController extends Controller
             <title>Invoice {$invoiceUnit->invoice_number}</title>
             <style>
                 * { box-sizing: border-box; }
-                body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }
                 .invoice-template { width: 180mm; max-width: 180mm; min-height: auto; padding: 10mm 8mm 10mm 10mm; font-family: Arial, sans-serif; background: white; color: #333; line-height: 1.3; overflow: hidden; page-break-after: avoid; }
                 .invoice-header { width: 100%; margin-bottom: 25px; border-bottom: 3px solid #2563eb; padding-bottom: 15px; overflow: hidden; position: relative; page-break-inside: avoid; }
                 .company-info { float: left; width: 55%; }
