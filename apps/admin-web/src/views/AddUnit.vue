@@ -1287,7 +1287,9 @@
     >
       <!-- Modal Header -->
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900">Add Owners to Unit</h3>
+        <h3 class="text-lg font-medium text-gray-900">
+          Assign Residents to Unit
+        </h3>
         <button
           @click="closeAddOwnerModal"
           class="text-gray-400 hover:text-gray-600"
