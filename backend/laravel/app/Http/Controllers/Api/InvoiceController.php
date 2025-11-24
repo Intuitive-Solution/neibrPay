@@ -175,7 +175,7 @@ class InvoiceController extends Controller
             foreach ($createdInvoices as $invoice) {
                 try {
                     // Load the invoice with necessary relationships for PDF generation
-                    $invoice->load(['unit', 'notes']);
+                    $invoice->load(['unit', 'notes', 'tenant']);
                     
                     // Generate HTML for the invoice
                     $html = $this->generateInvoiceHtml($invoice);
@@ -331,7 +331,7 @@ class InvoiceController extends Controller
                 $invoiceUnit->pdfs()->update(['is_latest' => false]);
                 
                 // Load the invoice with necessary relationships for PDF generation
-                $invoiceUnit->load(['unit', 'notes']);
+                $invoiceUnit->load(['unit', 'notes', 'tenant']);
                 
                 // Generate HTML for the invoice
                 $html = $this->generateInvoiceHtml($invoiceUnit);
@@ -538,6 +538,12 @@ class InvoiceController extends Controller
      */
     private function generateInvoiceHtml(InvoiceUnit $invoiceUnit, $payment = null): string
     {
+        // Load tenant relationship if not already loaded
+        if (!$invoiceUnit->relationLoaded('tenant')) {
+            $invoiceUnit->load('tenant');
+        }
+        
+        $tenantName = $invoiceUnit->tenant?->name ?? 'Community';
         $unit = $invoiceUnit->unit;
         $unitTitle = $unit ? $unit->title : "Unit {$invoiceUnit->unit_id}";
         $unitAddress = $unit ? "{$unit->address}, {$unit->city}" : '';
@@ -738,7 +744,7 @@ class InvoiceController extends Controller
                 <div class=\"invoice-header clearfix\">
                     {$paidStampHtml}
                     <div class=\"company-info\">
-                        <h1 class=\"company-name\">NeibrPay HOA</h1>
+                        <h1 class=\"company-name\">{$tenantName}</h1>
                         <div class=\"company-details\">
                             <p>123 HOA Management Street</p>
                             <p>Property City, PC 12345</p>
@@ -810,7 +816,7 @@ class InvoiceController extends Controller
                     <h3 class=\"section-title\">Payment Information</h3>
                     <div class=\"payment-details\">
                         <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p>
-                        <p><strong>Make checks payable to:</strong> NeibrPay HOA</p>
+                        <p><strong>Make checks payable to:</strong> {$tenantName}</p>
                         <p><strong>For questions about this invoice, contact:</strong> (555) 123-4567</p>
                     </div>
                 </div>

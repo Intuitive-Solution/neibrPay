@@ -8,7 +8,7 @@
       </div>
 
       <div class="company-info">
-        <h1 class="company-name">NeibrPay HOA</h1>
+        <h1 class="company-name">{{ communityName }}</h1>
         <div class="company-details">
           <p>123 HOA Management Street</p>
           <p>Property City, PC 12345</p>
@@ -134,7 +134,7 @@
         <p>
           <strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment
         </p>
-        <p><strong>Make checks payable to:</strong> NeibrPay HOA</p>
+        <p><strong>Make checks payable to:</strong> {{ communityName }}</p>
         <p>
           <strong>For questions about this invoice, contact:</strong> (555)
           123-4567
@@ -147,6 +147,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { UnitWithResident } from '@neibrpay/models';
+import { useAuthStore } from '../stores/auth';
 
 // Props
 interface Props {
@@ -184,6 +185,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const authStore = useAuthStore();
 
 // Computed properties
 const invoiceNumber = computed(() => props.form.invoice_number);
@@ -191,6 +193,7 @@ const poNumber = computed(() => props.form.po_number);
 const startDate = computed(() => props.form.start_date);
 const dueDate = computed(() => props.form.due_date || props.form.start_date);
 const unitIds = computed(() => props.form.unit_ids);
+const communityName = computed(() => authStore.tenantName || 'Community');
 
 const publicNotes = computed(() => props.tabContent['public-notes']);
 const terms = computed(() => props.tabContent.terms);
