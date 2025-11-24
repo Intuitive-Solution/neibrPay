@@ -123,11 +123,6 @@
       <div class="terms-content" v-html="terms"></div>
     </div>
 
-    <!-- Footer Section -->
-    <div v-if="footer" class="footer-section">
-      <div class="footer-content" v-html="footer"></div>
-    </div>
-
     <!-- Payment Information -->
     <div class="payment-section">
       <h3 class="section-title">Payment Information</h3>
@@ -141,6 +136,11 @@
           123-4567
         </p>
       </div>
+    </div>
+
+    <!-- Footer Section -->
+    <div v-if="footer" class="footer-section">
+      <div class="footer-content" v-html="footer"></div>
     </div>
   </div>
 </template>

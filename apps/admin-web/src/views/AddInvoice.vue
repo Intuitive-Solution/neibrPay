@@ -1588,20 +1588,19 @@
       </div>
 
       <!-- Invoice Template Preview -->
-      <div class="mt-8 card-modern">
-        <div class="preview-container">
-          <InvoiceTemplate
-            :form="previewForm"
-            :invoice-items="invoiceItems"
-            :subtotal="subtotal"
-            :tax-rate="taxRate"
-            :tax-amount="taxAmount"
-            :total="total"
-            :balance-due="balanceDue"
-            :tab-content="tabContent"
-            :units="units"
-          />
-        </div>
+
+      <div class="preview-container">
+        <InvoiceTemplate
+          :form="previewForm"
+          :invoice-items="invoiceItems"
+          :subtotal="subtotal"
+          :tax-rate="taxRate"
+          :tax-amount="taxAmount"
+          :total="total"
+          :balance-due="balanceDue"
+          :tab-content="tabContent"
+          :units="units"
+        />
       </div>
     </div>
   </div>
