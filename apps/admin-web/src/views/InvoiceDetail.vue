@@ -130,7 +130,7 @@
           <div class="mb-4 lg:mb-0">
             <div class="flex items-center gap-4 mb-2">
               <h1 class="text-2xl font-bold text-gray-900">
-                Invoice #{{ invoice.invoice_number }}
+                #{{ invoice.invoice_number }}
               </h1>
               <!-- Enhanced Status Badge -->
               <span
@@ -229,7 +229,7 @@
                 }}
               </span>
             </div>
-            <p class="text-gray-600">Preview invoice details and information</p>
+            <p class="text-gray-600">View HOA due details and information</p>
           </div>
           <div class="flex items-center gap-3">
             <button @click="goBack" class="btn-outline">

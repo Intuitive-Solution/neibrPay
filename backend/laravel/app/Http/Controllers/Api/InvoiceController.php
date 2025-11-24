@@ -737,7 +737,7 @@ class InvoiceController extends Controller
             <style>
                 * { box-sizing: border-box; }
                 body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }
-                .invoice-template { width: 180mm; max-width: 180mm; min-height: auto; padding: 10mm 8mm 10mm 10mm; font-family: Arial, sans-serif; background: white; color: #333; line-height: 1.3; overflow: hidden; page-break-after: avoid; }
+                .invoice-template { width: 180mm; max-width: 180mm; min-height: auto; padding: 10mm 8mm 20mm 10mm; font-family: Arial, sans-serif; background: white; color: #333; line-height: 1.3; }
                 .invoice-header { width: 100%; margin-bottom: 25px; border-bottom: 3px solid #2563eb; padding-bottom: 15px; overflow: hidden; position: relative; page-break-inside: avoid; }
                 .company-info { float: left; width: 55%; }
                 .company-name { font-size: 18px; font-weight: bold; color: #2563eb; margin: 0 0 4px 0; }
@@ -775,13 +775,14 @@ class InvoiceController extends Controller
                 .payment-details p { margin: 2px 0; font-size: 8px; color: #4b5563; }
                 .notes-section, .terms-section { margin-bottom: 10px; border: 1px solid #000000; page-break-inside: avoid; }
                 .notes-content, .terms-content { font-size: 9px; line-height: 1.3; color: #4b5563; margin-top: 4px; border: 1px solid #000000; }
-                .footer-section { margin-bottom: 10px; padding-top: 8px; border-top: 1px solid #e5e7eb; border: 1px solid #000000; page-break-inside: avoid; }
-                .footer-content { font-size: 8px; color: #6b7280; text-align: center; border: 1px solid #000000; }
+                .footer-section { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; padding: 8px 10mm; background: white; border-top: 1px solid #e5e7eb; z-index: 1000; }
+                .footer-content { font-size: 8px; color: #6b7280; text-align: center; }
                 .clearfix::after { content: \"\"; display: table; clear: both; }
                 {$paymentDetailsCss}
             </style>
         </head>
         <body>
+            {$footerHtml}
             <div class=\"invoice-template\">
                 <div class=\"invoice-header clearfix\">
                     {$paidStampHtml}
@@ -852,7 +853,6 @@ class InvoiceController extends Controller
 
                 {$notesHtml}
                 {$termsHtml}
-                {$footerHtml}
 
                 <div class=\"payment-section\">
                     <h3 class=\"section-title\">Payment Information</h3>
