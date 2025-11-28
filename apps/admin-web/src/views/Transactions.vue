@@ -171,22 +171,22 @@
             <thead class="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  Date
+                  DATE
                 </th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  Description
+                  DESCRIPTION
                 </th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  Category
+                  CATEGORY
                 </th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  Amount
+                  AMOUNT
                 </th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  Status
+                  STATUS
                 </th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  Account
+                  ACCOUNT
                 </th>
               </tr>
             </thead>
