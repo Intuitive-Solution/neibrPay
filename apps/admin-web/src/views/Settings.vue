@@ -148,6 +148,18 @@
           >
             Payments
           </button>
+          <button
+            v-if="!isResident"
+            @click="activeTab = 'bank'"
+            :class="[
+              activeTab === 'bank'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+              'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+            ]"
+          >
+            Bank
+          </button>
         </nav>
       </div>
 
@@ -520,6 +532,133 @@
             </div>
           </div>
         </div>
+
+        <!-- Bank Tab -->
+        <div v-if="activeTab === 'bank'" class="space-y-6">
+          <h2 class="text-base font-semibold text-gray-900">
+            Bank Account Integration
+          </h2>
+          <p class="text-sm text-gray-600">
+            Connect your bank account to view and reconcile transactions.
+          </p>
+
+          <!-- Connected Bank Accounts -->
+          <div v-if="bankAccounts.length > 0" class="space-y-4">
+            <h3 class="text-sm font-medium text-gray-900">
+              Connected Accounts
+            </h3>
+            <div class="space-y-3">
+              <div
+                v-for="account in bankAccounts"
+                :key="account.id"
+                class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <p class="font-medium text-gray-900">
+                      {{ account.account_name }}
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1">
+                      {{ account.institution_name }} • ••••{{
+                        account.account_mask
+                      }}
+                    </p>
+                    <div
+                      class="mt-2 flex items-center gap-4 text-xs text-gray-500"
+                    >
+                      <span
+                        :class="[
+                          'px-2 py-1 rounded',
+                          account.status === 'active'
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-yellow-50 text-yellow-700',
+                        ]"
+                      >
+                        {{
+                          account.status === 'active' ? 'Connected' : 'Error'
+                        }}
+                      </span>
+                      <span v-if="account.last_synced_at">
+                        Last synced: {{ formatDate(account.last_synced_at) }}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    @click="disconnectBank(account.id)"
+                    :disabled="isDisconnectingBank"
+                    class="ml-4 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Accounts State -->
+          <div
+            v-else
+            class="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center"
+          >
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400 mb-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            <p class="text-gray-600 mb-4">No bank accounts connected yet</p>
+            <button
+              @click="connectBank"
+              :disabled="isConnectingBank"
+              class="btn-primary"
+            >
+              <span v-if="isConnectingBank">Connecting...</span>
+              <span v-else>Connect Bank Account</span>
+            </button>
+          </div>
+
+          <!-- Connect New Account Button -->
+          <div
+            v-if="bankAccounts.length > 0"
+            class="pt-4 border-t border-gray-200"
+          >
+            <button
+              @click="connectBank"
+              :disabled="isConnectingBank"
+              class="btn-primary"
+            >
+              <span v-if="isConnectingBank">Connecting...</span>
+              <span v-else>+ Add Another Bank Account</span>
+            </button>
+          </div>
+
+          <!-- Transaction Sync Settings -->
+          <div
+            v-if="bankAccounts.length > 0"
+            class="p-4 bg-blue-50 border border-blue-200 rounded-lg"
+          >
+            <h3 class="font-medium text-blue-900 mb-2">Transaction Sync</h3>
+            <p class="text-sm text-blue-800 mb-4">
+              Transactions are automatically synced every hour. You can also
+              manually refresh anytime.
+            </p>
+            <button
+              @click="manualSyncBankAccounts"
+              :disabled="isManualSyncing"
+              class="btn-secondary"
+            >
+              <span v-if="isManualSyncing">Syncing...</span>
+              <span v-else>Refresh Transactions Now</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -624,6 +763,11 @@ import {
   useUpdatePassword,
   useUpdateLocalization,
   stripeApi,
+  usePlaidLinkToken,
+  useBankAccounts,
+  useExchangeToken,
+  useDisconnectBankAccount,
+  useSyncAccount,
   type SettingsData,
 } from '@neibrpay/api-client';
 import { useAuthStore } from '../stores/auth';
@@ -691,7 +835,7 @@ async function initHoaAddressAutocomplete() {
 
 // Tab state
 const activeTab = ref<
-  'hoa' | 'user' | 'localization' | 'security' | 'payments'
+  'hoa' | 'user' | 'localization' | 'security' | 'payments' | 'bank'
 >('hoa');
 
 // Redirect to 'user' tab if resident tries to access admin-only tabs
@@ -699,11 +843,13 @@ watch(
   [isResident, activeTab],
   ([isResidentValue, currentTab]: [
     boolean,
-    'hoa' | 'user' | 'localization' | 'security' | 'payments',
+    'hoa' | 'user' | 'localization' | 'security' | 'payments' | 'bank',
   ]) => {
     if (
       isResidentValue &&
-      (currentTab === 'localization' || currentTab === 'payments')
+      (currentTab === 'localization' ||
+        currentTab === 'payments' ||
+        currentTab === 'bank')
     ) {
       activeTab.value = 'user';
     }
@@ -1023,4 +1169,191 @@ import { onBeforeMount } from 'vue';
 onBeforeMount(() => {
   checkStripeReturn();
 });
+
+// ============ PLAID BANK INTEGRATION ============
+
+// Plaid queries and mutations
+const { data: linkTokenData, isLoading: isLoadingLinkToken } =
+  usePlaidLinkToken();
+const { data: bankAccountsData } = useBankAccounts();
+const exchangeTokenMutation = useExchangeToken();
+const disconnectBankMutation = useDisconnectBankAccount();
+const syncAccountMutation = useSyncAccount();
+
+// Bank account list
+const bankAccounts = computed(
+  () => bankAccountsData.value?.bank_accounts || []
+);
+
+// Plaid loading states
+const isConnectingBank = ref(false);
+const isDisconnectingBank = ref(false);
+const isManualSyncing = ref(false);
+
+// Format date helper
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return 'Never';
+  try {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return 'Invalid date';
+  }
+};
+
+/**
+ * Load Plaid Link script via fetch and eval (bypasses CDN 403)
+ */
+const loadPlaidScript = async (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    // Check if already loaded
+    if ((window as any).Plaid) {
+      resolve();
+      return;
+    }
+
+    // Try loading script via standard method first
+    const script = document.createElement('script');
+    script.id = 'plaid-link-script';
+    script.src = 'https://cdn.plaid.com/link/v2/stable/link-initialize.js';
+
+    script.onload = () => {
+      console.log('Plaid script loaded successfully');
+      resolve();
+    };
+
+    script.onerror = e => {
+      console.error('Plaid script load error:', e);
+      // Try alternative URL
+      const altScript = document.createElement('script');
+      altScript.src = 'https://plaid.com/link/v2/stable/link-initialize.js';
+      altScript.onload = () => {
+        console.log('Plaid script loaded via alternative URL');
+        resolve();
+      };
+      altScript.onerror = () => {
+        reject(
+          new Error(
+            'Failed to load Plaid Link. Please try using a different browser or disable ad blockers.'
+          )
+        );
+      };
+      document.head.appendChild(altScript);
+    };
+
+    document.head.appendChild(script);
+  });
+};
+
+/**
+ * Initialize Plaid Link
+ */
+const connectBank = async () => {
+  // First, fetch link token if not already loaded
+  if (!linkTokenData.value?.link_token) {
+    showError('Loading bank connection...');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    if (!linkTokenData.value?.link_token) {
+      showError(
+        'Failed to initialize bank connection. Please refresh and try again.'
+      );
+      return;
+    }
+  }
+
+  isConnectingBank.value = true;
+
+  try {
+    // Load Plaid script
+    await loadPlaidScript();
+
+    const linkToken = linkTokenData.value!.link_token;
+
+    // Create and open handler
+    const handler = (window as any).Plaid.create({
+      token: linkToken,
+      onSuccess: async (publicToken: string, metadata: any) => {
+        console.log('Plaid Link Success:', metadata);
+        try {
+          showSuccess('Connecting bank account...');
+          await exchangeTokenMutation.mutateAsync({
+            public_token: publicToken,
+          });
+          showSuccess('Bank account connected successfully!');
+        } catch (error: any) {
+          console.error('Exchange token error:', error);
+          showError(error.message || 'Failed to connect bank account');
+        } finally {
+          isConnectingBank.value = false;
+        }
+      },
+      onExit: (err: any, metadata: any) => {
+        console.log('Plaid Link Exit:', { err, metadata });
+        isConnectingBank.value = false;
+        if (err) {
+          showError(
+            `Bank connection closed: ${err.display_message || err.error_message || 'User cancelled'}`
+          );
+        }
+      },
+      onEvent: (eventName: string, metadata: any) => {
+        console.log('Plaid Event:', eventName, metadata);
+      },
+    });
+
+    handler.open();
+  } catch (error: any) {
+    console.error('Connect bank error:', error);
+    isConnectingBank.value = false;
+    showError(
+      error.message ||
+        'Failed to open bank connection. Please try in a different browser.'
+    );
+  }
+};
+
+/**
+ * Disconnect a bank account
+ */
+const disconnectBank = async (accountId: number) => {
+  if (!confirm('Are you sure you want to disconnect this bank account?')) {
+    return;
+  }
+
+  isDisconnectingBank.value = true;
+  try {
+    await disconnectBankMutation.mutateAsync(accountId);
+    showSuccess('Bank account disconnected successfully');
+  } catch (error: any) {
+    showError(error.message || 'Failed to disconnect bank account');
+  } finally {
+    isDisconnectingBank.value = false;
+  }
+};
+
+/**
+ * Manually sync all bank accounts
+ */
+const manualSyncBankAccounts = async () => {
+  isManualSyncing.value = true;
+  try {
+    // Sync all accounts
+    for (const account of bankAccounts.value) {
+      await syncAccountMutation.mutateAsync({
+        bank_account_id: account.id,
+      });
+    }
+    showSuccess('Bank accounts synced successfully');
+  } catch (error: any) {
+    showError(error.message || 'Failed to sync bank accounts');
+  } finally {
+    isManualSyncing.value = false;
+  }
+};
 </script>

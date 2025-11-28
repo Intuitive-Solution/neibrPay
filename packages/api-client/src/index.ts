@@ -33,6 +33,25 @@ export {
   type UpdatePasswordRequest,
   type UpdateLocalizationRequest,
 } from './settings';
+export {
+  plaidApi,
+  usePlaidLinkToken,
+  useBankAccounts,
+  useTransactions,
+  useExchangeToken,
+  useDisconnectBankAccount,
+  useSyncAccount,
+  type BankAccount,
+  type PlaidTransaction,
+  type LinkTokenResponse,
+  type ExchangeTokenRequest,
+  type ExchangeTokenResponse,
+  type GetBankAccountsResponse,
+  type GetTransactionsRequest,
+  type GetTransactionsResponse,
+  type SyncAccountRequest,
+  type SyncAccountResponse,
+} from './plaid';
 export * from './queryKeys';
-export { announcementKeys } from './queryKeys';
+export { announcementKeys, plaidKeys } from './queryKeys';
 export { apiClient, fileUploadClient, setAuthTokenGetter } from './apiClient';

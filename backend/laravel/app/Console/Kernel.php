@@ -12,7 +12,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Sync Plaid transactions every hour
+        $schedule->command('plaid:sync')
+            ->hourly()
+            ->withoutOverlapping()
+            ->onFailure(function () {
+                \Illuminate\Support\Facades\Log::error('Plaid sync job failed');
+            })
+            ->onSuccess(function () {
+                \Illuminate\Support\Facades\Log::info('Plaid sync job completed successfully');
+            });
     }
 
     /**

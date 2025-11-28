@@ -23,6 +23,7 @@ import Documents from '../views/Documents.vue';
 import Settings from '../views/Settings.vue';
 import Announcements from '../views/Announcements.vue';
 import AddAnnouncement from '../views/AddAnnouncement.vue';
+import Transactions from '../views/Transactions.vue';
 import { setupAuthGuards } from './guards';
 
 const router = createRouter({
@@ -204,6 +205,12 @@ const router = createRouter({
       path: '/settings',
       name: 'Settings',
       component: Settings,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/transactions',
+      name: 'Transactions',
+      component: Transactions,
       meta: { requiresAuth: true },
     },
     {
