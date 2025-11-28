@@ -9,6 +9,8 @@ export interface BankAccount {
   account_mask: string;
   institution_name: string;
   status: 'active' | 'error' | 'disconnected';
+  current_balance: number | null;
+  available_balance: number | null;
   last_synced_at: string | null;
   sync_start_date: string | null;
 }

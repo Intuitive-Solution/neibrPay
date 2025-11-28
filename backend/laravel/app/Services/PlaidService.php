@@ -138,6 +138,52 @@ class PlaidService
     }
 
     /**
+     * Get account balance from Plaid
+     */
+    public function getAccountBalance(PlaidBankAccount $bankAccount): ?array
+    {
+        try {
+            $accessToken = $bankAccount->getDecryptedAccessToken();
+
+            $response = Http::post("{$this->baseUrl}/accounts/balance/get", [
+                'client_id' => $this->clientId,
+                'secret' => $this->clientSecret,
+                'access_token' => $accessToken,
+            ]);
+
+            if ($response->failed()) {
+                Log::warning("Failed to get balance for account {$bankAccount->id}: " . $response->body());
+                return null;
+            }
+
+            $data = $response->json();
+            $accounts = $data['accounts'] ?? [];
+            
+            if (empty($accounts)) {
+                return null;
+            }
+
+            // Find the matching account
+            foreach ($accounts as $account) {
+                if ($account['account_id'] === $bankAccount->account_id) {
+                    return [
+                        'current' => $account['balances']['current'] ?? 0,
+                        'available' => $account['balances']['available'] ?? 0,
+                        'limit' => $account['balances']['limit'] ?? null,
+                        'iso_currency_code' => $account['balances']['iso_currency_code'] ?? 'USD',
+                        'unofficial_currency_code' => $account['balances']['unofficial_currency_code'] ?? null,
+                    ];
+                }
+            }
+
+            return null;
+        } catch (Exception $e) {
+            Log::error("Plaid Get Balance Error for account {$bankAccount->id}: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Sync transactions for a bank account
      */
     public function syncTransactions(PlaidBankAccount $bankAccount): array
@@ -191,12 +237,22 @@ class PlaidService
                 );
             }
 
+            // Get current balance
+            $balance = $this->getAccountBalance($bankAccount);
+
             // Update sync metadata
-            $bankAccount->update([
+            $updateData = [
                 'last_synced_at' => now(),
                 'status' => 'active',
                 'error_message' => null,
-            ]);
+            ];
+            
+            if ($balance) {
+                $updateData['current_balance'] = $balance['current'];
+                $updateData['available_balance'] = $balance['available'];
+            }
+
+            $bankAccount->update($updateData);
 
             return [
                 'success' => true,

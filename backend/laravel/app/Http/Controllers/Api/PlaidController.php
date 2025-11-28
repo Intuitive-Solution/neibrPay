@@ -132,7 +132,7 @@ class PlaidController extends Controller
             }
 
             $accounts = PlaidBankAccount::forTenant($user->tenant_id)
-                ->select('id', 'account_name', 'account_mask', 'institution_name', 'status', 'last_synced_at', 'sync_start_date')
+                ->select('id', 'account_name', 'account_mask', 'institution_name', 'status', 'current_balance', 'available_balance', 'last_synced_at', 'sync_start_date')
                 ->get();
 
             return response()->json([

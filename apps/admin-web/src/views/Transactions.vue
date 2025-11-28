@@ -31,6 +31,50 @@
 
     <!-- Transactions Section -->
     <div v-else class="space-y-6">
+      <!-- Bank Balance Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          v-for="account in bankAccounts"
+          :key="account.id"
+          class="card card-hover"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-600">
+                {{ account.account_name }}
+              </h3>
+              <p class="text-xs text-gray-500 mt-1">
+                ••••{{ account.account_mask }}
+              </p>
+            </div>
+            <div class="p-3 bg-primary-100 rounded-lg">
+              <svg
+                class="w-6 h-6 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-4">
+            <p class="text-2xl font-bold text-gray-900">
+              {{ formatCurrency(Number(account.current_balance || 0)) }}
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+              Available:
+              {{ formatCurrency(Number(account.available_balance || 0)) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Filters Card -->
       <div class="card-modern">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Filters</h2>

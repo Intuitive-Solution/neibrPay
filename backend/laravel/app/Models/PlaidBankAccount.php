@@ -20,6 +20,8 @@ class PlaidBankAccount extends Model
         'account_id',
         'account_name',
         'account_mask',
+        'current_balance',
+        'available_balance',
         'sync_start_date',
         'last_synced_at',
         'status',
@@ -29,6 +31,8 @@ class PlaidBankAccount extends Model
     protected $casts = [
         'sync_start_date' => 'date',
         'last_synced_at' => 'datetime',
+        'current_balance' => 'decimal:2',
+        'available_balance' => 'decimal:2',
     ];
 
     /**
