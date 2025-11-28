@@ -170,23 +170,125 @@
           <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  DATE
+                <th
+                  class="px-6 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                  @click="handleSort('date')"
+                >
+                  <div class="flex items-center gap-2">
+                    DATE
+                    <span
+                      v-if="sortBy === 'date'"
+                      class="text-primary font-normal"
+                    >
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                    <span
+                      v-else
+                      class="text-gray-400 opacity-0 group-hover:opacity-50"
+                    >
+                      ↕
+                    </span>
+                  </div>
                 </th>
-                <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  DESCRIPTION
+                <th
+                  class="px-6 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                  @click="handleSort('name')"
+                >
+                  <div class="flex items-center gap-2">
+                    DESCRIPTION
+                    <span
+                      v-if="sortBy === 'name'"
+                      class="text-primary font-normal"
+                    >
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                    <span
+                      v-else
+                      class="text-gray-400 opacity-0 group-hover:opacity-50"
+                    >
+                      ↕
+                    </span>
+                  </div>
                 </th>
-                <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  CATEGORY
+                <th
+                  class="px-6 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                  @click="handleSort('category')"
+                >
+                  <div class="flex items-center gap-2">
+                    CATEGORY
+                    <span
+                      v-if="sortBy === 'category'"
+                      class="text-primary font-normal"
+                    >
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                    <span
+                      v-else
+                      class="text-gray-400 opacity-0 group-hover:opacity-50"
+                    >
+                      ↕
+                    </span>
+                  </div>
                 </th>
-                <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  AMOUNT
+                <th
+                  class="px-6 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                  @click="handleSort('amount')"
+                >
+                  <div class="flex items-center gap-2">
+                    AMOUNT
+                    <span
+                      v-if="sortBy === 'amount'"
+                      class="text-primary font-normal"
+                    >
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                    <span
+                      v-else
+                      class="text-gray-400 opacity-0 group-hover:opacity-50"
+                    >
+                      ↕
+                    </span>
+                  </div>
                 </th>
-                <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  STATUS
+                <th
+                  class="px-6 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                  @click="handleSort('pending')"
+                >
+                  <div class="flex items-center gap-2">
+                    STATUS
+                    <span
+                      v-if="sortBy === 'pending'"
+                      class="text-primary font-normal"
+                    >
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                    <span
+                      v-else
+                      class="text-gray-400 opacity-0 group-hover:opacity-50"
+                    >
+                      ↕
+                    </span>
+                  </div>
                 </th>
-                <th class="px-6 py-3 text-left font-semibold text-gray-900">
-                  ACCOUNT
+                <th
+                  class="px-6 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                  @click="handleSort('plaid_bank_account_id')"
+                >
+                  <div class="flex items-center gap-2">
+                    ACCOUNT
+                    <span
+                      v-if="sortBy === 'plaid_bank_account_id'"
+                      class="text-primary font-normal"
+                    >
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                    <span
+                      v-else
+                      class="text-gray-400 opacity-0 group-hover:opacity-50"
+                    >
+                      ↕
+                    </span>
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -225,13 +327,13 @@
                 <td class="px-6 py-4 font-medium whitespace-nowrap">
                   <span
                     :class="[
-                      transaction.amount >= 0
+                      Number(transaction.amount) >= 0
                         ? 'text-green-600'
                         : 'text-red-600',
                     ]"
                   >
-                    {{ transaction.amount >= 0 ? '+' : ''
-                    }}{{ formatCurrency(transaction.amount) }}
+                    {{ Number(transaction.amount) >= 0 ? '+' : ''
+                    }}{{ formatCurrency(Number(transaction.amount)) }}
                   </span>
                 </td>
                 <td class="px-6 py-4">
@@ -308,16 +410,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import {
-  useBankAccounts,
-  useTransactions,
-  type PlaidTransaction,
-} from '@neibrpay/api-client';
+import { ref, computed } from 'vue';
+import { useBankAccounts, useTransactions } from '@neibrpay/api-client';
 
 // Queries
-const { data: bankAccountsData, isLoading: isLoadingAccounts } =
-  useBankAccounts();
+const { data: bankAccountsData } = useBankAccounts();
 const bankAccounts = computed(
   () => bankAccountsData.value?.bank_accounts || []
 );
@@ -331,6 +428,18 @@ const filters = ref({
   pending: null as boolean | null,
 });
 
+// Sorting state
+const sortBy = ref<
+  | 'date'
+  | 'name'
+  | 'amount'
+  | 'category'
+  | 'pending'
+  | 'plaid_bank_account_id'
+  | null
+>('date');
+const sortOrder = ref<'asc' | 'desc'>('desc');
+
 // Pagination
 const currentPage = ref(1);
 const isRefreshing = ref(false);
@@ -340,6 +449,8 @@ const queryParams = computed(() => ({
   ...filters.value,
   page: currentPage.value,
   per_page: 20,
+  sort_by: sortBy.value,
+  sort_order: sortOrder.value,
 }));
 
 // Fetch transactions with reactive query parameters
@@ -389,7 +500,29 @@ const resetFilters = () => {
     search: null,
     pending: null,
   };
+  sortBy.value = 'date';
+  sortOrder.value = 'desc';
   currentPage.value = 1;
+};
+
+const handleSort = (
+  column:
+    | 'date'
+    | 'name'
+    | 'amount'
+    | 'category'
+    | 'pending'
+    | 'plaid_bank_account_id'
+) => {
+  if (sortBy.value === column) {
+    // Toggle sort order if clicking the same column
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Set new column and default to descending
+    sortBy.value = column;
+    sortOrder.value = 'desc';
+  }
+  currentPage.value = 1; // Reset to first page when sorting changes
 };
 
 const refreshTransactions = async () => {

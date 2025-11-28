@@ -253,9 +253,24 @@
           <thead class="bg-gray-50">
             <tr>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                @click="handleSort('invoice_unit_id')"
               >
-                Invoice
+                <div class="flex items-center gap-2">
+                  Invoice
+                  <span
+                    v-if="sortBy === 'invoice_unit_id'"
+                    class="text-primary font-normal"
+                  >
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-gray-400 opacity-0 group-hover:opacity-50"
+                  >
+                    ↕
+                  </span>
+                </div>
               </th>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -263,19 +278,64 @@
                 Unit
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                @click="handleSort('payment_date')"
               >
-                Payment Date
+                <div class="flex items-center gap-2">
+                  Payment Date
+                  <span
+                    v-if="sortBy === 'payment_date'"
+                    class="text-primary font-normal"
+                  >
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-gray-400 opacity-0 group-hover:opacity-50"
+                  >
+                    ↕
+                  </span>
+                </div>
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                @click="handleSort('amount')"
               >
-                Amount
+                <div class="flex items-center gap-2">
+                  Amount
+                  <span
+                    v-if="sortBy === 'amount'"
+                    class="text-primary font-normal"
+                  >
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-gray-400 opacity-0 group-hover:opacity-50"
+                  >
+                    ↕
+                  </span>
+                </div>
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                @click="handleSort('payment_method')"
               >
-                Method
+                <div class="flex items-center gap-2">
+                  Method
+                  <span
+                    v-if="sortBy === 'payment_method'"
+                    class="text-primary font-normal"
+                  >
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-gray-400 opacity-0 group-hover:opacity-50"
+                  >
+                    ↕
+                  </span>
+                </div>
               </th>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -283,9 +343,24 @@
                 Reference
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none group"
+                @click="handleSort('recorded_by')"
               >
-                Recorded By
+                <div class="flex items-center gap-2">
+                  Recorded By
+                  <span
+                    v-if="sortBy === 'recorded_by'"
+                    class="text-primary font-normal"
+                  >
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-gray-400 opacity-0 group-hover:opacity-50"
+                  >
+                    ↕
+                  </span>
+                </div>
               </th>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -400,17 +475,33 @@ const filters = ref<PaymentFilters>({
   start_date: '',
   end_date: '',
   payment_method: undefined,
+  sort_by: 'payment_date',
+  sort_order: 'desc',
 });
+
+// Sorting state
+const sortBy = ref<
+  | 'payment_date'
+  | 'amount'
+  | 'payment_method'
+  | 'invoice_unit_id'
+  | 'recorded_by'
+  | 'created_at'
+  | null
+>('payment_date');
+const sortOrder = ref<'asc' | 'desc'>('desc');
 
 const deletingPaymentId = ref<number | null>(null);
 
+// Compute filters with sorting
+const queryFilters = computed(() => ({
+  ...filters.value,
+  sort_by: sortBy.value,
+  sort_order: sortOrder.value,
+}));
+
 // Queries
-const {
-  data: payments,
-  isLoading,
-  error,
-  refetch,
-} = usePayments(filters.value);
+const { data: payments, isLoading, error, refetch } = usePayments(queryFilters);
 
 // Mutations
 const deletePaymentMutation = useDeletePayment();
@@ -495,6 +586,27 @@ const clearFilters = () => {
     end_date: '',
     payment_method: undefined,
   };
+  sortBy.value = 'payment_date';
+  sortOrder.value = 'desc';
+};
+
+const handleSort = (
+  column:
+    | 'payment_date'
+    | 'amount'
+    | 'payment_method'
+    | 'invoice_unit_id'
+    | 'recorded_by'
+    | 'created_at'
+) => {
+  if (sortBy.value === column) {
+    // Toggle sort order if clicking the same column
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Set new column and default to descending
+    sortBy.value = column;
+    sortOrder.value = 'desc';
+  }
 };
 
 const viewInvoice = (invoiceId: number) => {
@@ -530,7 +642,7 @@ const deletePayment = async (payment: any) => {
 
 // Watch for filter changes to refetch data
 watch(
-  filters,
+  queryFilters,
   () => {
     refetch();
   },

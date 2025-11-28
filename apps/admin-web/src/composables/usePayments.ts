@@ -7,12 +7,16 @@ import type {
 } from '@neibrpay/models';
 
 /**
- * Hook to fetch payments with optional filters
+ * Hook to fetch payments with optional filters - accepts computed ref or direct params
  */
-export const usePayments = (filters?: PaymentFilters) => {
+export const usePayments = (filters?: PaymentFilters | any) => {
+  // If it's a computed ref, extract the value reactively
+  const getFilters = () =>
+    filters && 'value' in filters ? filters.value : filters;
+
   return useQuery({
-    queryKey: paymentKeys.list(filters),
-    queryFn: () => paymentsApi.list(filters),
+    queryKey: () => paymentKeys.list(getFilters()),
+    queryFn: () => paymentsApi.list(getFilters()),
   });
 };
 

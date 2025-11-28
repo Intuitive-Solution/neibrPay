@@ -29,6 +29,8 @@ class InvoicePaymentController extends Controller
         $paymentMethod = $request->get('payment_method');
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
+        $sortBy = $request->get('sort_by', 'payment_date');
+        $sortOrder = $request->get('sort_order', 'desc');
         
         $query = InvoicePayment::query()
             ->with(['invoiceUnit.unit', 'recorder', 'reviewer'])
@@ -63,9 +65,31 @@ class InvoicePaymentController extends Controller
             $query->where('payment_date', '<=', $endDate);
         }
         
-        $payments = $query->orderBy('payment_date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get()
+        // Validate sort_by and sort_order
+        $allowedSortFields = ['payment_date', 'amount', 'payment_method', 'invoice_unit_id', 'created_at', 'recorded_by'];
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'payment_date';
+        }
+        if (!in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'desc';
+        }
+        
+        // Handle sorting by recorded_by (recorder name) - requires join
+        if ($sortBy === 'recorded_by') {
+            $query->leftJoin('users', 'invoice_payments.recorded_by', '=', 'users.id')
+                ->orderBy('users.name', $sortOrder)
+                ->select('invoice_payments.*');
+            // Secondary sort by payment_date for consistent ordering
+            $query->orderBy('invoice_payments.payment_date', 'desc');
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+            // Secondary sort by created_at for consistent ordering (only if not primary sort)
+            if ($sortBy !== 'created_at') {
+                $query->orderBy('created_at', 'desc');
+            }
+        }
+        
+        $payments = $query->get()
             ->map(function ($payment) {
                 // Ensure status is set (for backward compatibility with old payments)
                 if (!$payment->status) {

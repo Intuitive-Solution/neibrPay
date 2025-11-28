@@ -67,6 +67,15 @@ export interface GetTransactionsRequest {
   pending?: boolean | null;
   page?: number;
   per_page?: number;
+  sort_by?:
+    | 'date'
+    | 'name'
+    | 'amount'
+    | 'category'
+    | 'pending'
+    | 'plaid_bank_account_id'
+    | null;
+  sort_order?: 'asc' | 'desc' | null;
 }
 
 export interface GetTransactionsResponse {

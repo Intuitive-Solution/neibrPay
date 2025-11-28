@@ -191,6 +191,8 @@ class PlaidController extends Controller
                 'pending' => 'nullable|boolean',
                 'page' => 'nullable|integer|min:1',
                 'per_page' => 'nullable|integer|min:1|max:100',
+                'sort_by' => 'nullable|string|in:date,name,amount,category,pending,plaid_bank_account_id',
+                'sort_order' => 'nullable|string|in:asc,desc',
             ]);
 
             $page = $validated['page'] ?? 1;
@@ -219,9 +221,13 @@ class PlaidController extends Controller
                 $query->where('pending', $validated['pending']);
             }
 
+            // Sorting
+            $sortBy = $validated['sort_by'] ?? 'date';
+            $sortOrder = $validated['sort_order'] ?? 'desc';
+            
             $transactions = $query
                 ->with('bankAccount:id,account_name,account_mask')
-                ->orderBy('date', 'desc')
+                ->orderBy($sortBy, $sortOrder)
                 ->paginate($perPage, ['*'], 'page', $page);
 
             return response()->json([
