@@ -233,8 +233,41 @@ export function useDisconnectBankAccount() {
 
   return useMutation({
     mutationFn: (id: number) => plaidApi.disconnectBankAccount(id),
+    onMutate: async (accountId: number) => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: plaidKeys.bankAccounts() });
+
+      // Snapshot the previous value
+      const previousBankAccounts = queryClient.getQueryData<{
+        bank_accounts: BankAccount[];
+      }>(plaidKeys.bankAccounts());
+
+      // Optimistically update to remove the disconnected account
+      if (previousBankAccounts) {
+        queryClient.setQueryData<{ bank_accounts: BankAccount[] }>(
+          plaidKeys.bankAccounts(),
+          {
+            bank_accounts: previousBankAccounts.bank_accounts.filter(
+              account => account.id !== accountId
+            ),
+          }
+        );
+      }
+
+      // Return context with the snapshotted value
+      return { previousBankAccounts };
+    },
+    onError: (err, accountId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousBankAccounts) {
+        queryClient.setQueryData(
+          plaidKeys.bankAccounts(),
+          context.previousBankAccounts
+        );
+      }
+    },
     onSuccess: () => {
-      // Invalidate bank accounts and transactions queries
+      // Invalidate bank accounts and transactions queries to ensure consistency
       queryClient.invalidateQueries({ queryKey: plaidKeys.bankAccounts() });
       queryClient.invalidateQueries({ queryKey: plaidKeys.all });
     },

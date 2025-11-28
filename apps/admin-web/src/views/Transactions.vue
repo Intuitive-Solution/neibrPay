@@ -24,8 +24,11 @@
       <p class="text-sm text-blue-800 mb-6">
         Connect a bank account in Settings to start viewing transactions.
       </p>
-      <router-link to="/settings" class="btn-primary inline-block">
-        Go to Settings
+      <router-link
+        :to="{ name: 'Settings', query: { tab: 'bank' } }"
+        class="btn-primary inline-block"
+      >
+        Add Bank Account
       </router-link>
     </div>
 

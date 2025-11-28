@@ -298,19 +298,32 @@ class PlaidService
 
     /**
      * Disconnect a bank account (remove access)
+     * Deletes all related transactions and the bank account record
      */
     public function disconnectAccount(PlaidBankAccount $bankAccount): bool
     {
         try {
             $accessToken = $bankAccount->getDecryptedAccessToken();
+            $accountId = $bankAccount->id;
+            $tenantId = $bankAccount->tenant_id;
 
+            // Remove access from Plaid
             Http::post("{$this->baseUrl}/item/remove", [
                 'client_id' => $this->clientId,
                 'secret' => $this->clientSecret,
                 'access_token' => $accessToken,
             ]);
 
-            $bankAccount->update(['status' => 'disconnected']);
+            // Delete all related transactions
+            PlaidTransaction::where('plaid_bank_account_id', $accountId)->delete();
+
+            // Delete the bank account record
+            $bankAccount->forceDelete();
+
+            Log::info('Bank account and transactions deleted', [
+                'bank_account_id' => $accountId,
+                'tenant_id' => $tenantId,
+            ]);
 
             return true;
         } catch (Exception $e) {
