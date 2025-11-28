@@ -215,6 +215,26 @@
             <span v-if="isRefreshing">Refreshing...</span>
             <span v-else>Refresh</span>
           </button>
+          <button
+            v-if="isAdmin"
+            @click="goToBankSettings"
+            class="btn-primary text-sm"
+          >
+            <svg
+              class="w-4 h-4 inline-block mr-1.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Bank Account
+          </button>
         </div>
       </div>
 
@@ -492,11 +512,18 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   useBankAccounts,
   useTransactions,
   type BankAccount,
 } from '@neibrpay/api-client';
+import { useAuthStore } from '../stores/auth';
+
+// Router and Auth
+const router = useRouter();
+const authStore = useAuthStore();
+const isAdmin = computed(() => authStore.isAdmin);
 
 // Queries
 const { data: bankAccountsData } = useBankAccounts();
@@ -641,5 +668,10 @@ const handleAccountClick = (accountId: number) => {
 const handleTotalAccountClick = () => {
   filters.value.bank_account_id = null;
   currentPage.value = 1;
+};
+
+// Navigate to bank settings tab
+const goToBankSettings = () => {
+  router.push({ name: 'Settings', query: { tab: 'bank' } });
 };
 </script>

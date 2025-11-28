@@ -755,7 +755,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   useSettings,
   useUpdateTenantSettings,
@@ -772,8 +773,9 @@ import {
 } from '@neibrpay/api-client';
 import { useAuthStore } from '../stores/auth';
 
-// Auth store
+// Auth store and route
 const authStore = useAuthStore();
+const route = useRoute();
 const isResident = computed(() => authStore.isResident);
 
 // ---------------- GOOGLE AUTOCOMPLETE FOR HOA ADDRESS ----------------
@@ -833,10 +835,26 @@ async function initHoaAddressAutocomplete() {
   }
 }
 
-// Tab state
-const activeTab = ref<
-  'hoa' | 'user' | 'localization' | 'security' | 'payments' | 'bank'
->('hoa');
+// Tab state - initialize from query param if present
+const validTabs = [
+  'hoa',
+  'user',
+  'localization',
+  'security',
+  'payments',
+  'bank',
+] as const;
+type TabType = (typeof validTabs)[number];
+
+const getInitialTab = (): TabType => {
+  const tabParam = route.query.tab as string;
+  if (tabParam && validTabs.includes(tabParam as TabType)) {
+    return tabParam as TabType;
+  }
+  return 'hoa';
+};
+
+const activeTab = ref<TabType>(getInitialTab());
 
 // Redirect to 'user' tab if resident tries to access admin-only tabs
 watch(
@@ -963,8 +981,6 @@ watch(
   },
   { immediate: true }
 );
-
-import { onMounted, nextTick } from 'vue';
 
 onMounted(async () => {
   await loadGoogleMapsScript();
