@@ -72,6 +72,7 @@ class PlaidService
 
     /**
      * Exchange public token for access token after successful onboarding
+     * Processes ALL accounts returned by Plaid, not just the first one
      */
     public function exchangePublicToken(string $publicToken, int $tenantId): PlaidBankAccount
     {
@@ -102,7 +103,11 @@ class PlaidService
             }
 
             $accountsData = $accountsResponse->json();
-            $account = $accountsData['accounts'][0]; // Use first account
+            $accounts = $accountsData['accounts'] ?? [];
+            
+            if (empty($accounts)) {
+                throw new Exception('No accounts found in Plaid response');
+            }
             
             // Get institution info from item
             $item = $accountsData['item'] ?? [];
@@ -115,22 +120,38 @@ class PlaidService
                 $institutionName = $item['institution_data']['name'] ?? $institutionName;
             }
 
-            // Create or update bank account
-            $bankAccount = PlaidBankAccount::updateOrCreate(
-                ['plaid_item_id' => $itemId],
-                [
-                    'tenant_id' => $tenantId,
-                    'plaid_access_token' => $accessToken,
-                    'institution_id' => $institutionId,
-                    'institution_name' => $institutionName,
-                    'account_id' => $account['account_id'],
-                    'account_name' => $account['name'],
-                    'account_mask' => $account['mask'] ?? substr($account['account_id'], -4),
-                    'status' => 'active',
-                ]
-            );
+            // Process ALL accounts, not just the first one
+            $createdAccounts = [];
+            foreach ($accounts as $account) {
+                // Use account_id + tenant_id as unique key to allow multiple accounts per tenant
+                // account_id is globally unique in Plaid, so this ensures we don't overwrite accounts
+                $bankAccount = PlaidBankAccount::updateOrCreate(
+                    [
+                        'tenant_id' => $tenantId,
+                        'account_id' => $account['account_id'],
+                    ],
+                    [
+                        'plaid_item_id' => $itemId,
+                        'plaid_access_token' => $accessToken,
+                        'institution_id' => $institutionId,
+                        'institution_name' => $institutionName,
+                        'account_name' => $account['name'],
+                        'account_mask' => $account['mask'] ?? substr($account['account_id'], -4),
+                        'status' => 'active',
+                    ]
+                );
+                
+                $createdAccounts[] = $bankAccount;
+            }
 
-            return $bankAccount;
+            Log::info('Plaid accounts processed', [
+                'tenant_id' => $tenantId,
+                'item_id' => $itemId,
+                'accounts_count' => count($createdAccounts),
+            ]);
+
+            // Return the first account for backward compatibility
+            return $createdAccounts[0];
         } catch (Exception $e) {
             Log::error('Plaid Exchange Token Error: ' . $e->getMessage());
             throw $e;
@@ -298,31 +319,42 @@ class PlaidService
 
     /**
      * Disconnect a bank account (remove access)
-     * Deletes all related transactions and the bank account record
+     * Deletes all accounts sharing the same Plaid Item and their transactions
+     * Note: Disconnecting one account removes all accounts from the same Plaid Item
      */
     public function disconnectAccount(PlaidBankAccount $bankAccount): bool
     {
         try {
             $accessToken = $bankAccount->getDecryptedAccessToken();
-            $accountId = $bankAccount->id;
+            $itemId = $bankAccount->plaid_item_id;
             $tenantId = $bankAccount->tenant_id;
 
-            // Remove access from Plaid
+            // Remove access from Plaid (this removes the entire Item, not just one account)
             Http::post("{$this->baseUrl}/item/remove", [
                 'client_id' => $this->clientId,
                 'secret' => $this->clientSecret,
                 'access_token' => $accessToken,
             ]);
 
-            // Delete all related transactions
-            PlaidTransaction::where('plaid_bank_account_id', $accountId)->delete();
+            // Find all bank accounts sharing the same plaid_item_id
+            $accountsToDelete = PlaidBankAccount::where('plaid_item_id', $itemId)
+                ->where('tenant_id', $tenantId)
+                ->get();
 
-            // Delete the bank account record
-            $bankAccount->forceDelete();
+            // Delete all related transactions for all accounts in this Item
+            foreach ($accountsToDelete as $account) {
+                PlaidTransaction::where('plaid_bank_account_id', $account->id)->delete();
+            }
 
-            Log::info('Bank account and transactions deleted', [
-                'bank_account_id' => $accountId,
+            // Delete all bank account records for this Item
+            foreach ($accountsToDelete as $account) {
+                $account->forceDelete();
+            }
+
+            Log::info('Plaid Item disconnected - all accounts and transactions deleted', [
+                'plaid_item_id' => $itemId,
                 'tenant_id' => $tenantId,
+                'accounts_deleted' => $accountsToDelete->count(),
             ]);
 
             return true;

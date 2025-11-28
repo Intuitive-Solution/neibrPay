@@ -102,7 +102,7 @@ class PlaidController extends Controller
             );
 
             return response()->json([
-                'message' => 'Bank account connected successfully',
+                'message' => 'Bank account(s) connected successfully',
                 'bank_account' => [
                     'id' => $bankAccount->id,
                     'account_name' => $bankAccount->account_name,
