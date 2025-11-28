@@ -34,7 +34,13 @@
       <!-- Bank Balance Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Total Account Balance Card -->
-        <div class="card card-hover">
+        <div
+          class="card card-hover cursor-pointer transition-all"
+          :class="{
+            'ring-2 ring-primary': filters.bank_account_id === null,
+          }"
+          @click="handleTotalAccountClick"
+        >
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-sm font-medium text-gray-600">
@@ -71,7 +77,11 @@
         <div
           v-for="account in bankAccounts"
           :key="account.id"
-          class="card card-hover"
+          class="card card-hover cursor-pointer transition-all"
+          :class="{
+            'ring-2 ring-primary': filters.bank_account_id === account.id,
+          }"
+          @click="handleAccountClick(account.id)"
         >
           <div class="flex items-center justify-between">
             <div>
@@ -619,5 +629,17 @@ const refreshTransactions = async () => {
   setTimeout(() => {
     isRefreshing.value = false;
   }, 500);
+};
+
+// Handle account card clicks
+const handleAccountClick = (accountId: number) => {
+  filters.value.bank_account_id = accountId;
+  currentPage.value = 1;
+};
+
+// Handle total account balance card click (show all)
+const handleTotalAccountClick = () => {
+  filters.value.bank_account_id = null;
+  currentPage.value = 1;
 };
 </script>
