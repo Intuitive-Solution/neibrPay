@@ -868,6 +868,8 @@ const pageTitle = computed(() => {
       return 'Announcements';
     case 'Settings':
       return 'Settings';
+    case 'Transactions':
+      return 'Transactions';
     default:
       return 'Dashboard';
   }
@@ -897,6 +899,8 @@ const pageDescription = computed(() => {
       return 'Manage community announcements and communications';
     case 'Settings':
       return 'Configure your community settings';
+    case 'Transactions':
+      return 'View your community transactions';
     default:
       return 'Overview of your HOA community management';
   }

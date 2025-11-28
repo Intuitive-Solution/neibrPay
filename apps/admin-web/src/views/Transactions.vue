@@ -1,13 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Page Header -->
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Bank Transactions</h1>
-      <p class="mt-2 text-sm text-gray-600">
-        View and monitor all transactions from your connected bank accounts.
-      </p>
-    </div>
-
     <!-- No Bank Accounts Connected -->
     <div
       v-if="bankAccounts.length === 0"
