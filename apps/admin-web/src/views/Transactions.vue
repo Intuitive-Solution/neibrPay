@@ -70,9 +70,6 @@
             <p class="text-2xl font-bold text-gray-900">
               {{ formatCurrency(totalCurrentBalance) }}
             </p>
-            <p class="text-xs text-gray-500 mt-1">
-              Available: {{ formatCurrency(totalAvailableBalance) }}
-            </p>
           </div>
         </div>
 
@@ -92,7 +89,7 @@
                 {{ account.account_name }}
               </h3>
               <p class="text-xs text-gray-500 mt-1">
-                ••••{{ account.account_mask }}
+                {{ account.institution_name }} ••••{{ account.account_mask }}
               </p>
             </div>
             <div class="p-3 bg-primary-100 rounded-lg">
@@ -119,6 +116,9 @@
               Available:
               {{ formatCurrency(Number(account.available_balance || 0)) }}
             </p>
+            <p class="text-xs text-gray-500 mt-1">
+              {{ formatLastSynced(account.last_synced_at) }}
+            </p>
           </div>
         </div>
       </div>
@@ -143,7 +143,10 @@
                 :key="account.id"
                 :value="account.id"
               >
-                {{ account.account_name }} (••••{{ account.account_mask }})
+                {{ account.account_name }} ({{
+                  account.institution_name
+                }}
+                ••••{{ account.account_mask }})
               </option>
             </select>
           </div>
@@ -590,12 +593,6 @@ const totalCurrentBalance = computed(() => {
   }, 0);
 });
 
-const totalAvailableBalance = computed(() => {
-  return bankAccounts.value.reduce((sum: number, account: BankAccount) => {
-    return sum + Number(account.available_balance || 0);
-  }, 0);
-});
-
 // Helper Functions
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -617,6 +614,49 @@ const formatCategory = (category: string) => {
     .split('_')
     .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+};
+
+const formatLastSynced = (lastSyncedAt: string | null) => {
+  if (!lastSyncedAt) {
+    return 'Never synced';
+  }
+
+  const syncedDate = new Date(lastSyncedAt);
+  const now = new Date();
+  const diffInSeconds = Math.floor(
+    (now.getTime() - syncedDate.getTime()) / 1000
+  );
+
+  // Less than a minute
+  if (diffInSeconds < 60) {
+    return 'Just now';
+  }
+
+  // Less than an hour
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `Synced ${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+  }
+
+  // Less than a day
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `Synced ${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+  }
+
+  // Less than a week
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `Synced ${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+  }
+
+  // More than a week - show formatted date
+  return `Synced ${syncedDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year:
+      syncedDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  })}`;
 };
 
 // Actions

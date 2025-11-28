@@ -123,6 +123,9 @@ class PlaidService
             // Process ALL accounts, not just the first one
             $createdAccounts = [];
             foreach ($accounts as $account) {
+                // Extract balance information from the account data
+                $balances = $account['balances'] ?? [];
+                
                 // Use account_id + tenant_id as unique key to allow multiple accounts per tenant
                 // account_id is globally unique in Plaid, so this ensures we don't overwrite accounts
                 $bankAccount = PlaidBankAccount::updateOrCreate(
@@ -137,6 +140,8 @@ class PlaidService
                         'institution_name' => $institutionName,
                         'account_name' => $account['name'],
                         'account_mask' => $account['mask'] ?? substr($account['account_id'], -4),
+                        'current_balance' => $balances['current'] ?? null,
+                        'available_balance' => $balances['available'] ?? null,
                         'status' => 'active',
                     ]
                 );
@@ -160,13 +165,15 @@ class PlaidService
 
     /**
      * Get account balance from Plaid
+     * Uses /accounts/get endpoint which includes balances and doesn't require min_last_updated_datetime
      */
     public function getAccountBalance(PlaidBankAccount $bankAccount): ?array
     {
         try {
             $accessToken = $bankAccount->getDecryptedAccessToken();
 
-            $response = Http::post("{$this->baseUrl}/accounts/balance/get", [
+            // Use /accounts/get which includes balances and doesn't require min_last_updated_datetime
+            $response = Http::post("{$this->baseUrl}/accounts/get", [
                 'client_id' => $this->clientId,
                 'secret' => $this->clientSecret,
                 'access_token' => $accessToken,
@@ -206,12 +213,31 @@ class PlaidService
 
     /**
      * Sync transactions for a bank account
+     * Note: Plaid returns transactions for ALL accounts under the same Item,
+     * so we need to match each transaction to the correct bank account by account_id
      */
     public function syncTransactions(PlaidBankAccount $bankAccount): array
     {
         try {
             $accessToken = $bankAccount->getDecryptedAccessToken();
-            $startDate = $bankAccount->sync_start_date ?? now()->subDays(90)->format('Y-m-d');
+            $itemId = $bankAccount->plaid_item_id;
+            $tenantId = $bankAccount->tenant_id;
+            
+            // Use the earliest sync_start_date from all accounts sharing this Item
+            $allAccountsForItem = PlaidBankAccount::where('plaid_item_id', $itemId)
+                ->where('tenant_id', $tenantId)
+                ->get();
+            
+            $startDate = $allAccountsForItem
+                ->filter(fn($acc) => $acc->sync_start_date !== null)
+                ->min('sync_start_date');
+            
+            if (!$startDate) {
+                $startDate = now()->subDays(90)->format('Y-m-d');
+            } else {
+                $startDate = $startDate->format('Y-m-d');
+            }
+            
             $endDate = now()->format('Y-m-d');
 
             $response = Http::post("{$this->baseUrl}/transactions/get", [
@@ -234,18 +260,82 @@ class PlaidService
             }
 
             $data = $response->json();
-            $transactions = $data['transactions'];
-            $totalTransactions = $data['total_transactions'];
+            $transactions = $data['transactions'] ?? [];
+            $totalTransactions = $data['total_transactions'] ?? 0;
 
-            // Store transactions
+            // Create a map of Plaid account_id -> PlaidBankAccount model
+            $accountMap = [];
+            foreach ($allAccountsForItem as $acc) {
+                $accountMap[$acc->account_id] = $acc;
+            }
+
+            // Store transactions, matching each to the correct bank account
+            $syncedByAccount = [];
             foreach ($transactions as $transaction) {
-                PlaidTransaction::updateOrCreate(
-                    [
+                $plaidAccountId = $transaction['account_id'] ?? null;
+                
+                if (!$plaidAccountId) {
+                    Log::warning('Transaction missing account_id', [
+                        'transaction_id' => $transaction['transaction_id'] ?? 'unknown',
+                    ]);
+                    continue;
+                }
+
+                // Find the matching bank account
+                $matchingBankAccount = $accountMap[$plaidAccountId] ?? null;
+                
+                if (!$matchingBankAccount) {
+                    Log::warning('Transaction account_id not found in bank accounts', [
+                        'plaid_account_id' => $plaidAccountId,
+                        'transaction_id' => $transaction['transaction_id'] ?? 'unknown',
+                        'item_id' => $itemId,
+                    ]);
+                    continue;
+                }
+
+                // Check if transaction already exists (plaid_transaction_id is unique)
+                $existingTransaction = PlaidTransaction::where('plaid_transaction_id', $transaction['transaction_id'])
+                    ->first();
+
+                if ($existingTransaction) {
+                    // Transaction exists - update if bank_account_id changed (shouldn't happen, but handle it)
+                    if ($existingTransaction->plaid_bank_account_id !== $matchingBankAccount->id) {
+                        Log::warning('Transaction already exists with different bank_account_id', [
+                            'transaction_id' => $transaction['transaction_id'],
+                            'existing_account_id' => $existingTransaction->plaid_bank_account_id,
+                            'new_account_id' => $matchingBankAccount->id,
+                        ]);
+                        // Update the transaction to the correct account
+                        $existingTransaction->update([
+                            'plaid_bank_account_id' => $matchingBankAccount->id,
+                            'amount' => $transaction['amount'],
+                            'date' => $transaction['date'],
+                            'name' => $transaction['name'],
+                            'merchant_name' => $transaction['merchant_name'] ?? null,
+                            'category' => $transaction['personal_finance_category']['primary'] ?? null,
+                            'categories' => $transaction['categories'] ?? [],
+                            'pending' => $transaction['pending'] ?? false,
+                            'personal_finance_category' => json_encode($transaction['personal_finance_category'] ?? []),
+                        ]);
+                    } else {
+                        // Transaction already exists with correct account - just update fields
+                        $existingTransaction->update([
+                            'amount' => $transaction['amount'],
+                            'date' => $transaction['date'],
+                            'name' => $transaction['name'],
+                            'merchant_name' => $transaction['merchant_name'] ?? null,
+                            'category' => $transaction['personal_finance_category']['primary'] ?? null,
+                            'categories' => $transaction['categories'] ?? [],
+                            'pending' => $transaction['pending'] ?? false,
+                            'personal_finance_category' => json_encode($transaction['personal_finance_category'] ?? []),
+                        ]);
+                    }
+                } else {
+                    // New transaction - create it
+                    PlaidTransaction::create([
                         'plaid_transaction_id' => $transaction['transaction_id'],
-                        'plaid_bank_account_id' => $bankAccount->id,
-                    ],
-                    [
-                        'tenant_id' => $bankAccount->tenant_id,
+                        'plaid_bank_account_id' => $matchingBankAccount->id,
+                        'tenant_id' => $tenantId,
                         'amount' => $transaction['amount'],
                         'date' => $transaction['date'],
                         'name' => $transaction['name'],
@@ -254,30 +344,46 @@ class PlaidService
                         'categories' => $transaction['categories'] ?? [],
                         'pending' => $transaction['pending'] ?? false,
                         'personal_finance_category' => json_encode($transaction['personal_finance_category'] ?? []),
-                    ]
-                );
+                    ]);
+                }
+
+                // Track synced count per account
+                if (!isset($syncedByAccount[$matchingBankAccount->id])) {
+                    $syncedByAccount[$matchingBankAccount->id] = 0;
+                }
+                $syncedByAccount[$matchingBankAccount->id]++;
             }
 
-            // Get current balance
-            $balance = $this->getAccountBalance($bankAccount);
+            // Update sync metadata and balances for all accounts in this Item
+            foreach ($allAccountsForItem as $acc) {
+                $balance = $this->getAccountBalance($acc);
+                
+                $updateData = [
+                    'last_synced_at' => now(),
+                    'status' => 'active',
+                    'error_message' => null,
+                ];
+                
+                if ($balance) {
+                    $updateData['current_balance'] = $balance['current'];
+                    $updateData['available_balance'] = $balance['available'];
+                }
 
-            // Update sync metadata
-            $updateData = [
-                'last_synced_at' => now(),
-                'status' => 'active',
-                'error_message' => null,
-            ];
-            
-            if ($balance) {
-                $updateData['current_balance'] = $balance['current'];
-                $updateData['available_balance'] = $balance['available'];
+                $acc->update($updateData);
             }
 
-            $bankAccount->update($updateData);
+            $syncedCount = $syncedByAccount[$bankAccount->id] ?? 0;
+
+            Log::info('Plaid transactions synced', [
+                'item_id' => $itemId,
+                'tenant_id' => $tenantId,
+                'total_transactions' => $totalTransactions,
+                'synced_by_account' => $syncedByAccount,
+            ]);
 
             return [
                 'success' => true,
-                'synced_count' => count($transactions),
+                'synced_count' => $syncedCount,
                 'total_transactions' => $totalTransactions,
                 'bank_account_id' => $bankAccount->id,
             ];

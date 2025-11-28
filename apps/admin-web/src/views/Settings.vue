@@ -1487,17 +1487,46 @@ const confirmDisconnectBank = async () => {
 
 /**
  * Manually sync all bank accounts
+ * Continues syncing even if one account fails
  */
 const manualSyncBankAccounts = async () => {
   isManualSyncing.value = true;
+  const results = {
+    success: 0,
+    failed: 0,
+    errors: [] as string[],
+  };
+
   try {
-    // Sync all accounts
+    // Sync all accounts, continue even if one fails
     for (const account of bankAccounts.value) {
-      await syncAccountMutation.mutateAsync({
-        bank_account_id: account.id,
-      });
+      try {
+        await syncAccountMutation.mutateAsync({
+          bank_account_id: account.id,
+        });
+        results.success++;
+      } catch (error: any) {
+        results.failed++;
+        results.errors.push(
+          `${account.account_name}: ${error.message || 'Sync failed'}`
+        );
+        console.error(`Failed to sync account ${account.id}:`, error);
+      }
     }
-    showSuccess('Bank accounts synced successfully');
+
+    // Show appropriate message based on results
+    if (results.success === bankAccounts.value.length) {
+      showSuccess('All bank accounts synced successfully');
+    } else if (results.success > 0) {
+      showSuccess(
+        `Synced ${results.success} account(s). ${results.failed} failed.`
+      );
+      if (results.errors.length > 0) {
+        console.warn('Sync errors:', results.errors);
+      }
+    } else {
+      showError(`Failed to sync all accounts. ${results.errors.join('; ')}`);
+    }
   } catch (error: any) {
     showError(error.message || 'Failed to sync bank accounts');
   } finally {
