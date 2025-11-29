@@ -299,6 +299,33 @@
             </router-link>
           </li>
 
+          <!-- Transactions - Admin only -->
+          <li v-if="isAdmin">
+            <router-link
+              to="/transactions"
+              :class="getNavLinkClass('Transactions')"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Transactions' : ''"
+            >
+              <svg
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              <span v-if="isExpanded || isMobileMenuOpen">Transactions</span>
+            </router-link>
+          </li>
+
           <!-- Announcements - Admin only -->
           <li v-if="isAdmin">
             <router-link
@@ -841,6 +868,8 @@ const pageTitle = computed(() => {
       return 'Announcements';
     case 'Settings':
       return 'Settings';
+    case 'Transactions':
+      return 'Transactions';
     default:
       return 'Dashboard';
   }
@@ -870,6 +899,8 @@ const pageDescription = computed(() => {
       return 'Manage community announcements and communications';
     case 'Settings':
       return 'Configure your community settings';
+    case 'Transactions':
+      return 'View your community transactions';
     default:
       return 'Overview of your HOA community management';
   }

@@ -32,5 +32,13 @@ return [
         'connect_webhook_secret' => env('STRIPE_CONNECT_WEBHOOK_SECRET'),
     ],
 
+    'plaid' => [
+        'client_id' => env('PLAID_CLIENT_ID'),
+        'client_secret' => env('PLAID_CLIENT_SECRET'),
+        'environment' => env('PLAID_ENVIRONMENT', 'sandbox'),
+        'redirect_uri' => env('PLAID_REDIRECT_URI'),
+        'api_key' => env('PLAID_API_KEY'),
+    ],
+
 ];
 

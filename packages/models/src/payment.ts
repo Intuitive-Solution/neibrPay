@@ -101,6 +101,15 @@ export interface PaymentFilters {
   start_date?: string;
   end_date?: string;
   payment_method?: PaymentMethodType;
+  sort_by?:
+    | 'payment_date'
+    | 'amount'
+    | 'payment_method'
+    | 'invoice_unit_id'
+    | 'recorded_by'
+    | 'created_at'
+    | null;
+  sort_order?: 'asc' | 'desc' | null;
 }
 export type CreatePaymentRequest = z.infer<typeof CreatePaymentRequestSchema>;
 export type UpdatePaymentRequest = z.infer<typeof UpdatePaymentRequestSchema>;

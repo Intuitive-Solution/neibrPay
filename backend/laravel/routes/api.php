@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\InvoiceAttachmentController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InvoicePaymentController;
 use App\Http\Controllers\Api\InvoicePdfController;
+use App\Http\Controllers\Api\PlaidController;
 use App\Http\Controllers\Api\StripePaymentController;
 use App\Http\Controllers\Api\StripeConnectController;
 use App\Http\Controllers\Api\ResidentController;
@@ -191,7 +192,21 @@ Route::middleware('auth:sanctum')->group(function () {
     // Announcement routes
     Route::get('announcements/for-user', [AnnouncementController::class, 'forUser']);
     Route::apiResource('announcements', AnnouncementController::class);
+
+    // Plaid bank integration routes
+    Route::prefix('plaid')->group(function () {
+        Route::get('/debug', [PlaidController::class, 'debug']);
+        Route::post('/link-token', [PlaidController::class, 'createLinkToken']);
+        Route::post('/exchange-token', [PlaidController::class, 'exchangeToken']);
+        Route::get('/bank-accounts', [PlaidController::class, 'getBankAccounts']);
+        Route::delete('/bank-accounts/{id}', [PlaidController::class, 'disconnectBankAccount']);
+        Route::get('/transactions', [PlaidController::class, 'getTransactions']);
+        Route::post('/sync', [PlaidController::class, 'syncAccount']);
+    });
 });
+
+// Plaid sync-all route (public, secured with API key for n8n)
+Route::post('/plaid/sync-all', [PlaidController::class, 'syncAll']);
 
 // Stripe webhook route (public, no auth - uses signature verification)
 Route::post('stripe/webhook', [StripePaymentController::class, 'handleWebhook']);

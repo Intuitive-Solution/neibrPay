@@ -578,3 +578,8 @@ Test Account Holder: Any name
 
 **N8N MCP**
 npx n8n-mcp
+
+**PLAID Sandbox**
+Username: user_good
+Password: pass_good
+Phone: 1111111111

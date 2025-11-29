@@ -1,0 +1,153 @@
+{
+  "name": "Plaid: Sync Bank Transactions",
+  "nodes": [
+    {
+      "parameters": {
+        "interval": [
+          {
+            "triggerAtHour": 0,
+            "triggerAtMinute": 0,
+            "repeatInterval": "every"
+          }
+        ]
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "requestMethod": "POST",
+        "url": "{{ $env.LARAVEL_API_URL }}/api/plaid/sync-all",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-Key",
+              "value": "={{ $env.PLAID_N8N_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60
+        }
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "Plaid Sync Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "compareOperation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "type": "string",
+              "value": 200,
+              "property": "statusCode"
+            }
+          ],
+          "combineOperation": "any"
+        }
+      },
+      "name": "Check Response",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "content": "✅ Plaid transactions synced successfully"
+      },
+      "name": "Success Log",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [950, 150]
+    },
+    {
+      "parameters": {
+        "content": "❌ Sync failed. Check the error details above.",
+        "color": 2
+      },
+      "name": "Error Log",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [950, 450]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Check Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Response": {
+      "main": [
+        [
+          {
+            "node": "Success Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "83dc99b2-cbda-48c3-b8cc-8c15d09e8a7a",
+  "meta": {
+    "instanceId": "5f45e1d88b435",
+    "templateId": null
+  },
+  "tags": ["plaid", "banking", "transactions", "sync"]
+}

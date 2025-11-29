@@ -94,6 +94,14 @@ export const announcementKeys = {
   forUser: () => [...announcementKeys.all, 'for-user'] as const,
 } as const;
 
+export const plaidKeys = {
+  all: ['plaid'] as const,
+  linkToken: () => [...plaidKeys.all, 'link-token'] as const,
+  bankAccounts: () => [...plaidKeys.all, 'bank-accounts'] as const,
+  transactions: (params: Record<string, any> = {}) =>
+    [...plaidKeys.all, 'transactions', params] as const,
+} as const;
+
 export const queryKeys = {
   residents: residentKeys,
   units: unitKeys,
@@ -105,4 +113,5 @@ export const queryKeys = {
   settings: settingsKeys,
   documents: documentKeys,
   announcements: announcementKeys,
+  plaid: plaidKeys,
 } as const;
