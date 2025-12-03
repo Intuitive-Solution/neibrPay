@@ -958,10 +958,14 @@ const validTabs = [
 type TabType = (typeof validTabs)[number];
 
 const getInitialTab = (): TabType => {
-  // Check hash first (e.g., #payments)
-  const hash = window.location.hash.slice(1);
-  if (hash && validTabs.includes(hash as TabType)) {
-    return hash as TabType;
+  // Check hash first (e.g., #payments or #payments?stripe_connect=success)
+  const hashWithParams = window.location.hash.slice(1);
+  if (hashWithParams) {
+    // Extract just the tab name part before any query params
+    const tabName = hashWithParams.split('?')[0];
+    if (tabName && validTabs.includes(tabName as TabType)) {
+      return tabName as TabType;
+    }
   }
 
   // Fallback to query param for backwards compatibility
@@ -975,9 +979,14 @@ const getInitialTab = (): TabType => {
 
 const activeTab = ref<TabType>(getInitialTab());
 
-// Update URL hash when active tab changes
-watch(activeTab, newTab => {
-  window.location.hash = newTab;
+// Update URL hash when active tab changes (preserve any query params)
+watch(activeTab, (newTab: TabType) => {
+  const currentHashWithParams = window.location.hash.slice(1);
+  const currentParams = currentHashWithParams.includes('?')
+    ? currentHashWithParams.split('?')[1]
+    : '';
+
+  window.location.hash = currentParams ? `${newTab}?${currentParams}` : newTab;
 });
 
 // Redirect to 'user' tab if resident tries to access admin-only tabs
@@ -1116,9 +1125,13 @@ onMounted(async () => {
 
   // Listen for hash changes (back/forward buttons)
   window.addEventListener('hashchange', () => {
-    const hash = window.location.hash.slice(1);
-    if (hash && validTabs.includes(hash as TabType)) {
-      activeTab.value = hash as TabType;
+    const hashWithParams = window.location.hash.slice(1);
+    if (hashWithParams) {
+      // Extract just the tab name part before any query params
+      const tabName = hashWithParams.split('?')[0];
+      if (tabName && validTabs.includes(tabName as TabType)) {
+        activeTab.value = tabName as TabType;
+      }
     }
   });
 });
