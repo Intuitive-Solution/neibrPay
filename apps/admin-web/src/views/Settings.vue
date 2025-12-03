@@ -873,6 +873,7 @@ import {
   useUpdatePassword,
   useUpdateLocalization,
   stripeApi,
+  useDisconnectStripe,
   usePlaidLinkToken,
   useBankAccounts,
   useExchangeToken,
@@ -1195,6 +1196,9 @@ const savePassword = async () => {
 
 // ============ STRIPE PAYMENTS SECTION ============
 
+// Stripe mutations and queries
+const disconnectStripeMutation = useDisconnectStripe();
+
 // Stripe state
 const stripeConnectId = computed(
   () => settingsData.value?.tenant?.settings?.stripe_connect_id || null
@@ -1212,7 +1216,9 @@ const chargesEnabled = computed(
 const isConnectingStripe = ref(false);
 const isLoadingDashboard = ref(false);
 const isVerifyingStatus = ref(false);
-const isDisconnecting = ref(false);
+const isDisconnecting = computed(
+  () => disconnectStripeMutation.isPending.value
+);
 const showDisconnectConfirmation = ref(false);
 
 /**
@@ -1275,21 +1281,14 @@ const verifyStripeStatus = async () => {
  * Disconnect Stripe account
  */
 const disconnectStripe = async () => {
-  isDisconnecting.value = true;
   try {
-    await stripeApi.disconnect();
+    await disconnectStripeMutation.mutateAsync();
     showSuccess(
       'Stripe account disconnected successfully. You can now connect a new account.'
     );
     showDisconnectConfirmation.value = false;
-    // Small delay to allow settings to update
-    setTimeout(() => {
-      // The settings query will automatically refetch via TanStack Query
-    }, 500);
   } catch (error: any) {
     showError(error.message || 'Failed to disconnect Stripe account');
-  } finally {
-    isDisconnecting.value = false;
   }
 };
 
