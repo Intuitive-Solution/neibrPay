@@ -96,7 +96,7 @@ class StripeConnectController extends Controller
             $onboardingLink = $this->stripe->accountLinks->create([
                 'account' => $account->id,
                 'type' => 'account_onboarding',
-                'refresh_url' => "{$frontendUrl}/settings?stripe_connect=refresh",
+                'refresh_url' => "{$frontendUrl}/settings#payments?stripe_connect=refresh",
                 'return_url' => "{$frontendUrl}/settings#payments?stripe_connect=success",
             ]);
 

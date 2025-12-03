@@ -12,6 +12,7 @@ export { announcementsApi } from './announcements';
 export { documentsApi } from './documents';
 export {
   stripeApi,
+  useVerifyStripeStatus,
   useDisconnectStripe,
   type StripeConnectResponse,
   type StripeConnectStatus,

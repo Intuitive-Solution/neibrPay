@@ -54,6 +54,22 @@ export const stripeApi = {
 };
 
 /**
+ * TanStack Query mutation to verify Stripe account status
+ * Automatically invalidates settings query on success
+ */
+export function useVerifyStripeStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => stripeApi.verifyStatus(),
+    onSuccess: () => {
+      // Invalidate settings query to refresh Stripe connection status
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
  * TanStack Query mutation to disconnect Stripe account
  * Automatically invalidates settings query on success
  */

@@ -873,6 +873,7 @@ import {
   useUpdatePassword,
   useUpdateLocalization,
   stripeApi,
+  useVerifyStripeStatus,
   useDisconnectStripe,
   usePlaidLinkToken,
   useBankAccounts,
@@ -1197,6 +1198,7 @@ const savePassword = async () => {
 // ============ STRIPE PAYMENTS SECTION ============
 
 // Stripe mutations and queries
+const verifyStripeMutation = useVerifyStripeStatus();
 const disconnectStripeMutation = useDisconnectStripe();
 
 // Stripe state
@@ -1215,7 +1217,7 @@ const chargesEnabled = computed(
 // Stripe loading states
 const isConnectingStripe = ref(false);
 const isLoadingDashboard = ref(false);
-const isVerifyingStatus = ref(false);
+const isVerifyingStatus = computed(() => verifyStripeMutation.isPending.value);
 const isDisconnecting = computed(
   () => disconnectStripeMutation.isPending.value
 );
@@ -1264,16 +1266,11 @@ const openStripeDashboard = async () => {
  * Verify Stripe account status
  */
 const verifyStripeStatus = async () => {
-  isVerifyingStatus.value = true;
   try {
-    const response = await stripeApi.verifyStatus();
+    await verifyStripeMutation.mutateAsync();
     showSuccess('Account status updated');
-    // Invalidate settings query to refresh the UI
-    // The mutation will handle this automatically
   } catch (error: any) {
     showError(error.message || 'Failed to verify account status');
-  } finally {
-    isVerifyingStatus.value = false;
   }
 };
 
