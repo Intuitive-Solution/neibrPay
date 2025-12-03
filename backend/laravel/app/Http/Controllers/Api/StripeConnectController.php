@@ -75,6 +75,8 @@ class StripeConnectController extends Controller
 
             // Get onboarding link
             $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
+            Log::info('Frontend URL', ['frontend_url' => $frontendUrl]);
+              
             $onboardingLink = $this->stripe->accountLinks->create([
                 'account' => $account->id,
                 'type' => 'account_onboarding',
