@@ -944,7 +944,7 @@ async function initHoaAddressAutocomplete() {
   }
 }
 
-// Tab state - initialize from query param if present
+// Tab state - initialize from hash if present
 const validTabs = [
   'hoa',
   'user',
@@ -956,14 +956,27 @@ const validTabs = [
 type TabType = (typeof validTabs)[number];
 
 const getInitialTab = (): TabType => {
+  // Check hash first (e.g., #payments)
+  const hash = window.location.hash.slice(1);
+  if (hash && validTabs.includes(hash as TabType)) {
+    return hash as TabType;
+  }
+
+  // Fallback to query param for backwards compatibility
   const tabParam = route.query.tab as string;
   if (tabParam && validTabs.includes(tabParam as TabType)) {
     return tabParam as TabType;
   }
+
   return 'hoa';
 };
 
 const activeTab = ref<TabType>(getInitialTab());
+
+// Update URL hash when active tab changes
+watch(activeTab, newTab => {
+  window.location.hash = newTab;
+});
 
 // Redirect to 'user' tab if resident tries to access admin-only tabs
 watch(
@@ -1098,6 +1111,14 @@ onMounted(async () => {
     await nextTick();
     initHoaAddressAutocomplete();
   }
+
+  // Listen for hash changes (back/forward buttons)
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.slice(1);
+    if (hash && validTabs.includes(hash as TabType)) {
+      activeTab.value = hash as TabType;
+    }
+  });
 });
 
 watch(activeTab, async tab => {
