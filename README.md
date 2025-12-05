@@ -230,11 +230,177 @@ npm run dev
 npm run build
 npm run test
 
-   # Laravel Backend
-   cd backend/laravel
-   php artisan serve
+# Laravel Backend
+cd backend/laravel
+php artisan serve
 php artisan test
 ```
+
+### Plaid Bank Integration - Running Sync Commands
+
+#### Local Development
+
+**Manual Sync (One-time)**
+
+Run the Plaid transaction sync command manually in your terminal:
+
+```bash
+cd backend/laravel
+php artisan plaid:sync
+```
+
+This will:
+
+1. Fetch all active Plaid bank accounts from the database
+2. Sync transactions for each account via the Plaid API
+3. Log results and any errors
+4. Update account status if errors occur
+
+**Monitor Queue Jobs (if using queue)**
+
+If you're using the queue driver:
+
+```bash
+cd backend/laravel
+
+# Start the queue worker in a separate terminal
+php artisan queue:work
+
+# In another terminal, dispatch sync jobs
+php artisan plaid:sync
+```
+
+**View Logs**
+
+Check sync operation results:
+
+```bash
+cd backend/laravel
+tail -f storage/logs/laravel.log | grep -i plaid
+```
+
+#### Production Deployment (Railway.app)
+
+The Plaid sync is configured to run automatically on a **schedule every hour** using Laravel's task scheduler.
+
+**Setup Steps:**
+
+1. **Set Plaid Credentials on Railway**
+
+   In your Railway environment variables, add:
+
+   ```env
+   PLAID_CLIENT_ID=your_plaid_client_id
+   PLAID_SECRET=your_plaid_secret
+   PLAID_ENV=sandbox  # or production
+   ```
+
+2. **Enable Scheduler on Railway**
+
+   Create a **Cron Job** process in Railway that runs Laravel's scheduler:
+
+   ```bash
+   cd /app && php artisan schedule:run >> /dev/null 2>&1
+   ```
+
+   **Configuration Steps:**
+   - Go to your Railway project dashboard
+   - Add a new service: **Cron Job**
+   - Set command: `php /app/artisan schedule:run >> /dev/null 2>&1`
+   - Set frequency: **Every hour** (or your preferred interval)
+   - Set working directory: `/app` (Railway root)
+
+3. **Alternative: Use an External Scheduler**
+
+   If Railway's cron is unreliable, use an external service:
+   - **EasyCron** (free): https://www.easycron.com/
+   - **Cron-job.org** (free): https://cron-job.org/
+
+   Set webhook to your Railway API:
+
+   ```
+   https://your-railway-domain.railway.app/api/schedule/plaid
+   ```
+
+4. **Monitor Sync on Railway**
+
+   View logs in Railway dashboard:
+   - Go to Logs tab
+   - Filter by keyword: `plaid` or `Plaid sync job`
+   - Look for success/error messages
+
+5. **Manual Trigger on Railway**
+
+   Trigger sync manually via API (if endpoint available):
+
+   ```bash
+   curl -X POST https://your-railway-domain.railway.app/api/plaid/sync \
+     -H "Authorization: Bearer YOUR_API_TOKEN" \
+     -H "Content-Type: application/json"
+   ```
+
+#### Scheduler Configuration Details
+
+The scheduler is configured in `backend/laravel/app/Console/Kernel.php`:
+
+```php
+protected function schedule(Schedule $schedule): void
+{
+    // Sync Plaid transactions every hour
+    $schedule->command('plaid:sync')
+        ->hourly()
+        ->withoutOverlapping()  // Prevent overlapping executions
+        ->onFailure(function () {
+            Log::error('Plaid sync job failed');
+        })
+        ->onSuccess(function () {
+            Log::info('Plaid sync job completed successfully');
+        });
+}
+```
+
+**Key Features:**
+
+- ✅ Runs every hour
+- ✅ Prevents overlapping executions (only 1 sync at a time)
+- ✅ Logs success and failure events
+- ✅ Auto-updates account status on errors
+
+#### Troubleshooting
+
+**Sync Not Running?**
+
+1. Verify Plaid credentials in `.env`:
+
+   ```bash
+   grep PLAID backend/laravel/.env
+   ```
+
+2. Check that active bank accounts exist in database:
+
+   ```bash
+   php artisan tinker
+   >>> App\Models\PlaidBankAccount::where('status', 'active')->count()
+   ```
+
+3. Check logs for errors:
+
+   ```bash
+   tail -f backend/laravel/storage/logs/laravel.log | grep -i plaid
+   ```
+
+4. On Railway, verify cron job is running:
+   - Check Railway dashboard → Deployments → Job logs
+   - Look for `php artisan schedule:run` executions
+
+**Common Issues:**
+
+| Issue                           | Solution                                            |
+| ------------------------------- | --------------------------------------------------- |
+| "No active Plaid bank accounts" | Ensure accounts are created and status is 'active'  |
+| Authentication errors           | Verify PLAID_CLIENT_ID and PLAID_SECRET are correct |
+| Sync hangs or times out         | Check queue connection settings or increase timeout |
+| Railway cron not triggering     | Enable cron job service or use external scheduler   |
 
 ## 🏛️ Project Structure Details
 
@@ -436,6 +602,11 @@ APP_KEY=base64:...
 APP_URL=https://your-railway-domain.railway.app
 FRONTEND_URL=https://your-netlify-domain.netlify.app
 DB_CONNECTION=sqlite
+
+# Plaid Configuration
+PLAID_CLIENT_ID=your_plaid_client_id
+PLAID_SECRET=your_plaid_secret
+PLAID_ENV=sandbox  # or production
 ```
 
 ### Deployment Steps
@@ -457,10 +628,27 @@ DB_CONNECTION=sqlite
    ```
 
 3. **Connect Services**
+
    ```bash
    # Update FRONTEND_URL on Railway
    # Test authentication flow
    # Verify API connectivity
+   ```
+
+4. **Setup Plaid Integration (Optional)**
+
+   ```bash
+   # Set Plaid credentials in Railway environment:
+   # - PLAID_CLIENT_ID
+   # - PLAID_SECRET
+   # - PLAID_ENV (sandbox or production)
+
+   # Enable task scheduler for automatic sync:
+   # Add a Cron Job service in Railway
+   # Command: php /app/artisan schedule:run >> /dev/null 2>&1
+   # Frequency: Every hour (or as needed)
+
+   # See "Plaid Bank Integration - Running Sync Commands" section above
    ```
 
 📖 **Complete Guide**: See [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)

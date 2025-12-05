@@ -73,10 +73,30 @@ class StripeConnectController extends Controller
             }
 
             // Create Express account
+            // Build business profile - url is optional and must be valid if provided
+            // Stripe rejects localhost URLs, so only include if it's a public URL
+            $businessProfile = ['name' => $tenant->name];
+            $frontendUrl = config('app.frontend_url');
+            if ($frontendUrl 
+                && filter_var($frontendUrl, FILTER_VALIDATE_URL) 
+                && strpos($frontendUrl, 'localhost') === false
+                && strpos($frontendUrl, '127.0.0.1') === false) {
+                $businessProfile['url'] = $frontendUrl;
+            }
+            Log::info('Business profile', ['business_profile' => $businessProfile]);
+
+            // Create Express account with capabilities for card payments, ACH, and Link
             $account = $this->stripe->accounts->create([
                 'type' => 'express',
                 'country' => $tenant->country ?? 'US',
                 'email' => $tenant->email ?? $user->email,
+
+                'capabilities' => [
+                    'card_payments' => ['requested' => true],      // Accept card payments
+                    'transfers' => ['requested' => true],          // Receive payouts
+                    'us_bank_account_ach_payments' => ['requested' => true], // Accept ACH payments
+                    'link_payments' => ['requested' => true],      // Enable Stripe Link
+                ],
                 'business_profile' => $businessProfile,
             ]);
 
@@ -91,8 +111,6 @@ class StripeConnectController extends Controller
                 'stripe_account_id' => $account->id,
             ]);
 
-            Log::info('Frontend URL for Stripe', ['frontend_url' => $frontendUrl]);
-              
             $onboardingLink = $this->stripe->accountLinks->create([
                 'account' => $account->id,
                 'type' => 'account_onboarding',
@@ -201,11 +219,22 @@ class StripeConnectController extends Controller
             $tenant->setSetting('stripe_account_country', $account->country);
             $tenant->setSetting('stripe_account_default_currency', $account->default_currency ?? 'usd');
 
+            // Track capability status for payment methods
+            $capabilities = $account->capabilities ?? new \stdClass();
+            $capabilityStatus = [
+                'card_payments' => $capabilities->card_payments ?? 'inactive',
+                'transfers' => $capabilities->transfers ?? 'inactive',
+                'us_bank_account_ach_payments' => $capabilities->us_bank_account_ach_payments ?? 'inactive',
+                'link_payments' => $capabilities->link_payments ?? 'inactive',
+            ];
+            $tenant->setSetting('stripe_capabilities', json_encode($capabilityStatus));
+
             Log::info('Stripe account verified', [
                 'tenant_id' => $tenant->id,
                 'stripe_account_id' => $stripeConnectId,
                 'charges_enabled' => $account->charges_enabled,
                 'details_submitted' => $account->details_submitted,
+                'capabilities' => $capabilityStatus,
             ]);
 
             return response()->json([
@@ -213,6 +242,7 @@ class StripeConnectController extends Controller
                 'charges_enabled' => $account->charges_enabled,
                 'details_submitted' => $account->details_submitted,
                 'status' => $account->charges_enabled ? 'active' : 'pending',
+                'capabilities' => $capabilityStatus,
             ], 200);
         } catch (ApiErrorException $e) {
             Log::error('Stripe verification error', [
