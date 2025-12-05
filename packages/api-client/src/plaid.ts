@@ -205,7 +205,7 @@ export function useTransactions(params: GetTransactionsRequest | any) {
   const getParams = () => (params && 'value' in params ? params.value : params);
 
   return useQuery({
-    queryKey: () => plaidKeys.transactions(getParams()),
+    queryKey: plaidKeys.transactions(getParams()),
     queryFn: () => plaidApi.getTransactions(getParams()),
   });
 }
@@ -257,7 +257,7 @@ export function useDisconnectBankAccount() {
       // Return context with the snapshotted value
       return { previousBankAccounts };
     },
-    onError: (err, accountId, context) => {
+    onError: (_err, _accountId, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousBankAccounts) {
         queryClient.setQueryData(
