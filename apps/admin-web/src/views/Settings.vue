@@ -873,6 +873,8 @@ import {
   useUpdatePassword,
   useUpdateLocalization,
   stripeApi,
+  useVerifyStripeStatus,
+  useDisconnectStripe,
   usePlaidLinkToken,
   useBankAccounts,
   useExchangeToken,
@@ -944,7 +946,7 @@ async function initHoaAddressAutocomplete() {
   }
 }
 
-// Tab state - initialize from query param if present
+// Tab state - initialize from hash if present
 const validTabs = [
   'hoa',
   'user',
@@ -956,14 +958,36 @@ const validTabs = [
 type TabType = (typeof validTabs)[number];
 
 const getInitialTab = (): TabType => {
+  // Check hash first (e.g., #payments or #payments?stripe_connect=success)
+  const hashWithParams = window.location.hash.slice(1);
+  if (hashWithParams) {
+    // Extract just the tab name part before any query params
+    const tabName = hashWithParams.split('?')[0];
+    if (tabName && validTabs.includes(tabName as TabType)) {
+      return tabName as TabType;
+    }
+  }
+
+  // Fallback to query param for backwards compatibility
   const tabParam = route.query.tab as string;
   if (tabParam && validTabs.includes(tabParam as TabType)) {
     return tabParam as TabType;
   }
+
   return 'hoa';
 };
 
 const activeTab = ref<TabType>(getInitialTab());
+
+// Update URL hash when active tab changes (preserve any query params)
+watch(activeTab, (newTab: TabType) => {
+  const currentHashWithParams = window.location.hash.slice(1);
+  const currentParams = currentHashWithParams.includes('?')
+    ? currentHashWithParams.split('?')[1]
+    : '';
+
+  window.location.hash = currentParams ? `${newTab}?${currentParams}` : newTab;
+});
 
 // Redirect to 'user' tab if resident tries to access admin-only tabs
 watch(
@@ -1098,6 +1122,18 @@ onMounted(async () => {
     await nextTick();
     initHoaAddressAutocomplete();
   }
+
+  // Listen for hash changes (back/forward buttons)
+  window.addEventListener('hashchange', () => {
+    const hashWithParams = window.location.hash.slice(1);
+    if (hashWithParams) {
+      // Extract just the tab name part before any query params
+      const tabName = hashWithParams.split('?')[0];
+      if (tabName && validTabs.includes(tabName as TabType)) {
+        activeTab.value = tabName as TabType;
+      }
+    }
+  });
 });
 
 watch(activeTab, async tab => {
@@ -1174,6 +1210,10 @@ const savePassword = async () => {
 
 // ============ STRIPE PAYMENTS SECTION ============
 
+// Stripe mutations and queries
+const verifyStripeMutation = useVerifyStripeStatus();
+const disconnectStripeMutation = useDisconnectStripe();
+
 // Stripe state
 const stripeConnectId = computed(
   () => settingsData.value?.tenant?.settings?.stripe_connect_id || null
@@ -1190,8 +1230,10 @@ const chargesEnabled = computed(
 // Stripe loading states
 const isConnectingStripe = ref(false);
 const isLoadingDashboard = ref(false);
-const isVerifyingStatus = ref(false);
-const isDisconnecting = ref(false);
+const isVerifyingStatus = computed(() => verifyStripeMutation.isPending.value);
+const isDisconnecting = computed(
+  () => disconnectStripeMutation.isPending.value
+);
 const showDisconnectConfirmation = ref(false);
 
 /**
@@ -1237,16 +1279,11 @@ const openStripeDashboard = async () => {
  * Verify Stripe account status
  */
 const verifyStripeStatus = async () => {
-  isVerifyingStatus.value = true;
   try {
-    const response = await stripeApi.verifyStatus();
+    await verifyStripeMutation.mutateAsync();
     showSuccess('Account status updated');
-    // Invalidate settings query to refresh the UI
-    // The mutation will handle this automatically
   } catch (error: any) {
     showError(error.message || 'Failed to verify account status');
-  } finally {
-    isVerifyingStatus.value = false;
   }
 };
 
@@ -1254,21 +1291,14 @@ const verifyStripeStatus = async () => {
  * Disconnect Stripe account
  */
 const disconnectStripe = async () => {
-  isDisconnecting.value = true;
   try {
-    await stripeApi.disconnect();
+    await disconnectStripeMutation.mutateAsync();
     showSuccess(
       'Stripe account disconnected successfully. You can now connect a new account.'
     );
     showDisconnectConfirmation.value = false;
-    // Small delay to allow settings to update
-    setTimeout(() => {
-      // The settings query will automatically refetch via TanStack Query
-    }, 500);
   } catch (error: any) {
     showError(error.message || 'Failed to disconnect Stripe account');
-  } finally {
-    isDisconnecting.value = false;
   }
 };
 

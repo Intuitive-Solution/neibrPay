@@ -1,4 +1,6 @@
+import { useMutation, useQueryClient } from '@tanstack/vue-query';
 import { apiClient } from './apiClient';
+import { settingsKeys } from './queryKeys';
 
 export interface StripeConnectResponse {
   message: string;
@@ -50,3 +52,35 @@ export const stripeApi = {
     return response.data;
   },
 };
+
+/**
+ * TanStack Query mutation to verify Stripe account status
+ * Automatically invalidates settings query on success
+ */
+export function useVerifyStripeStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => stripeApi.verifyStatus(),
+    onSuccess: () => {
+      // Invalidate settings query to refresh Stripe connection status
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
+ * TanStack Query mutation to disconnect Stripe account
+ * Automatically invalidates settings query on success
+ */
+export function useDisconnectStripe() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => stripeApi.disconnect(),
+    onSuccess: () => {
+      // Invalidate settings query to refresh Stripe connection status
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}

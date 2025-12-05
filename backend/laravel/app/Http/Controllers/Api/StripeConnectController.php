@@ -51,15 +51,33 @@ class StripeConnectController extends Controller
                 ], 200);
             }
 
+            // Get frontend URL, with fallback
+            $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
+            if (!$frontendUrl) {
+                Log::error('Frontend URL not found in config', ['config' => config('app.frontend_url')]);
+                $frontendUrl = 'http://localhost:3000';
+            }
+            Log::info('Frontend URL', ['frontend_url' => $frontendUrl]);
+
+            // Prepare business profile - only include URL if it's a valid production URL
+            $businessProfile = [
+                'name' => $tenant->name,
+            ];
+            
+            // Only add URL if it's not a localhost URL (Stripe may reject localhost URLs)
+            if ($frontendUrl && strpos($frontendUrl, 'localhost') === false) {
+                $businessProfile['url'] = $frontendUrl;
+                Log::info('Adding production URL to business profile', ['url' => $frontendUrl]);
+            } else {
+                Log::info('Skipping localhost URL for business profile', ['url' => $frontendUrl]);
+            }
+
             // Create Express account
             $account = $this->stripe->accounts->create([
                 'type' => 'express',
                 'country' => $tenant->country ?? 'US',
                 'email' => $tenant->email ?? $user->email,
-                'business_profile' => [
-                    'name' => $tenant->name,
-                    'url' => config('app.frontend_url'),
-                ],
+                'business_profile' => $businessProfile,
             ]);
 
             // Save stripe_connect_id to tenant settings
@@ -73,15 +91,13 @@ class StripeConnectController extends Controller
                 'stripe_account_id' => $account->id,
             ]);
 
-            // Get onboarding link
-            $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
-            Log::info('Frontend URL', ['frontend_url' => $frontendUrl]);
+            Log::info('Frontend URL for Stripe', ['frontend_url' => $frontendUrl]);
               
             $onboardingLink = $this->stripe->accountLinks->create([
                 'account' => $account->id,
                 'type' => 'account_onboarding',
-                'refresh_url' => "{$frontendUrl}/settings?stripe_connect=refresh",
-                'return_url' => "{$frontendUrl}/settings?stripe_connect=success",
+                'refresh_url' => "{$frontendUrl}/settings#payments?stripe_connect=refresh",
+                'return_url' => "{$frontendUrl}/settings#payments?stripe_connect=success",
             ]);
 
             return response()->json([

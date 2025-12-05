@@ -559,6 +559,9 @@ Private - All rights reserved
 For support, questions, or contributions, please refer to the documentation in the `/md` directory or open an issue.
 
 **\* Stripe Test account \*\***
+
+stripe listen --forward-to localhost:8000/api/stripe/webhook
+
 CARDS
 4000 0000 0000 0002 - Card declined
 4000 0000 0000 9995 - Insufficient funds
