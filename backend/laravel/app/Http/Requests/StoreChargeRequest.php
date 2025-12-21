@@ -25,7 +25,7 @@ class StoreChargeRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0|max:999999.99',
-            'category' => 'required|in:hoa_fee,maintenance,penalties,special_assessment,other',
+            'budget_category_id' => 'required|exists:budget_categories,id',
             'is_active' => 'boolean',
         ];
     }
@@ -44,8 +44,8 @@ class StoreChargeRequest extends FormRequest
             'amount.numeric' => 'The charge amount must be a valid number.',
             'amount.min' => 'The charge amount must be at least 0.',
             'amount.max' => 'The charge amount may not be greater than 999,999.99.',
-            'category.required' => 'The charge category is required.',
-            'category.in' => 'The selected category is invalid.',
+            'budget_category_id.required' => 'The budget category is required.',
+            'budget_category_id.exists' => 'The selected budget category is invalid.',
         ];
     }
 }

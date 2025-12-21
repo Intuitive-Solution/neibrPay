@@ -244,39 +244,67 @@
               </div>
             </div>
 
-            <!-- Category -->
+            <!-- Budget Category Field (Expense) -->
             <div
               class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
             >
               <label
-                for="category"
+                for="budget_category_id"
                 class="block text-sm font-medium text-gray-700 lg:pt-3"
               >
-                Category <span class="text-red-500">*</span>
+                Budget Category <span class="text-red-500">*</span>
               </label>
               <div class="lg:col-span-2">
                 <select
-                  id="category"
-                  v-model="form.category"
+                  id="budget_category_id"
+                  v-model="form.budget_category_id"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
                   :class="{
                     'border-red-300 focus:ring-red-500 focus:border-red-500':
-                      errors.category,
+                      errors.budget_category_id,
                   }"
+                  :disabled="isLoadingCategories"
                   required
                 >
-                  <option value="">Select a category</option>
+                  <option value="">Select a budget category</option>
                   <option
-                    v-for="option in categoryOptions"
-                    :key="option.value"
-                    :value="option.value"
+                    v-for="category in expenseCategories"
+                    :key="category.id"
+                    :value="category.id"
                   >
-                    {{ option.label }}
+                    {{ category.name }}
                   </option>
                 </select>
-                <p v-if="errors.category" class="mt-2 text-sm text-red-600">
-                  {{ errors.category }}
+                <p
+                  v-if="errors.budget_category_id"
+                  class="mt-2 text-sm text-red-600"
+                >
+                  {{ errors.budget_category_id }}
                 </p>
+                <p v-else class="mt-2 text-sm text-gray-600">
+                  Link this expense to a budget expense category for automatic
+                  tracking
+                </p>
+                <button
+                  type="button"
+                  @click="showCategoryManager = true"
+                  class="mt-2 inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary hover:text-primary-600 border border-primary rounded-lg hover:bg-primary-50 transition-colors duration-200"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  Manage Budget Categories
+                </button>
               </div>
             </div>
 
@@ -715,6 +743,12 @@
         </div>
       </form>
     </div>
+
+    <!-- Expense Category Manager Modal -->
+    <ExpenseCategoryManager
+      :is-open="showCategoryManager"
+      @close="handleCategoryManagerClose"
+    />
   </div>
 </template>
 
@@ -731,18 +765,20 @@ import {
 } from '../composables/useExpenses';
 import { vendorsApi, queryKeys, expensesApi } from '@neibrpay/api-client';
 import {
-  getExpenseCategoryOptions,
   getExpenseStatusOptions,
   getPaymentMethodOptions,
   type CreateExpenseDto,
   type UpdateExpenseDto,
   type ExpenseStatus,
-  ExpenseCategory,
   ExpenseStatus as ExpenseStatusEnum,
 } from '@neibrpay/models';
+import { useBudgetCategories } from '../composables/useBudget';
+import ExpenseCategoryManager from '../components/ExpenseCategoryManager.vue';
+import { useQueryClient } from '@tanstack/vue-query';
 
 const router = useRouter();
 const route = useRoute();
+const queryClient = useQueryClient();
 
 // Check if we're in edit mode
 const isEditMode = computed(() => !!route.params.id);
@@ -757,7 +793,7 @@ const form = ref<CreateExpenseDto & { paid_amount?: number }>({
   invoice_date: '',
   invoice_due_date: '',
   invoice_amount: 0,
-  category: ExpenseCategory.OTHER,
+  budget_category_id: null,
   note: '',
   status: ExpenseStatusEnum.UNPAID,
   payment_details: '',
@@ -765,6 +801,11 @@ const form = ref<CreateExpenseDto & { paid_amount?: number }>({
   paid_amount: 0,
   paid_date: '',
 });
+
+// Fetch expense budget categories
+const { data: expenseCategoriesData, isLoading: isLoadingCategories } =
+  useBudgetCategories('expense');
+const expenseCategories = computed(() => expenseCategoriesData.value || []);
 
 // File upload
 const uploadedFiles = ref<File[]>([]);
@@ -774,6 +815,17 @@ const isDragOver = ref(false);
 // Form state
 const isSubmitting = ref(false);
 const errors = ref<Record<string, string>>({});
+
+// Category manager modal
+const showCategoryManager = ref(false);
+
+const handleCategoryManagerClose = () => {
+  showCategoryManager.value = false;
+  // Invalidate categories query to refresh the dropdown
+  queryClient.invalidateQueries({
+    queryKey: queryKeys.budget.categoryList('expense'),
+  });
+};
 
 // Get vendors for dropdown
 const { data: vendorsData } = useQuery({
@@ -793,7 +845,6 @@ const { data: existingAttachments } = useExpenseAttachments(
 );
 
 // Options for dropdowns
-const categoryOptions = getExpenseCategoryOptions();
 const statusOptions = getExpenseStatusOptions();
 const paymentMethodOptions = getPaymentMethodOptions();
 
@@ -838,7 +889,7 @@ watch(
         invoice_date: formatDateForInput(expense.invoice_date),
         invoice_due_date: formatDateForInput(expense.invoice_due_date),
         invoice_amount: expense.invoice_amount,
-        category: expense.category,
+        budget_category_id: expense.budget_category_id || null,
         note: expense.note || '',
         status: expense.status,
         payment_details: expense.payment_details || '',
@@ -981,8 +1032,8 @@ const validateForm = (): boolean => {
     errors.value.invoice_amount = 'Invoice amount must be greater than 0';
   }
 
-  if (!form.value.category) {
-    errors.value.category = 'Category is required';
+  if (!form.value.budget_category_id) {
+    errors.value.budget_category_id = 'Budget category is required';
   }
 
   if (!form.value.status) {

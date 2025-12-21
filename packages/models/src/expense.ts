@@ -1,12 +1,3 @@
-export enum ExpenseCategory {
-  MAINTENANCE = 'maintenance',
-  LANDSCAPING = 'landscaping',
-  LEGAL = 'legal',
-  INSURANCE = 'insurance',
-  UTILITIES = 'utilities',
-  OTHER = 'other',
-}
-
 export enum ExpenseStatus {
   UNPAID = 'unpaid',
   PARTIAL = 'partial',
@@ -29,7 +20,7 @@ export interface Expense {
   invoice_date: string;
   invoice_due_date: string;
   invoice_amount: number;
-  category: ExpenseCategory;
+  budget_category_id?: number | null;
   note?: string;
   status: ExpenseStatus;
   payment_details?: string;
@@ -48,6 +39,12 @@ export interface Expense {
     contact_name: string;
     contact_email: string;
     contact_phone: string;
+  };
+  budget_category?: {
+    id: number;
+    name: string;
+    type: string;
+    display_order: number;
   };
   creator?: {
     id: number;
@@ -83,7 +80,7 @@ export interface CreateExpenseDto {
   invoice_date: string;
   invoice_due_date: string;
   invoice_amount: number;
-  category: ExpenseCategory;
+  budget_category_id?: number | null;
   note?: string;
   status: ExpenseStatus;
   payment_details?: string;
@@ -98,7 +95,7 @@ export interface UpdateExpenseDto {
   invoice_date?: string;
   invoice_due_date?: string;
   invoice_amount?: number;
-  category?: ExpenseCategory;
+  budget_category_id?: number | null;
   note?: string;
   status?: ExpenseStatus;
   payment_details?: string;
@@ -109,7 +106,7 @@ export interface UpdateExpenseDto {
 
 export interface ExpenseFilters {
   vendor_id?: number;
-  category?: ExpenseCategory | string;
+  budget_category_id?: number;
   status?: ExpenseStatus | string;
   search?: string;
   include_deleted?: boolean;
@@ -122,7 +119,7 @@ export interface ExpenseListResponse {
     include_deleted?: boolean;
     filters?: {
       vendor_id?: number;
-      category?: string;
+      budget_category_id?: number;
       status?: string;
       search?: string;
     };
@@ -137,22 +134,6 @@ export interface ExpenseResponse {
 export interface ExpenseAttachmentResponse {
   data: ExpenseAttachment;
   message?: string;
-}
-
-// Helper function to get category display name
-export function getExpenseCategoryDisplayName(
-  category: ExpenseCategory
-): string {
-  const displayNames: Record<ExpenseCategory, string> = {
-    [ExpenseCategory.MAINTENANCE]: 'Maintenance',
-    [ExpenseCategory.LANDSCAPING]: 'Landscaping',
-    [ExpenseCategory.LEGAL]: 'Legal',
-    [ExpenseCategory.INSURANCE]: 'Insurance',
-    [ExpenseCategory.UTILITIES]: 'Utilities',
-    [ExpenseCategory.OTHER]: 'Other',
-  };
-
-  return displayNames[category] || category;
 }
 
 // Helper function to get status display name
@@ -177,17 +158,6 @@ export function getPaymentMethodDisplayName(method: PaymentMethod): string {
   };
 
   return displayNames[method] || method;
-}
-
-// Helper function to get all category options for dropdowns
-export function getExpenseCategoryOptions(): Array<{
-  value: ExpenseCategory;
-  label: string;
-}> {
-  return Object.values(ExpenseCategory).map(category => ({
-    value: category,
-    label: getExpenseCategoryDisplayName(category),
-  }));
 }
 
 // Helper function to get all status options for dropdowns

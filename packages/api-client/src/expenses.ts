@@ -20,8 +20,11 @@ export const expensesApi = {
     if (filters?.vendor_id) {
       params.append('vendor_id', filters.vendor_id.toString());
     }
-    if (filters?.category) {
-      params.append('category', filters.category);
+    if (filters?.budget_category_id) {
+      params.append(
+        'budget_category_id',
+        filters.budget_category_id.toString()
+      );
     }
     if (filters?.status) {
       params.append('status', filters.status);

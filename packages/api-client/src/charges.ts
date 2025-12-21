@@ -14,8 +14,11 @@ export const chargesApi = {
   list: async (filters?: ChargeFilters): Promise<ChargeListResponse> => {
     const params = new URLSearchParams();
 
-    if (filters?.category && filters.category !== '') {
-      params.append('category', filters.category);
+    if (filters?.budget_category_id && filters.budget_category_id !== '') {
+      params.append(
+        'budget_category_id',
+        filters.budget_category_id.toString()
+      );
     }
 
     if (filters?.is_active !== undefined && filters.is_active !== '') {

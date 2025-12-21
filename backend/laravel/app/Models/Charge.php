@@ -21,7 +21,7 @@ class Charge extends Model
         'title',
         'description',
         'amount',
-        'category',
+        'budget_category_id',
         'is_active',
         'created_by',
     ];
@@ -53,6 +53,14 @@ class Charge extends Model
     }
 
     /**
+     * Get the budget category for this charge (income type).
+     */
+    public function budgetCategory(): BelongsTo
+    {
+        return $this->belongsTo(BudgetCategory::class);
+    }
+
+    /**
      * Scope a query to only include charges for a specific tenant.
      */
     public function scopeForTenant($query, $tenantId)
@@ -77,10 +85,10 @@ class Charge extends Model
     }
 
     /**
-     * Scope a query to filter by category.
+     * Scope a query to filter by budget category.
      */
-    public function scopeByCategory($query, $category)
+    public function scopeByBudgetCategory($query, $budgetCategoryId)
     {
-        return $query->where('category', $category);
+        return $query->where('budget_category_id', $budgetCategoryId);
     }
 }

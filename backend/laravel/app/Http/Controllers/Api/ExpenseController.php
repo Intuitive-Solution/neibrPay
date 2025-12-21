@@ -19,12 +19,12 @@ class ExpenseController extends Controller
         $user = $request->user();
         $includeDeleted = $request->boolean('include_deleted', false);
         $vendorId = $request->get('vendor_id');
-        $category = $request->get('category');
+        $budgetCategoryId = $request->get('budget_category_id');
         $status = $request->get('status');
         $search = $request->get('search');
         
         $query = Expense::forTenant($user->tenant_id)
-            ->with(['vendor', 'creator', 'attachments']);
+            ->with(['vendor', 'creator', 'attachments', 'budgetCategory']);
             
         if ($includeDeleted) {
             $query->withTrashed();
@@ -34,8 +34,8 @@ class ExpenseController extends Controller
             $query->byVendor($vendorId);
         }
         
-        if ($category) {
-            $query->byCategory($category);
+        if ($budgetCategoryId) {
+            $query->where('budget_category_id', $budgetCategoryId);
         }
         
         if ($status) {
@@ -58,7 +58,7 @@ class ExpenseController extends Controller
                 'include_deleted' => $includeDeleted,
                 'filters' => [
                     'vendor_id' => $vendorId,
-                    'category' => $category,
+                    'budget_category_id' => $budgetCategoryId,
                     'status' => $status,
                     'search' => $search,
                 ],
@@ -79,7 +79,7 @@ class ExpenseController extends Controller
             'invoice_date' => 'required|date',
             'invoice_due_date' => 'required|date|after_or_equal:invoice_date',
             'invoice_amount' => 'required|numeric|min:0',
-            'category' => 'required|in:maintenance,landscaping,legal,insurance,utilities,other',
+            'budget_category_id' => 'nullable|integer|exists:budget_categories,id',
             'note' => 'nullable|string',
             'status' => 'required|in:unpaid,partial,paid',
             'payment_details' => 'nullable|string',
@@ -95,6 +95,18 @@ class ExpenseController extends Controller
         
         if (!$vendor) {
             return response()->json(['message' => 'Vendor does not belong to your tenant'], 400);
+        }
+
+        // Ensure the budget category belongs to the user's tenant if provided
+        if (isset($validated['budget_category_id'])) {
+            $budgetCategory = \App\Models\BudgetCategory::where('id', $validated['budget_category_id'])
+                ->where('tenant_id', $user->tenant_id)
+                ->where('type', 'expense')
+                ->first();
+            
+            if (!$budgetCategory) {
+                return response()->json(['message' => 'Budget category does not belong to your tenant or is not an expense category'], 400);
+            }
         }
 
         // Validate payment fields based on status
@@ -150,6 +162,7 @@ class ExpenseController extends Controller
             'vendor',
             'creator',
             'attachments.uploader',
+            'budgetCategory',
         ]);
 
         return response()->json([
@@ -175,7 +188,7 @@ class ExpenseController extends Controller
             'invoice_date' => 'sometimes|date',
             'invoice_due_date' => 'sometimes|date|after_or_equal:invoice_date',
             'invoice_amount' => 'sometimes|numeric|min:0',
-            'category' => 'sometimes|in:maintenance,landscaping,legal,insurance,utilities,other',
+            'budget_category_id' => 'nullable|integer|exists:budget_categories,id',
             'note' => 'nullable|string',
             'status' => 'sometimes|in:unpaid,partial,paid',
             'payment_details' => 'nullable|string',
@@ -192,6 +205,18 @@ class ExpenseController extends Controller
             
             if (!$vendor) {
                 return response()->json(['message' => 'Vendor does not belong to your tenant'], 400);
+            }
+        }
+
+        // Ensure the budget category belongs to the user's tenant if provided
+        if (isset($validated['budget_category_id'])) {
+            $budgetCategory = \App\Models\BudgetCategory::where('id', $validated['budget_category_id'])
+                ->where('tenant_id', $user->tenant_id)
+                ->where('type', 'expense')
+                ->first();
+            
+            if (!$budgetCategory) {
+                return response()->json(['message' => 'Budget category does not belong to your tenant or is not an expense category'], 400);
             }
         }
 
@@ -224,7 +249,7 @@ class ExpenseController extends Controller
         }
 
         $expense->update($validated);
-        $expense->load(['vendor', 'creator', 'attachments']);
+        $expense->load(['vendor', 'creator', 'attachments', 'budgetCategory']);
 
         return response()->json([
             'data' => $expense,
@@ -264,7 +289,7 @@ class ExpenseController extends Controller
         }
 
         $expense->restore();
-        $expense->load(['vendor', 'creator', 'attachments']);
+        $expense->load(['vendor', 'creator', 'attachments', 'budgetCategory']);
 
         return response()->json([
             'data' => $expense,

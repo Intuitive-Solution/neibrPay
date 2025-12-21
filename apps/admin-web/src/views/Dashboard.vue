@@ -384,7 +384,7 @@
               <g>
                 <path
                   v-for="slice in pieChartSlices"
-                  :key="slice.category"
+                  :key="slice.categoryId"
                   :d="
                     getDonutSlicePath(
                       slice.startAngle,
@@ -395,9 +395,9 @@
                       50
                     )
                   "
-                  :fill="getExpenseCategoryColor(slice.category)"
+                  :fill="getExpenseCategoryColor(slice.categoryId)"
                   class="transition-opacity duration-200 hover:opacity-80 cursor-pointer"
-                  :data-category="slice.category"
+                  :data-category-id="slice.categoryId"
                 />
               </g>
             </svg>
@@ -405,12 +405,12 @@
             <div class="flex-1 ml-4 space-y-1">
               <div
                 v-for="item in expenseCategoryData"
-                :key="item.category"
+                :key="item.categoryId"
                 class="flex items-center gap-2 text-xs group"
               >
                 <div
                   class="w-3 h-3 rounded-full flex-shrink-0"
-                  :style="`background-color: ${getExpenseCategoryColor(item.category)}`"
+                  :style="`background-color: ${getExpenseCategoryColor(item.categoryId)}`"
                 ></div>
                 <div class="flex-1 min-w-0">
                   <div class="font-medium text-gray-900 truncate">
@@ -424,6 +424,88 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budget Summary Card -->
+      <div class="card card-hover cursor-pointer" @click="navigateToBudget">
+        <div class="flex flex-col h-full">
+          <div class="flex items-center mb-4">
+            <div class="p-3 bg-purple-100 rounded-lg">
+              <svg
+                class="w-6 h-6 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+            <div class="ml-4 flex-1">
+              <h3 class="text-sm font-medium text-gray-600">
+                Budget ({{ currentYear }})
+              </h3>
+              <div v-if="!budgetLoading && budgetData" class="mt-2 space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-500">Forecast</span>
+                  <span class="text-sm font-semibold text-gray-900">
+                    {{ formatCurrency(budgetForecast) }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-500">Actual</span>
+                  <span
+                    class="text-sm font-semibold"
+                    :class="
+                      budgetActual >= budgetForecast
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    "
+                  >
+                    {{ formatCurrency(budgetActual) }}
+                  </span>
+                </div>
+              </div>
+              <p v-else class="text-2xl font-bold text-gray-900 mt-1">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Account Balance Card -->
+      <div
+        class="card card-hover cursor-pointer"
+        @click="navigateToTransactions"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-medium text-gray-600">
+              Total Account Balance
+            </h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ formatCurrency(totalAccountBalance) }}
+            </p>
+          </div>
+          <div class="p-3 bg-primary-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+              />
+            </svg>
           </div>
         </div>
       </div>
@@ -557,7 +639,9 @@ import { useInvoices } from '../composables/useInvoices';
 import { usePayments } from '../composables/usePayments';
 import { useResidents } from '../composables/useResidents';
 import { useExpenses } from '../composables/useExpenses';
+import { useBudget } from '../composables/useBudget';
 import { useAuthStore } from '../stores/auth';
+import { useBankAccounts, type BankAccount } from '@neibrpay/api-client';
 import AnnouncementsCarousel from '../components/AnnouncementsCarousel.vue';
 import type {
   Unit,
@@ -566,10 +650,7 @@ import type {
   Resident,
   Expense,
 } from '@neibrpay/models';
-import {
-  getExpenseCategoryDisplayName,
-  ExpenseCategory,
-} from '@neibrpay/models';
+// Removed ExpenseCategory import - using budget_category instead
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -583,6 +664,14 @@ const { data: invoices, isLoading: invoicesLoading } = useInvoices();
 const { data: payments, isLoading: paymentsLoading } = usePayments();
 const { data: residents, isLoading: residentsLoading } = useResidents(false);
 const { data: expenses, isLoading: expensesLoading } = useExpenses();
+const { data: bankAccountsData } = useBankAccounts();
+const bankAccounts = computed(
+  () => bankAccountsData.value?.bank_accounts || []
+);
+
+// Budget data for current year
+const currentYear = new Date().getFullYear();
+const { data: budgetData, isLoading: budgetLoading } = useBudget(currentYear);
 
 // Currency formatting helper
 const formatCurrency = (amount: number): string => {
@@ -958,12 +1047,14 @@ const expenseCategoryData = computed(() => {
     }
   });
 
-  // Group by category and sum amounts
-  const categoryTotals: Record<string, number> = {};
+  // Group by budget category and sum amounts
+  const categoryTotals: Record<number, { amount: number; name: string }> = {};
   let totalAmount = 0;
 
   recentExpenses.forEach((expense: Expense) => {
-    const category = expense.category || ExpenseCategory.OTHER;
+    // Skip expenses without a budget category
+    if (!expense.budget_category_id || !expense.budget_category) return;
+
     // Handle amount conversion (could be string from API)
     let amount = 0;
     if (expense.invoice_amount != null) {
@@ -975,10 +1066,14 @@ const expenseCategoryData = computed(() => {
 
     // Only include expenses with positive amounts
     if (amount > 0) {
-      if (!categoryTotals[category]) {
-        categoryTotals[category] = 0;
+      const categoryId = expense.budget_category_id;
+      if (!categoryTotals[categoryId]) {
+        categoryTotals[categoryId] = {
+          amount: 0,
+          name: expense.budget_category.name || 'Uncategorized',
+        };
       }
-      categoryTotals[category] += amount;
+      categoryTotals[categoryId].amount += amount;
       totalAmount += amount;
     }
   });
@@ -988,14 +1083,16 @@ const expenseCategoryData = computed(() => {
 
   // Convert to array with percentages - only include categories with amounts > 0
   const result = Object.keys(categoryTotals)
-    .filter(category => categoryTotals[category] > 0)
-    .map(category => {
-      const amount = categoryTotals[category];
+    .map(key => Number(key))
+    .filter(categoryId => categoryTotals[categoryId].amount > 0)
+    .map(categoryId => {
+      const categoryData = categoryTotals[categoryId];
+      const amount = categoryData.amount;
       const percentage = (amount / totalAmount) * 100;
 
       return {
-        category: category as ExpenseCategory,
-        displayName: getExpenseCategoryDisplayName(category as ExpenseCategory),
+        categoryId,
+        displayName: categoryData.name,
         amount,
         percentage,
       };
@@ -1012,17 +1109,25 @@ const totalExpensesAmount = computed(() => {
   return expenseCategoryData.value.reduce((sum, item) => sum + item.amount, 0);
 });
 
-// Color palette for expense categories
-const getExpenseCategoryColor = (category: ExpenseCategory): string => {
-  const colors: Record<ExpenseCategory, string> = {
-    [ExpenseCategory.MAINTENANCE]: '#3B82F6', // blue
-    [ExpenseCategory.LANDSCAPING]: '#10B981', // green
-    [ExpenseCategory.LEGAL]: '#EF4444', // red
-    [ExpenseCategory.INSURANCE]: '#F59E0B', // yellow/amber
-    [ExpenseCategory.UTILITIES]: '#8B5CF6', // purple
-    [ExpenseCategory.OTHER]: '#6B7280', // gray
-  };
-  return colors[category] || '#6B7280';
+// Color palette for expense categories (based on category ID)
+// Uses a hash function to generate consistent colors for each category
+const getExpenseCategoryColor = (categoryId: number): string => {
+  // Color palette for budget categories
+  const colors = [
+    '#3B82F6', // blue
+    '#10B981', // green
+    '#EF4444', // red
+    '#F59E0B', // yellow/amber
+    '#8B5CF6', // purple
+    '#EC4899', // pink
+    '#14B8A6', // teal
+    '#F97316', // orange
+    '#6366F1', // indigo
+    '#84CC16', // lime
+  ];
+
+  // Use category ID to consistently map to a color
+  return colors[categoryId % colors.length] || '#6B7280';
 };
 
 // Pie chart slices with calculated angles
@@ -1204,6 +1309,48 @@ const navigateToExpenses = () => {
 const navigateToPeople = () => {
   router.push('/people');
 };
+
+const navigateToBudget = () => {
+  router.push('/budget');
+};
+
+const navigateToTransactions = () => {
+  router.push('/transactions');
+};
+
+// Calculate total account balance
+const totalAccountBalance = computed(() => {
+  return bankAccounts.value.reduce((sum: number, account: BankAccount) => {
+    return sum + Number(account.current_balance || 0);
+  }, 0);
+});
+
+// Budget summary calculations
+const budgetForecast = computed(() => {
+  if (!budgetData.value) return 0;
+  const incomeForecast = budgetData.value.income.reduce(
+    (sum, cat) => sum + cat.total.forecast,
+    0
+  );
+  const expenseForecast = budgetData.value.expense.reduce(
+    (sum, cat) => sum + cat.total.forecast,
+    0
+  );
+  return incomeForecast - expenseForecast;
+});
+
+const budgetActual = computed(() => {
+  if (!budgetData.value) return 0;
+  const incomeActual = budgetData.value.income.reduce(
+    (sum, cat) => sum + cat.total.actual,
+    0
+  );
+  const expenseActual = budgetData.value.expense.reduce(
+    (sum, cat) => sum + cat.total.actual,
+    0
+  );
+  return incomeActual - expenseActual;
+});
 
 // Loading state
 const isLoading = computed(() => {

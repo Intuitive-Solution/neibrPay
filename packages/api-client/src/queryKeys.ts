@@ -102,6 +102,17 @@ export const plaidKeys = {
     [...plaidKeys.all, 'transactions', params] as const,
 } as const;
 
+export const budgetKeys = {
+  all: ['budget'] as const,
+  categories: () => [...budgetKeys.all, 'categories'] as const,
+  categoryList: (type?: string) =>
+    [...budgetKeys.categories(), { type }] as const,
+  categoryDetail: (id: number) => [...budgetKeys.categories(), id] as const,
+  budget: (year: number) => [...budgetKeys.all, 'year', year] as const,
+  auditLogs: (year: number) =>
+    [...budgetKeys.budget(year), 'audit-logs'] as const,
+} as const;
+
 export const queryKeys = {
   residents: residentKeys,
   units: unitKeys,
@@ -114,4 +125,5 @@ export const queryKeys = {
   documents: documentKeys,
   announcements: announcementKeys,
   plaid: plaidKeys,
+  budget: budgetKeys,
 } as const;
