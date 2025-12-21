@@ -20,8 +20,6 @@ return new class extends Migration
             $table->string('password')->nullable(); // Nullable - using OTP verification codes and social login (Google OAuth)
             $table->string('role')->default('admin'); // admin, resident, bookkeeper
             $table->string('phone_number')->nullable();
-            $table->enum('type', ['owner', 'tenant', 'others'])->default('owner')->nullable();
-            $table->enum('member_role', ['admin', 'member'])->default('member')->nullable();
             $table->string('avatar_url')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamp('last_login_at')->nullable();

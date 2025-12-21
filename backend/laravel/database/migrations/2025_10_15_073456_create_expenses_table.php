@@ -19,7 +19,11 @@ return new class extends Migration
             $table->date('invoice_date');
             $table->date('invoice_due_date');
             $table->decimal('invoice_amount', 10, 2);
-            $table->enum('category', ['maintenance', 'landscaping', 'legal', 'insurance', 'utilities', 'other']);
+            $table->foreignId('budget_category_id')
+                ->nullable()
+                ->after('invoice_amount')
+                ->constrained('budget_categories')
+                ->onDelete('set null');
             $table->text('note')->nullable();
             $table->enum('status', ['unpaid', 'partial', 'paid'])->default('unpaid');
             $table->text('payment_details')->nullable();
@@ -33,7 +37,7 @@ return new class extends Migration
             // Indexes
             $table->index('tenant_id');
             $table->index('vendor_id');
-            $table->index('category');
+            $table->index('budget_category_id');
             $table->index('status');
             $table->index('invoice_date');
             $table->index('invoice_due_date');
