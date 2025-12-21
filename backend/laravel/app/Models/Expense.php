@@ -24,7 +24,6 @@ class Expense extends Model
         'invoice_date',
         'invoice_due_date',
         'invoice_amount',
-        'category',
         'budget_category_id',
         'note',
         'status',
@@ -46,7 +45,6 @@ class Expense extends Model
         'invoice_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'paid_date' => 'date',
-        'category' => 'string',
         'status' => 'string',
         'payment_method' => 'string',
     ];
@@ -108,11 +106,11 @@ class Expense extends Model
     }
 
     /**
-     * Scope a query to filter by category.
+     * Scope a query to filter by budget category.
      */
-    public function scopeByCategory($query, $category)
+    public function scopeByBudgetCategory($query, $budgetCategoryId)
     {
-        return $query->where('category', $category);
+        return $query->where('budget_category_id', $budgetCategoryId);
     }
 
     /**

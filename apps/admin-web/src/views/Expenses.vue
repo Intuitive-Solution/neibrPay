@@ -150,24 +150,6 @@
 
           <!-- Header Controls (Right) -->
           <div class="flex items-center space-x-3">
-            <!-- Category Filter -->
-            <div class="flex items-center">
-              <select
-                v-model="categoryFilter"
-                class="input-field text-sm"
-                @change="applyFilters"
-              >
-                <option value="">All Categories</option>
-                <option
-                  v-for="option in categoryOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-
             <!-- Show Deleted Checkbox - Hidden for residents -->
             <div v-if="!isResident" class="flex items-center">
               <input
@@ -622,7 +604,7 @@
                       expense.deleted_at ? 'text-red-400' : 'text-gray-500',
                     ]"
                   >
-                    {{ getExpenseCategoryDisplayName(expense.category) }}
+                    {{ expense.budget_category?.name || 'No Category' }}
                   </div>
                 </div>
               </td>
@@ -887,8 +869,6 @@ import {
 } from '../composables/useExpenses';
 import { useAuthStore } from '../stores/auth';
 import {
-  getExpenseCategoryDisplayName,
-  getExpenseCategoryOptions,
   getExpenseStatusDisplayName,
   getExpenseStatusBadgeClass,
 } from '@neibrpay/models';
@@ -903,7 +883,6 @@ const isResident = computed(() => authStore.isResident);
 
 // Local state
 const searchQuery = ref('');
-const categoryFilter = ref('');
 const includeDeleted = ref(false);
 const deletingExpenseId = ref<number | null>(null);
 const restoringExpenseId = ref<number | null>(null);
@@ -932,9 +911,6 @@ const {
 
 const deleteExpenseMutation = useDeleteExpense();
 const restoreExpenseMutation = useRestoreExpense();
-
-// Category options
-const categoryOptions = getExpenseCategoryOptions();
 
 // Helper function to check if expense is unpaid
 const isExpenseUnpaid = (expense: any): boolean => {
@@ -1012,20 +988,20 @@ const filteredExpenses = computed(() => {
     // 'all' filter shows all expenses (no additional filtering needed)
     // If activeFilter is 'all', we don't filter by status
 
-    // Apply category filter
-    if (categoryFilter.value && expense.category !== categoryFilter.value) {
-      return false;
-    }
-
     // Apply search filter
     if (searchQuery.value && searchQuery.value.trim()) {
       const query = searchQuery.value.toLowerCase().trim();
       const invoiceNumber = (expense.invoice_number || '').toLowerCase();
-      const category = getExpenseCategoryDisplayName(
-        expense.category
+      const budgetCategory = (
+        expense.budget_category?.name || ''
       ).toLowerCase();
+      const vendorName = (expense.vendor?.name || '').toLowerCase();
 
-      return invoiceNumber.includes(query) || category.includes(query);
+      return (
+        invoiceNumber.includes(query) ||
+        budgetCategory.includes(query) ||
+        vendorName.includes(query)
+      );
     }
 
     // Filter out deleted expenses unless includeDeleted is true (admin only)

@@ -384,7 +384,7 @@
               <g>
                 <path
                   v-for="slice in pieChartSlices"
-                  :key="slice.category"
+                  :key="slice.categoryId"
                   :d="
                     getDonutSlicePath(
                       slice.startAngle,
@@ -395,9 +395,9 @@
                       50
                     )
                   "
-                  :fill="getExpenseCategoryColor(slice.category)"
+                  :fill="getExpenseCategoryColor(slice.categoryId)"
                   class="transition-opacity duration-200 hover:opacity-80 cursor-pointer"
-                  :data-category="slice.category"
+                  :data-category-id="slice.categoryId"
                 />
               </g>
             </svg>
@@ -405,12 +405,12 @@
             <div class="flex-1 ml-4 space-y-1">
               <div
                 v-for="item in expenseCategoryData"
-                :key="item.category"
+                :key="item.categoryId"
                 class="flex items-center gap-2 text-xs group"
               >
                 <div
                   class="w-3 h-3 rounded-full flex-shrink-0"
-                  :style="`background-color: ${getExpenseCategoryColor(item.category)}`"
+                  :style="`background-color: ${getExpenseCategoryColor(item.categoryId)}`"
                 ></div>
                 <div class="flex-1 min-w-0">
                   <div class="font-medium text-gray-900 truncate">
@@ -566,10 +566,7 @@ import type {
   Resident,
   Expense,
 } from '@neibrpay/models';
-import {
-  getExpenseCategoryDisplayName,
-  ExpenseCategory,
-} from '@neibrpay/models';
+// Removed ExpenseCategory import - using budget_category instead
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -958,12 +955,14 @@ const expenseCategoryData = computed(() => {
     }
   });
 
-  // Group by category and sum amounts
-  const categoryTotals: Record<string, number> = {};
+  // Group by budget category and sum amounts
+  const categoryTotals: Record<number, { amount: number; name: string }> = {};
   let totalAmount = 0;
 
   recentExpenses.forEach((expense: Expense) => {
-    const category = expense.category || ExpenseCategory.OTHER;
+    // Skip expenses without a budget category
+    if (!expense.budget_category_id || !expense.budget_category) return;
+
     // Handle amount conversion (could be string from API)
     let amount = 0;
     if (expense.invoice_amount != null) {
@@ -975,10 +974,14 @@ const expenseCategoryData = computed(() => {
 
     // Only include expenses with positive amounts
     if (amount > 0) {
-      if (!categoryTotals[category]) {
-        categoryTotals[category] = 0;
+      const categoryId = expense.budget_category_id;
+      if (!categoryTotals[categoryId]) {
+        categoryTotals[categoryId] = {
+          amount: 0,
+          name: expense.budget_category.name || 'Uncategorized',
+        };
       }
-      categoryTotals[category] += amount;
+      categoryTotals[categoryId].amount += amount;
       totalAmount += amount;
     }
   });
@@ -988,14 +991,16 @@ const expenseCategoryData = computed(() => {
 
   // Convert to array with percentages - only include categories with amounts > 0
   const result = Object.keys(categoryTotals)
-    .filter(category => categoryTotals[category] > 0)
-    .map(category => {
-      const amount = categoryTotals[category];
+    .map(key => Number(key))
+    .filter(categoryId => categoryTotals[categoryId].amount > 0)
+    .map(categoryId => {
+      const categoryData = categoryTotals[categoryId];
+      const amount = categoryData.amount;
       const percentage = (amount / totalAmount) * 100;
 
       return {
-        category: category as ExpenseCategory,
-        displayName: getExpenseCategoryDisplayName(category as ExpenseCategory),
+        categoryId,
+        displayName: categoryData.name,
         amount,
         percentage,
       };
@@ -1012,17 +1017,25 @@ const totalExpensesAmount = computed(() => {
   return expenseCategoryData.value.reduce((sum, item) => sum + item.amount, 0);
 });
 
-// Color palette for expense categories
-const getExpenseCategoryColor = (category: ExpenseCategory): string => {
-  const colors: Record<ExpenseCategory, string> = {
-    [ExpenseCategory.MAINTENANCE]: '#3B82F6', // blue
-    [ExpenseCategory.LANDSCAPING]: '#10B981', // green
-    [ExpenseCategory.LEGAL]: '#EF4444', // red
-    [ExpenseCategory.INSURANCE]: '#F59E0B', // yellow/amber
-    [ExpenseCategory.UTILITIES]: '#8B5CF6', // purple
-    [ExpenseCategory.OTHER]: '#6B7280', // gray
-  };
-  return colors[category] || '#6B7280';
+// Color palette for expense categories (based on category ID)
+// Uses a hash function to generate consistent colors for each category
+const getExpenseCategoryColor = (categoryId: number): string => {
+  // Color palette for budget categories
+  const colors = [
+    '#3B82F6', // blue
+    '#10B981', // green
+    '#EF4444', // red
+    '#F59E0B', // yellow/amber
+    '#8B5CF6', // purple
+    '#EC4899', // pink
+    '#14B8A6', // teal
+    '#F97316', // orange
+    '#6366F1', // indigo
+    '#84CC16', // lime
+  ];
+
+  // Use category ID to consistently map to a color
+  return colors[categoryId % colors.length] || '#6B7280';
 };
 
 // Pie chart slices with calculated angles

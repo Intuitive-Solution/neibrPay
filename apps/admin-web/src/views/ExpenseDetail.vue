@@ -166,10 +166,10 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-500"
-                >Category</label
+                >Budget Category</label
               >
               <p class="mt-1 text-sm text-gray-900">
-                {{ getExpenseCategoryDisplayName(expense.category) }}
+                {{ expense.budget_category?.name || 'N/A' }}
               </p>
             </div>
             <div>
@@ -494,7 +494,6 @@ import {
 import { useAuthStore } from '../stores/auth';
 import { expensesApi } from '@neibrpay/api-client';
 import {
-  getExpenseCategoryDisplayName,
   getExpenseStatusDisplayName,
   getExpenseStatusBadgeClass,
   getPaymentMethodDisplayName,
