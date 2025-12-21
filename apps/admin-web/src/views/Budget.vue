@@ -22,7 +22,7 @@
             <template v-if="!isResident">
               <button
                 @click="showCopyModal = true"
-                class="btn-secondary btn-sm"
+                class="btn-secondary btn-sm whitespace-nowrap"
                 :disabled="isCopying"
               >
                 <svg
@@ -42,7 +42,7 @@
               </button>
               <button
                 @click="showCategoryManager = true"
-                class="btn-primary btn-sm"
+                class="btn-primary btn-sm whitespace-nowrap"
               >
                 <svg
                   class="w-4 h-4 mr-2"
