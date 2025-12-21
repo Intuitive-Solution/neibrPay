@@ -325,8 +325,8 @@
             </router-link>
           </li>
 
-          <!-- Transactions - Admin only -->
-          <li v-if="isAdmin">
+          <!-- Transactions -->
+          <li>
             <router-link
               to="/transactions"
               :class="getNavLinkClass('Transactions')"
