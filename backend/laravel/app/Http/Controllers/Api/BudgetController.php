@@ -497,16 +497,20 @@ class BudgetController extends Controller
     private function calculateExpenseActuals(int $tenantId, int $year): array
     {
         $expenses = Expense::forTenant($tenantId)
-            ->whereYear('paid_date', $year)
+            ->whereNotNull('invoice_date')
             ->whereNotNull('budget_category_id')
-            ->whereNotNull('paid_date')
-            ->where('status', 'paid')
+            ->whereYear('invoice_date', $year)
             ->get();
 
         $actuals = [];
 
         foreach ($expenses as $expense) {
-            $month = (int) $expense->paid_date->format('n');
+            // Skip if invoice_date is still null (defensive check)
+            if (!$expense->invoice_date) {
+                continue;
+            }
+
+            $month = (int) $expense->invoice_date->format('n');
             $categoryId = $expense->budget_category_id;
             $key = "{$categoryId}_{$month}";
 
@@ -514,7 +518,7 @@ class BudgetController extends Controller
                 $actuals[$key] = 0;
             }
 
-            $actuals[$key] += $expense->paid_amount;
+            $actuals[$key] += $expense->invoice_amount ?? 0;
         }
 
         return $actuals;

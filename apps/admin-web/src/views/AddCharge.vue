@@ -317,11 +317,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { chargesApi, queryKeys } from '@neibrpay/api-client';
-import type { CreateChargeDto, UpdateChargeDto } from '@neibrpay/models';
+import type {
+  CreateChargeDto,
+  UpdateChargeDto,
+  Charge,
+} from '@neibrpay/models';
 import { useBudgetCategories } from '../composables/useBudget';
 import IncomeCategoryManager from '../components/IncomeCategoryManager.vue';
 
@@ -334,7 +338,9 @@ const isEdit = computed(() => !!route.params.id);
 const chargeId = computed(() => Number(route.params.id));
 
 // Form data
-const form = reactive<CreateChargeDto & UpdateChargeDto>({
+const form = reactive<
+  CreateChargeDto & UpdateChargeDto & { budget_category_id?: number }
+>({
   title: '',
   description: '',
   amount: 0,
@@ -364,23 +370,27 @@ const errors = ref<Record<string, string>>({});
 const submitError = ref('');
 
 // Fetch charge data for edit mode
-const { data: chargeData } = useQuery({
+const { data: chargeData } = useQuery<Charge | undefined>({
   queryKey: queryKeys.charges.detail(chargeId.value),
   queryFn: () => chargesApi.get(chargeId.value),
   select: data => data.data,
-  enabled: isEdit.value,
+  enabled: isEdit,
 });
 
 // Populate form when charge data is loaded
-onMounted(() => {
-  if (isEdit.value && chargeData.value) {
-    form.title = chargeData.value.title;
-    form.description = chargeData.value.description || '';
-    form.amount = chargeData.value.amount;
-    form.budget_category_id = chargeData.value.budget_category_id;
-    form.is_active = chargeData.value.is_active;
-  }
-});
+watch(
+  chargeData,
+  (newData: Charge | undefined) => {
+    if (isEdit.value && newData) {
+      form.title = newData.title;
+      form.description = newData.description || '';
+      form.amount = newData.amount;
+      form.budget_category_id = newData.budget_category_id;
+      form.is_active = newData.is_active;
+    }
+  },
+  { immediate: true }
+);
 
 // Create mutation
 const { mutate: createCharge, isPending: isCreating } = useMutation({
