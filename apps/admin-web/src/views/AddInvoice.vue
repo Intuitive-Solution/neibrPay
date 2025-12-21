@@ -1677,6 +1677,7 @@ interface InvoiceItem {
   unitCost: number;
   quantity: number;
   lineTotal: number;
+  chargeId?: number;
 }
 import { chargesApi, queryKeys } from '@neibrpay/api-client';
 import { useQuery } from '@tanstack/vue-query';
@@ -1914,6 +1915,7 @@ watch(
         unitCost: item.unit_cost,
         quantity: item.quantity,
         lineTotal: item.line_total,
+        chargeId: item.charge_id || undefined,
       }));
 
       // Set tax rate - convert string to number
@@ -2230,6 +2232,7 @@ const addItem = () => {
     unitCost: 0.0,
     quantity: 1,
     lineTotal: 0.0,
+    chargeId: undefined,
   };
   invoiceItems.value.push(newItem);
   // Ensure line total is calculated for the new item
@@ -2270,6 +2273,7 @@ const loadCharge = (index: number, charge: Charge) => {
     item.description = charge.description || '';
     item.unitCost = charge.amount;
     item.quantity = 1;
+    item.chargeId = charge.id;
     // Don't set lineTotal directly - let updateLineTotal calculate it
     updateLineTotal(index);
   }
@@ -2784,6 +2788,7 @@ const handleSubmit = async () => {
           line_total: item.lineTotal,
           sort_order: 0,
           taxable: true,
+          charge_id: item.chargeId || null,
         })),
         tax_rate: taxRate.value,
         notes: {
@@ -2865,6 +2870,7 @@ const handleSubmit = async () => {
           line_total: item.lineTotal,
           sort_order: 0,
           taxable: true,
+          charge_id: item.chargeId || null,
         })),
         tax_rate: taxRate.value,
         notes: {

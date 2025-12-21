@@ -37,6 +37,7 @@ class UpdateInvoiceRequest extends FormRequest
             'items.*.unit_cost' => 'required_with:items|numeric|min:0|max:999999.99',
             'items.*.quantity' => 'required_with:items|numeric|min:0.01|max:999999.99',
             'items.*.line_total' => 'required_with:items|numeric|min:0|max:999999.99',
+            'items.*.charge_id' => 'nullable|integer|exists:charges,id',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'notes' => 'nullable|array',
             'notes.public_notes' => 'nullable|string|max:10000',
