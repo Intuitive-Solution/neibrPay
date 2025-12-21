@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->foreignId('resident_id')->constrained('users')->onDelete('cascade');
-            $table->enum('type', ['owner', 'tenant'])->default('owner')->after('resident_id');
+            $table->enum('type', ['owner', 'tenant'])->default('owner');
             $table->timestamps();
 
             // Ensure unique combination of unit and resident
