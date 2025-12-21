@@ -4,20 +4,20 @@
       <thead class="bg-gray-100 border-b border-gray-200">
         <tr>
           <th
-            class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider sticky left-0 bg-gray-100 z-10"
+            class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider sticky left-0 bg-gray-100 z-10 border-r border-gray-300"
           >
             Category
           </th>
           <th
             v-for="month in months"
             :key="month.number"
-            class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider"
+            class="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-l border-r border-gray-300"
             colspan="2"
           >
             {{ month.abbr }}
           </th>
           <th
-            class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider"
+            class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-l border-gray-300"
             colspan="2"
           >
             Total
@@ -25,20 +25,28 @@
         </tr>
         <tr>
           <th
-            class="px-4 py-2 text-left text-xs font-medium text-gray-600 sticky left-0 bg-gray-100 z-10"
+            class="px-4 py-2 text-left text-xs font-medium text-gray-600 sticky left-0 bg-gray-100 z-10 border-r border-gray-300"
           ></th>
           <template v-for="month in months" :key="month.number">
-            <th class="px-2 py-2 text-center text-xs font-medium text-gray-600">
+            <th
+              class="px-2 py-2 text-center text-xs font-medium text-gray-600 border-l border-gray-300"
+            >
               Forecast
             </th>
-            <th class="px-2 py-2 text-center text-xs font-medium text-gray-600">
+            <th
+              class="px-2 py-2 text-center text-xs font-medium text-gray-600 border-r border-gray-300"
+            >
               Actual
             </th>
           </template>
-          <th class="px-2 py-2 text-center text-xs font-medium text-gray-600">
+          <th
+            class="px-2 py-2 text-center text-xs font-medium text-gray-600 border-l border-gray-300"
+          >
             Forecast
           </th>
-          <th class="px-2 py-2 text-center text-xs font-medium text-gray-600">
+          <th
+            class="px-2 py-2 text-center text-xs font-medium text-gray-600 border-r border-gray-300"
+          >
             Actual
           </th>
         </tr>
@@ -51,7 +59,7 @@
         >
           <!-- Category Name -->
           <td
-            class="px-4 py-3 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10"
+            class="px-4 py-3 text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-300"
           >
             {{ category.name }}
           </td>
@@ -59,7 +67,7 @@
           <!-- Month Columns -->
           <template v-for="month in months" :key="month.number">
             <!-- Forecast Cell -->
-            <td class="px-2 py-3 text-center">
+            <td class="px-2 py-3 text-center border-l border-gray-300">
               <EditableCell
                 v-if="!isResident"
                 :value="category.months[month.number]?.forecast || 0"
@@ -77,15 +85,17 @@
 
             <!-- Actual Cell -->
             <td
-              class="px-2 py-3 text-center text-sm"
-              :class="getActualCellClass(category.months[month.number])"
+              :class="[
+                'px-2 py-3 text-center text-sm border-r border-gray-300',
+                getActualCellClass(category.months[month.number]),
+              ]"
             >
               {{ formatCurrency(category.months[month.number]?.actual || 0) }}
             </td>
           </template>
 
           <!-- Total Columns -->
-          <td class="px-2 py-3 text-center">
+          <td class="px-2 py-3 text-center border-l border-gray-300">
             <EditableCell
               v-if="!isResident"
               :value="category.total.forecast"
@@ -100,7 +110,7 @@
             </span>
           </td>
           <td
-            class="px-2 py-3 text-center text-sm font-medium"
+            class="px-2 py-3 text-center text-sm font-medium border-r border-gray-300"
             :class="getActualCellClass(category.total)"
           >
             {{ formatCurrency(category.total.actual) }}
