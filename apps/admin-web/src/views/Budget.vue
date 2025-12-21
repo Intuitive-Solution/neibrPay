@@ -100,7 +100,7 @@
                   <span
                     class="text-sm font-semibold"
                     :class="
-                      summaryActual <= summaryForecast
+                      summaryActual >= summaryForecast
                         ? 'text-green-600'
                         : 'text-red-600'
                     "
@@ -145,7 +145,7 @@
                   <span
                     class="text-sm font-semibold"
                     :class="
-                      incomeActual <= incomeForecast
+                      incomeActual >= incomeForecast
                         ? 'text-green-600'
                         : 'text-red-600'
                     "
@@ -268,6 +268,7 @@
           :categories="budgetData.income"
           :is-resident="isResident"
           :year="selectedYear"
+          type="income"
           @update-entry="handleUpdateEntry"
         />
       </div>
@@ -281,6 +282,7 @@
           :categories="budgetData.expense"
           :is-resident="isResident"
           :year="selectedYear"
+          type="expense"
           @update-entry="handleUpdateEntry"
         />
       </div>

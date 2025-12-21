@@ -133,12 +133,13 @@ import type {
   BudgetCategoryData,
   BudgetEntryUpdateDto,
 } from '@neibrpay/models';
-import { getMonthAbbreviation, isOnBudget } from '@neibrpay/models';
+import { getMonthAbbreviation } from '@neibrpay/models';
 
 interface Props {
   categories: BudgetCategoryData[];
   isResident: boolean;
   year: number;
+  type?: 'income' | 'expense';
 }
 
 const props = defineProps<Props>();
@@ -170,9 +171,15 @@ const getActualCellClass = (monthData?: {
   actual: number;
 }): string => {
   if (!monthData) return 'text-gray-900';
-  return isOnBudget(monthData.actual, monthData.forecast)
-    ? 'text-green-600 font-medium'
-    : 'text-red-600 font-medium';
+
+  // For income: green if actual >= forecast (good - making more than expected)
+  // For expense: green if actual <= forecast (good - spending less than expected)
+  const isGood =
+    props.type === 'income'
+      ? monthData.actual >= monthData.forecast
+      : monthData.actual <= monthData.forecast;
+
+  return isGood ? 'text-green-600 font-medium' : 'text-red-600 font-medium';
 };
 
 const handleUpdateForecast = async (
