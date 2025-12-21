@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('account_id')->unique();
             $table->string('account_name');
             $table->string('account_mask'); // Last 4 digits
-            $table->decimal('current_balance', 12, 2)->nullable()->after('account_mask');
-            $table->decimal('available_balance', 12, 2)->nullable()->after('current_balance');
+            $table->decimal('current_balance', 12, 2)->nullable();
+            $table->decimal('available_balance', 12, 2)->nullable();
             $table->date('sync_start_date')->nullable();
             $table->timestamp('last_synced_at')->nullable();
             $table->enum('status', ['active', 'error', 'disconnected'])->default('active');

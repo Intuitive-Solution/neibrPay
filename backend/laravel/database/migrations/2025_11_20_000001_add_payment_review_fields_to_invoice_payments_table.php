@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::table('invoice_payments', function (Blueprint $table) {
             // Add payment status field with default 'approved' for backward compatibility
-            $table->enum('status', ['pending', 'in_review', 'approved', 'rejected'])->default('approved')->after('payment_date');
+            $table->enum('status', ['pending', 'in_review', 'approved', 'rejected'])->default('approved');
             
             // Add comment fields
-            $table->text('admin_comment_public')->nullable()->after('status');
-            $table->text('admin_comment_private')->nullable()->after('admin_comment_public');
+            $table->text('admin_comment_public')->nullable();
+            $table->text('admin_comment_private')->nullable();
             
             // Add review tracking
-            $table->foreignId('reviewed_by')->nullable()->constrained('users')->onDelete('set null')->after('admin_comment_private');
-            $table->timestamp('reviewed_at')->nullable()->after('reviewed_by');
+            $table->foreignId('reviewed_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->timestamp('reviewed_at')->nullable();
             
             // Add indexes
             $table->index('status');

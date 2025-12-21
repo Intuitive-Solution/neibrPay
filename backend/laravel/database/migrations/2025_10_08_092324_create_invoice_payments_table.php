@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('invoice_unit_id')->constrained()->onDelete('cascade');
             $table->decimal('amount', 10, 2);
-            $table->enum('payment_method', ['cash', 'check', 'credit_card', 'bank_transfer', 'other'])->default('other');
+            $table->enum('payment_method', ['cash', 'check', 'credit_card', 'bank_transfer', 'stripe_card', 'stripe_ach', 'other'])->default('other');
             $table->string('payment_reference')->nullable();
             $table->text('notes')->nullable();
             $table->date('payment_date');

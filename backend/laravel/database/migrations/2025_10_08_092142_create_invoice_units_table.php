@@ -22,21 +22,21 @@ return new class extends Migration
             $table->string('remaining_cycles', 20)->nullable(); // 'endless' or number as string
             $table->enum('due_date', ['use_payment_terms', 'net_15', 'net_30', 'net_45', 'net_60', 'due_on_receipt'])->default('use_payment_terms');
             // Early payment discount fields
-            $table->boolean('early_payment_discount_enabled')->default(false)->after('due_date');
-            $table->decimal('early_payment_discount_amount', 10, 2)->nullable()->after('early_payment_discount_enabled');
-            $table->enum('early_payment_discount_type', ['amount', 'percentage'])->nullable()->after('early_payment_discount_amount');
-            $table->date('early_payment_discount_by_date')->nullable()->after('early_payment_discount_type');
+            $table->boolean('early_payment_discount_enabled')->default(false);
+            $table->decimal('early_payment_discount_amount', 10, 2)->nullable();
+            $table->enum('early_payment_discount_type', ['amount', 'percentage'])->nullable();
+            $table->date('early_payment_discount_by_date')->nullable();
             // Late fee fields
-            $table->boolean('late_fee_enabled')->default(false)->after('early_payment_discount_by_date');
-            $table->decimal('late_fee_amount', 10, 2)->nullable()->after('late_fee_enabled');
-            $table->enum('late_fee_type', ['amount', 'percentage'])->nullable()->after('late_fee_amount');
-            $table->date('late_fee_applies_on_date')->nullable()->after('late_fee_type');
+            $table->boolean('late_fee_enabled')->default(false);
+            $table->decimal('late_fee_amount', 10, 2)->nullable();
+            $table->enum('late_fee_type', ['amount', 'percentage'])->nullable();
+            $table->date('late_fee_applies_on_date')->nullable();
             $table->json('items'); // Flexible JSON structure for invoice items
             $table->decimal('subtotal', 10, 2)->default(0.00);
             $table->decimal('tax_rate', 5, 2)->default(0.00);
             $table->decimal('tax_amount', 10, 2)->default(0.00);
             $table->decimal('total', 10, 2)->default(0.00);
-            $table->enum('status', ['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])->default('draft');
+            $table->enum('status', ['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled', 'in_review', 'payment_rejected'])->default('draft');
             $table->foreignId('parent_invoice_id')->nullable()->constrained('invoice_units')->onDelete('set null');
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
