@@ -29,7 +29,7 @@
           ></th>
           <template v-for="month in months" :key="month.number">
             <th
-              class="px-2 py-2 text-center text-xs font-medium text-gray-600 border-l border-gray-300"
+              class="px-2 py-2 text-center text-xs font-medium text-gray-600 border-l border-gray-300 border-r border-dotted border-gray-200"
             >
               Forecast
             </th>
@@ -40,7 +40,7 @@
             </th>
           </template>
           <th
-            class="px-2 py-2 text-center text-xs font-medium text-gray-600 border-l border-gray-300"
+            class="px-2 py-2 text-center text-xs font-medium text-gray-600 border-l border-gray-300 border-r border-dotted border-gray-200"
           >
             Forecast
           </th>
@@ -67,7 +67,9 @@
           <!-- Month Columns -->
           <template v-for="month in months" :key="month.number">
             <!-- Forecast Cell -->
-            <td class="px-2 py-3 text-center border-l border-gray-300">
+            <td
+              class="px-2 py-3 text-center border-l border-gray-300 border-r border-dotted border-gray-200"
+            >
               <EditableCell
                 v-if="!isResident"
                 :value="category.months[month.number]?.forecast || 0"
@@ -95,7 +97,9 @@
           </template>
 
           <!-- Total Columns -->
-          <td class="px-2 py-3 text-center border-l border-gray-300">
+          <td
+            class="px-2 py-3 text-center border-l border-gray-300 border-r border-dotted border-gray-200"
+          >
             <EditableCell
               v-if="!isResident"
               :value="category.total.forecast"
