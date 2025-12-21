@@ -29,18 +29,18 @@ class ChargeController extends Controller
                 'data' => [],
                 'meta' => [
                     'total' => 0,
-                    'category' => $request->category,
+                    'budget_category_id' => $request->budget_category_id,
                     'include_deleted' => false,
                 ],
             ]);
         }
         
         $query = Charge::forTenant($user->tenant_id)
-            ->with(['creator:id,name,email']);
+            ->with(['creator:id,name,email', 'budgetCategory:id,name,type']);
 
         // Apply filters
-        if ($request->has('category') && $request->category !== '') {
-            $query->byCategory($request->category);
+        if ($request->has('budget_category_id') && $request->budget_category_id !== '') {
+            $query->byBudgetCategory($request->budget_category_id);
         }
 
         if ($request->has('is_active') && $request->is_active !== '') {
@@ -62,7 +62,7 @@ class ChargeController extends Controller
             'data' => $charges,
             'meta' => [
                 'total' => $charges->count(),
-                'category' => $request->category,
+                'budget_category_id' => $request->budget_category_id,
                 'is_active' => $request->is_active,
                 'include_deleted' => $request->boolean('include_deleted'),
                 'search' => $request->search,
@@ -86,12 +86,12 @@ class ChargeController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'amount' => $request->amount,
-            'category' => $request->category,
+            'budget_category_id' => $request->budget_category_id,
             'is_active' => $request->boolean('is_active', true),
             'created_by' => $user->id,
         ]);
 
-        $charge->load(['creator:id,name,email']);
+        $charge->load(['creator:id,name,email', 'budgetCategory:id,name,type']);
 
         return response()->json([
             'data' => $charge,
@@ -115,7 +115,7 @@ class ChargeController extends Controller
             return response()->json(['message' => 'Charge not found'], 404);
         }
 
-        $charge->load(['creator:id,name,email']);
+        $charge->load(['creator:id,name,email', 'budgetCategory:id,name,type']);
 
         return response()->json([
             'data' => $charge,
@@ -139,7 +139,7 @@ class ChargeController extends Controller
         }
 
         $charge->update($request->validated());
-        $charge->load(['creator:id,name,email']);
+        $charge->load(['creator:id,name,email', 'budgetCategory:id,name,type']);
 
         return response()->json([
             'data' => $charge,
@@ -193,7 +193,7 @@ class ChargeController extends Controller
         }
 
         $charge->restore();
-        $charge->load(['creator:id,name,email']);
+        $charge->load(['creator:id,name,email', 'budgetCategory:id,name,type']);
 
         return response()->json([
             'data' => $charge,

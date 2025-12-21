@@ -114,19 +114,19 @@
 
           <!-- Header Controls (Right) -->
           <div class="flex items-center space-x-3">
-            <!-- Category Filter -->
+            <!-- Budget Category Filter -->
             <select
-              v-model="filters.category"
+              v-model="filters.budget_category_id"
               class="input-field"
               @change="applyFilters"
             >
-              <option value="">All Categories</option>
+              <option value="">All Budget Categories</option>
               <option
-                v-for="option in categoryOptions"
-                :key="option.value"
-                :value="option.value"
+                v-for="category in budgetCategories"
+                :key="category.id"
+                :value="category.id"
               >
-                {{ option.label }}
+                {{ category.name }}
               </option>
             </select>
 
@@ -336,13 +336,13 @@
                 </div>
               </th>
               <th
-                @click="sortBy('category')"
+                @click="sortBy('budget_category')"
                 class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
                 <div class="flex items-center space-x-1">
-                  <span>CATEGORY</span>
+                  <span>BUDGET CATEGORY</span>
                   <svg
-                    v-if="sortColumn === 'category'"
+                    v-if="sortColumn === 'budget_category'"
                     class="w-4 h-4"
                     fill="none"
                     stroke="currentColor"
@@ -513,7 +513,7 @@
                               : 'text-gray-500',
                           ]"
                         >
-                          {{ getChargeCategoryDisplayName(charge.category) }} •
+                          {{ charge.budget_category?.name || 'No Category' }} •
                           ${{ formatCurrency(charge.amount) }}
                         </div>
                         <div class="mt-1">
@@ -537,7 +537,7 @@
                 </div>
               </td>
 
-              <!-- Category Column -->
+              <!-- Budget Category Column -->
               <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                 <div
                   :class="[
@@ -547,7 +547,7 @@
                       : 'text-gray-900',
                   ]"
                 >
-                  {{ getChargeCategoryDisplayName(charge.category) }}
+                  {{ charge.budget_category?.name || 'No Category' }}
                 </div>
               </td>
 
@@ -721,12 +721,8 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { chargesApi, queryKeys } from '@neibrpay/api-client';
-import {
-  type ChargeFilters,
-  getChargeCategoryDisplayName,
-  getChargeCategoryOptions,
-} from '@neibrpay/models';
+import { chargesApi, budgetApi, queryKeys } from '@neibrpay/api-client';
+import type { ChargeFilters } from '@neibrpay/models';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DropdownMenu from '../components/DropdownMenu.vue';
 
@@ -736,7 +732,7 @@ const queryClient = useQueryClient();
 // Local state
 const filters = ref<ChargeFilters>({
   search: '',
-  category: '',
+  budget_category_id: '',
   is_active: '',
   include_deleted: false,
 });
@@ -745,7 +741,9 @@ const deletingChargeId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const chargeToDelete = ref<any>(null);
 const activeFilter = ref<'active' | 'all' | null>('active'); // Default to 'active' filter
-const sortColumn = ref<'title' | 'category' | 'amount' | 'status' | null>(null);
+const sortColumn = ref<
+  'title' | 'budget_category' | 'amount' | 'status' | null
+>(null);
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
 // Debounced search
@@ -757,8 +755,12 @@ const debouncedSearch = () => {
   }, 300);
 };
 
-// Category options for dropdown
-const categoryOptions = getChargeCategoryOptions();
+// Fetch budget categories for dropdown (income type only for charges)
+const { data: budgetCategoriesData } = useQuery({
+  queryKey: ['budget', 'categories', 'income'],
+  queryFn: () => budgetApi.getCategories('income'),
+});
+const budgetCategories = computed(() => budgetCategoriesData.value || []);
 
 // Query for charges
 const {
@@ -839,15 +841,15 @@ const filteredCharges = computed(() => {
       const query = filters.value.search.toLowerCase().trim();
       const title = (charge.title || '').toLowerCase();
       const description = (charge.description || '').toLowerCase();
-      const category = getChargeCategoryDisplayName(
-        charge.category
+      const budgetCategoryName = (
+        charge.budget_category?.name || ''
       ).toLowerCase();
       const amount = String(charge.amount || '');
 
       return (
         title.includes(query) ||
         description.includes(query) ||
-        category.includes(query) ||
+        budgetCategoryName.includes(query) ||
         amount.includes(query)
       );
     }
@@ -866,9 +868,9 @@ const filteredCharges = computed(() => {
           aValue = a.title || '';
           bValue = b.title || '';
           break;
-        case 'category':
-          aValue = getChargeCategoryDisplayName(a.category);
-          bValue = getChargeCategoryDisplayName(b.category);
+        case 'budget_category':
+          aValue = a.budget_category?.name || '';
+          bValue = b.budget_category?.name || '';
           break;
         case 'amount':
           aValue = a.amount || 0;
@@ -915,7 +917,7 @@ const filterByStatus = (status: 'active' | 'all') => {
   }
 };
 
-const sortBy = (column: 'title' | 'category' | 'amount' | 'status') => {
+const sortBy = (column: 'title' | 'budget_category' | 'amount' | 'status') => {
   if (sortColumn.value === column) {
     // Toggle direction if clicking the same column
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';

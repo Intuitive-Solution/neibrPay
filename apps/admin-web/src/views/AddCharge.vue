@@ -159,56 +159,27 @@
           </div>
         </div>
 
-        <!-- Category Field -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
-          <label
-            for="category"
-            class="block text-sm font-medium text-gray-700 lg:pt-3"
-          >
-            Category <span class="text-red-500">*</span>
-          </label>
-          <div class="lg:col-span-2">
-            <select
-              id="category"
-              v-model="form.category"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
-              :class="{
-                'border-red-300 focus:ring-red-500 focus:border-red-500':
-                  errors.category,
-              }"
-            >
-              <option value="">Select a category</option>
-              <option
-                v-for="option in categoryOptions"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </option>
-            </select>
-            <p v-if="errors.category" class="mt-2 text-sm text-red-600">
-              {{ errors.category }}
-            </p>
-          </div>
-        </div>
-
         <!-- Budget Category Field (Income) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
           <label
             for="budget_category_id"
             class="block text-sm font-medium text-gray-700 lg:pt-3"
           >
-            Budget Category
+            Budget Category <span class="text-red-500">*</span>
           </label>
           <div class="lg:col-span-2">
             <select
               id="budget_category_id"
               v-model="form.budget_category_id"
+              required
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              :class="{
+                'border-red-300 focus:ring-red-500 focus:border-red-500':
+                  errors.budget_category_id,
+              }"
               :disabled="isLoadingCategories"
             >
-              <option :value="null">None (not tracked in budget)</option>
+              <option value="">Select a budget category</option>
               <option
                 v-for="category in incomeCategories"
                 :key="category.id"
@@ -217,10 +188,36 @@
                 {{ category.name }}
               </option>
             </select>
-            <p class="mt-2 text-sm text-gray-600">
-              Link this charge to a budget income category for automatic
-              tracking
+            <p
+              v-if="errors.budget_category_id"
+              class="mt-2 text-sm text-red-600"
+            >
+              {{ errors.budget_category_id }}
             </p>
+            <p v-else class="mt-2 text-sm text-gray-600">
+              Select the income category this charge will be tracked under in
+              the budget
+            </p>
+            <button
+              type="button"
+              @click="showCategoryManager = true"
+              class="mt-2 inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary hover:text-primary-600 border border-primary rounded-lg hover:bg-primary-50 transition-colors duration-200"
+            >
+              <svg
+                class="w-4 h-4 mr-1.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Manage Budget Categories
+            </button>
           </div>
         </div>
 
@@ -310,6 +307,12 @@
         </div>
       </form>
     </div>
+
+    <!-- Income Category Manager Modal -->
+    <IncomeCategoryManager
+      :is-open="showCategoryManager"
+      @close="handleCategoryManagerClose"
+    />
   </div>
 </template>
 
@@ -318,13 +321,9 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { chargesApi, queryKeys } from '@neibrpay/api-client';
-import {
-  type CreateChargeDto,
-  type UpdateChargeDto,
-  ChargeCategory,
-  getChargeCategoryOptions,
-} from '@neibrpay/models';
+import type { CreateChargeDto, UpdateChargeDto } from '@neibrpay/models';
 import { useBudgetCategories } from '../composables/useBudget';
+import IncomeCategoryManager from '../components/IncomeCategoryManager.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -339,8 +338,7 @@ const form = reactive<CreateChargeDto & UpdateChargeDto>({
   title: '',
   description: '',
   amount: 0,
-  category: '' as ChargeCategory,
-  budget_category_id: null,
+  budget_category_id: undefined,
   is_active: true,
 });
 
@@ -349,12 +347,21 @@ const { data: incomeCategoriesData, isLoading: isLoadingCategories } =
   useBudgetCategories('income');
 const incomeCategories = computed(() => incomeCategoriesData.value || []);
 
+// Category manager modal
+const showCategoryManager = ref(false);
+
+const handleCategoryManagerClose = () => {
+  showCategoryManager.value = false;
+  // Invalidate categories query to refresh the dropdown
+  // The mutations in IncomeCategoryManager already invalidate, but this ensures refresh
+  queryClient.invalidateQueries({
+    queryKey: queryKeys.budget.categoryList('income'),
+  });
+};
+
 // Form validation
 const errors = ref<Record<string, string>>({});
 const submitError = ref('');
-
-// Category options
-const categoryOptions = getChargeCategoryOptions();
 
 // Fetch charge data for edit mode
 const { data: chargeData } = useQuery({
@@ -370,8 +377,7 @@ onMounted(() => {
     form.title = chargeData.value.title;
     form.description = chargeData.value.description || '';
     form.amount = chargeData.value.amount;
-    form.category = chargeData.value.category;
-    form.budget_category_id = chargeData.value.budget_category_id || null;
+    form.budget_category_id = chargeData.value.budget_category_id;
     form.is_active = chargeData.value.is_active;
   }
 });
@@ -421,8 +427,8 @@ const validateForm = (): boolean => {
     errors.value.amount = 'Amount must be less than 999,999.99';
   }
 
-  if (!form.category) {
-    errors.value.category = 'Category is required';
+  if (!form.budget_category_id) {
+    errors.value.budget_category_id = 'Budget category is required';
   }
 
   return Object.keys(errors.value).length === 0;
@@ -443,8 +449,7 @@ const handleSubmit = () => {
         title: form.title,
         description: form.description,
         amount: form.amount,
-        category: form.category,
-        budget_category_id: form.budget_category_id || null,
+        budget_category_id: form.budget_category_id,
         is_active: form.is_active,
       },
     });
@@ -453,8 +458,7 @@ const handleSubmit = () => {
       title: form.title,
       description: form.description,
       amount: form.amount,
-      category: form.category,
-      budget_category_id: form.budget_category_id || null,
+      budget_category_id: form.budget_category_id!,
       is_active: form.is_active,
     });
   }

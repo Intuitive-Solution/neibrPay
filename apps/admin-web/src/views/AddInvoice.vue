@@ -953,7 +953,7 @@
                               <div class="font-medium">{{ charge.title }}</div>
                               <div class="text-xs text-gray-500">
                                 {{
-                                  getChargeCategoryDisplayName(charge.category)
+                                  charge.budget_category?.name || 'No Category'
                                 }}
                               </div>
                             </div>
@@ -1680,7 +1680,6 @@ interface InvoiceItem {
 }
 import { chargesApi, queryKeys } from '@neibrpay/api-client';
 import { useQuery } from '@tanstack/vue-query';
-import { getChargeCategoryDisplayName } from '@neibrpay/models';
 import InvoiceTemplate from '../components/InvoiceTemplate.vue';
 
 // Router
