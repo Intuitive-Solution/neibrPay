@@ -17,7 +17,11 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->decimal('amount', 10, 2);
-            $table->enum('category', ['hoa_fee', 'maintenance', 'penalties', 'special_assessment', 'other']);
+            $table->foreignId('budget_category_id')
+                ->nullable(false)
+                ->after('amount')
+                ->constrained('budget_categories')
+                ->onDelete('restrict');
             $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
@@ -25,9 +29,9 @@ return new class extends Migration
             
             // Indexes
             $table->index(['tenant_id']);
-            $table->index(['category']);
+            $table->index(['budget_category_id']);
             $table->index(['is_active']);
-            $table->index(['tenant_id', 'category']);
+            $table->index(['tenant_id', 'budget_category_id']);
             $table->index(['tenant_id', 'is_active']);
         });
     }

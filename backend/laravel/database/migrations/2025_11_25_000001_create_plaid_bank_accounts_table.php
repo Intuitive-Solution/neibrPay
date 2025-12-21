@@ -14,13 +14,15 @@ return new class extends Migration
         Schema::create('plaid_bank_accounts', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tenant_id');
-            $table->string('plaid_item_id')->unique();
+            $table->string('plaid_item_id'); // Not unique - multiple accounts can belong to same Plaid Item
             $table->text('plaid_access_token'); // Encrypted
             $table->string('institution_id');
             $table->string('institution_name');
             $table->string('account_id')->unique();
             $table->string('account_name');
             $table->string('account_mask'); // Last 4 digits
+            $table->decimal('current_balance', 12, 2)->nullable()->after('account_mask');
+            $table->decimal('available_balance', 12, 2)->nullable()->after('current_balance');
             $table->date('sync_start_date')->nullable();
             $table->timestamp('last_synced_at')->nullable();
             $table->enum('status', ['active', 'error', 'disconnected'])->default('active');
@@ -30,6 +32,7 @@ return new class extends Migration
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
             $table->index('tenant_id');
+            $table->index('plaid_item_id'); // Regular index, not unique
             $table->index('status');
         });
     }
