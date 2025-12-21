@@ -78,8 +78,17 @@ export const budgetApi = {
   /**
    * Copy budget from one year to another
    */
-  async copyBudget(fromYear: number, toYear: number): Promise<void> {
-    await apiClient.post(`/budget/copy/${fromYear}/${toYear}`);
+  async copyBudget(
+    fromYear: number,
+    toYear: number,
+    type?: 'all' | 'income' | 'expense'
+  ): Promise<void> {
+    const params = new URLSearchParams();
+    if (type && type !== 'all') {
+      params.append('type', type);
+    }
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    await apiClient.post(`/budget/copy/${fromYear}/${toYear}${queryString}`);
   },
 
   /**

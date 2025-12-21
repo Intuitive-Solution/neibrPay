@@ -86,9 +86,10 @@
                     {{ title }}
                   </h3>
                   <div class="mt-2">
-                    <p class="text-sm text-gray-500">
+                    <p v-if="!$slots.default" class="text-sm text-gray-500">
                       {{ message }}
                     </p>
+                    <slot></slot>
                   </div>
                 </div>
               </div>

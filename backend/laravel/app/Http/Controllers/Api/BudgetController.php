@@ -360,14 +360,31 @@ class BudgetController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // Get all entries from source year
-        $sourceEntries = BudgetEntry::forTenant($user->tenant_id)
+        // Get optional type filter (all, income, expense)
+        $type = $request->input('type', 'all');
+        $validTypes = ['all', 'income', 'expense'];
+        if (!in_array($type, $validTypes)) {
+            return response()->json(['message' => 'Invalid type. Must be one of: all, income, expense'], 400);
+        }
+
+        // Get entries from source year
+        $sourceEntriesQuery = BudgetEntry::forTenant($user->tenant_id)
             ->forYear($fromYear)
-            ->get();
+            ->with('category');
+
+        // Filter by type if specified
+        if ($type !== 'all') {
+            $sourceEntriesQuery->whereHas('category', function ($query) use ($type) {
+                $query->where('type', $type);
+            });
+        }
+
+        $sourceEntries = $sourceEntriesQuery->get();
 
         $copiedEntries = [];
+        $copiedCount = 0;
 
-        DB::transaction(function () use ($user, $sourceEntries, $toYear, &$copiedEntries) {
+        DB::transaction(function () use ($user, $sourceEntries, $toYear, &$copiedEntries, &$copiedCount) {
             foreach ($sourceEntries as $sourceEntry) {
                 $newEntry = BudgetEntry::updateOrCreate(
                     [
@@ -382,24 +399,31 @@ class BudgetController extends Controller
                 );
 
                 $copiedEntries[] = $newEntry;
+                $copiedCount++;
             }
         });
 
         // Log audit
+        $typeLabel = $type === 'all' ? 'all' : ($type === 'income' ? 'income' : 'expense');
         $this->logAudit(
             $user,
             $toYear,
             'copy_budget',
             'entry',
             null,
-            ['source_year' => $fromYear],
-            ['target_year' => $toYear],
-            "Copied budget from {$fromYear} to {$toYear}"
+            ['source_year' => $fromYear, 'type' => $type],
+            ['target_year' => $toYear, 'copied_count' => $copiedCount],
+            "Copied {$typeLabel} budget from {$fromYear} to {$toYear}"
         );
+
+        $message = "Budget copied from {$fromYear} to {$toYear} successfully";
+        if ($type !== 'all') {
+            $message .= " ({$typeLabel} only)";
+        }
 
         return response()->json([
             'data' => $copiedEntries,
-            'message' => "Budget copied from {$fromYear} to {$toYear} successfully",
+            'message' => $message,
         ]);
     }
 

@@ -144,8 +144,15 @@ export function useCopyBudget() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ fromYear, toYear }: { fromYear: number; toYear: number }) =>
-      budgetApi.copyBudget(fromYear, toYear),
+    mutationFn: ({
+      fromYear,
+      toYear,
+      type,
+    }: {
+      fromYear: number;
+      toYear: number;
+      type?: 'all' | 'income' | 'expense';
+    }) => budgetApi.copyBudget(fromYear, toYear, type),
     onSuccess: (_, variables) => {
       // Invalidate budget data for target year
       queryClient.invalidateQueries({
