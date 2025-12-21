@@ -285,6 +285,26 @@
                   Link this expense to a budget expense category for automatic
                   tracking
                 </p>
+                <button
+                  type="button"
+                  @click="showCategoryManager = true"
+                  class="mt-2 inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary hover:text-primary-600 border border-primary rounded-lg hover:bg-primary-50 transition-colors duration-200"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  Manage Budget Categories
+                </button>
               </div>
             </div>
 
@@ -723,6 +743,12 @@
         </div>
       </form>
     </div>
+
+    <!-- Expense Category Manager Modal -->
+    <ExpenseCategoryManager
+      :is-open="showCategoryManager"
+      @close="handleCategoryManagerClose"
+    />
   </div>
 </template>
 
@@ -747,9 +773,12 @@ import {
   ExpenseStatus as ExpenseStatusEnum,
 } from '@neibrpay/models';
 import { useBudgetCategories } from '../composables/useBudget';
+import ExpenseCategoryManager from '../components/ExpenseCategoryManager.vue';
+import { useQueryClient } from '@tanstack/vue-query';
 
 const router = useRouter();
 const route = useRoute();
+const queryClient = useQueryClient();
 
 // Check if we're in edit mode
 const isEditMode = computed(() => !!route.params.id);
@@ -786,6 +815,17 @@ const isDragOver = ref(false);
 // Form state
 const isSubmitting = ref(false);
 const errors = ref<Record<string, string>>({});
+
+// Category manager modal
+const showCategoryManager = ref(false);
+
+const handleCategoryManagerClose = () => {
+  showCategoryManager.value = false;
+  // Invalidate categories query to refresh the dropdown
+  queryClient.invalidateQueries({
+    queryKey: queryKeys.budget.categoryList('expense'),
+  });
+};
 
 // Get vendors for dropdown
 const { data: vendorsData } = useQuery({
