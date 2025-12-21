@@ -280,6 +280,39 @@
               </div>
             </div>
 
+            <!-- Budget Category Field (Expense) -->
+            <div
+              class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
+            >
+              <label
+                for="budget_category_id"
+                class="block text-sm font-medium text-gray-700 lg:pt-3"
+              >
+                Budget Category
+              </label>
+              <div class="lg:col-span-2">
+                <select
+                  id="budget_category_id"
+                  v-model="form.budget_category_id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+                  :disabled="isLoadingCategories"
+                >
+                  <option :value="null">None (not tracked in budget)</option>
+                  <option
+                    v-for="category in expenseCategories"
+                    :key="category.id"
+                    :value="category.id"
+                  >
+                    {{ category.name }}
+                  </option>
+                </select>
+                <p class="mt-2 text-sm text-gray-600">
+                  Link this expense to a budget expense category for automatic
+                  tracking
+                </p>
+              </div>
+            </div>
+
             <!-- Note -->
             <div
               class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start"
@@ -740,6 +773,7 @@ import {
   ExpenseCategory,
   ExpenseStatus as ExpenseStatusEnum,
 } from '@neibrpay/models';
+import { useBudgetCategories } from '../composables/useBudget';
 
 const router = useRouter();
 const route = useRoute();
@@ -758,6 +792,7 @@ const form = ref<CreateExpenseDto & { paid_amount?: number }>({
   invoice_due_date: '',
   invoice_amount: 0,
   category: ExpenseCategory.OTHER,
+  budget_category_id: null,
   note: '',
   status: ExpenseStatusEnum.UNPAID,
   payment_details: '',
@@ -765,6 +800,11 @@ const form = ref<CreateExpenseDto & { paid_amount?: number }>({
   paid_amount: 0,
   paid_date: '',
 });
+
+// Fetch expense budget categories
+const { data: expenseCategoriesData, isLoading: isLoadingCategories } =
+  useBudgetCategories('expense');
+const expenseCategories = computed(() => expenseCategoriesData.value || []);
 
 // File upload
 const uploadedFiles = ref<File[]>([]);
@@ -839,6 +879,7 @@ watch(
         invoice_due_date: formatDateForInput(expense.invoice_due_date),
         invoice_amount: expense.invoice_amount,
         category: expense.category,
+        budget_category_id: expense.budget_category_id || null,
         note: expense.note || '',
         status: expense.status,
         payment_details: expense.payment_details || '',

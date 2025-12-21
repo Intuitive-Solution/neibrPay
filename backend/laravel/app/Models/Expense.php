@@ -25,6 +25,7 @@ class Expense extends Model
         'invoice_due_date',
         'invoice_amount',
         'category',
+        'budget_category_id',
         'note',
         'status',
         'payment_details',
@@ -80,6 +81,14 @@ class Expense extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(ExpenseAttachment::class);
+    }
+
+    /**
+     * Get the budget category for this expense (expense type).
+     */
+    public function budgetCategory(): BelongsTo
+    {
+        return $this->belongsTo(BudgetCategory::class);
     }
 
     /**

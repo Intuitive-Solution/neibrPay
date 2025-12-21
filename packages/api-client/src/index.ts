@@ -10,6 +10,7 @@ export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';
 export { announcementsApi } from './announcements';
 export { documentsApi } from './documents';
+export { budgetApi } from './budget';
 export {
   stripeApi,
   useVerifyStripeStatus,
@@ -55,5 +56,5 @@ export {
   type SyncAccountResponse,
 } from './plaid';
 export * from './queryKeys';
-export { announcementKeys, plaidKeys } from './queryKeys';
+export { announcementKeys, plaidKeys, budgetKeys } from './queryKeys';
 export { apiClient, fileUploadClient, setAuthTokenGetter } from './apiClient';

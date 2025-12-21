@@ -30,6 +30,7 @@ export interface Expense {
   invoice_due_date: string;
   invoice_amount: number;
   category: ExpenseCategory;
+  budget_category_id?: number | null;
   note?: string;
   status: ExpenseStatus;
   payment_details?: string;
@@ -84,6 +85,7 @@ export interface CreateExpenseDto {
   invoice_due_date: string;
   invoice_amount: number;
   category: ExpenseCategory;
+  budget_category_id?: number | null;
   note?: string;
   status: ExpenseStatus;
   payment_details?: string;
@@ -99,6 +101,7 @@ export interface UpdateExpenseDto {
   invoice_due_date?: string;
   invoice_amount?: number;
   category?: ExpenseCategory;
+  budget_category_id?: number | null;
   note?: string;
   status?: ExpenseStatus;
   payment_details?: string;

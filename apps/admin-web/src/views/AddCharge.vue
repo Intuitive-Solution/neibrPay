@@ -193,6 +193,37 @@
           </div>
         </div>
 
+        <!-- Budget Category Field (Income) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
+          <label
+            for="budget_category_id"
+            class="block text-sm font-medium text-gray-700 lg:pt-3"
+          >
+            Budget Category
+          </label>
+          <div class="lg:col-span-2">
+            <select
+              id="budget_category_id"
+              v-model="form.budget_category_id"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
+              :disabled="isLoadingCategories"
+            >
+              <option :value="null">None (not tracked in budget)</option>
+              <option
+                v-for="category in incomeCategories"
+                :key="category.id"
+                :value="category.id"
+              >
+                {{ category.name }}
+              </option>
+            </select>
+            <p class="mt-2 text-sm text-gray-600">
+              Link this charge to a budget income category for automatic
+              tracking
+            </p>
+          </div>
+        </div>
+
         <!-- Is Active Field -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
           <label
@@ -293,6 +324,7 @@ import {
   ChargeCategory,
   getChargeCategoryOptions,
 } from '@neibrpay/models';
+import { useBudgetCategories } from '../composables/useBudget';
 
 const route = useRoute();
 const router = useRouter();
@@ -308,8 +340,14 @@ const form = reactive<CreateChargeDto & UpdateChargeDto>({
   description: '',
   amount: 0,
   category: '' as ChargeCategory,
+  budget_category_id: null,
   is_active: true,
 });
+
+// Fetch income budget categories
+const { data: incomeCategoriesData, isLoading: isLoadingCategories } =
+  useBudgetCategories('income');
+const incomeCategories = computed(() => incomeCategoriesData.value || []);
 
 // Form validation
 const errors = ref<Record<string, string>>({});
@@ -333,6 +371,7 @@ onMounted(() => {
     form.description = chargeData.value.description || '';
     form.amount = chargeData.value.amount;
     form.category = chargeData.value.category;
+    form.budget_category_id = chargeData.value.budget_category_id || null;
     form.is_active = chargeData.value.is_active;
   }
 });
@@ -405,6 +444,7 @@ const handleSubmit = () => {
         description: form.description,
         amount: form.amount,
         category: form.category,
+        budget_category_id: form.budget_category_id || null,
         is_active: form.is_active,
       },
     });
@@ -414,6 +454,7 @@ const handleSubmit = () => {
       description: form.description,
       amount: form.amount,
       category: form.category,
+      budget_category_id: form.budget_category_id || null,
       is_active: form.is_active,
     });
   }

@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\Api\UnitDocumentController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\VendorController;
+use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -202,6 +203,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/bank-accounts/{id}', [PlaidController::class, 'disconnectBankAccount']);
         Route::get('/transactions', [PlaidController::class, 'getTransactions']);
         Route::post('/sync', [PlaidController::class, 'syncAccount']);
+    });
+
+    // Budget management routes
+    Route::prefix('budget')->group(function () {
+        // Category routes (viewable by all, editable by admin only)
+        Route::get('/categories', [BudgetController::class, 'getCategories']);
+        Route::post('/categories', [BudgetController::class, 'createCategory']); // Admin only
+        Route::put('/categories/{category}', [BudgetController::class, 'updateCategory']); // Admin only
+        Route::delete('/categories/{category}', [BudgetController::class, 'deleteCategory']); // Admin only
+
+        // Budget data routes
+        Route::get('/{year}', [BudgetController::class, 'getBudget']);
+        Route::put('/entries', [BudgetController::class, 'updateEntries']); // Admin only
+        Route::post('/copy/{fromYear}/{toYear}', [BudgetController::class, 'copyBudget']); // Admin only
+        Route::get('/{year}/audit-logs', [BudgetController::class, 'getAuditLogs']);
     });
 });
 

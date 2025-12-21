@@ -22,6 +22,7 @@ class Charge extends Model
         'description',
         'amount',
         'category',
+        'budget_category_id',
         'is_active',
         'created_by',
     ];
@@ -50,6 +51,14 @@ class Charge extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the budget category for this charge (income type).
+     */
+    public function budgetCategory(): BelongsTo
+    {
+        return $this->belongsTo(BudgetCategory::class);
     }
 
     /**

@@ -13,6 +13,7 @@ export interface Charge {
   description?: string;
   amount: number;
   category: ChargeCategory;
+  budget_category_id?: number | null;
   is_active: boolean;
   created_by: number;
   created_at: string;
@@ -30,6 +31,7 @@ export interface CreateChargeDto {
   description?: string;
   amount: number;
   category: ChargeCategory;
+  budget_category_id?: number | null;
   is_active?: boolean;
 }
 
@@ -38,6 +40,7 @@ export interface UpdateChargeDto {
   description?: string;
   amount?: number;
   category?: ChargeCategory;
+  budget_category_id?: number | null;
   is_active?: boolean;
 }
 

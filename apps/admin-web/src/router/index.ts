@@ -24,6 +24,7 @@ import Settings from '../views/Settings.vue';
 import Announcements from '../views/Announcements.vue';
 import AddAnnouncement from '../views/AddAnnouncement.vue';
 import Transactions from '../views/Transactions.vue';
+import Budget from '../views/Budget.vue';
 import { setupAuthGuards } from './guards';
 
 const router = createRouter({
@@ -211,6 +212,12 @@ const router = createRouter({
       path: '/transactions',
       name: 'Transactions',
       component: Transactions,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/budget',
+      name: 'Budget',
+      component: Budget,
       meta: { requiresAuth: true },
     },
     {
