@@ -14,18 +14,34 @@ return new class extends Migration
     {
         Schema::table('invoice_payments', function (Blueprint $table) {
             // Add Stripe-related fields
-            $table->string('stripe_checkout_session_id')->nullable()->after('payment_reference');
-            $table->string('stripe_payment_intent_id')->nullable()->after('stripe_checkout_session_id');
-            $table->enum('stripe_payment_method', ['card', 'ach_debit'])->nullable()->after('stripe_payment_intent_id');
+            $table->string('stripe_checkout_session_id')->nullable();
+            $table->string('stripe_payment_intent_id')->nullable();
+            $table->enum('stripe_payment_method', ['card', 'ach_debit'])->nullable();
             
             // Add indexes for Stripe fields
             $table->index('stripe_checkout_session_id');
             $table->index('stripe_payment_intent_id');
         });
 
-        // Modify payment_method enum to include Stripe payment methods
-        // Using DBAL to modify enum column
-        DB::statement("ALTER TABLE invoice_payments MODIFY COLUMN payment_method ENUM('cash', 'check', 'credit_card', 'bank_transfer', 'stripe_card', 'stripe_ach', 'other') DEFAULT 'other'");
+        // For fresh databases, the enum already includes these values in the create migration
+        // This modification is only needed for existing databases
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'mysql') {
+            // MySQL-specific enum modification
+            DB::statement("ALTER TABLE invoice_payments MODIFY COLUMN payment_method ENUM('cash', 'check', 'credit_card', 'bank_transfer', 'stripe_card', 'stripe_ach', 'other') DEFAULT 'other'");
+        } elseif ($driver === 'pgsql') {
+            // PostgreSQL: Check if enum values exist, add if not
+            try {
+                DB::statement("ALTER TYPE invoice_payments_payment_method_enum ADD VALUE IF NOT EXISTS 'stripe_card'");
+                DB::statement("ALTER TYPE invoice_payments_payment_method_enum ADD VALUE IF NOT EXISTS 'stripe_ach'");
+            } catch (\Exception $e) {
+                // Enum values may already exist or table may use check constraint instead
+                // Silently continue - migration may not be needed for fresh databases
+            }
+        }
+        // For SQLite and other databases, enum is typically stored as string with check constraint
+        // No modification needed as the create migration already includes all values
     }
 
     /**
@@ -46,7 +62,18 @@ return new class extends Migration
             ]);
         });
 
-        // Revert payment_method enum to original values
-        DB::statement("ALTER TABLE invoice_payments MODIFY COLUMN payment_method ENUM('cash', 'check', 'credit_card', 'bank_transfer', 'other') DEFAULT 'other'");
+        // Cannot safely remove enum values in PostgreSQL
+        // For MySQL, revert to original enum (may fail if data exists with new values)
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'mysql') {
+            try {
+                DB::statement("ALTER TABLE invoice_payments MODIFY COLUMN payment_method ENUM('cash', 'check', 'credit_card', 'bank_transfer', 'other') DEFAULT 'other'");
+            } catch (\Exception $e) {
+                // Cannot revert if data exists with new enum values
+            }
+        }
+        // PostgreSQL: Cannot remove enum values once added
+        // SQLite: No action needed
     }
 };
