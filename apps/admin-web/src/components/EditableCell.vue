@@ -3,7 +3,10 @@
     <span
       v-if="!isEditing"
       @click="startEditing"
-      class="text-sm text-gray-900 cursor-pointer hover:text-primary hover:underline transition-colors"
+      :class="[
+        'text-sm text-gray-900 cursor-pointer hover:text-primary hover:underline transition-colors',
+        isTotal ? 'font-medium' : '',
+      ]"
     >
       {{ formatCurrency(value) }}
     </span>
@@ -20,7 +23,10 @@
           type="number"
           step="0.01"
           min="0"
-          class="pl-6 pr-2 py-1 text-sm border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary w-20"
+          :class="[
+            'pl-6 pr-2 py-1 text-sm border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary',
+            isTotal ? 'w-24 font-medium' : 'w-20',
+          ]"
           @blur="handleBlur"
           @keyup.enter="handleBlur"
           @keyup.esc="cancelEditing"
@@ -38,6 +44,7 @@ interface Props {
   categoryId: number;
   month: number;
   year: number;
+  isTotal?: boolean;
 }
 
 const props = defineProps<Props>();

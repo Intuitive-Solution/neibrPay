@@ -85,8 +85,19 @@
           </template>
 
           <!-- Total Columns -->
-          <td class="px-2 py-3 text-center text-sm font-medium text-gray-900">
-            {{ formatCurrency(category.total.forecast) }}
+          <td class="px-2 py-3 text-center">
+            <EditableCell
+              v-if="!isResident"
+              :value="category.total.forecast"
+              :category-id="category.id"
+              :month="0"
+              :year="year"
+              :is-total="true"
+              @update="handleUpdateTotal"
+            />
+            <span v-else class="text-sm font-medium text-gray-900">
+              {{ formatCurrency(category.total.forecast) }}
+            </span>
           </td>
           <td
             class="px-2 py-3 text-center text-sm font-medium"
@@ -169,6 +180,37 @@ const handleUpdateForecast = async (
     emit('update-entry', entry);
   } catch (error) {
     console.error('Failed to update forecast:', error);
+  }
+};
+
+const handleUpdateTotal = async (
+  categoryId: number,
+  _month: number,
+  totalValue: number
+) => {
+  // Divide total by 12 and update all 12 months
+  const monthlyValue = totalValue / 12;
+  const entries: BudgetEntryUpdateDto[] = [];
+
+  for (let month = 1; month <= 12; month++) {
+    entries.push({
+      budget_category_id: categoryId,
+      year: props.year,
+      month,
+      forecast_amount: monthlyValue,
+    });
+  }
+
+  try {
+    await updateEntriesMutation.mutateAsync({
+      entries,
+    });
+    // Emit update for each entry
+    entries.forEach(entry => {
+      emit('update-entry', entry);
+    });
+  } catch (error) {
+    console.error('Failed to update total forecast:', error);
   }
 };
 </script>
