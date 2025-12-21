@@ -19,7 +19,6 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->foreignId('budget_category_id')
                 ->nullable(false)
-                ->after('amount')
                 ->constrained('budget_categories')
                 ->onDelete('restrict');
             $table->boolean('is_active')->default(true);

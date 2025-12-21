@@ -21,7 +21,6 @@ return new class extends Migration
             $table->decimal('invoice_amount', 10, 2);
             $table->foreignId('budget_category_id')
                 ->nullable()
-                ->after('invoice_amount')
                 ->constrained('budget_categories')
                 ->onDelete('set null');
             $table->text('note')->nullable();
