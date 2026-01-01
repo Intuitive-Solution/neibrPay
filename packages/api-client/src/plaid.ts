@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import { computed, unref } from 'vue';
 import { apiClient } from './apiClient';
 import { plaidKeys } from './queryKeys';
 
@@ -201,12 +202,19 @@ export function useBankAccounts() {
  * Hook to fetch transactions with filters - accepts computed ref or direct params
  */
 export function useTransactions(params: GetTransactionsRequest | any) {
-  // If it's a computed ref, extract the value reactively
-  const getParams = () => (params && 'value' in params ? params.value : params);
+  // Use unref to properly unwrap reactive values (computed refs, refs, or plain objects)
+  // This ensures reactivity is tracked correctly
+  const queryKey = computed(() => {
+    const unwrappedParams = unref(params);
+    return plaidKeys.transactions(unwrappedParams);
+  });
 
   return useQuery({
-    queryKey: plaidKeys.transactions(getParams()),
-    queryFn: () => plaidApi.getTransactions(getParams()),
+    queryKey,
+    queryFn: () => {
+      const unwrappedParams = unref(params);
+      return plaidApi.getTransactions(unwrappedParams);
+    },
   });
 }
 

@@ -188,7 +188,7 @@ class PlaidController extends Controller
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date',
                 'search' => 'nullable|string',
-                'pending' => 'nullable|boolean',
+                'pending' => 'nullable|in:true,false,1,0',
                 'page' => 'nullable|integer|min:1',
                 'per_page' => 'nullable|integer|min:1|max:100',
                 'sort_by' => 'nullable|string|in:date,name,amount,category,pending,plaid_bank_account_id',
@@ -197,6 +197,11 @@ class PlaidController extends Controller
 
             $page = $validated['page'] ?? 1;
             $perPage = $validated['per_page'] ?? 20;
+            
+            // Convert pending string to boolean if present
+            if (isset($validated['pending'])) {
+                $validated['pending'] = filter_var($validated['pending'], FILTER_VALIDATE_BOOLEAN);
+            }
 
             $query = PlaidTransaction::forTenant($user->tenant_id);
 
@@ -217,7 +222,7 @@ class PlaidController extends Controller
             }
 
             // Filter by pending status
-            if ($validated['pending'] ?? null) {
+            if (isset($validated['pending'])) {
                 $query->where('pending', $validated['pending']);
             }
 
