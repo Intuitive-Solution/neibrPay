@@ -90,6 +90,7 @@ export interface GetTransactionsResponse {
     last_page: number;
     from: number;
     to: number;
+    total_amount: number | string;
   };
 }
 

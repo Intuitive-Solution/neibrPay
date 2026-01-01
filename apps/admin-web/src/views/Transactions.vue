@@ -246,6 +246,25 @@
 
       <!-- Transactions Table -->
       <div class="card-modern overflow-hidden">
+        <!-- Total Amount Header -->
+        <div
+          v-if="pagination.total > 0"
+          class="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between"
+        >
+          <div class="text-sm font-semibold text-gray-900">
+            Total Amount for Matching Transactions:
+            <span
+              :class="[totalAmount >= 0 ? 'text-green-600' : 'text-red-600']"
+            >
+              {{ totalAmount >= 0 ? '+' : '' }}{{ formatCurrency(totalAmount) }}
+            </span>
+          </div>
+          <div class="text-sm text-gray-600">
+            <span class="font-medium">{{ pagination.total }}</span>
+            total {{ pagination.total === 1 ? 'transaction' : 'transactions' }}
+          </div>
+        </div>
+
         <!-- Loading State -->
         <div v-if="isLoadingTransactions" class="p-12 text-center">
           <div
@@ -584,7 +603,15 @@ const pagination = computed(() => ({
   last_page: transactionsData.value?.pagination?.last_page || 1,
   from: transactionsData.value?.pagination?.from || 0,
   to: transactionsData.value?.pagination?.to || 0,
+  total_amount: transactionsData.value?.pagination?.total_amount ?? 0,
 }));
+
+// Safely compute total amount for display
+const totalAmount = computed(() => {
+  const amount = pagination.value.total_amount;
+  const numAmount = Number(amount);
+  return isNaN(numAmount) ? 0 : numAmount;
+});
 
 // Calculate total balances across all accounts
 const totalCurrentBalance = computed(() => {

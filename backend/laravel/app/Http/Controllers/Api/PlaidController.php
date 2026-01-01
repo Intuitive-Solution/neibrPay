@@ -230,6 +230,9 @@ class PlaidController extends Controller
             $sortBy = $validated['sort_by'] ?? 'date';
             $sortOrder = $validated['sort_order'] ?? 'desc';
             
+            // Calculate total amount of all matching transactions (before pagination)
+            $totalAmount = (float) (clone $query)->sum('amount');
+            
             $transactions = $query
                 ->with('bankAccount:id,account_name,account_mask')
                 ->orderBy($sortBy, $sortOrder)
@@ -244,6 +247,7 @@ class PlaidController extends Controller
                     'last_page' => $transactions->lastPage(),
                     'from' => $transactions->firstItem(),
                     'to' => $transactions->lastItem(),
+                    'total_amount' => $totalAmount,
                 ],
             ]);
         } catch (\Exception $e) {
