@@ -2094,7 +2094,7 @@ const pdfViewerUrl = computed(() => {
   if (!latestPdf.value?.file_path) return '';
   // Use direct storage path to the PDF file from Laravel backend
   const baseUrl =
-    (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api';
+    (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000/api';
   const backendUrl = baseUrl.replace('/api', '');
   // Add refresh key to force iframe reload when PDF is updated
   return `${backendUrl}/storage/${latestPdf.value.file_path}?t=${pdfRefreshKey.value}`;
