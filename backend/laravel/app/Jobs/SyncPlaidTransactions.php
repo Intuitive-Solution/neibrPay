@@ -25,6 +25,17 @@ class SyncPlaidTransactions implements ShouldQueue
 
     /**
      * Execute the job.
+     * 
+     * Sync Strategy for Low-Activity HOA Accounts:
+     * - Initial Sync: Retrieves 730 days (2 years) of historical transaction data
+     * - Ongoing Syncs: Uses 30-day lookback window to catch delayed postings and status changes
+     * - Frequency: Weekly (every Monday at 00:00 UTC)
+     * - Purpose: Optimized for low-activity accounts (~4 transactions/month)
+     * 
+     * This approach balances:
+     * - Complete transaction history on initial setup
+     * - Efficient incremental syncs with overlap to catch pending→posted transitions
+     * - Reduced API costs with weekly scheduling instead of hourly
      */
     public function handle(PlaidService $plaidService): void
     {

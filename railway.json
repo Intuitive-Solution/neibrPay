@@ -1,0 +1,22 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "services": {
+    "api": {
+      "startCommand": "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT",
+      "buildCommand": "composer install && npm install && npm run build",
+      "variables": {
+        "PORT": "8000"
+      }
+    },
+    "scheduler": {
+      "startCommand": "chmod +x ./run-scheduler.sh && ./run-scheduler.sh",
+      "buildCommand": "composer install --no-dev --no-scripts",
+      "healthcheck": {
+        "test": ["CMD", "ps", "aux"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3
+      }
+    }
+  }
+}

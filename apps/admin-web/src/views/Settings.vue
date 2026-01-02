@@ -646,8 +646,10 @@
           >
             <h3 class="font-medium text-blue-900 mb-2">Transaction Sync</h3>
             <p class="text-sm text-blue-800 mb-4">
-              Transactions are automatically synced every hour. You can also
-              manually refresh anytime.
+              Transactions are automatically synced weekly (every Monday at
+              12:00 AM UTC). With a 30-day lookback window to catch pending
+              transactions. You can also manually refresh anytime to sync
+              immediately.
             </p>
             <button
               @click="manualSyncBankAccounts"

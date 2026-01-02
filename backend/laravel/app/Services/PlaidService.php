@@ -233,9 +233,28 @@ class PlaidService
                 ->min('sync_start_date');
             
             if (!$startDate) {
-                $startDate = now()->subDays(90)->format('Y-m-d');
+                // Initial sync: retrieve full 2 years of history (730 days)
+                // This gives a complete historical baseline for the account
+                $startDate = now()->subDays(730)->format('Y-m-d');
+                
+                Log::info('Initial Plaid sync - requesting 730 days of history', [
+                    'item_id' => $itemId,
+                    'tenant_id' => $tenantId,
+                    'start_date' => $startDate,
+                ]);
             } else {
-                $startDate = $startDate->format('Y-m-d');
+                // Ongoing syncs: look back 30 days to catch:
+                // - Delayed postings (transactions posted 3-5 days after occurrence)
+                // - Pending → Posted status changes
+                // - Any missed transactions from previous syncs
+                $startDate = now()->subDays(30)->format('Y-m-d');
+                
+                Log::info('Ongoing Plaid sync - using 30-day lookback window', [
+                    'item_id' => $itemId,
+                    'tenant_id' => $tenantId,
+                    'original_sync_date' => $startDate,
+                    'start_date' => $startDate,
+                ]);
             }
             
             $endDate = now()->format('Y-m-d');
@@ -260,6 +279,7 @@ class PlaidService
             }
 
             $data = $response->json();
+            Log::info('Plaid transactions response', ['data' => $data]);    
             $transactions = $data['transactions'] ?? [];
             $totalTransactions = $data['total_transactions'] ?? 0;
 

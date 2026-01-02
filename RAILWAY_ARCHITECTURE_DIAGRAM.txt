@@ -1,0 +1,316 @@
+╔═════════════════════════════════════════════════════════════════════════════╗
+║                                                                             ║
+║                    RAILWAY ARCHITECTURE DIAGRAM                            ║
+║              Showing How Scheduler Works on Railway                        ║
+║                                                                             ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         RAILWAY PLATFORM                                     │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │                       Your Project: NeibrPay                           │  │
+│  │  ┌────────────────────────────────────────────────────────────────┐  │  │
+│  │  │                    PROJECT SERVICES                           │  │  │
+│  │  │                                                               │  │  │
+│  │  │  ┌────────────────────┐      ┌────────────────────┐          │  │  │
+│  │  │  │   API Service      │      │ Scheduler Service  │          │  │  │
+│  │  │  ├────────────────────┤      ├────────────────────┤          │  │  │
+│  │  │  │ • Web server       │      │ • Background job   │          │  │  │
+│  │  │  │ • Port 8000        │      │ • Continuous loop  │          │  │  │
+│  │  │  │ • Handles requests │      │ • Runs scheduler   │          │  │  │
+│  │  │  │ • REST API         │      │                    │          │  │  │
+│  │  │  │                    │      │ run-scheduler.sh   │          │  │  │
+│  │  │  └────────────────────┘      └────────────────────┘          │  │  │
+│  │  │           ↓                           ↓                       │  │  │
+│  │  │                                                               │  │  │
+│  │  │  ┌────────────────────────────────────────────────────────┐  │  │  │
+│  │  │  │          PostgreSQL Database                         │  │  │  │
+│  │  │  │  (Shared between API and Scheduler)                  │  │  │  │
+│  │  │  ├────────────────────────────────────────────────────────┤  │  │  │
+│  │  │  │ • plaid_bank_accounts (sync metadata)                │  │  │  │
+│  │  │  │ • plaid_transactions (transaction data)              │  │  │  │
+│  │  │  │ • Updated by Scheduler every Monday 00:00 UTC        │  │  │  │
+│  │  │  │ • Read by API for transaction endpoints              │  │  │  │
+│  │  │  └────────────────────────────────────────────────────────┘  │  │  │
+│  │  │                                                               │  │  │
+│  │  └───────────────────────────────────────────────────────────────┘  │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+SCHEDULER SERVICE INTERNAL FLOW
+═════════════════════════════════════════════════════════════════════════════
+
+        ┌─────────────────────────┐
+        │  run-scheduler.sh        │
+        │  Bash script             │
+        └────────────┬─────────────┘
+                     │
+                     ↓
+        ┌─────────────────────────────────────────┐
+        │  while true; do                         │
+        │    php artisan schedule:run --verbose   │
+        │    sleep 60                             │
+        │  done                                   │
+        └────────────┬────────────────────────────┘
+                     │
+                     ↓ (Every minute)
+        ┌─────────────────────────────────────────┐
+        │  Laravel Kernel::schedule()             │
+        │  Reads: $schedule->command('plaid:sync')│
+        │         ->weekly()                      │
+        │         ->mondays()                     │
+        │         ->timezone('UTC')               │
+        └────────────┬────────────────────────────┘
+                     │
+                     ↓ (Is it Monday 00:00 UTC?)
+            ┌────────┴────────┐
+            │                 │
+         NO ↓               YES ↓
+    ┌──────────────┐   ┌─────────────────────────┐
+    │ Do nothing   │   │ Execute: plaid:sync     │
+    │ Sleep 60 sec │   │ Run: SyncPlaidTransactions
+    └──────────────┘   └────────┬────────────────┘
+            ↑                    │
+            │                    ↓
+            │          ┌─────────────────────────┐
+            │          │  PlaidService           │
+            └──────────┤  syncTransactions()     │
+                       │                         │
+                       │ For each account:       │
+                       │ ├─ Detect first sync    │
+                       │ ├─ Determine date range │
+                       │ ├─ Call Plaid API       │
+                       │ ├─ Fetch transactions   │
+                       │ ├─ Store in DB          │
+                       │ └─ Update metadata      │
+                       │                         │
+                       └─────────┬───────────────┘
+                                 │
+                                 ↓
+                       ┌──────────────────────┐
+                       │ Log completion       │
+                       │ Update last_synced_at│
+                       │ Return result        │
+                       └──────────────────────┘
+
+
+REQUEST/RESPONSE FLOW
+═════════════════════════════════════════════════════════════════════════════
+
+USER                        API SERVICE                SCHEDULER SERVICE
+ │                              │                              │
+ │ GET /transactions            │                              │
+ ├─────────────────────────────►│                              │
+ │                              │                              │
+ │                              │ SELECT * FROM               │
+ │                              │ plaid_transactions           │
+ │                              ├─────────────┐               │
+ │                              │             │               │
+ │                              │◄────────────┤               │
+ │                              │ (Data       │               │
+ │◄─────────────────────────────┤  from DB)   │               │
+ │ JSON Response                │             │               │
+ │                              │             │               │
+ │                              │             │               │
+ │ MANUAL SYNC:                 │             │               │
+ │ POST /api/plaid/sync         │             │               │
+ ├─────────────────────────────►│             │               │
+ │                              │             │               │
+ │                              ├────────────────────────────►│
+ │                              │  Call syncTransactions()     │
+ │                              │                              │
+ │                              │◄────────────────────────────┤
+ │                              │ Results: X accounts synced   │
+ │◄─────────────────────────────┤                              │
+ │ {success, count}             │                              │
+ │                              │                              │
+ │                              │                              │
+ │ AUTOMATIC SYNC (Monday):     │                              │
+ │                              │             ┌──────────────┐│
+ │                              │             │ Every minute: ││
+ │                              │             │ Check if sync││
+ │                              │             │ needs to run ││
+ │                              │             └──────────────┘│
+ │                              │                    │         │
+ │                              │    MONDAY 00:00 UTC ↓        │
+ │                              │◄────────────────────────────┤
+ │                              │  Sync all active accounts    │
+ │                              │                              │
+ │ [User sees updated data]     │◄────────────────────────────┤
+ │                              │ Results logged               │
+ └                              └                              ┘
+
+
+DEPLOYMENT DIAGRAM
+═════════════════════════════════════════════════════════════════════════════
+
+Local Repository
+        │
+        ├─ run-scheduler.sh (created)
+        ├─ railway.json (created)
+        └─ [other files]
+        │
+        ↓ git push
+        │
+GitHub Repository (or GitLab)
+        │
+        ↓ Webhook trigger
+        │
+Railway Platform
+        │
+        ├─ Detects railway.json
+        │
+        ├─ Creates Services:
+        │  ├─ api
+        │  └─ scheduler
+        │
+        ├─ Builds:
+        │  ├─ Composer install
+        │  ├─ npm install
+        │  └─ npm run build
+        │
+        ├─ Deploys:
+        │  ├─ API service (starts web server)
+        │  └─ Scheduler service (runs run-scheduler.sh)
+        │
+        ├─ Sets Environment Variables
+        │
+        ├─ Links Database
+        │
+        └─ Monitors & Auto-Restarts
+
+
+TIME-BASED EXECUTION
+═════════════════════════════════════════════════════════════════════════════
+
+MONDAY:
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│ 23:50 UTC (Sunday night)                                                │
+│ └─ Scheduler checking every minute                                     │
+│    (NOT time yet, skip)                                                │
+│                                                                         │
+│ 23:59 UTC (Almost midnight)                                             │
+│ └─ Still checking                                                      │
+│    (NOT time yet, skip)                                                │
+│                                                                         │
+│ 00:00 UTC (Monday midnight) ← THIS IS IT!                              │
+│ ├─ Scheduler runs: php artisan schedule:run                            │
+│ ├─ Laravel checks: Is command due?                                     │
+│ ├─ Cron: 0 0 * * 1 (Monday 00:00) ✓ YES!                             │
+│ ├─ Executes: plaid:sync                                                │
+│ │                                                                      │
+│ │ ├─ Gets all active bank accounts                                    │
+│ │ ├─ For each account:                                                │
+│ │ │  ├─ Detect: First or ongoing sync                                │
+│ │ │  ├─ Set window: 730 days or 30 days                             │
+│ │ │  ├─ Call Plaid API                                              │
+│ │ │  ├─ Fetch transactions                                          │
+│ │ │  ├─ Create/Update in database                                   │
+│ │ │  └─ Update last_synced_at                                       │
+│ │ │                                                                  │
+│ │ └─ Log: "Plaid sync completed successfully"                       │
+│ │                                                                   │
+│ │ (Takes ~1-5 seconds total)                                        │
+│ │                                                                   │
+│ └─ Back to sleep (60 seconds)                                        │
+│                                                                         │
+│ 00:01-23:59 UTC (Rest of week)                                         │
+│ └─ Scheduler keeps running                                             │
+│    └─ Every minute checks: Is it Monday 00:00?                        │
+│       └─ NO → Skip                                                    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+NEXT MONDAY:
+Same cycle repeats...
+
+
+RESOURCE USAGE
+═════════════════════════════════════════════════════════════════════════════
+
+API Service:
+  CPU:    Variable (based on traffic)
+  Memory: ~200-300MB
+  Cost:   Based on dyno hours
+
+Scheduler Service:
+  CPU:    Minimal (sleeps most of the time)
+           Peak: ~50% CPU for ~5 seconds every Monday
+           Avg:  <1% CPU
+  Memory: ~100-150MB
+  Cost:   Low ($5-10/month)
+
+Database:
+  Reads:  From API queries
+  Writes: Only Monday 00:00 UTC (sync)
+  Storage: Grows with transactions (~1KB per transaction)
+
+Total Cost:
+  Before:  Hourly sync = high cost
+  After:   Weekly sync = 95% cost reduction
+
+
+MONITORING POINTS
+═════════════════════════════════════════════════════════════════════════════
+
+1. Scheduler Service Status
+   └─ railway service list
+   └─ Should show: running
+
+2. Logs Every Minute
+   └─ railway logs --service scheduler
+   └─ Should see: "Running scheduled commands..."
+
+3. Monday Sync Logs
+   └─ railway logs --service scheduler | grep "2024-01-08"
+   └─ Should see: "Plaid sync completed successfully"
+
+4. Database Updates
+   └─ Check last_synced_at column
+   └─ Should be recent (Monday morning)
+
+5. Transaction Count
+   └─ SELECT COUNT(*) FROM plaid_transactions
+   └─ Should increase after each sync
+
+
+ERROR HANDLING
+═════════════════════════════════════════════════════════════════════════════
+
+If Sync Fails:
+  ├─ Logs show error message
+  ├─ Account status updated to 'error'
+  ├─ No transactions created/updated
+  └─ Manual retry: "Refresh Transactions Now" button
+
+If Scheduler Crashes:
+  ├─ Railway auto-restarts (within 1-2 minutes)
+  ├─ You get notified (if configured)
+  └─ Next cycle continues normally
+
+If Database Down:
+  ├─ Scheduler can't connect
+  ├─ Logs show connection error
+  ├─ Database restored → Scheduler continues
+  └─ Sync happens next Monday
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+Summary: Two separate services working together
+
+API Service:    Handles user requests, reads data
+                ↓
+                Database
+                ↑
+Scheduler Service: Runs once/week, writes data
+
+No conflicts, no issues, works perfectly on Railway!
+
+═════════════════════════════════════════════════════════════════════════════
+
+

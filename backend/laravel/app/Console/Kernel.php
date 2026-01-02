@@ -12,9 +12,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Sync Plaid transactions every hour
+        // Sync Plaid transactions weekly (optimized for low-activity accounts)
+        // Runs every Monday at 00:00 UTC
+        // This allows time for all pending transactions to post (typically 1-3 days)
         $schedule->command('plaid:sync')
-            ->hourly()
+            ->weekly()
+            ->mondays()
+            ->timezone('UTC')
             ->withoutOverlapping()
             ->onFailure(function () {
                 \Illuminate\Support\Facades\Log::error('Plaid sync job failed');
