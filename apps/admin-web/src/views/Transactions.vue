@@ -126,7 +126,9 @@
       <!-- Filters Card -->
       <div class="card-modern">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+
+        <!-- Quick Filters Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
           <!-- Bank Account Filter -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -149,32 +151,6 @@
                 ••••{{ account.account_mask }})
               </option>
             </select>
-          </div>
-
-          <!-- Start Date -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Start Date
-            </label>
-            <input
-              v-model="filters.start_date"
-              type="date"
-              class="input-field"
-              @change="currentPage = 1"
-            />
-          </div>
-
-          <!-- End Date -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              End Date
-            </label>
-            <input
-              v-model="filters.end_date"
-              type="date"
-              class="input-field"
-              @change="currentPage = 1"
-            />
           </div>
 
           <!-- Status Filter -->
@@ -206,6 +182,12 @@
               @change="currentPage = 1"
             />
           </div>
+        </div>
+
+        <!-- Date Range Picker Section -->
+        <div class="border-t border-gray-200 pt-6">
+          <h3 class="text-sm font-medium text-gray-700 mb-4">Date Range</h3>
+          <DateRangePicker v-model="dateRange" />
         </div>
 
         <!-- Filter Actions -->
@@ -246,6 +228,25 @@
 
       <!-- Transactions Table -->
       <div class="card-modern overflow-hidden">
+        <!-- Total Amount Header -->
+        <div
+          v-if="pagination.total > 0"
+          class="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between"
+        >
+          <div class="text-sm font-semibold text-gray-900">
+            Total Amount for Matching Transactions:
+            <span
+              :class="[totalAmount >= 0 ? 'text-green-600' : 'text-red-600']"
+            >
+              {{ totalAmount >= 0 ? '+' : '' }}{{ formatCurrency(totalAmount) }}
+            </span>
+          </div>
+          <div class="text-sm text-gray-600">
+            <span class="font-medium">{{ pagination.total }}</span>
+            total {{ pagination.total === 1 ? 'transaction' : 'transactions' }}
+          </div>
+        </div>
+
         <!-- Loading State -->
         <div v-if="isLoadingTransactions" class="p-12 text-center">
           <div
@@ -517,7 +518,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   useBankAccounts,
@@ -525,6 +526,7 @@ import {
   type BankAccount,
 } from '@neibrpay/api-client';
 import { useAuthStore } from '../stores/auth';
+import DateRangePicker from '../components/DateRangePicker.vue';
 
 // Router and Auth
 const router = useRouter();
@@ -544,6 +546,12 @@ const filters = ref({
   end_date: null as string | null,
   search: null as string | null,
   pending: null as boolean | null,
+});
+
+// Date Range Picker state
+const dateRange = ref({
+  startDate: '',
+  endDate: '',
 });
 
 // Sorting state
@@ -571,6 +579,17 @@ const queryParams = computed(() => ({
   sort_order: sortOrder.value,
 }));
 
+// Watch for date range changes and update filters
+watch(
+  () => dateRange.value,
+  newRange => {
+    filters.value.start_date = newRange.startDate || null;
+    filters.value.end_date = newRange.endDate || null;
+    currentPage.value = 1;
+  },
+  { deep: true }
+);
+
 // Fetch transactions with reactive query parameters
 const { data: transactionsData, isLoading: isLoadingTransactions } =
   useTransactions(queryParams);
@@ -584,7 +603,15 @@ const pagination = computed(() => ({
   last_page: transactionsData.value?.pagination?.last_page || 1,
   from: transactionsData.value?.pagination?.from || 0,
   to: transactionsData.value?.pagination?.to || 0,
+  total_amount: transactionsData.value?.pagination?.total_amount ?? 0,
 }));
+
+// Safely compute total amount for display
+const totalAmount = computed(() => {
+  const amount = pagination.value.total_amount;
+  const numAmount = Number(amount);
+  return isNaN(numAmount) ? 0 : numAmount;
+});
 
 // Calculate total balances across all accounts
 const totalCurrentBalance = computed(() => {
@@ -667,6 +694,10 @@ const resetFilters = () => {
     end_date: null,
     search: null,
     pending: null,
+  };
+  dateRange.value = {
+    startDate: '',
+    endDate: '',
   };
   sortBy.value = 'date';
   sortOrder.value = 'desc';
