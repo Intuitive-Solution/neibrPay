@@ -27,7 +27,7 @@ LOG_FILE="$LARAVEL_DIR/storage/logs/laravel.log"
 
 # Plaid Configuration (update these or set as environment variables)
 PLAID_CLIENT_ID="6923886e63de1f00215b725d"
-PLAID_CLIENT_SECRET="a4f69fb5c0726f5890cc1399dc155b"
+PLAID_CLIENT_SECRET=""
 PLAID_ENVIRONMENT="sandbox"
 PLAID_BASE_URL="https://sandbox.plaid.com"
 
