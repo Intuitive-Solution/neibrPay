@@ -283,6 +283,25 @@ class PlaidService
 
                 $data = $response->json();
                 
+                // Log sync response for debugging (first page only to avoid spam)
+                if ($cursor === ($representativeAccount->transactions_cursor ?? '')) {
+                    Log::debug('Plaid transactions/sync response', [
+                        'item_id' => $itemId,
+                        'cursor' => substr($cursor, 0, 20) . '...',
+                        'added_count' => count($data['added'] ?? []),
+                        'modified_count' => count($data['modified'] ?? []),
+                        'removed_count' => count($data['removed'] ?? []),
+                        'has_more' => $data['has_more'] ?? false,
+                        'next_cursor' => isset($data['next_cursor']) ? substr($data['next_cursor'], 0, 20) . '...' : 'null',
+                    ]);
+                    
+                    // Log sample transaction IDs if any were returned
+                    if (!empty($data['added'])) {
+                        $sampleIds = array_slice(array_column($data['added'], 'transaction_id'), 0, 3);
+                        Log::debug('Sample added transaction IDs', ['ids' => $sampleIds]);
+                    }
+                }
+                
                 // Process added transactions
                 $added = $data['added'] ?? [];
                 foreach ($added as $transaction) {
