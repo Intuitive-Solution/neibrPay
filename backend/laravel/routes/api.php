@@ -224,6 +224,9 @@ Route::middleware('auth:sanctum')->group(function () {
 // Plaid sync-all route (public, secured with API key for n8n)
 Route::post('/plaid/sync-all', [PlaidController::class, 'syncAll']);
 
+// Plaid webhook route (public, no auth - optional signature verification)
+Route::post('/plaid/webhook', [PlaidController::class, 'handleWebhook']);
+
 // Stripe webhook route (public, no auth - uses signature verification)
 Route::post('stripe/webhook', [StripePaymentController::class, 'handleWebhook']);
 

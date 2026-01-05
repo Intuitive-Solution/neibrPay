@@ -20,6 +20,9 @@ class VerifyCsrfToken extends Middleware
         'api/auth/login',
         'api/auth/magic-link',
         'api/auth/google/signup',
+        // Webhook endpoints (external services)
+        'api/plaid/webhook',
+        'api/stripe/webhook',
     ];
 
     /**

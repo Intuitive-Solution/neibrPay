@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('budget_entries', function (Blueprint $table) {
+        if (!Schema::hasTable('budget_entries')) {
+            Schema::create('budget_entries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
             $table->foreignId('budget_category_id')->constrained('budget_categories')->onDelete('cascade');
@@ -26,7 +27,8 @@ return new class extends Migration
             // Indexes
             $table->index(['tenant_id', 'year']);
             $table->index(['budget_category_id', 'year', 'month']);
-        });
+            });
+        }
     }
 
     /**
