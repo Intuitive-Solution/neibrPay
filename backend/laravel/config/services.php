@@ -38,6 +38,8 @@ return [
         'environment' => env('PLAID_ENVIRONMENT', 'sandbox'),
         'redirect_uri' => env('PLAID_REDIRECT_URI'),
         'api_key' => env('PLAID_API_KEY'),
+        'webhook_url' => env('PLAID_WEBHOOK_URL'),
+        'webhook_secret' => env('PLAID_WEBHOOK_SECRET'),
     ],
 
 ];

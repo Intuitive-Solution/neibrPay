@@ -24,6 +24,8 @@ class PlaidBankAccount extends Model
         'available_balance',
         'sync_start_date',
         'last_synced_at',
+        'transactions_cursor',
+        'initial_sync_complete',
         'status',
         'error_message',
     ];
@@ -33,6 +35,7 @@ class PlaidBankAccount extends Model
         'last_synced_at' => 'datetime',
         'current_balance' => 'decimal:2',
         'available_balance' => 'decimal:2',
+        'initial_sync_complete' => 'boolean',
     ];
 
     /**

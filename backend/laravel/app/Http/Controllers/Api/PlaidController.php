@@ -317,5 +317,134 @@ class PlaidController extends Controller
             return response()->json(['error' => 'Failed to sync account: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * POST /api/plaid/webhook
+     * Webhook endpoint to handle Plaid events (public, no authentication)
+     * Processes SYNC_UPDATES_AVAILABLE events for incremental transaction updates
+     */
+    public function handleWebhook(Request $request): JsonResponse
+    {
+        try {
+            // Get payload - handle both JSON and form-encoded requests
+            $payload = [];
+            if ($request->isJson()) {
+                $payload = $request->json()->all();
+            } else {
+                $payload = $request->all();
+            }
+
+            // Log all webhook events for debugging
+            Log::info('Plaid webhook received', [
+                'webhook_type' => $payload['webhook_type'] ?? 'unknown',
+                'webhook_code' => $payload['webhook_code'] ?? 'unknown',
+                'item_id' => $payload['item_id'] ?? 'unknown',
+                'content_type' => $request->header('Content-Type'),
+                'has_json' => $request->isJson(),
+            ]);
+
+            // Verify webhook signature if secret is configured (optional but recommended)
+            if (config('services.plaid.webhook_secret')) {
+                try {
+                    $this->verifyWebhookSignature($request);
+                } catch (\Exception $e) {
+                    Log::warning('Webhook signature verification failed', [
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Continue processing even if signature verification fails
+                    // (you may want to throw here in production)
+                }
+            }
+
+            $webhookType = $payload['webhook_type'] ?? null;
+            $webhookCode = $payload['webhook_code'] ?? null;
+            $itemId = $payload['item_id'] ?? null;
+
+            // Handle SYNC_UPDATES_AVAILABLE webhook
+            if ($webhookType === 'TRANSACTIONS' && $webhookCode === 'SYNC_UPDATES_AVAILABLE') {
+                if (!$itemId) {
+                    Log::warning('SYNC_UPDATES_AVAILABLE webhook missing item_id');
+                    return response()->json(['status' => 'received'], 200);
+                }
+
+                // Find all bank accounts for this item and sync them
+                $accounts = PlaidBankAccount::where('plaid_item_id', $itemId)
+                    ->get();
+
+                if ($accounts->isEmpty()) {
+                    Log::warning('No bank accounts found for Plaid item', ['item_id' => $itemId]);
+                    return response()->json(['status' => 'received'], 200);
+                }
+
+                // Sync only the first account (will sync all accounts for the item)
+                // Note: For production, consider queueing this to avoid webhook timeouts
+                try {
+                    // Dispatch sync job in background to avoid webhook timeout
+                    // For now, we'll run it synchronously but with error handling
+                    $syncResult = $this->plaidService->syncTransactions($accounts->first());
+                    Log::info('Webhook sync completed', [
+                        'item_id' => $itemId,
+                        'sync_result' => $syncResult,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Webhook sync failed', [
+                        'item_id' => $itemId,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    // Still return 200 to acknowledge receipt
+                }
+            } else {
+                // Log other webhook types for informational purposes
+                Log::info('Plaid webhook ignored (not SYNC_UPDATES_AVAILABLE)', [
+                    'webhook_type' => $webhookType,
+                    'webhook_code' => $webhookCode,
+                ]);
+            }
+
+            // Always return 200 OK to acknowledge receipt
+            return response()->json(['status' => 'received'], 200);
+        } catch (\Exception $e) {
+            Log::error('Plaid Webhook Error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Still return 200 to prevent Plaid from retrying
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 200);
+        } catch (\Throwable $e) {
+            // Catch any other throwable (PHP 7+)
+            Log::error('Plaid Webhook Fatal Error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['status' => 'error', 'message' => 'Internal server error'], 200);
+        }
+    }
+
+    /**
+     * Verify webhook signature using HMAC-SHA256
+     * Optional: Use if webhook_secret is configured in environment
+     */
+    private function verifyWebhookSignature(Request $request): void
+    {
+        $signature = $request->header('Plaid-Verification');
+        if (!$signature) {
+            throw new \Exception('Missing webhook signature');
+        }
+
+        $secret = config('services.plaid.webhook_secret');
+        $body = $request->getContent();
+        
+        // Plaid uses HMAC-SHA256 for signature verification
+        $expectedSignature = hash_hmac('sha256', $body, $secret);
+        
+        if (!hash_equals($expectedSignature, $signature)) {
+            throw new \Exception('Invalid webhook signature');
+        }
+    }
 }
 

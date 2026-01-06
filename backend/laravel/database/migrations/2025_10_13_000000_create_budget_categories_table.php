@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('budget_categories', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
-            $table->string('name');
-            $table->enum('type', ['income', 'expense']);
-            $table->integer('display_order')->default(0);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamps();
-            $table->softDeletes();
-            
-            // Indexes
-            $table->index(['tenant_id', 'type']);
-            $table->index(['tenant_id', 'display_order']);
-            $table->index('created_by');
-        });
+        if (!Schema::hasTable('budget_categories')) {
+            Schema::create('budget_categories', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
+                $table->string('name');
+                $table->enum('type', ['income', 'expense']);
+                $table->integer('display_order')->default(0);
+                $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->timestamps();
+                $table->softDeletes();
+                
+                // Indexes
+                $table->index(['tenant_id', 'type']);
+                $table->index(['tenant_id', 'display_order']);
+                $table->index('created_by');
+            });
+        }
     }
 
     /**

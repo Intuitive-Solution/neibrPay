@@ -774,3 +774,5 @@ npx n8n-mcp
 Username: user_good
 Password: pass_good
 Phone: 1111111111
+
+user_transactions_dynamic
