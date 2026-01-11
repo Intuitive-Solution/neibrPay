@@ -1172,6 +1172,7 @@ const isUploading = ref(false);
 const showDeleteModal = ref(false);
 const documentToDelete = ref<HoaDocument | null>(null);
 const currentFolderId = ref<number | null>(null);
+const fetchedParentFolders = ref<Map<number, HoaDocumentFolder>>(new Map());
 const showFolderModal = ref(false);
 const showFolderDeleteModal = ref(false);
 const folderToDelete = ref<HoaDocumentFolder | null>(null);
@@ -1255,10 +1256,43 @@ const {
 });
 
 // Query for all folders (for dropdowns and search)
+const allFoldersQueryParams = computed(() => {
+  const params: {
+    all?: boolean;
+    visible_to_residents?: boolean;
+  } = {
+    all: true,
+  };
+
+  if (isResident.value) {
+    params.visible_to_residents = true;
+  }
+
+  return params;
+});
+
 const { data: allFolders } = useQuery({
-  queryKey: computed(() => queryKeys.documentFolders.list({ all: true })),
-  queryFn: () => documentsApi.getFolders({ all: true }),
+  queryKey: computed(() =>
+    queryKeys.documentFolders.list(allFoldersQueryParams.value)
+  ),
+  queryFn: () => documentsApi.getFolders(allFoldersQueryParams.value),
   enabled: true,
+});
+
+// Query for current folder (to ensure we have it for breadcrumb)
+const { data: currentFolderData } = useQuery({
+  queryKey: computed(() =>
+    currentFolderId.value !== null
+      ? queryKeys.documentFolders.detail(currentFolderId.value)
+      : ['skip']
+  ),
+  queryFn: () => {
+    if (currentFolderId.value === null) {
+      return null;
+    }
+    return documentsApi.getFolder(currentFolderId.value);
+  },
+  enabled: computed(() => currentFolderId.value !== null),
 });
 
 // Query for all documents (for search across all folders)
@@ -1307,7 +1341,46 @@ watch(
   () => {
     refetch();
     refetchFolders();
+    // Clear fetched parent folders when folder changes
+    fetchedParentFolders.value.clear();
   }
+);
+
+// Watch for current folder data and fetch missing parent folders
+watch(
+  () => currentFolderData.value,
+  async folder => {
+    if (!folder || !folder.parent_id) return;
+
+    const all = allFolders.value || [];
+    const folderMap = new Map<number, HoaDocumentFolder>();
+    all.forEach(f => folderMap.set(f.id, f));
+
+    // Fetch missing parent folders recursively
+    const fetchParents = async (parentId: number | null) => {
+      if (parentId === null) return;
+
+      // Check if already fetched or in allFolders
+      if (folderMap.has(parentId) || fetchedParentFolders.value.has(parentId)) {
+        return;
+      }
+
+      try {
+        const parentFolder = await documentsApi.getFolder(parentId);
+        fetchedParentFolders.value.set(parentId, parentFolder);
+
+        // Recursively fetch grandparent
+        if (parentFolder.parent_id !== null) {
+          await fetchParents(parentFolder.parent_id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch parent folder:', error);
+      }
+    };
+
+    await fetchParents(folder.parent_id);
+  },
+  { immediate: true }
 );
 
 // Set default folder when upload modal opens
@@ -1454,27 +1527,39 @@ const breadcrumbPath = computed(() => {
     folderMap.set(folder.id, folder);
   });
 
+  // Use currentFolderData if available (more reliable for residents)
+  const currentFolder =
+    currentFolderData.value || folderMap.get(currentFolderId.value);
+
+  if (!currentFolder) {
+    // If folder not found, just return root
+    return path;
+  }
+
   // Build path from current folder up to root
-  const buildPath = (folderId: number | null): void => {
-    if (folderId === null) {
-      return;
-    }
-
-    const folder = folderMap.get(folderId);
-    if (!folder) {
-      return;
-    }
-
+  const buildPath = (folder: HoaDocumentFolder): void => {
     // Recursively add parent first
     if (folder.parent_id !== null) {
-      buildPath(folder.parent_id);
+      // Check both allFolders and fetchedParentFolders
+      const parent =
+        folderMap.get(folder.parent_id) ||
+        fetchedParentFolders.value.get(folder.parent_id);
+      if (parent) {
+        buildPath(parent);
+      } else {
+        // Parent not found - this shouldn't happen if watch is working correctly
+        // But if it does, skip the parent to avoid breaking the breadcrumb
+        console.warn(
+          `Parent folder ${folder.parent_id} not found for folder ${folder.id}`
+        );
+      }
     }
 
     // Then add current folder
     path.push({ id: folder.id, name: folder.name });
   };
 
-  buildPath(currentFolderId.value);
+  buildPath(currentFolder);
 
   return path;
 });
