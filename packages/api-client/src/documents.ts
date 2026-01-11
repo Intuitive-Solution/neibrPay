@@ -104,6 +104,7 @@ export const documentsApi = {
   async getDocuments(params?: {
     visible_to_residents?: boolean;
     folder_id?: number | null;
+    all?: boolean; // If true, return all documents regardless of folder_id
   }): Promise<HoaDocument[]> {
     const response = await apiClient.get('/documents', { params });
     return response.data.data;

@@ -23,10 +23,13 @@ class DocumentController extends Controller
             ->with('folder:id,name')
             ->orderBy('created_at', 'desc');
 
-        // Always filter by folder_id to show only documents in the current folder
-        // If folder_id is null, show root documents (no folder)
-        // If folder_id is provided, show only documents in that folder
-        if ($request->has('folder_id')) {
+        // If 'all' parameter is true, return all documents (for search)
+        if ($request->boolean('all')) {
+            // Return all documents without folder_id filtering
+        } elseif ($request->has('folder_id')) {
+            // Filter by folder_id to show only documents in the current folder
+            // If folder_id is null, show root documents (no folder)
+            // If folder_id is provided, show only documents in that folder
             if ($request->input('folder_id') === null || $request->input('folder_id') === '') {
                 // Get documents at root level (no folder)
                 $query->whereNull('folder_id');

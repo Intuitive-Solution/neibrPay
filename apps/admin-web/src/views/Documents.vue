@@ -1205,11 +1205,43 @@ const {
   enabled: true,
 });
 
-// Query for all folders (for dropdowns)
+// Query for all folders (for dropdowns and search)
 const { data: allFolders } = useQuery({
   queryKey: computed(() => queryKeys.documentFolders.list({ all: true })),
   queryFn: () => documentsApi.getFolders({ all: true }),
   enabled: true,
+});
+
+// Query for all documents (for search across all folders)
+const allDocumentsQueryParams = computed(() => {
+  const params: {
+    visible_to_residents?: boolean;
+    all?: boolean;
+  } = {
+    all: true, // Get all documents regardless of folder_id
+  };
+
+  if (isResident.value) {
+    params.visible_to_residents = true;
+  } else if (filterVisible.value) {
+    params.visible_to_residents = true;
+  }
+
+  return params;
+});
+
+// Query for all documents when searching
+const { data: allDocuments } = useQuery({
+  queryKey: computed(() =>
+    queryKeys.documents.list({
+      visible_to_residents: isResident.value
+        ? true
+        : filterVisible.value || undefined,
+      all: true,
+    })
+  ),
+  queryFn: () => documentsApi.getDocuments(allDocumentsQueryParams.value),
+  enabled: computed(() => searchQuery.value.length > 0), // Only fetch when searching
 });
 
 // Watch for filter changes to ensure refetch
@@ -1307,7 +1339,13 @@ const deleteFolderMutation = useMutation({
 
 // Computed
 const filteredDocuments = computed(() => {
-  let filtered = documents.value || [];
+  // When searching, use all documents if available, otherwise use current folder documents
+  const docsToSearch =
+    searchQuery.value && allDocuments.value
+      ? allDocuments.value
+      : documents.value || [];
+
+  let filtered = docsToSearch;
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
@@ -1322,7 +1360,13 @@ const filteredDocuments = computed(() => {
 });
 
 const filteredFolders = computed(() => {
-  let filtered = folders.value || [];
+  // When searching, use all folders, otherwise use current folder's child folders
+  const foldersToSearch =
+    searchQuery.value && allFolders.value
+      ? allFolders.value
+      : folders.value || [];
+
+  let filtered = foldersToSearch;
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
