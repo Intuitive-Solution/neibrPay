@@ -372,7 +372,7 @@
                   <!-- Dropdown Menu -->
                   <div
                     v-if="!isResident && openFolderMenuId === folder.id"
-                    class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                     @click.stop
                   >
                     <button
@@ -531,7 +531,7 @@
                   <!-- Dropdown Menu -->
                   <div
                     v-if="openDocumentMenuId === document.id"
-                    class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                     @click.stop
                   >
                     <button
@@ -659,19 +659,22 @@
                         isDragOver
                           ? 'border-primary bg-primary-50'
                           : 'border-gray-300 hover:border-gray-400 bg-gray-50',
-                        selectedFile ? 'border-primary bg-primary-50' : '',
+                        selectedFiles.length > 0
+                          ? 'border-primary bg-primary-50'
+                          : '',
                       ]"
                       @click="triggerFileInput"
                     >
                       <input
                         ref="fileInput"
                         type="file"
+                        multiple
                         @change="handleFileSelect"
                         class="hidden"
                         accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.csv,.zip"
                       />
 
-                      <div v-if="!selectedFile">
+                      <div v-if="selectedFiles.length === 0">
                         <svg
                           class="mx-auto h-12 w-12 text-gray-400"
                           stroke="currentColor"
@@ -695,36 +698,78 @@
                           </p>
                           <p class="text-xs text-gray-500 mt-1">
                             PDF, DOC, DOCX, TXT, JPG, PNG, GIF, XLS, XLSX, CSV,
-                            ZIP (Max 10MB)
+                            ZIP (Max 10MB per file)
                           </p>
                         </div>
                       </div>
 
-                      <div v-else class="flex flex-col items-center">
-                        <svg
-                          class="mx-auto h-12 w-12 text-primary"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                        <p class="mt-2 text-sm font-medium text-gray-900">
-                          {{ selectedFile.name }}
-                        </p>
-                        <p class="text-xs text-gray-500 mt-1">
-                          {{ formatFileSize(selectedFile.size) }}
-                        </p>
+                      <div v-else class="w-full">
+                        <div class="mb-4">
+                          <p class="text-sm font-medium text-gray-700 mb-2">
+                            {{ selectedFiles.length }} file{{
+                              selectedFiles.length !== 1 ? 's' : ''
+                            }}
+                            selected
+                          </p>
+                        </div>
+                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                          <div
+                            v-for="(file, index) in selectedFiles"
+                            :key="index"
+                            class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200 group"
+                          >
+                            <div class="flex items-center flex-1 min-w-0 pr-2">
+                              <svg
+                                class="h-5 w-5 text-gray-400 mr-2 flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                              <div class="flex-1 min-w-0">
+                                <p
+                                  class="text-sm font-medium text-gray-900 truncate"
+                                >
+                                  {{ file.name }}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                  {{ formatFileSize(file.size) }}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              @click.stop="removeFile(index)"
+                              class="ml-2 text-red-600 hover:text-red-800 flex-shrink-0 p-1 rounded hover:bg-red-50 transition-colors z-10"
+                              title="Remove file"
+                              type="button"
+                            >
+                              <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
                         <button
-                          @click.stop="selectedFile = null"
-                          class="mt-2 text-xs text-red-600 hover:text-red-800"
+                          @click.stop="selectedFiles = []"
+                          class="mt-3 text-sm text-red-600 hover:text-red-800"
                         >
-                          Remove file
+                          Clear all files
                         </button>
                       </div>
                     </div>
@@ -803,10 +848,14 @@
               <button
                 type="button"
                 @click="handleUpload"
-                :disabled="!selectedFile || isUploading"
+                :disabled="selectedFiles.length === 0 || isUploading"
                 class="inline-flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ isUploading ? 'Uploading...' : 'Upload' }}
+                {{
+                  isUploading
+                    ? `Uploading ${selectedFiles.length} file${selectedFiles.length !== 1 ? 's' : ''}...`
+                    : `Upload ${selectedFiles.length} file${selectedFiles.length !== 1 ? 's' : ''}`
+                }}
               </button>
               <button
                 type="button"
@@ -1110,7 +1159,7 @@ const isResident = computed(() => authStore.isResident);
 const searchQuery = ref('');
 const filterVisible = ref(false);
 const showUploadModal = ref(false);
-const selectedFile = ref<File | null>(null);
+const selectedFiles = ref<File[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
 const isDragOver = ref(false);
 const uploadForm = ref({
@@ -1276,7 +1325,7 @@ const uploadMutation = useMutation({
   mutationFn: documentsApi.createDocument,
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.documents.all });
-    cancelUpload();
+    // Don't call cancelUpload here - we'll call it after all files are uploaded
   },
 });
 
@@ -1463,8 +1512,8 @@ const triggerFileInput = () => {
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
-    const file = target.files[0];
-    validateAndSetFile(file);
+    const files = Array.from(target.files);
+    validateAndAddFiles(files);
   }
 };
 
@@ -1496,21 +1545,13 @@ const handleDrop = (event: DragEvent) => {
 
   const files = event.dataTransfer?.files;
   if (files && files.length > 0) {
-    // Only take the first file
-    const file = files[0];
-    validateAndSetFile(file);
+    const fileArray = Array.from(files);
+    validateAndAddFiles(fileArray);
   }
 };
 
-const validateAndSetFile = (file: File) => {
-  // Validate file size (10MB max)
+const validateAndAddFiles = (files: File[]) => {
   const maxSize = 10 * 1024 * 1024; // 10MB
-  if (file.size > maxSize) {
-    uploadError.value = 'File size must be less than 10MB';
-    return;
-  }
-
-  // Validate file type
   const allowedExtensions = [
     '.pdf',
     '.doc',
@@ -1526,47 +1567,90 @@ const validateAndSetFile = (file: File) => {
     '.zip',
   ];
 
-  const fileName = file.name.toLowerCase();
-  const hasValidExtension = allowedExtensions.some(ext =>
-    fileName.endsWith(ext)
-  );
+  const validFiles: File[] = [];
+  const errors: string[] = [];
 
-  if (!hasValidExtension) {
-    uploadError.value =
-      'File type not supported. Please upload PDF, DOC, DOCX, TXT, JPG, PNG, GIF, XLS, XLSX, CSV, or ZIP files.';
-    return;
+  for (const file of files) {
+    // Validate file size
+    if (file.size > maxSize) {
+      errors.push(`${file.name}: File size must be less than 10MB`);
+      continue;
+    }
+
+    // Validate file type
+    const fileName = file.name.toLowerCase();
+    const hasValidExtension = allowedExtensions.some(ext =>
+      fileName.endsWith(ext)
+    );
+
+    if (!hasValidExtension) {
+      errors.push(
+        `${file.name}: File type not supported. Please upload PDF, DOC, DOCX, TXT, JPG, PNG, GIF, XLS, XLSX, CSV, or ZIP files.`
+      );
+      continue;
+    }
+
+    // Check for duplicates
+    const isDuplicate = selectedFiles.value.some(
+      (existingFile: File) =>
+        existingFile.name === file.name && existingFile.size === file.size
+    );
+
+    if (!isDuplicate) {
+      validFiles.push(file);
+    }
   }
 
-  // File is valid
-  selectedFile.value = file;
-  uploadError.value = '';
+  // Add valid files
+  selectedFiles.value.push(...validFiles);
+
+  // Show errors if any
+  if (errors.length > 0) {
+    uploadError.value = errors.join('\n');
+  } else {
+    uploadError.value = '';
+  }
+};
+
+const removeFile = (index: number) => {
+  selectedFiles.value.splice(index, 1);
+  if (selectedFiles.value.length === 0) {
+    uploadError.value = '';
+  }
 };
 
 const handleUpload = async () => {
-  if (!selectedFile.value) return;
+  if (selectedFiles.value.length === 0) return;
 
   uploadError.value = '';
   isUploading.value = true;
 
-  try {
-    await uploadMutation.mutateAsync({
-      file: selectedFile.value,
+  const uploadPromises = selectedFiles.value.map((file: File) =>
+    uploadMutation.mutateAsync({
+      file,
       description: uploadForm.value.description || undefined,
       visible_to_residents: uploadForm.value.visible_to_residents,
       folder_id: uploadForm.value.folder_id,
-    });
+    })
+  );
+
+  try {
+    await Promise.all(uploadPromises);
+    // All files uploaded successfully
+    cancelUpload();
   } catch (error: any) {
-    uploadError.value = error.message || 'Failed to upload document';
+    uploadError.value =
+      error.message || 'Failed to upload one or more documents';
     console.error('Upload error:', error);
-  } finally {
     isUploading.value = false;
   }
 };
 
 const cancelUpload = () => {
   showUploadModal.value = false;
-  selectedFile.value = null;
+  selectedFiles.value = [];
   isDragOver.value = false;
+  isUploading.value = false;
   uploadForm.value = {
     description: '',
     visible_to_residents: false,
@@ -1673,6 +1757,8 @@ const navigateToFolder = (folderId: number | null) => {
 
 const openUploadModal = () => {
   uploadForm.value.folder_id = currentFolderId.value;
+  isUploading.value = false;
+  uploadError.value = '';
   showUploadModal.value = true;
 };
 
