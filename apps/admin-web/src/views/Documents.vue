@@ -207,7 +207,7 @@
       </div>
 
       <!-- Documents and Folders Table -->
-      <div v-else class="overflow-x-auto">
+      <div v-else class="overflow-x-auto" @click="closeAllMenus">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
@@ -349,47 +349,77 @@
                 class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
                 @click.stop
               >
-                <div class="flex items-center justify-end space-x-2">
+                <div class="relative flex items-center justify-end">
                   <button
                     v-if="!isResident"
-                    @click="openFolderModal(folder)"
-                    class="text-primary hover:text-primary-600"
-                    title="Edit"
+                    @click="
+                      openFolderMenuId =
+                        openFolderMenuId === folder.id ? null : folder.id
+                    "
+                    class="inline-flex items-center p-2 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full"
+                    title="Actions"
                   >
                     <svg
                       class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
                     >
                       <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"
                       />
                     </svg>
                   </button>
-                  <button
-                    v-if="!isResident"
-                    @click="deleteFolder(folder)"
-                    class="text-red-600 hover:text-red-800"
-                    title="Delete"
+                  <!-- Dropdown Menu -->
+                  <div
+                    v-if="!isResident && openFolderMenuId === folder.id"
+                    class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    @click.stop
                   >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <button
+                      @click="
+                        openFolderModal(folder);
+                        openFolderMenuId = null;
+                      "
+                      class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        class="w-4 h-4 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                      Edit
+                    </button>
+                    <button
+                      @click="
+                        deleteFolder(folder);
+                        openFolderMenuId = null;
+                      "
+                      class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    >
+                      <svg
+                        class="w-4 h-4 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -477,67 +507,102 @@
               </td>
               <td
                 class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                @click.stop
               >
-                <div class="flex items-center justify-end space-x-2">
+                <div class="relative flex items-center justify-end">
                   <button
-                    @click="downloadDocument(document)"
-                    class="text-primary hover:text-primary-600"
-                    title="Download"
+                    @click="
+                      openDocumentMenuId =
+                        openDocumentMenuId === document.id ? null : document.id
+                    "
+                    class="inline-flex items-center p-2 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full"
+                    title="Actions"
                   >
                     <svg
                       class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
                     >
                       <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"
                       />
                     </svg>
                   </button>
-                  <button
-                    v-if="!isResident"
-                    @click="openMoveModal(document)"
-                    class="text-gray-600 hover:text-gray-800"
-                    title="Move to Folder"
+                  <!-- Dropdown Menu -->
+                  <div
+                    v-if="openDocumentMenuId === document.id"
+                    class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    @click.stop
                   >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <button
+                      @click="
+                        downloadDocument(document);
+                        openDocumentMenuId = null;
+                      "
+                      class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    v-if="!isResident"
-                    @click="deleteDocument(document)"
-                    class="text-red-600 hover:text-red-800"
-                    title="Delete"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      <svg
+                        class="w-4 h-4 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                      Download
+                    </button>
+                    <button
+                      v-if="!isResident"
+                      @click="
+                        openMoveModal(document);
+                        openDocumentMenuId = null;
+                      "
+                      class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        class="w-4 h-4 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                        />
+                      </svg>
+                      Move to Folder
+                    </button>
+                    <button
+                      v-if="!isResident"
+                      @click="
+                        deleteDocument(document);
+                        openDocumentMenuId = null;
+                      "
+                      class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    >
+                      <svg
+                        class="w-4 h-4 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -1071,6 +1136,8 @@ const editingFolder = ref<HoaDocumentFolder | null>(null);
 const showMoveModal = ref(false);
 const documentToMove = ref<HoaDocument | null>(null);
 const moveFolderId = ref<number | null>(null);
+const openFolderMenuId = ref<number | null>(null);
+const openDocumentMenuId = ref<number | null>(null);
 
 // Queries
 const queryParams = computed(() => {
@@ -1557,6 +1624,7 @@ const formatDate = (dateString: string): string => {
 // Folder methods
 const navigateToFolder = (folderId: number | null) => {
   currentFolderId.value = folderId;
+  closeAllMenus();
 };
 
 const openUploadModal = () => {
@@ -1631,6 +1699,11 @@ const confirmDeleteFolder = async () => {
 const cancelDeleteFolder = () => {
   showFolderDeleteModal.value = false;
   folderToDelete.value = null;
+};
+
+const closeAllMenus = () => {
+  openFolderMenuId.value = null;
+  openDocumentMenuId.value = null;
 };
 
 const toggleFolderVisibility = async (folder: HoaDocumentFolder) => {
