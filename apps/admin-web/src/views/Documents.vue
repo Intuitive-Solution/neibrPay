@@ -2,16 +2,18 @@
   <div class="space-y-6">
     <!-- Breadcrumb Navigation -->
     <div class="flex items-center space-x-2 text-sm text-gray-600">
-      <button
-        @click="navigateToFolder(null)"
-        class="hover:text-primary"
-        :class="{ 'font-semibold text-gray-900': currentFolderId === null }"
-      >
-        Root
-      </button>
-      <template v-if="currentFolderId !== null">
-        <span>/</span>
-        <span class="font-semibold text-gray-900">Current Folder</span>
+      <template v-for="(item, index) in breadcrumbPath" :key="item.id">
+        <button
+          v-if="index < breadcrumbPath.length - 1"
+          @click="navigateToFolder(item.id)"
+          class="hover:text-primary"
+        >
+          {{ item.name }}
+        </button>
+        <span v-else class="font-semibold text-gray-900">
+          {{ item.name }}
+        </span>
+        <span v-if="index < breadcrumbPath.length - 1" class="mx-1">/</span>
       </template>
     </div>
 
@@ -1165,6 +1167,16 @@ watch(
   }
 );
 
+// Set default folder when upload modal opens
+watch(
+  () => showUploadModal.value,
+  (isOpen: boolean) => {
+    if (isOpen) {
+      uploadForm.value.folder_id = currentFolderId.value;
+    }
+  }
+);
+
 // Mutations
 const uploadMutation = useMutation({
   mutationFn: documentsApi.createDocument,
@@ -1262,17 +1274,54 @@ const filteredFolders = computed(() => {
   return filtered;
 });
 
-const breadcrumbPath = computed(() => {
-  // For now, we'll just show the current folder name
-  // In a full implementation, you'd fetch parent folders recursively
+// Get the current folder object
+const currentFolder = computed(() => {
   if (currentFolderId.value === null) {
-    return [{ id: null, name: 'Root' }];
+    return null;
   }
-  // TODO: Implement full breadcrumb by fetching folder hierarchy
-  return [
+  const all = allFolders.value || [];
+  return all.find(f => f.id === currentFolderId.value) || null;
+});
+
+// Build breadcrumb path by traversing up the parent chain
+const breadcrumbPath = computed(() => {
+  const path: Array<{ id: number | null; name: string }> = [
     { id: null, name: 'Root' },
-    { id: currentFolderId.value, name: 'Current Folder' },
   ];
+
+  if (currentFolderId.value === null) {
+    return path;
+  }
+
+  const all = allFolders.value || [];
+  const folderMap = new Map<number, HoaDocumentFolder>();
+  all.forEach(folder => {
+    folderMap.set(folder.id, folder);
+  });
+
+  // Build path from current folder up to root
+  const buildPath = (folderId: number | null): void => {
+    if (folderId === null) {
+      return;
+    }
+
+    const folder = folderMap.get(folderId);
+    if (!folder) {
+      return;
+    }
+
+    // Recursively add parent first
+    if (folder.parent_id !== null) {
+      buildPath(folder.parent_id);
+    }
+
+    // Then add current folder
+    path.push({ id: folder.id, name: folder.name });
+  };
+
+  buildPath(currentFolderId.value);
+
+  return path;
 });
 
 const availableFolders = computed(() => {
