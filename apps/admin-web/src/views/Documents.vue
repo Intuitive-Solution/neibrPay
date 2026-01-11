@@ -115,12 +115,7 @@
             <!-- Upload Button (Icon Only) - Hidden for residents -->
             <button
               v-if="!isResident"
-              @click="
-                () => {
-                  uploadForm.folder_id = currentFolderId.value;
-                  showUploadModal = true;
-                }
-              "
+              @click="openUploadModal"
               class="btn-primary btn-sm"
               title="Upload Document"
             >
@@ -204,7 +199,7 @@
         </p>
         <button
           v-if="!isResident"
-          @click="showUploadModal = true"
+          @click="openUploadModal"
           class="btn-primary mt-4"
         >
           Upload Document
@@ -1562,6 +1557,11 @@ const formatDate = (dateString: string): string => {
 // Folder methods
 const navigateToFolder = (folderId: number | null) => {
   currentFolderId.value = folderId;
+};
+
+const openUploadModal = () => {
+  uploadForm.value.folder_id = currentFolderId.value;
+  showUploadModal.value = true;
 };
 
 const openFolderModal = (folder?: HoaDocumentFolder) => {
