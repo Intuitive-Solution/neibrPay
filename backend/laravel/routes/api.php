@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\Api\UnitDocumentController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\DocumentFolderController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\HealthController;
@@ -182,6 +183,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('documents/{document}/download', [DocumentController::class, 'download']);
     Route::delete('documents/{document}', [DocumentController::class, 'destroy']);
     Route::delete('documents/{document}/force', [DocumentController::class, 'forceDelete']);
+    
+    // Document Folder management routes
+    Route::get('document-folders', [DocumentFolderController::class, 'index']);
+    Route::post('document-folders', [DocumentFolderController::class, 'store']);
+    Route::get('document-folders/{folder}', [DocumentFolderController::class, 'show']);
+    Route::put('document-folders/{folder}', [DocumentFolderController::class, 'update']);
+    Route::delete('document-folders/{folder}', [DocumentFolderController::class, 'destroy']);
     
     // Settings routes
     Route::get('settings', [SettingsController::class, 'index']);

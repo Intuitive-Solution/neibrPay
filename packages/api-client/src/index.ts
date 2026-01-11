@@ -20,8 +20,11 @@ export {
 } from './stripe';
 export type {
   HoaDocument,
+  HoaDocumentFolder,
   CreateDocumentRequest,
   UpdateDocumentRequest,
+  CreateFolderRequest,
+  UpdateFolderRequest,
 } from './documents';
 export {
   settingsApi,
