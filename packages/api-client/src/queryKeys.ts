@@ -84,6 +84,15 @@ export const documentKeys = {
   detail: (id: number) => [...documentKeys.details(), id] as const,
 } as const;
 
+export const documentFolderKeys = {
+  all: ['document-folders'] as const,
+  lists: () => [...documentFolderKeys.all, 'list'] as const,
+  list: (filters: Record<string, any> = {}) =>
+    [...documentFolderKeys.lists(), { filters }] as const,
+  details: () => [...documentFolderKeys.all, 'detail'] as const,
+  detail: (id: number) => [...documentFolderKeys.details(), id] as const,
+} as const;
+
 export const announcementKeys = {
   all: ['announcements'] as const,
   lists: () => [...announcementKeys.all, 'list'] as const,
@@ -123,6 +132,7 @@ export const queryKeys = {
   payments: paymentKeys,
   settings: settingsKeys,
   documents: documentKeys,
+  documentFolders: documentFolderKeys,
   announcements: announcementKeys,
   plaid: plaidKeys,
   budget: budgetKeys,

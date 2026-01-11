@@ -20,7 +20,27 @@ class DocumentController extends Controller
 
         $query = HoaDocument::forTenant($user->tenant_id)
             ->with('uploader:id,name,email')
+            ->with('folder:id,name')
             ->orderBy('created_at', 'desc');
+
+        // If 'all' parameter is true, return all documents (for search)
+        if ($request->boolean('all')) {
+            // Return all documents without folder_id filtering
+        } elseif ($request->has('folder_id')) {
+            // Filter by folder_id to show only documents in the current folder
+            // If folder_id is null, show root documents (no folder)
+            // If folder_id is provided, show only documents in that folder
+            if ($request->input('folder_id') === null || $request->input('folder_id') === '') {
+                // Get documents at root level (no folder)
+                $query->whereNull('folder_id');
+            } else {
+                // Get documents with specific folder_id
+                $query->where('folder_id', $request->input('folder_id'));
+            }
+        } else {
+            // If folder_id is not provided, default to root documents
+            $query->whereNull('folder_id');
+        }
 
         // If user is a resident, automatically filter by visible_to_residents = true
         if ($user->isResident()) {
@@ -59,6 +79,19 @@ class DocumentController extends Controller
             'file' => 'required|file|max:10240|mimes:pdf,doc,docx,txt,jpg,jpeg,png,gif,xls,xlsx,csv,zip',
             'description' => 'nullable|string|max:500',
             'visible_to_residents' => 'nullable|boolean',
+            'folder_id' => [
+                'nullable',
+                'integer',
+                'exists:hoa_document_folders,id',
+                function ($attribute, $value, $fail) use ($user) {
+                    if ($value !== null) {
+                        $folder = \App\Models\HoaDocumentFolder::find($value);
+                        if ($folder && $folder->tenant_id !== $user->tenant_id) {
+                            $fail('The selected folder does not belong to your tenant.');
+                        }
+                    }
+                },
+            ],
         ]);
 
         $file = $validated['file'];
@@ -92,6 +125,7 @@ class DocumentController extends Controller
         // Create document record
         $document = HoaDocument::create([
             'tenant_id' => $user->tenant_id,
+            'folder_id' => $validated['folder_id'] ?? null,
             'file_name' => $originalName,
             'file_path' => $filePath,
             'file_hash' => $fileHash,
@@ -157,6 +191,19 @@ class DocumentController extends Controller
         $validated = $request->validate([
             'description' => 'nullable|string|max:500',
             'visible_to_residents' => 'nullable|boolean',
+            'folder_id' => [
+                'nullable',
+                'integer',
+                'exists:hoa_document_folders,id',
+                function ($attribute, $value, $fail) use ($user) {
+                    if ($value !== null) {
+                        $folder = \App\Models\HoaDocumentFolder::find($value);
+                        if ($folder && $folder->tenant_id !== $user->tenant_id) {
+                            $fail('The selected folder does not belong to your tenant.');
+                        }
+                    }
+                },
+            ],
         ]);
 
         $document->update($validated);

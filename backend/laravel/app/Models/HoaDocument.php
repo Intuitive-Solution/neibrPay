@@ -19,6 +19,7 @@ class HoaDocument extends Model
      */
     protected $fillable = [
         'tenant_id',
+        'folder_id',
         'file_name',
         'file_path',
         'file_hash',
@@ -53,6 +54,14 @@ class HoaDocument extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    /**
+     * Get the folder that contains this document.
+     */
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(HoaDocumentFolder::class, 'folder_id');
     }
 
     /**
