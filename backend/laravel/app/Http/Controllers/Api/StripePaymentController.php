@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InvoicePayment;
 use App\Models\InvoiceUnit;
 use App\Services\AnalyticsService;
+use App\Services\InvoicePdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +23,14 @@ class StripePaymentController extends Controller
 {
     private StripeClient $stripe;
     protected AnalyticsService $analytics;
+    protected InvoicePdfService $pdfService;
 
-    public function __construct(AnalyticsService $analytics)
+    public function __construct(AnalyticsService $analytics, InvoicePdfService $pdfService)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
         $this->stripe = new StripeClient(config('services.stripe.secret'));
         $this->analytics = $analytics;
+        $this->pdfService = $pdfService;
     }
 
     /**
@@ -621,6 +624,33 @@ class StripePaymentController extends Controller
             ]);
 
             DB::commit();
+
+            // Regenerate PDF with payment details if invoice is fully paid
+            if ($invoice->status === 'paid') {
+                try {
+                    // Refresh the payment object to ensure we have the latest data
+                    $payment->refresh();
+                    
+                    // Load invoice with necessary relationships for PDF generation
+                    $invoice->load(['unit', 'notes', 'tenant']);
+                    
+                    // Generate HTML with payment details
+                    $html = $this->pdfService->generateInvoiceHtml($invoice, $payment);
+                    
+                    // Generate and store new PDF
+                    $userId = $payment->recorder?->id ?? $invoice->creator?->id ?? 1;
+                    $this->pdfService->generatePdf($invoice, $html, $userId);
+                    
+                    Log::info("PDF regenerated with payment details for invoice {$invoice->id} after Stripe payment {$payment->id}");
+                } catch (\Exception $e) {
+                    // Log error but don't fail the payment processing
+                    Log::error('Failed to regenerate PDF after Stripe payment: ' . $e->getMessage(), [
+                        'payment_id' => $payment->id,
+                        'invoice_id' => $invoice->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
 
             // Track successful payment
             $userId = $payment->recorder?->id ?? $invoice->creator?->id;
