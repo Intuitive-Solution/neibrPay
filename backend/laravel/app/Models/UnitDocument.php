@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
+use App\Services\FileStorageService;
 
 class UnitDocument extends Model
 {
@@ -83,7 +83,7 @@ class UnitDocument extends Model
      */
     public function getFileUrlAttribute(): string
     {
-        return asset('storage/' . $this->file_path);
+        return app(FileStorageService::class)->getUrl($this->file_path);
     }
 
     /**
@@ -106,7 +106,7 @@ class UnitDocument extends Model
      */
     public function fileExists(): bool
     {
-        return Storage::disk('public')->exists($this->file_path);
+        return app(FileStorageService::class)->exists($this->file_path);
     }
 
     /**
@@ -119,9 +119,7 @@ class UnitDocument extends Model
         static::deleting(function ($document) {
             if ($document->isForceDeleting()) {
                 // Only delete file from storage on force delete
-                if ($document->fileExists()) {
-                    Storage::disk('public')->delete($document->file_path);
-                }
+                app(FileStorageService::class)->delete($document->file_path);
             }
         });
     }

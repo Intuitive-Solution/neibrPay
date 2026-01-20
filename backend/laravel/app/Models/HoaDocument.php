@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
+use App\Services\FileStorageService;
 
 class HoaDocument extends Model
 {
@@ -85,7 +85,7 @@ class HoaDocument extends Model
      */
     public function getFileUrlAttribute(): string
     {
-        return asset('storage/' . $this->file_path);
+        return app(FileStorageService::class)->getUrl($this->file_path);
     }
 
     /**
@@ -110,6 +110,6 @@ class HoaDocument extends Model
      */
     public function fileExists(): bool
     {
-        return Storage::disk('public')->exists($this->file_path);
+        return app(FileStorageService::class)->exists($this->file_path);
     }
 }

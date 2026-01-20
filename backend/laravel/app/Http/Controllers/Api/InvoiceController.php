@@ -327,18 +327,15 @@ class InvoiceController extends Controller
                 $this->updateInvoiceNotes($invoiceUnit, $validated['notes']);
             }
             
-            // Generate new PDF with is_latest = true (mark previous PDFs as is_latest = false)
+            // Regenerate PDF for the updated invoice
             try {
-                // Mark all existing PDFs as not latest
-                $invoiceUnit->pdfs()->update(['is_latest' => false]);
-                
                 // Load the invoice with necessary relationships for PDF generation
                 $invoiceUnit->load(['unit', 'notes', 'tenant']);
                 
                 // Generate HTML for the invoice
                 $html = $this->generateInvoiceHtml($invoiceUnit);
                 
-                // Generate and store new PDF with is_latest = true
+                // Generate and store new PDF (updates existing record)
                 $this->pdfService->generatePdf($invoiceUnit, $html, $user->id);
                 
                 \Log::info("PDF regenerated successfully for updated invoice {$invoiceUnit->id}");

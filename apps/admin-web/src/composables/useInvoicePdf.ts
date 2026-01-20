@@ -7,8 +7,6 @@ export const invoicePdfKeys = {
   all: ['invoice-pdfs'] as const,
   latest: (invoiceId: number) =>
     [...invoicePdfKeys.all, 'latest', invoiceId] as const,
-  versions: (invoiceId: number) =>
-    [...invoicePdfKeys.all, 'versions', invoiceId] as const,
 };
 
 /**
@@ -32,11 +30,6 @@ export function useGenerateInvoicePdf() {
       queryClient.invalidateQueries({
         queryKey: invoicePdfKeys.latest(variables.invoiceId),
       });
-
-      // Invalidate and refetch the versions query
-      queryClient.invalidateQueries({
-        queryKey: invoicePdfKeys.versions(variables.invoiceId),
-      });
     },
   });
 }
@@ -58,19 +51,9 @@ export function useLatestInvoicePdf(invoiceId: number) {
       }
     },
     enabled: !!invoiceId,
-  });
-}
-
-/**
- * Get all versions of PDFs for an invoice
- */
-export function useInvoicePdfVersions(invoiceId: number) {
-  return useQuery({
-    queryKey: invoicePdfKeys.versions(invoiceId),
-    queryFn: async (): Promise<InvoicePdf[]> => {
-      return await invoicesApi.getInvoicePdfVersions(invoiceId);
-    },
-    enabled: !!invoiceId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -89,44 +72,6 @@ export function useDownloadInvoicePdf() {
 
       // Get filename from response headers or use default
       link.download = `invoice-${invoiceId}.pdf`;
-
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Clean up
-      window.URL.revokeObjectURL(url);
-
-      return blob;
-    },
-  });
-}
-
-/**
- * Download a specific version of PDF for an invoice
- */
-export function useDownloadInvoicePdfVersion() {
-  return useMutation({
-    mutationFn: async ({
-      invoiceId,
-      version,
-    }: {
-      invoiceId: number;
-      version: number;
-    }) => {
-      const blob = await invoicesApi.downloadInvoicePdfVersion(
-        invoiceId,
-        version
-      );
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-
-      // Get filename from response headers or use default
-      link.download = `invoice-${invoiceId}-v${version}.pdf`;
 
       // Trigger download
       document.body.appendChild(link);

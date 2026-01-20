@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\HoaDocument;
+use App\Services\FileStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DocumentController extends Controller
 {
+    public function __construct(
+        protected FileStorageService $fileStorage
+    ) {
+    }
     /**
      * Display a listing of HOA documents.
      */
@@ -101,9 +105,6 @@ class DocumentController extends Controller
         $extension = $file->getClientOriginalExtension();
         $filename = Str::uuid() . '.' . $extension;
 
-        // Store file
-        $filePath = $file->storeAs('hoa-documents', $filename, 'public');
-
         // Calculate file hash for duplicate detection
         $fileHash = hash_file('sha256', $file->getRealPath());
 
@@ -113,14 +114,14 @@ class DocumentController extends Controller
             ->first();
 
         if ($existingDocument) {
-            // Delete the uploaded file since it's a duplicate
-            Storage::disk('public')->delete($filePath);
-
             return response()->json([
                 'error' => 'File already exists',
                 'message' => 'A document with the same content already exists.',
             ], 409);
         }
+
+        // Store file
+        $filePath = $this->fileStorage->storeAs('hoa-documents', $file->getRealPath(), $filename);
 
         // Create document record
         $document = HoaDocument::create([
@@ -232,14 +233,7 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        // Check if file exists
-        if (!$document->fileExists()) {
-            abort(404, 'File not found');
-        }
-
-        $filePath = storage_path('app/public/' . $document->file_path);
-
-        return response()->download($filePath, $document->file_name);
+        return $this->fileStorage->getDownloadResponse($document->file_path, $document->file_name);
     }
 
     /**
@@ -291,9 +285,7 @@ class DocumentController extends Controller
         }
 
         // Delete file from storage
-        if ($document->fileExists()) {
-            Storage::disk('public')->delete($document->file_path);
-        }
+        $this->fileStorage->delete($document->file_path);
 
         // Force delete the document record
         $document->forceDelete();
