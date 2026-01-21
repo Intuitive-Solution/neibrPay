@@ -1,0 +1,230 @@
+{
+  "name": "neibrpay-prod-db-backup",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-528, -304],
+      "id": "1f8baae5-e43d-41a2-934c-ad382b2a089a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-528, 48],
+      "id": "b8582caf-b999-415f-b3de-a486324032c6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT NOW() AS backup_time;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [-320, -112],
+      "id": "53db2e46-168b-4fc2-a64c-50500b97e7e3",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "mySql": {
+          "id": "4nbkgC6y2Y1uUbhX",
+          "name": "MySQL Railway Neibrpay Prod"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=export AWS_REGION='us-east-1'\nexport SECRET_NAME='prod/mysql/neibrpay'\n\nmkdir -p /tmp/backups\n\nTIMESTAMP=$(date +%F_%H%M%S)\nexport BACKUP_FILENAME=\"neibrpay_backup_$TIMESTAMP.sql.gz\"\nexport BACKUP_FILE=\"/tmp/backups/$BACKUP_FILENAME\"\n\necho \"Fetching credentials from AWS Secrets Manager...\"\necho \"Secret: $SECRET_NAME\"\necho \"Region: $AWS_REGION\"\n\npython3 << 'PYEOF'\nimport boto3\nimport pymysql\nimport gzip\nimport sys\nimport os\nimport json\nfrom datetime import datetime, date\nfrom decimal import Decimal\n\nsecret_name = os.environ.get('SECRET_NAME')\nregion = os.environ.get('AWS_REGION', 'us-east-1')\nbackup_file = os.environ.get('BACKUP_FILE')\n\nprint(f\"Fetching secret: {secret_name}\")\n\ntry:\n    # Fetch credentials from AWS Secrets Manager\n    client = boto3.client('secretsmanager', region_name=region)\n    response = client.get_secret_value(SecretId=secret_name)\n    secret = json.loads(response['SecretString'])\n    \n    host = secret['host']\n    port = int(secret['port'])\n    user = secret['username']\n    password = secret['password']\n    database = secret['database']\n    \n    print(f\"Connecting to {host}:{port} as {user}...\")\n    \n    conn = pymysql.connect(\n        host=host,\n        port=port,\n        user=user,\n        password=password,\n        database=database,\n        ssl={'ssl': True}\n    )\n    cursor = conn.cursor()\n    print(\"Connected successfully!\")\n    \n    with gzip.open(backup_file, 'wt', encoding='utf-8') as f:\n        f.write(f\"-- MySQL Backup\\n\")\n        f.write(f\"-- Database: {database}\\n\")\n        f.write(f\"-- Host: {host}:{port}\\n\")\n        f.write(f\"-- Generated: {datetime.now()}\\n\")\n        f.write(f\"--\\n\\n\")\n        f.write(\"SET FOREIGN_KEY_CHECKS=0;\\n\\n\")\n        \n        cursor.execute(\"SHOW TABLES\")\n        tables = [row[0] for row in cursor.fetchall()]\n        print(f\"Found {len(tables)} tables\")\n        \n        for table in tables:\n            print(f\"  Exporting: {table}\")\n            \n            cursor.execute(f\"SHOW CREATE TABLE `{table}`\")\n            create_stmt = cursor.fetchone()[1]\n            f.write(f\"DROP TABLE IF EXISTS `{table}`;\\n\")\n            f.write(f\"{create_stmt};\\n\\n\")\n            \n            cursor.execute(f\"SELECT * FROM `{table}`\")\n            rows = cursor.fetchall()\n            \n            if rows:\n                columns = [desc[0] for desc in cursor.description]\n                cols_str = ', '.join([f\"`{c}`\" for c in columns])\n                \n                for row in rows:\n                    values = []\n                    for val in row:\n                        if val is None:\n                            values.append('NULL')\n                        elif isinstance(val, bool):\n                            values.append('1' if val else '0')\n                        elif isinstance(val, (int, float, Decimal)):\n                            values.append(str(val))\n                        elif isinstance(val, bytes):\n                            values.append(f\"X'{val.hex()}'\")\n                        elif isinstance(val, (datetime, date)):\n                            values.append(f\"'{val}'\")\n                        else:\n                            escaped = str(val).replace(\"\\\\\", \"\\\\\\\\\").replace(\"'\", \"\\\\'\")\n                            values.append(f\"'{escaped}'\")\n                    vals_str = ', '.join(values)\n                    f.write(f\"INSERT INTO `{table}` ({cols_str}) VALUES ({vals_str});\\n\")\n                f.write(\"\\n\")\n        \n        f.write(\"SET FOREIGN_KEY_CHECKS=1;\\n\")\n        f.write(\"-- Dump completed\\n\")\n    \n    cursor.close()\n    conn.close()\n    \n    size = os.path.getsize(backup_file)\n    print(f\"Backup file created: {backup_file} ({size} bytes)\")\n    \nexcept Exception as e:\n    print(f\"ERROR: {e}\")\n    import traceback\n    traceback.print_exc()\n    sys.exit(1)\nPYEOF\n\nif [ $? -ne 0 ]; then\n  echo \"Backup failed\"\n  exit 1\nfi\n\nFILESIZE=$(du -h \"$BACKUP_FILE\" | cut -f1)\necho \"BACKUP_FILE_PATH=$BACKUP_FILE\"\necho \"BACKUP_FILENAME=$BACKUP_FILENAME\"\necho \"FILESIZE=$FILESIZE\"\n\nfind /tmp/backups -name 'neibrpay_backup_*.sql.gz' -mtime +7 -delete 2>/dev/null || true\necho \"Backup completed successfully!\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [160, -112],
+      "id": "1b16126d-b68f-4b61-986b-1b127969a7bb",
+      "name": "DUMP_DB"
+    },
+    {
+      "parameters": {
+        "jsCode": "// AWS Secrets Manager credentials will be fetched by the DUMP_DB node\n// This node just passes through to trigger the backup\nreturn [{\n  json: {\n    secretName: 'prod/mysql/neibrpay',\n    awsRegion: 'us-east-1',\n    backupTimestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "mysql-creds-node",
+      "name": "Set MySQL Credentials",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-48, -112]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract backup file path from DUMP_DB output\nconst output = $input.first().json.stdout || '';\n\n// Parse the backup file path from output\nconst filePathMatch = output.match(/BACKUP_FILE_PATH=(.+)/);\nconst filenameMatch = output.match(/BACKUP_FILENAME=(.+)/);\nconst filesizeMatch = output.match(/FILESIZE=(.+)/);\n\nif (!filePathMatch) {\n  throw new Error('Could not find backup file path in output. Check DUMP_DB node.');\n}\n\nconst backupFilePath = filePathMatch[1].trim();\nconst backupFilename = filenameMatch ? filenameMatch[1].trim() : 'backup.sql.gz';\nconst filesize = filesizeMatch ? filesizeMatch[1].trim() : 'unknown';\n\nreturn [{\n  json: {\n    backupFilePath,\n    backupFilename,\n    filesize,\n    s3Key: `backups/mysql/${backupFilename}`,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "extract-filename-node",
+      "name": "Extract Backup Filename",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, -112]
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.backupFilePath }}",
+        "options": {}
+      },
+      "id": "read-backup-file-node",
+      "name": "Read Backup File",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [624, -112]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "neibrpay-mysql-backups-prod",
+        "fileName": "={{ $('Extract Backup Filename').item.json.backupFilename }}",
+        "additionalFields": {}
+      },
+      "id": "s3-upload-node",
+      "name": "Upload to S3",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 1,
+      "position": [880, -112],
+      "credentials": {
+        "aws": {
+          "id": "MVGFZDdQDBufuNRf",
+          "name": "AWS S3 Account Neibrpay"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "support@neibrpay.com",
+        "toEmail": "tahir@openitconsulting.com",
+        "subject": "=✅ MySQL Backup Successful - {{ $('Extract Backup Filename').item.json.backupFilename }}",
+        "options": {}
+      },
+      "id": "success-email-node",
+      "name": "Send Success Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1088, -112],
+      "webhookId": "052cb052-edd8-48b9-80ce-33a24f6bbbef",
+      "credentials": {
+        "smtp": {
+          "id": "RghCNSDKFQ5Oth4i",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Set MySQL Credentials",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set MySQL Credentials": {
+      "main": [
+        [
+          {
+            "node": "DUMP_DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DUMP_DB": {
+      "main": [
+        [
+          {
+            "node": "Extract Backup Filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Backup Filename": {
+      "main": [
+        [
+          {
+            "node": "Read Backup File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Backup File": {
+      "main": [
+        [
+          {
+            "node": "Upload to S3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to S3": {
+      "main": [
+        [
+          {
+            "node": "Send Success Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "o7LxGQpmLffJw6Pk"
+  },
+  "versionId": "8bf0392e-ea60-4f55-a5de-660d51ed9bb2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7049e8f52f4a8b5eddcfbc7601c36c0a32779966c03f9b643c8db461d2762391"
+  },
+  "id": "uLCynhTRSUJR2Se3",
+  "tags": []
+}
