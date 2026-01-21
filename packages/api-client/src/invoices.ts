@@ -217,35 +217,21 @@ export const invoicesApi = {
   },
 
   /**
+   * Get a short-lived signed URL for the latest PDF
+   */
+  async getInvoicePdfSignedUrl(
+    invoiceId: number
+  ): Promise<{ file_url: string }> {
+    const response = await apiClient.get(`/invoices/${invoiceId}/pdf/url`);
+    return response.data.data;
+  },
+
+  /**
    * Download the latest PDF for an invoice
    */
   async downloadInvoicePdf(invoiceId: number): Promise<Blob> {
     const response = await apiClient.get(
       `/invoices/${invoiceId}/pdf/download`,
-      {
-        responseType: 'blob',
-      }
-    );
-    return response.data;
-  },
-
-  /**
-   * Get all versions of PDFs for an invoice
-   */
-  async getInvoicePdfVersions(invoiceId: number): Promise<any[]> {
-    const response = await apiClient.get(`/invoices/${invoiceId}/pdf/versions`);
-    return response.data.data;
-  },
-
-  /**
-   * Download a specific version of PDF for an invoice
-   */
-  async downloadInvoicePdfVersion(
-    invoiceId: number,
-    version: number
-  ): Promise<Blob> {
-    const response = await apiClient.get(
-      `/invoices/${invoiceId}/pdf/versions/${version}/download`,
       {
         responseType: 'blob',
       }

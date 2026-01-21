@@ -168,7 +168,6 @@ export function useMarkInvoiceAsPaid() {
       queryClient.invalidateQueries({ queryKey: invoiceQueryKeys.lists() });
       // Invalidate PDF queries to refresh PDF viewer with payment details
       queryClient.invalidateQueries({ queryKey: invoicePdfKeys.latest(id) });
-      queryClient.invalidateQueries({ queryKey: invoicePdfKeys.versions(id) });
     },
   });
 }

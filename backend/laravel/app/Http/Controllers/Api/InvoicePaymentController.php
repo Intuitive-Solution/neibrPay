@@ -6,18 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\InvoicePayment;
 use App\Models\InvoiceUnit;
 use App\Services\AnalyticsService;
+use App\Services\InvoicePdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class InvoicePaymentController extends Controller
 {
     protected $analytics;
+    protected $pdfService;
 
-    public function __construct(AnalyticsService $analytics)
+    public function __construct(AnalyticsService $analytics, InvoicePdfService $pdfService)
     {
         $this->analytics = $analytics;
+        $this->pdfService = $pdfService;
     }
     /**
      * Display a listing of payments.
@@ -197,6 +201,32 @@ class InvoicePaymentController extends Controller
             $invoice->save();
             
             DB::commit();
+            
+            // Regenerate PDF with payment details if invoice is fully paid (admin payments only)
+            if (!$isResident && $invoice->status === 'paid' && $payment->status === 'approved') {
+                try {
+                    // Refresh the payment object to ensure we have the latest data
+                    $payment->refresh();
+                    
+                    // Load invoice with necessary relationships for PDF generation
+                    $invoice->load(['unit', 'notes', 'tenant']);
+                    
+                    // Generate HTML with payment details
+                    $html = $this->pdfService->generateInvoiceHtml($invoice, $payment);
+                    
+                    // Generate and store new PDF
+                    $this->pdfService->generatePdf($invoice, $html, $user->id);
+                    
+                    Log::info("PDF regenerated with payment details for invoice {$invoice->id} after payment {$payment->id}");
+                } catch (\Exception $e) {
+                    // Log error but don't fail the payment recording
+                    Log::error('Failed to regenerate PDF after payment: ' . $e->getMessage(), [
+                        'payment_id' => $payment->id,
+                        'invoice_id' => $invoice->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
             
             // Track payment in PostHog
             $this->analytics->captureEvent('invoice_paid_backend', $user->id, [
@@ -467,6 +497,32 @@ class InvoicePaymentController extends Controller
             $invoice->save();
             
             DB::commit();
+            
+            // Regenerate PDF with payment details if invoice is fully paid
+            if ($invoice->status === 'paid') {
+                try {
+                    // Refresh the payment object to ensure we have the latest data
+                    $payment->refresh();
+                    
+                    // Load invoice with necessary relationships for PDF generation
+                    $invoice->load(['unit', 'notes', 'tenant']);
+                    
+                    // Generate HTML with payment details
+                    $html = $this->pdfService->generateInvoiceHtml($invoice, $payment);
+                    
+                    // Generate and store new PDF
+                    $this->pdfService->generatePdf($invoice, $html, $user->id);
+                    
+                    Log::info("PDF regenerated with payment details for invoice {$invoice->id} after approving payment {$payment->id}");
+                } catch (\Exception $e) {
+                    // Log error but don't fail the payment approval
+                    Log::error('Failed to regenerate PDF after payment approval: ' . $e->getMessage(), [
+                        'payment_id' => $payment->id,
+                        'invoice_id' => $invoice->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
             
             // Send approval notification email
             $this->sendPaymentApprovalEmail($payment, $invoice);

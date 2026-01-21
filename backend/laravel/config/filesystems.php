@@ -58,6 +58,27 @@ return [
             'throw' => false,
         ],
 
+        'documents' => array_merge(
+            [
+                'driver' => env('FILESYSTEM_DISK', 'public') === 's3' ? 's3' : 'local',
+                'throw' => false,
+            ],
+        env('FILESYSTEM_DISK', 'public') === 's3' ? [
+                // S3 settings
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'region' => env('AWS_DEFAULT_REGION'),
+                'bucket' => env('AWS_BUCKET'),
+                'url' => env('AWS_URL'),
+                'endpoint' => env('AWS_ENDPOINT'),
+                'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            ] : [
+                // Local settings
+            'root' => storage_path('app/documents'),
+            'visibility' => 'private', // Private for secure access
+            ]
+        ),
+
     ],
 
     /*

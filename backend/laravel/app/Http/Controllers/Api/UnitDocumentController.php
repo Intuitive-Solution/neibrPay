@@ -5,15 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Unit;
 use App\Models\UnitDocument;
+use App\Services\FileStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class UnitDocumentController extends Controller
 {
+    public function __construct(
+        protected FileStorageService $fileStorage
+    ) {
+    }
     /**
      * Display a listing of documents for a unit.
      */
@@ -64,9 +68,6 @@ class UnitDocumentController extends Controller
         $extension = $file->getClientOriginalExtension();
         $filename = Str::uuid() . '.' . $extension;
         
-        // Store file
-        $filePath = $file->storeAs('unit-documents', $filename, 'public');
-        
         // Calculate file hash for duplicate detection
         $fileHash = hash_file('sha256', $file->getRealPath());
         
@@ -76,14 +77,14 @@ class UnitDocumentController extends Controller
             ->first();
             
         if ($existingDocument) {
-            // Delete the uploaded file since it's a duplicate
-            Storage::disk('public')->delete($filePath);
-            
             return response()->json([
                 'error' => 'File already exists',
                 'message' => 'A document with the same content already exists for this unit.',
             ], 409);
         }
+        
+        // Store file
+        $filePath = $this->fileStorage->storeAs('unit-documents', $file->getRealPath(), $filename);
 
         // Create document record
         $document = UnitDocument::create([
@@ -137,14 +138,7 @@ class UnitDocumentController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        // Check if file exists
-        if (!$document->fileExists()) {
-            abort(404, 'File not found');
-        }
-
-        $filePath = storage_path('app/public/' . $document->file_path);
-        
-        return response()->download($filePath, $document->file_name);
+        return $this->fileStorage->getDownloadResponse($document->file_path, $document->file_name);
     }
 
     /**
@@ -180,9 +174,7 @@ class UnitDocumentController extends Controller
         }
 
         // Delete file from storage
-        if ($document->fileExists()) {
-            Storage::disk('public')->delete($document->file_path);
-        }
+        $this->fileStorage->delete($document->file_path);
 
         // Force delete the document record
         $document->forceDelete();

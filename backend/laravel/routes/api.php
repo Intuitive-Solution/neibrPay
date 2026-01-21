@@ -45,6 +45,11 @@ Route::get('/test', function () {
     ]);
 });
 
+// Public signed route for viewing invoice PDF (short-lived, no auth header needed)
+Route::get('invoices/{invoice}/pdf/signed', [InvoicePdfController::class, 'viewSigned'])
+    ->name('invoices.pdf.signed')
+    ->middleware('signed');
+
 // Authentication routes (public)
 Route::prefix('auth')->group(function () {
     // Email-based authentication
@@ -130,10 +135,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Invoice PDF management routes
     Route::post('invoices/{invoice}/pdf/generate', [InvoicePdfController::class, 'generate']);
     Route::get('invoices/{invoice}/pdf', [InvoicePdfController::class, 'view']);
+    Route::get('invoices/{invoice}/pdf/url', [InvoicePdfController::class, 'getSignedUrl']); // New endpoint for signed URL
     Route::get('invoices/{invoice}/pdf/info', [InvoicePdfController::class, 'latest']);
     Route::get('invoices/{invoice}/pdf/download', [InvoicePdfController::class, 'download']);
-    Route::get('invoices/{invoice}/pdf/versions', [InvoicePdfController::class, 'versions']);
-    Route::get('invoices/{invoice}/pdf/versions/{version}/download', [InvoicePdfController::class, 'downloadVersion']);
     
     // Invoice payment management routes
     Route::get('payments', [InvoicePaymentController::class, 'index']);

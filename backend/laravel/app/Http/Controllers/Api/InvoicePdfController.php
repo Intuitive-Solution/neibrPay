@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\InvoicePdf;
 use App\Models\InvoiceUnit;
+use App\Services\FileStorageService;
 use App\Services\InvoicePdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\URL;
 
 class InvoicePdfController extends Controller
 {
     public function __construct(
-        private InvoicePdfService $pdfService
+        private InvoicePdfService $pdfService,
+        private FileStorageService $fileStorageService
     ) {}
 
     /**
@@ -146,10 +149,11 @@ class InvoicePdfController extends Controller
             ->header('Content-Length', strlen($content));
     }
 
+
     /**
-     * Get all versions of PDFs for an invoice.
+     * Get signed URL for the latest PDF (for S3 access).
      */
-    public function versions(Request $request, InvoiceUnit $invoice): JsonResponse
+    public function getSignedUrl(Request $request, InvoiceUnit $invoice): JsonResponse
     {
         $user = $request->user();
         
@@ -158,36 +162,51 @@ class InvoicePdfController extends Controller
             return response()->json(['message' => 'Invoice not found'], 404);
         }
 
-        $versions = $this->pdfService->getAllVersions($invoice);
+        $latestPdf = $this->pdfService->getLatestPdf($invoice);
+
+        if (!$latestPdf) {
+            return response()->json([
+                'message' => 'No PDF found for this invoice'
+            ], 404);
+        }
+
+        if ($this->fileStorageService->isS3Disk()) {
+            $signedUrl = $this->fileStorageService->getTemporaryUrl(
+                $latestPdf->file_path,
+                6,
+                ['ResponseCacheControl' => 'no-store, max-age=0']
+            );
+        } else {
+            $signedUrl = URL::temporarySignedRoute(
+                'invoices.pdf.signed',
+                now()->addMinutes(6),
+                ['invoice' => $invoice->id]
+            );
+        }
 
         return response()->json([
-            'data' => $versions->load('generator'),
-            'meta' => [
-                'total' => $versions->count(),
-                'invoice_id' => $invoice->id,
+            'data' => [
+                'id' => $latestPdf->id,
+                'file_name' => $latestPdf->file_name,
+                'file_url' => $signedUrl,
+                'file_size' => $latestPdf->file_size,
+                'created_at' => $latestPdf->created_at,
             ],
         ]);
     }
 
     /**
-     * Download a specific version of PDF for an invoice.
+     * View the latest PDF for an invoice via signed URL.
      */
-    public function downloadVersion(Request $request, InvoiceUnit $invoice, int $version): Response
+    public function viewSigned(InvoiceUnit $invoice): Response
     {
-        $user = $request->user();
-        
-        // Verify the invoice belongs to the user's tenant
-        if ($invoice->tenant_id !== $user->tenant_id) {
-            return response('Invoice not found', 404);
+        $latestPdf = $this->pdfService->getLatestPdf($invoice);
+
+        if (!$latestPdf) {
+            return response('No PDF found for this invoice', 404);
         }
 
-        $pdfVersion = $this->pdfService->getPdfVersion($invoice, $version);
-
-        if (!$pdfVersion) {
-            return response('PDF version not found', 404);
-        }
-
-        $content = $this->pdfService->getPdfContent($pdfVersion);
+        $content = $this->pdfService->getPdfContent($latestPdf);
 
         if (!$content) {
             return response('PDF file not found', 404);
@@ -195,7 +214,8 @@ class InvoicePdfController extends Controller
 
         return response($content)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="' . $pdfVersion->file_name . '"')
-            ->header('Content-Length', strlen($content));
+            ->header('Content-Disposition', 'inline; filename="' . $latestPdf->file_name . '"')
+            ->header('Content-Length', strlen($content))
+            ->header('Cache-Control', 'no-store, max-age=0');
     }
 }

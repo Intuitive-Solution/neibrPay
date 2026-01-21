@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ExpenseAttachment;
 use App\Models\Expense;
+use App\Services\FileStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ExpenseAttachmentController extends Controller
 {
+    public function __construct(
+        protected FileStorageService $fileStorage
+    ) {
+    }
     /**
      * Display a listing of attachments for an expense.
      */
@@ -76,7 +80,7 @@ class ExpenseAttachmentController extends Controller
         $filePath = 'expense-attachments/' . $filename;
 
         // Store the file (each expense gets its own copy)
-        $stored = Storage::disk('public')->put($filePath, file_get_contents($file));
+        $stored = $this->fileStorage->store($filePath, file_get_contents($file));
 
         if (!$stored) {
             return response()->json(['message' => 'Failed to store file'], 500);
@@ -151,13 +155,7 @@ class ExpenseAttachmentController extends Controller
             return response()->json(['message' => 'Attachment not found'], 404);
         }
 
-        $filePath = storage_path('app/public/' . $attachment->file_path);
-
-        if (!file_exists($filePath)) {
-            return response()->json(['message' => 'File not found on disk'], 404);
-        }
-
-        return response()->download($filePath, $attachment->file_name);
+        return $this->fileStorage->getDownloadResponse($attachment->file_path, $attachment->file_name);
     }
 
     /**
@@ -181,9 +179,7 @@ class ExpenseAttachmentController extends Controller
         }
 
         // Delete the file from storage
-        if (Storage::disk('public')->exists($attachment->file_path)) {
-            Storage::disk('public')->delete($attachment->file_path);
-        }
+        $this->fileStorage->delete($attachment->file_path);
 
         // Delete the attachment record
         $attachment->delete();

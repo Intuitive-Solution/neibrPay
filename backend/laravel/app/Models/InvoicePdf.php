@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
+use App\Services\FileStorageService;
 
 class InvoicePdf extends Model
 {
@@ -35,6 +35,16 @@ class InvoicePdf extends Model
         'version' => 'integer',
         'file_size' => 'integer',
         'is_latest' => 'boolean',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'file_url',
+        'file_size_human',
     ];
 
     /**
@@ -82,7 +92,7 @@ class InvoicePdf extends Model
      */
     public function getFileUrlAttribute(): string
     {
-        return asset('storage/' . $this->file_path);
+        return app(FileStorageService::class)->getUrl($this->file_path);
     }
 
     /**
@@ -105,35 +115,6 @@ class InvoicePdf extends Model
      */
     public function fileExists(): bool
     {
-        return Storage::disk('public')->exists($this->file_path);
-    }
-
-    /**
-     * Get the full file path in storage.
-     */
-    public function getFullFilePath(): string
-    {
-        return storage_path('app/public/' . $this->file_path);
-    }
-
-    /**
-     * Get the next version number for an invoice.
-     */
-    public static function getNextVersion(int $invoiceUnitId): int
-    {
-        $latestVersion = self::where('invoice_unit_id', $invoiceUnitId)
-            ->max('version');
-        
-        return $latestVersion ? $latestVersion + 1 : 1;
-    }
-
-    /**
-     * Mark all other versions of this invoice as not latest.
-     */
-    public function markOthersAsNotLatest(): void
-    {
-        self::where('invoice_unit_id', $this->invoice_unit_id)
-            ->where('id', '!=', $this->id)
-            ->update(['is_latest' => false]);
+        return app(FileStorageService::class)->exists($this->file_path);
     }
 }

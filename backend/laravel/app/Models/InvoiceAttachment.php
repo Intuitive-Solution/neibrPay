@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Services\FileStorageService;
 
 class InvoiceAttachment extends Model
 {
@@ -57,6 +58,14 @@ class InvoiceAttachment extends Model
     public function scopeOfType($query, $type)
     {
         return $query->where('attachment_type', $type);
+    }
+
+    /**
+     * Get the file URL for downloading.
+     */
+    public function getFileUrlAttribute(): string
+    {
+        return app(FileStorageService::class)->getUrl($this->file_path);
     }
 
     /**

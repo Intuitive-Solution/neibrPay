@@ -179,7 +179,7 @@ class InvoiceController extends Controller
                     $invoice->load(['unit', 'notes', 'tenant']);
                     
                     // Generate HTML for the invoice
-                    $html = $this->generateInvoiceHtml($invoice);
+                    $html = $this->pdfService->generateInvoiceHtml($invoice);
                     
                     // Generate and store PDF
                     $this->pdfService->generatePdf($invoice, $html, $user->id);
@@ -327,18 +327,15 @@ class InvoiceController extends Controller
                 $this->updateInvoiceNotes($invoiceUnit, $validated['notes']);
             }
             
-            // Generate new PDF with is_latest = true (mark previous PDFs as is_latest = false)
+            // Regenerate PDF for the updated invoice
             try {
-                // Mark all existing PDFs as not latest
-                $invoiceUnit->pdfs()->update(['is_latest' => false]);
-                
                 // Load the invoice with necessary relationships for PDF generation
                 $invoiceUnit->load(['unit', 'notes', 'tenant']);
                 
                 // Generate HTML for the invoice
-                $html = $this->generateInvoiceHtml($invoiceUnit);
+                $html = $this->pdfService->generateInvoiceHtml($invoiceUnit);
                 
-                // Generate and store new PDF with is_latest = true
+                // Generate and store new PDF (updates existing record)
                 $this->pdfService->generatePdf($invoiceUnit, $html, $user->id);
                 
                 \Log::info("PDF regenerated successfully for updated invoice {$invoiceUnit->id}");
@@ -520,7 +517,7 @@ class InvoiceController extends Controller
                 $payment->refresh();
             }
             
-            $html = $this->generateInvoiceHtml($invoiceUnit, $payment);
+            $html = $this->pdfService->generateInvoiceHtml($invoiceUnit, $payment);
             $this->pdfService->generatePdf($invoiceUnit, $html, $user->id);
         } catch (\Exception $e) {
             // Log error but don't fail the payment marking
@@ -535,338 +532,6 @@ class InvoiceController extends Controller
         ]);
     }
 
-    /**
-     * Generate HTML for invoice with optional payment details.
-     */
-    private function generateInvoiceHtml(InvoiceUnit $invoiceUnit, $payment = null): string
-    {
-        // Load tenant relationship if not already loaded
-        if (!$invoiceUnit->relationLoaded('tenant')) {
-            $invoiceUnit->load('tenant');
-        }
-        
-        $tenant = $invoiceUnit->tenant;
-        $tenantName = $tenant?->name ?? 'Community';
-        $tenantAddress = $tenant?->address ?? '';
-        $tenantCity = $tenant?->city ?? '';
-        $tenantState = $tenant?->state ?? '';
-        $tenantZipCode = $tenant?->zip_code ?? '';
-        $tenantPhone = $tenant?->phone ?? '';
-        $tenantEmail = $tenant?->email ?? '';
-        
-        // Extract street address - always get first part before the first comma
-        $streetAddress = htmlspecialchars($tenantAddress);
-        $cityStateZipFromAddress = '';
-        
-        if ($tenantAddress && (strpos($tenantAddress, ',') !== false)) {
-            // Address contains commas - split it
-            $addressParts = array_map('trim', explode(',', $tenantAddress));
-            $streetAddress = htmlspecialchars($addressParts[0]); // First part is street address
-            
-            // Get the rest for fallback use
-            if (count($addressParts) > 1) {
-                $cityStateZipFromAddress = implode(', ', array_slice($addressParts, 1));
-            }
-        }
-        
-        // Build city, state, zip line - prioritize separate fields, fallback to address parsing
-        $cityStateZip = '';
-        if (!empty($tenantCity) || !empty($tenantState) || !empty($tenantZipCode)) {
-            // Use separate fields if any are provided
-            $cityStateZip = trim(implode(', ', array_filter([$tenantCity, $tenantState, $tenantZipCode])));
-        } elseif (!empty($cityStateZipFromAddress)) {
-            // Fallback: use the part after first comma from address
-            $cityStateZip = $cityStateZipFromAddress;
-        }
-        $cityStateZip = htmlspecialchars($cityStateZip);
-        
-        // Build contact info divs (optional)
-        $phoneHtml = $tenantPhone ? "<div class=\"address-phone\">Phone: " . htmlspecialchars($tenantPhone) . "</div>" : '';
-        $emailHtml = $tenantEmail ? "<div class=\"address-email\">Email: " . htmlspecialchars($tenantEmail) . "</div>" : '';
-        
-        $unit = $invoiceUnit->unit;
-        $unitTitle = $unit ? $unit->title : "Unit {$invoiceUnit->unit_id}";
-        $unitAddress = $unit ? "{$unit->address}, {$unit->city}" : '';
-        $unitResident = $unit ? $unit->resident_name : '';
-
-        $formatDate = function ($dateString) {
-            if (!$dateString || $dateString === 'use_payment_terms' || strpos($dateString, 'use_') === 0) {
-                return '';
-            }
-            
-            try {
-                // Handle different date formats
-                if (is_object($dateString) && method_exists($dateString, 'format')) {
-                    return $dateString->format('F j, Y');
-                }
-                
-                return \Carbon\Carbon::parse($dateString)->format('F j, Y');
-            } catch (\Exception $e) {
-                // Log the error for debugging
-                \Log::warning('Failed to parse date in PDF generation', [
-                    'date_string' => $dateString,
-                    'date_type' => gettype($dateString),
-                    'error' => $e->getMessage(),
-                ]);
-                return '';
-            }
-        };
-
-        // Only include payment method formatter if payment is provided
-        $formatPaymentMethod = null;
-        if ($payment) {
-            $formatPaymentMethod = function ($method) {
-                $methodMap = [
-                    'cash' => 'Cash',
-                    'check' => 'Check',
-                    'credit_card' => 'Credit Card',
-                    'bank_transfer' => 'Bank Transfer',
-                    'other' => 'Other'
-                ];
-                return $methodMap[$method] ?? $method;
-            };
-        }
-
-        $publicNotes = $invoiceUnit->notes->where('type', 'public_notes')->first()?->content ?? '';
-        $terms = $invoiceUnit->notes->where('type', 'terms')->first()?->content ?? '';
-        $footer = $invoiceUnit->notes->where('type', 'footer')->first()?->content ?? '';
-
-        $itemsHtml = '';
-        foreach ($invoiceUnit->items as $item) {
-            $itemsHtml .= "
-            <tr>
-                <td class=\"item-name\">{$item['name']}</td>
-                <td class=\"item-description\">" . ($item['description'] ?? '') . "</td>
-                <td class=\"item-cost\">$" . number_format((float)$item['unit_cost'], 2) . "</td>
-                <td class=\"item-quantity\">{$item['quantity']}</td>
-                <td class=\"item-total\">$" . number_format((float)$item['line_total'], 2) . "</td>
-            </tr>";
-        }
-
-        $discountHtml = '';
-
-        $taxHtml = '';
-        if ($invoiceUnit->tax_rate > 0) {
-            $taxHtml = "
-            <div class=\"total-row clearfix\">
-                <span class=\"total-label\">Tax ({$invoiceUnit->tax_rate}%):</span>
-                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->tax_amount, 2) . "</span>
-            </div>";
-        }
-
-        $balanceDueHtml = '';
-        if ($invoiceUnit->balance_due > 0) {
-            $balanceDueHtml = "
-            <div class=\"total-row balance-due clearfix\">
-                <span class=\"total-label\">Balance Due:</span>
-                <span class=\"total-value\">$" . number_format((float)$invoiceUnit->balance_due, 2) . "</span>
-            </div>";
-        }
-
-        // Conditional payment details HTML
-        $paymentDetailsHtml = '';
-        if ($payment) {
-            // Debug: Log the payment data to see what we're getting
-            \Log::info('Payment data for PDF generation:', [
-                'payment_id' => $payment->id,
-                'payment_date' => $payment->payment_date,
-                'payment_date_type' => gettype($payment->payment_date),
-                'payment_method' => $payment->payment_method,
-                'payment_reference' => $payment->payment_reference,
-            ]);
-
-            // Get payment date with fallback - handle any invalid date values
-            $paymentDate = $payment->payment_date;
-            
-            // Handle different date formats and invalid values
-            if (!$paymentDate || $paymentDate === 'use_payment_terms' || strpos($paymentDate, 'use_') === 0) {
-                $paymentDate = now()->format('Y-m-d H:i:s');
-            } elseif (is_object($paymentDate) && method_exists($paymentDate, 'format')) {
-                // If it's a Carbon instance, format it
-                $paymentDate = $paymentDate->format('Y-m-d H:i:s');
-            } elseif (!is_string($paymentDate)) {
-                // If it's not a string, convert it
-                $paymentDate = now()->format('Y-m-d H:i:s');
-            }
-
-            $paymentDetailsHtml = "
-            <div class=\"payment-details-section\">
-                <h3 class=\"section-title\">Payment Details:</h3>
-                <div class=\"payment-details-content\">
-                    <p><strong>Payment Date:</strong> {$formatDate($paymentDate)}</p>
-                    <p><strong>Payment Method:</strong> {$formatPaymentMethod($payment->payment_method)}</p>
-                    <p><strong>Reference:</strong> {$payment->payment_reference}</p>
-                </div>
-            </div>";
-        }
-
-        $notesHtml = $publicNotes ? "
-        <div class=\"notes-section\">
-            <h3 class=\"section-title\">Notes:</h3>
-            <div class=\"notes-content\">{$publicNotes}</div>
-        </div>" : '';
-
-        $termsHtml = $terms ? "
-        <div class=\"terms-section\">
-            <h3 class=\"section-title\">Terms & Conditions:</h3>
-            <div class=\"terms-content\">{$terms}</div>
-        </div>" : '';
-
-        $footerHtml = $footer ? "
-        <div class=\"footer-section\">
-            <div class=\"footer-content\">{$footer}</div>
-        </div>" : '';
-
-        // Conditional PAID stamp
-        $paidStampHtml = $payment ? '
-                    <div class="paid-stamp">
-                        <div class="paid-stamp-content">PAID</div>
-                    </div>' : '';
-
-        // Conditional CSS for payment details
-        $paymentDetailsCss = $payment ? '
-                .payment-details-section { margin-bottom: 10px; padding: 10px 12px; margin-right: 5mm; background-color: #f0fdf4; border: 2px solid #10b981; border-radius: 4px; page-break-inside: avoid; }
-                .payment-details-content p { margin: 2px 0; font-size: 8px; color: #1f2937; }
-                .paid-stamp { position: absolute; top: 10px; right: 15mm; z-index: 10; }
-                .paid-stamp-content { background: #10b981; color: white; padding: 3px 6px; border-radius: 2px; font-weight: bold; font-size: 11px; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transform: rotate(-15deg); }' : '';
-
-        return "
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset=\"utf-8\">
-            <title>Invoice {$invoiceUnit->invoice_number}</title>
-            <style>
-                * { box-sizing: border-box; }
-                body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }
-                .invoice-template { width: 180mm; max-width: 180mm; min-height: auto; padding: 10mm 8mm 20mm 10mm; font-family: Arial, sans-serif; background: white; color: #333; line-height: 1.3; }
-                .invoice-header { width: 100%; margin-bottom: 25px; border-bottom: 3px solid #2563eb; padding-bottom: 15px; overflow: hidden; position: relative; page-break-inside: avoid; }
-                .company-info { float: left; width: 55%; }
-                .company-name { font-size: 18px; font-weight: bold; color: #2563eb; margin: 0 0 4px 0; }
-                .company-details { margin: 0; }
-                .address-line-1 { margin: 1px 0; font-size: 9px; color: #666; font-weight: 500; }
-                .address-line-2 { margin: 1px 0; font-size: 9px; color: #666; }
-                .address-phone { margin: 1px 0; font-size: 9px; color: #666; }
-                .address-email { margin: 1px 0; font-size: 9px; color: #666; }
-                .invoice-meta { float: right; width: 40%; text-align: right; padding-right: 5mm; }
-                .invoice-title { font-size: 18px; font-weight: bold; color: #1f2937; margin: 0 0 6px 0; }
-                .invoice-details p { margin: 1px 0; font-size: 9px; }
-                .bill-to-section { margin-bottom: 25px; page-break-inside: avoid; }
-                .section-title { font-size: 12px; font-weight: bold; color: #1f2937; margin: 0 0 6px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; }
-                .unit-header h4 { font-size: 12px; font-weight: bold; margin: 0 0 3px 0; color: #1f2937; }
-                .unit-details p { margin: 1px 0; font-size: 10px; color: #666; }
-                .items-section { margin-bottom: 25px; page-break-inside: avoid; }
-                .items-table { width: 100%; border-collapse: collapse; margin: 0; table-layout: fixed; }
-                .items-table th { background-color: #f8fafc; color: #1f2937; font-weight: bold; padding: 6px 4px; text-align: left; border: 1px solid #e5e7eb; font-size: 10px; }
-                .items-table td { padding: 6px 4px; border: 1px solid #e5e7eb; font-size: 10px; vertical-align: top; word-wrap: break-word; }
-                .item-name { width: 18%; font-weight: 500; }
-                .item-description { width: 32%; }
-                .item-cost { width: 15%; text-align: right; }
-                .item-quantity { width: 10%; text-align: right; }
-                .item-total { width: 15%; text-align: right; font-weight: 500; }
-                .totals-section { margin-bottom: 15px; page-break-inside: avoid; }
-                .totals-container { max-width: 220px; margin-left: auto; margin-right: 5mm; }
-                .total-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
-                .total-label { font-size: 10px; color: #6b7280; }
-                .total-value { font-size: 10px; font-weight: 500; color: #1f2937; }
-                .final-total { border-top: 2px solid #1f2937; border-bottom: 2px solid #1f2937; font-weight: bold; font-size: 12px; margin-top: 6px; padding: 8px 0; }
-                .final-total .total-label, .final-total .total-value { font-size: 12px; font-weight: bold; }
-                .balance-due { background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 3px; padding: 8px 12px; margin-top: 8px; }
-                .balance-due .total-label, .balance-due .total-value { color: #dc2626; font-weight: bold; }
-                .payment-section { margin-top: 10px; padding-top: 8px; border-top: 1px solid #e5e7eb; page-break-inside: avoid; }
-                .payment-details p { margin: 2px 0; font-size: 8px; color: #4b5563; }
-                .notes-section, .terms-section { margin-bottom: 10px; border: 1px solid #000000; page-break-inside: avoid; }
-                .notes-content, .terms-content { font-size: 9px; line-height: 1.3; color: #4b5563; margin-top: 4px; border: 1px solid #000000; }
-                .footer-section { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; padding: 8px 10mm; background: white; border-top: 1px solid #e5e7eb; z-index: 1000; }
-                .footer-content { font-size: 8px; color: #6b7280; text-align: center; }
-                .clearfix::after { content: \"\"; display: table; clear: both; }
-                {$paymentDetailsCss}
-            </style>
-        </head>
-        <body>
-            {$footerHtml}
-            <div class=\"invoice-template\">
-                <div class=\"invoice-header clearfix\">
-                    {$paidStampHtml}
-                    <div class=\"company-info\">
-                        <h1 class=\"company-name\">{$tenantName}</h1>
-                        <div class=\"company-details\">
-                            <div class=\"address-line-1\">{$streetAddress}</div>
-                            <div class=\"address-line-2\">{$cityStateZip}</div>
-                            {$phoneHtml}
-                            {$emailHtml}
-                        </div>
-                    </div>
-                    <div class=\"invoice-meta\">
-                        <h2 class=\"invoice-title\">INVOICE</h2>
-                        <div class=\"invoice-details\">
-                            <p><strong>Invoice #:</strong> {$invoiceUnit->invoice_number}</p>
-                            <p><strong>Date:</strong> {$formatDate($invoiceUnit->start_date)}</p>
-                            <p><strong>Due Date:</strong> {$formatDate($invoiceUnit->getActualDueDate())}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class=\"bill-to-section\">
-                    <h3 class=\"section-title\">Bill To:</h3>
-                    <div class=\"unit-header\">
-                        <h4>{$unitTitle}</h4>
-                    </div>
-                    <div class=\"unit-details\">
-                        <p>{$unitAddress}</p>
-                        <p>{$unitResident}</p>
-                    </div>
-                </div>
-
-                <div class=\"items-section\">
-                    <table class=\"items-table\">
-                        <thead>
-                            <tr>
-                                <th class=\"item-name\">Item</th>
-                                <th class=\"item-description\">Description</th>
-                                <th class=\"item-cost\">Unit Cost</th>
-                                <th class=\"item-quantity\">Qty</th>
-                                <th class=\"item-total\">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {$itemsHtml}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class=\"totals-section\">
-                    <div class=\"totals-container\">
-                        <div class=\"total-row\">
-                            <span class=\"total-label\">Subtotal:</span>
-                            <span class=\"total-value\">$" . number_format((float)$invoiceUnit->subtotal, 2) . "</span>
-                        </div>
-                        {$discountHtml}
-                        {$taxHtml}
-                        <div class=\"total-row final-total\">
-                            <span class=\"total-label\">Total:</span>
-                            <span class=\"total-value\">$" . number_format((float)$invoiceUnit->total, 2) . "</span>
-                        </div>
-                        {$balanceDueHtml}
-                    </div>
-                </div>
-
-                {$paymentDetailsHtml}
-
-                {$notesHtml}
-                {$termsHtml}
-
-                <div class=\"payment-section\">
-                    <h3 class=\"section-title\">Payment Information</h3>
-                    <div class=\"payment-details\">
-                        <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p>
-                        <p><strong>Make checks payable to:</strong> {$tenantName}</p>
-                    </div>
-                </div>
-            </div>
-        </body>
-        </html>";
-    }
 
 
     /**
