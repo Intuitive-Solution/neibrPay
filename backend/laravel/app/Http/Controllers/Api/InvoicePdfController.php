@@ -177,11 +177,18 @@ class InvoicePdfController extends Controller
                 ['ResponseCacheControl' => 'no-store, max-age=0']
             );
         } else {
+            // Ensure HTTPS is used for signed URLs
             $signedUrl = URL::temporarySignedRoute(
                 'invoices.pdf.signed',
                 now()->addMinutes(6),
-                ['invoice' => $invoice->id]
+                ['invoice' => $invoice->id],
+                true // absolute URL
             );
+            
+            // Force HTTPS if the URL is HTTP (for production environments)
+            if (str_starts_with($signedUrl, 'http://') && (config('app.env') === 'production' || str_contains($signedUrl, 'neibrpay.com'))) {
+                $signedUrl = str_replace('http://', 'https://', $signedUrl);
+            }
         }
 
         return response()->json([
