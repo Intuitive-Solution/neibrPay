@@ -16,6 +16,15 @@ class DocumentBackupService
      */
     public function backup(): array
     {
+        // Verify ZipArchive extension is available
+        if (!class_exists('ZipArchive')) {
+            throw new \Exception(
+                'PHP ZipArchive extension is not installed. ' .
+                'Please install the php-zip extension. ' .
+                'On Railway, add "zip" to extensions.txt file.'
+            );
+        }
+
         $sourcePath = config('backup.documents.source_path');
         
         // Verify source directory exists
