@@ -20,7 +20,8 @@
     "laravel/tinker": "^2.8",
     "league/flysystem-aws-s3-v3": "^3.0",
     "posthog/posthog-php": "^3.7",
-    "stripe/stripe-php": "^18.2"
+    "stripe/stripe-php": "^18.2",
+    "ext-zip": "*"
   },
   "require-dev": {
     "fakerphp/faker": "^1.9.1",
