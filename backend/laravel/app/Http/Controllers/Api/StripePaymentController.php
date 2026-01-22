@@ -903,6 +903,12 @@ class StripePaymentController extends Controller
             ->whereNull('stripe_payment_intent_id')
             ->get();
 
+        // Get the most recent approved payment (to check if payment just completed)
+        $latestApprovedPayment = InvoicePayment::where('invoice_unit_id', $invoiceId)
+            ->where('status', 'approved')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
         return response()->json([
             'data' => [
                 'has_pending_payments' => $pendingPayments->count() > 0,
@@ -914,6 +920,12 @@ class StripePaymentController extends Controller
                         'created_at' => $payment->created_at,
                     ];
                 }),
+                'latest_approved_payment' => $latestApprovedPayment ? [
+                    'id' => $latestApprovedPayment->id,
+                    'amount' => $latestApprovedPayment->amount,
+                    'payment_method' => $latestApprovedPayment->payment_method,
+                    'updated_at' => $latestApprovedPayment->updated_at,
+                ] : null,
             ],
         ]);
     }

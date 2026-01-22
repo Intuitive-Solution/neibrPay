@@ -34,6 +34,12 @@ export interface StripePaymentStatus {
     session_id: string;
     created_at: string;
   }>;
+  latest_approved_payment: {
+    id: number;
+    amount: number;
+    payment_method: string;
+    updated_at: string;
+  } | null;
 }
 
 export interface FeeCalculation {
