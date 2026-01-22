@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DocumentFolderController;
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\BudgetController;
+use App\Http\Controllers\Api\BackupController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -235,6 +236,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Plaid sync-all route (public, secured with API key for n8n)
 Route::post('/plaid/sync-all', [PlaidController::class, 'syncAll']);
+
+// Document backup route (public, secured with API key for n8n)
+Route::post('/backup/documents', [BackupController::class, 'backupDocuments']);
 
 // Plaid webhook route (public, no auth - optional signature verification)
 Route::post('/plaid/webhook', [PlaidController::class, 'handleWebhook']);

@@ -776,3 +776,6 @@ Password: pass_good
 Phone: 1111111111
 
 user_transactions_dynamic
+
+#n8n mcp
+npx n8n-mcp

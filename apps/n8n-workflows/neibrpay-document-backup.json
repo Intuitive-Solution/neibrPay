@@ -1,0 +1,171 @@
+{
+  "name": "neibrpay-document-backup",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "699b9aec-9cb1-49df-bb68-da12d18dad41",
+      "name": "When clicking 'Execute workflow'"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 352],
+      "id": "a1c2aeaa-f74e-46c4-8ba9-f384669843e0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{'https://chelsie-immiscible-unaggressively.ngrok-free.dev' }}/api/backup/documents",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-Key",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMWEyZjM5ZS0wMjQ1LTRiNjItOWE5Ny0zY2FhMTc0NjVmY2YiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY5MDc2MzUyLCJleHAiOjE3NzE2Mjg0MDB9.LiCXFLx5AWp20Y7zG5_Hmg0UAsa9PI7Ot7lvM6v3s5w"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [208, 192],
+      "id": "00a6df73-a5e7-4cc4-998d-c20bc7eb14ab",
+      "name": "HTTP Request - Trigger Backup"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [528, 192],
+      "id": "6ed99697-2dbd-459b-8d78-9b0f20c5e511",
+      "name": "Check Success"
+    },
+    {
+      "parameters": {
+        "fromEmail": "support@neibrpay.com",
+        "toEmail": "tahir@openitconsulting.com",
+        "subject": "=✅ Document Backup Successful - {{ $('HTTP Request - Trigger Backup').item.json.data.filename }}",
+        "options": {}
+      },
+      "id": "39492bd6-0937-4876-8795-a473d344630d",
+      "name": "Send Success Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [848, 112],
+      "webhookId": "1c43a35d-43b4-40c8-ab91-36bc5e3a2708",
+      "credentials": {
+        "smtp": {
+          "id": "RghCNSDKFQ5Oth4i",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "support@neibrpay.com",
+        "toEmail": "tahir@openitconsulting.com",
+        "subject": "=❌ Document Backup Failed",
+        "options": {}
+      },
+      "id": "afec746f-e902-4144-aa08-9ab5d5b01b57",
+      "name": "Send Failure Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [848, 288],
+      "webhookId": "21b12642-356d-4a66-8028-8fe077c4f7d0",
+      "credentials": {
+        "smtp": {
+          "id": "RghCNSDKFQ5Oth4i",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Trigger Backup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Trigger Backup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Trigger Backup": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Send Success Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Failure Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "df3d4447-9b35-4043-8a8e-40aa4fef2182",
+  "meta": {
+    "instanceId": "7049e8f52f4a8b5eddcfbc7601c36c0a32779966c03f9b643c8db461d2762391"
+  },
+  "id": "iM63EOEpV8K9FxQ6",
+  "tags": []
+}
