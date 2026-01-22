@@ -36,6 +36,26 @@ export interface StripePaymentStatus {
   }>;
 }
 
+export interface FeeCalculation {
+  invoice_amount: number;
+  card: {
+    processing_fee: number;
+    total: number;
+    breakdown: {
+      platform_fee: number;
+      stripe_fee: number;
+    };
+  };
+  ach: {
+    processing_fee: number;
+    total: number;
+    breakdown: {
+      platform_fee: number;
+      stripe_fee: number;
+    };
+  };
+}
+
 export const paymentsApi = {
   /**
    * List all payments with optional filters
@@ -88,15 +108,33 @@ export const paymentsApi = {
   },
 
   /**
+   * Calculate fees for an invoice payment
+   */
+  calculateFees: async (
+    invoiceId: number,
+    amount?: number
+  ): Promise<FeeCalculation> => {
+    const response = await apiClient.post<{ data: FeeCalculation }>(
+      `/invoices/${invoiceId}/calculate-fees`,
+      amount ? { amount } : {}
+    );
+    return response.data.data;
+  },
+
+  /**
    * Create a Stripe Checkout session for an invoice
    */
   createStripeCheckout: async (
     invoiceId: number,
+    paymentMethod: 'card' | 'ach' = 'card',
     amount?: number
   ): Promise<StripeCheckoutResponse> => {
     const response = await apiClient.post<{ data: StripeCheckoutResponse }>(
       `/invoices/${invoiceId}/stripe/checkout`,
-      amount ? { amount } : {}
+      {
+        payment_method: paymentMethod,
+        ...(amount && { amount }),
+      }
     );
     return response.data.data;
   },

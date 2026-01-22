@@ -1938,10 +1938,12 @@
       @close="showPaymentViewModal = false"
     />
 
-    <!-- Stripe Payment Modal -->
-    <StripePaymentModal
+    <!-- Payment Method Modal -->
+    <PaymentMethodModal
       :is-open="showStripePaymentModal"
       :invoice="invoice || null"
+      :hoa-name="hoaName"
+      :hoa-address="hoaAddress"
       @close="showStripePaymentModal = false"
       @success="handleStripePaymentSuccess"
       @error="handleStripePaymentError"
@@ -1973,6 +1975,7 @@ import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
 import PaymentReviewModal from '../components/PaymentReviewModal.vue';
 import PaymentViewModal from '../components/PaymentViewModal.vue';
 import StripePaymentModal from '../components/StripePaymentModal.vue';
+import PaymentMethodModal from '../components/PaymentMethodModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -2016,6 +2019,24 @@ const {
 
 // Fetch tenant settings to check Stripe status
 const { data: settingsData } = useSettings();
+
+// HOA information for check payment note
+const hoaName = computed(() => {
+  return settingsData.value?.tenant?.name || 'HOA';
+});
+
+const hoaAddress = computed(() => {
+  const tenant = settingsData.value?.tenant;
+  if (!tenant) return '';
+
+  const address = tenant.address || '';
+  const city = tenant.city || '';
+  const state = tenant.state || '';
+  const zip = tenant.zip_code || '';
+
+  const parts = [address, city, state, zip].filter(p => p);
+  return parts.join('\n');
+});
 
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
