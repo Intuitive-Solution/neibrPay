@@ -34,6 +34,91 @@ class StripePaymentController extends Controller
     }
 
     /**
+     * Calculate fees for an invoice payment (Card vs ACH).
+     */
+    public function calculateFees(Request $request, int $invoiceId): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verify invoice exists and belongs to user's tenant
+        $invoice = InvoiceUnit::forTenant($user->tenant_id)->findOrFail($invoiceId);
+
+        // If user is a resident, verify they own the unit associated with the invoice
+        if ($user->isResident()) {
+            $ownedUnitIds = $user->ownedUnits()->get()->pluck('id')->toArray();
+            if (!in_array($invoice->unit_id, $ownedUnitIds)) {
+                return response()->json([
+                    'message' => 'You do not have permission to calculate fees for this invoice.',
+                ], 403);
+            }
+        }
+
+        // Validate request
+        $validated = $request->validate([
+            'amount' => 'nullable|numeric|min:0.01',
+        ]);
+
+        // Determine payment amount (default to balance due)
+        $amount = $validated['amount'] ?? $invoice->balance_due;
+
+        // Validate amount doesn't exceed balance
+        if ($amount > $invoice->balance_due) {
+            return response()->json([
+                'message' => 'Payment amount cannot exceed the remaining balance.',
+            ], 422);
+        }
+
+        // Validate minimum amount
+        if ($amount < 0.50) {
+            return response()->json([
+                'message' => 'Payment amount must be at least $0.50.',
+            ], 422);
+        }
+
+        // Calculate fees
+        $platformFeePercent = 0.01; // 1%
+        $cardStripeFeePercent = 0.029; // 2.9%
+        $cardStripeFeeFixed = 0.30; // $0.30
+        $achStripeFeePercent = 0.008; // 0.8%
+        $achStripeFeeMax = 5.00; // $5.00 cap
+
+        // Platform fee (same for both methods)
+        $platformFee = round($amount * $platformFeePercent, 2);
+
+        // Card: 1% (platform) + 2.9% + $0.30 (Stripe)
+        $cardStripeFee = round(($amount * $cardStripeFeePercent) + $cardStripeFeeFixed, 2);
+        $cardProcessingFee = round($platformFee + $cardStripeFee, 2);
+        $cardTotal = round($amount + $cardProcessingFee, 2);
+
+        // ACH: 1% (platform) + 0.8% capped at $5 (Stripe)
+        $achStripeFee = min(round($amount * $achStripeFeePercent, 2), $achStripeFeeMax);
+        $achProcessingFee = round($platformFee + $achStripeFee, 2);
+        $achTotal = round($amount + $achProcessingFee, 2);
+
+        return response()->json([
+            'data' => [
+                'invoice_amount' => $amount,
+                'card' => [
+                    'processing_fee' => $cardProcessingFee,
+                    'total' => $cardTotal,
+                    'breakdown' => [
+                        'platform_fee' => $platformFee,
+                        'stripe_fee' => $cardStripeFee,
+                    ],
+                ],
+                'ach' => [
+                    'processing_fee' => $achProcessingFee,
+                    'total' => $achTotal,
+                    'breakdown' => [
+                        'platform_fee' => $platformFee,
+                        'stripe_fee' => $achStripeFee,
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
      * Create a Stripe Checkout session for an invoice.
      */
     public function createCheckoutSession(Request $request, int $invoiceId): JsonResponse
@@ -56,6 +141,7 @@ class StripePaymentController extends Controller
         // Validate request
         $validated = $request->validate([
             'amount' => 'nullable|numeric|min:0.01',
+            'payment_method' => 'nullable|in:card,ach',
         ]);
 
         // Determine payment amount (default to balance due)
@@ -97,21 +183,36 @@ class StripePaymentController extends Controller
                 ], 400);
             }
 
-            // Calculate platform fee (1% of payment amount)
-            $amountInCents = (int)($amount * 100);
-            $platformFeeInCents = (int)round($amountInCents * 0.01);
+            // Get payment method (default to card)
+            $paymentMethod = $validated['payment_method'] ?? 'card';
 
-            // Build checkout session params
-            $checkoutParams = [
-                'payment_method_types' => ['card', 'us_bank_account', 'link'], // Card, ACH, and Link
-                'payment_method_options' => [
-                    'us_bank_account' => [
-                        'financial_connections' => [
-                            'permissions' => ['payment_method', 'balances'],
-                        ],
-                    ],
-                ],
-                'line_items' => [[
+            // Calculate fees based on payment method
+            $platformFeePercent = 0.01; // 1%
+            $platformFee = round($amount * $platformFeePercent, 2);
+
+            if ($paymentMethod === 'ach') {
+                // ACH: 1% (platform) + 0.8% capped at $5 (Stripe)
+                $achStripeFeePercent = 0.008;
+                $achStripeFeeMax = 5.00;
+                $stripeFee = min(round($amount * $achStripeFeePercent, 2), $achStripeFeeMax);
+            } else {
+                // Card (default): 1% (platform) + 2.9% + $0.30 (Stripe)
+                $cardStripeFeePercent = 0.029;
+                $cardStripeFeeFixed = 0.30;
+                $stripeFee = round(($amount * $cardStripeFeePercent) + $cardStripeFeeFixed, 2);
+            }
+
+            $totalFee = round($platformFee + $stripeFee, 2);
+            $totalChargeAmount = round($amount + $totalFee, 2);
+
+            // Convert to cents for Stripe
+            $amountInCents = (int)($amount * 100);
+            $totalChargeInCents = (int)($totalChargeAmount * 100);
+            $platformFeeInCents = (int)round($platformFee * 100);
+
+            // Build checkout session params with fee structure
+            $lineItems = [
+                [
                     'price_data' => [
                         'currency' => 'usd',
                         'product_data' => [
@@ -121,7 +222,40 @@ class StripePaymentController extends Controller
                         'unit_amount' => $amountInCents,
                     ],
                     'quantity' => 1,
-                ]],
+                ],
+            ];
+
+            // Add processing fee line item if there are fees
+            if ($totalFee > 0) {
+                $lineItems[] = [
+                    'price_data' => [
+                        'currency' => 'usd',
+                        'product_data' => [
+                            'name' => 'Processing Fee',
+                            'description' => $paymentMethod === 'ach' 
+                                ? 'Platform fee (1%) + ACH processing fee (0.8% capped at $5)'
+                                : 'Platform fee (1%) + Card processing fee (2.9% + $0.30)',
+                        ],
+                        'unit_amount' => (int)round($totalFee * 100),
+                    ],
+                    'quantity' => 1,
+                ];
+            }
+
+            $checkoutParams = [
+                'payment_method_types' => $paymentMethod === 'ach' 
+                    ? ['us_bank_account'] 
+                    : ['card'],
+                'payment_method_options' => $paymentMethod === 'ach' 
+                    ? [
+                        'us_bank_account' => [
+                            'financial_connections' => [
+                                'permissions' => ['payment_method', 'balances'],
+                            ],
+                        ],
+                    ]
+                    : [],
+                'line_items' => $lineItems,
                 'mode' => 'payment',
                 'success_url' => "{$frontendUrl}/invoices/{$invoiceId}?payment=success&session_id={CHECKOUT_SESSION_ID}",
                 'cancel_url' => "{$frontendUrl}/invoices/{$invoiceId}?payment=cancelled",
@@ -131,12 +265,16 @@ class StripePaymentController extends Controller
                     'tenant_id' => $invoice->tenant_id,
                     'unit_id' => $invoice->unit_id,
                     'user_id' => $user->id,
+                    'payment_method' => $paymentMethod,
+                    'invoice_amount' => (string)$amount,
+                    'processing_fee' => (string)$totalFee,
                 ],
                 'customer_email' => $user->email,
             ];
 
             // Add payment intent data with application fee for platform
-            // Also include metadata so it's available in webhooks
+            // Application fee is only the platform's 1% cut
+            // The Stripe fee is paid from the platform's cut
             $paymentIntentData = [
                 'metadata' => [
                     'invoice_id' => $invoice->id,
@@ -144,6 +282,9 @@ class StripePaymentController extends Controller
                     'tenant_id' => $invoice->tenant_id,
                     'unit_id' => $invoice->unit_id,
                     'user_id' => $user->id,
+                    'payment_method' => $paymentMethod,
+                    'invoice_amount' => (string)$amount,
+                    'processing_fee' => (string)$totalFee,
                 ],
             ];
             
@@ -161,15 +302,17 @@ class StripePaymentController extends Controller
             );
 
             // Create a pending payment record
+            // Note: amount stored is the invoice amount only (not including fees)
+            // Fees are tracked separately in metadata and notes
             $payment = InvoicePayment::create([
                 'invoice_unit_id' => $invoice->id,
                 'amount' => $amount,
-                'payment_method' => 'stripe_card', // Will be updated when webhook is received
+                'payment_method' => $paymentMethod === 'ach' ? 'stripe_ach' : 'stripe_card',
                 'payment_reference' => $checkoutSession->id,
                 'stripe_checkout_session_id' => $checkoutSession->id,
                 'payment_date' => now(),
                 'recorded_by' => $user->id,
-                'notes' => 'Stripe Checkout payment - pending confirmation',
+                'notes' => "Stripe Checkout payment ({$paymentMethod}) - pending confirmation\nProcessing fee: \${$totalFee}",
                 'status' => 'pending', // Will be updated to 'approved' when charge succeeds
             ]);
 
@@ -760,6 +903,12 @@ class StripePaymentController extends Controller
             ->whereNull('stripe_payment_intent_id')
             ->get();
 
+        // Get the most recent approved payment (to check if payment just completed)
+        $latestApprovedPayment = InvoicePayment::where('invoice_unit_id', $invoiceId)
+            ->where('status', 'approved')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
         return response()->json([
             'data' => [
                 'has_pending_payments' => $pendingPayments->count() > 0,
@@ -771,6 +920,12 @@ class StripePaymentController extends Controller
                         'created_at' => $payment->created_at,
                     ];
                 }),
+                'latest_approved_payment' => $latestApprovedPayment ? [
+                    'id' => $latestApprovedPayment->id,
+                    'amount' => $latestApprovedPayment->amount,
+                    'payment_method' => $latestApprovedPayment->payment_method,
+                    'updated_at' => $latestApprovedPayment->updated_at,
+                ] : null,
             ],
         ]);
     }

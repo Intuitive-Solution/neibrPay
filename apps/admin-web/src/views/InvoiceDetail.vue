@@ -1,5 +1,36 @@
 <template>
   <div class="max-w-7xl">
+    <!-- Payment Processing Banner -->
+    <div
+      v-if="isProcessingPayment"
+      class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+    >
+      <div class="flex items-center">
+        <svg
+          class="animate-spin h-5 w-5 text-blue-500 mr-3"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <p class="text-sm text-blue-800 font-medium">
+          Processing your payment... Please wait.
+        </p>
+      </div>
+    </div>
+
     <!-- Success Message -->
     <div
       v-if="showSuccessMessage"
@@ -769,14 +800,15 @@
         "
         class="mb-6 flex flex-wrap gap-3"
       >
-        <!-- Pay Now button - show for residents when invoice is payment_rejected, hide for in_review -->
+        <!-- Pay Now button - show for residents when invoice is payment_rejected, hide for in_review or processing -->
         <button
           v-if="
-            (isStripeConfigured &&
+            !isProcessingPayment &&
+            ((isStripeConfigured &&
               invoice?.balance_due > 0 &&
               invoice.status !== 'in_review' &&
               invoice.status !== 'payment_rejected') ||
-            (isResident && invoice.status === 'payment_rejected')
+              (isResident && invoice.status === 'payment_rejected'))
           "
           @click="showStripePaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
@@ -1938,10 +1970,12 @@
       @close="showPaymentViewModal = false"
     />
 
-    <!-- Stripe Payment Modal -->
-    <StripePaymentModal
+    <!-- Payment Method Modal -->
+    <PaymentMethodModal
       :is-open="showStripePaymentModal"
       :invoice="invoice || null"
+      :hoa-name="hoaName"
+      :hoa-address="hoaAddress"
       @close="showStripePaymentModal = false"
       @success="handleStripePaymentSuccess"
       @error="handleStripePaymentError"
@@ -1965,7 +1999,7 @@ import {
   useDownloadInvoiceAttachment,
 } from '../composables/useInvoiceAttachments';
 import { usePayments, useDeletePayment } from '../composables/usePayments';
-import { invoicesApi, useSettings } from '@neibrpay/api-client';
+import { invoicesApi, paymentsApi, useSettings } from '@neibrpay/api-client';
 import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import PaymentEntryModal from '../components/PaymentEntryModal.vue';
@@ -1973,6 +2007,7 @@ import PaymentUpdateModal from '../components/PaymentUpdateModal.vue';
 import PaymentReviewModal from '../components/PaymentReviewModal.vue';
 import PaymentViewModal from '../components/PaymentViewModal.vue';
 import StripePaymentModal from '../components/StripePaymentModal.vue';
+import PaymentMethodModal from '../components/PaymentMethodModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -2017,6 +2052,24 @@ const {
 // Fetch tenant settings to check Stripe status
 const { data: settingsData } = useSettings();
 
+// HOA information for check payment note
+const hoaName = computed(() => {
+  return settingsData.value?.tenant?.name || 'HOA';
+});
+
+const hoaAddress = computed(() => {
+  const tenant = settingsData.value?.tenant;
+  if (!tenant) return '';
+
+  const address = tenant.address || '';
+  const city = tenant.city || '';
+  const state = tenant.state || '';
+  const zip = tenant.zip_code || '';
+
+  const parts = [address, city, state, zip].filter(p => p);
+  return parts.join('\n');
+});
+
 // Mutations
 const deleteInvoiceMutation = useDeleteInvoice();
 const emailInvoiceMutation = useEmailInvoice();
@@ -2053,6 +2106,7 @@ const successMessage = ref('');
 const errorMessage = ref('');
 const showSuccessMessage = ref(false);
 const showErrorMessage = ref(false);
+const isProcessingPayment = ref(false); // Track when payment is being processed after Stripe redirect
 const pdfLoadError = ref(false);
 const pdfRefreshKey = ref(0);
 const pdfSignedUrl = ref('');
@@ -2061,20 +2115,78 @@ const isLoadingSignedPdfUrl = ref(false);
 // Tab state
 const activeTab = ref('documents');
 
-// Handle Stripe payment redirects
-onMounted(() => {
+// Handle Stripe payment redirects with polling for payment confirmation
+onMounted(async () => {
   const paymentStatus = route.query.payment as string;
   const sessionId = route.query.session_id as string;
 
   if (paymentStatus === 'success' && sessionId) {
+    // Hide Pay Now button and show processing message
+    isProcessingPayment.value = true;
     showSuccess('Payment processing! Your payment is being confirmed...');
-    // Refetch invoice and payments to get updated status
-    refetchInvoice();
-    // Remove query params from URL
-    router.replace({ query: {} });
+
+    // Poll for payment confirmation (webhooks may take a moment to process)
+    let pollCount = 0;
+    const maxPolls = 20; // Poll for up to 20 seconds
+    const pollInterval = 1000; // 1 second intervals
+
+    const pollPaymentStatus = async () => {
+      try {
+        const response = await paymentsApi.getStripePaymentStatus(
+          invoiceId.value
+        );
+        const latestApproved = response.latest_approved_payment;
+
+        // Check if we have a recently approved payment (within last 2 minutes)
+        if (latestApproved) {
+          const timeSinceApproval =
+            new Date().getTime() -
+            new Date(latestApproved.updated_at).getTime();
+          if (timeSinceApproval < 120000) {
+            // Payment confirmed - refresh invoice data first
+            await refetchInvoice();
+            // Small delay to ensure UI updates
+            await new Promise(resolve => setTimeout(resolve, 500));
+            // Show success and clean up
+            showSuccess('Payment confirmed successfully!');
+            isProcessingPayment.value = false;
+            router.replace({ query: {} });
+            return; // Stop polling
+          }
+        }
+
+        // Continue polling if payment not confirmed yet
+        pollCount++;
+        if (pollCount < maxPolls) {
+          setTimeout(pollPaymentStatus, pollInterval);
+        } else {
+          // Timeout - refresh anyway (webhook may have processed)
+          await refetchInvoice();
+          await new Promise(resolve => setTimeout(resolve, 500));
+          showSuccess(
+            'Payment submitted! Please refresh if status does not update.'
+          );
+          isProcessingPayment.value = false;
+          router.replace({ query: {} });
+        }
+      } catch (error) {
+        console.error('Error polling payment status:', error);
+        pollCount++;
+        if (pollCount < maxPolls) {
+          setTimeout(pollPaymentStatus, pollInterval);
+        } else {
+          // Max polls reached - refresh anyway
+          await refetchInvoice();
+          isProcessingPayment.value = false;
+          router.replace({ query: {} });
+        }
+      }
+    };
+
+    // Start polling
+    pollPaymentStatus();
   } else if (paymentStatus === 'cancelled') {
     showError('Payment was cancelled. You can try again when ready.');
-    // Remove query params from URL
     router.replace({ query: {} });
   }
 });

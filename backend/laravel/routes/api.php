@@ -153,6 +153,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('payments/{id}/resubmit', [InvoicePaymentController::class, 'resubmit']);
     
     // Stripe payment routes
+    Route::post('invoices/{id}/calculate-fees', [StripePaymentController::class, 'calculateFees']);
     Route::post('invoices/{id}/stripe/checkout', [StripePaymentController::class, 'createCheckoutSession']);
     Route::get('invoices/{id}/stripe/status', [StripePaymentController::class, 'getPaymentStatus']);
     
