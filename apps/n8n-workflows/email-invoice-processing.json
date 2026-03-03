@@ -1,0 +1,4054 @@
+{
+  "name": "Email Invoice Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "downloadAttachments": true,
+        "options": {}
+      },
+      "name": "IMAP Email Trigger",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [576, -144],
+      "id": "58d645a6-5a28-4968-8f75-ffd31dd7eebf",
+      "credentials": {
+        "imap": {
+          "id": "BDmcnksgeTce9NhI",
+          "name": "Hostinger Mailbox"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $binary ? Object.keys($binary).length : 0 }}",
+              "operation": "larger"
+            }
+          ]
+        }
+      },
+      "name": "Check Attachments",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [800, -160],
+      "id": "e225cd66-9689-45cc-acc0-170ca849e033"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {
+          "reset": false
+        }
+      },
+      "name": "Loop Each Attachment",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [1056, -224],
+      "id": "0be7c6ac-5f66-44ae-bb82-f25c9d08085e"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $binary[Object.keys($binary)[0]].mimeType }}",
+              "value2": "application/pdf"
+            }
+          ]
+        }
+      },
+      "name": "Is PDF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1248, -128],
+      "id": "ab4cebd1-e3e8-4d3d-aa00-2214f8959510"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = items[0].json;\nconst documents = response.analyzeResult?.documents || [];\n\nconst isInvoiceOrReceipt = documents.some(doc => {\n  const docType = doc.docType || '';\n  const confidence = doc.confidence || 0;\n  return (\n    (docType.toLowerCase().includes('invoice') || docType.toLowerCase().includes('receipt')) &&\n    confidence > 0.5\n  );\n});\n\nconst hasInvoiceFields = documents.some(doc => {\n  const fields = doc.fields || {};\n  return fields.VendorName || fields.InvoiceId || fields.InvoiceTotal;\n});\n\nreturn [{ json: { ...response, isValidInvoice: isInvoiceOrReceipt || hasInvoiceFields } }];"
+      },
+      "name": "Validate Document Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1888, -144],
+      "id": "71a22a40-9f43-40b7-810a-c3c9b891713a"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isValidInvoice }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Is Valid Invoice",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2112, -144],
+      "id": "45011fb2-239c-4d82-bf7d-cbdc2ca6f4d9"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = items[0].json;\nconst documents = response.analyzeResult?.documents || [];\nif (documents.length === 0) throw new Error('No documents found');\n\nconst doc = documents[0];\nconst fields = doc.fields || {};\n\nfunction getFieldValue(field) {\n  if (!field) return null;\n  if (field.content) return field.content;\n  if (field.valueString) return field.valueString;\n  if (field.valueNumber) return field.valueNumber;\n  if (field.valueDate) return field.valueDate;\n  if (field.valueCurrency) return field.valueCurrency.amount;\n  return null;\n}\n\nconst lineItems = [];\nif (fields.Items?.valueArray) {\n  fields.Items.valueArray.forEach(item => {\n    const f = item.valueObject || {};\n    lineItems.push({\n      description: getFieldValue(f.Description),\n      quantity: getFieldValue(f.Quantity),\n      unit_price: getFieldValue(f.UnitPrice),\n      amount: getFieldValue(f.Amount)\n    });\n  });\n}\n\nreturn [{ json: {\n  vendor_name: getFieldValue(fields.VendorName),\n  invoice_number: getFieldValue(fields.InvoiceId),\n  invoice_date: getFieldValue(fields.InvoiceDate),\n  due_date: getFieldValue(fields.DueDate),\n  total_amount: getFieldValue(fields.InvoiceTotal),\n  line_items: lineItems,\n  confidence: doc.confidence\n}}];"
+      },
+      "name": "Parse Invoice Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [2336, -144],
+      "id": "c49175c8-0ff4-438a-8228-9a0bf8e5175f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://neibrpay-us.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-invoice:analyze?api-version=2023-07-31",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Ocp-Apim-Subscription-Key",
+              "value": ""
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "attachment_0",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, -320],
+      "id": "9ca9990a-0d34-4367-974a-d610643b9d84",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "={{ $node['HTTP Request'].json.headers['operation-location'] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Ocp-Apim-Subscription-Key",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1808, -416],
+      "id": "b9a06f64-70c0-467d-8942-55b1f6c33550",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1584, -464],
+      "id": "1ddc7908-d334-4e6b-b148-1e5d3291ccb1",
+      "name": "Wait",
+      "webhookId": "a74c229b-8614-481b-bb55-8d77c5da4364"
+    }
+  ],
+  "pinData": {
+    "HTTP Request1": [
+      {
+        "json": {
+          "status": "succeeded",
+          "createdDateTime": "2026-01-29T09:30:41Z",
+          "lastUpdatedDateTime": "2026-01-29T09:30:47Z",
+          "analyzeResult": {
+            "apiVersion": "2023-07-31",
+            "modelId": "prebuilt-invoice",
+            "stringIndexType": "textElements",
+            "content": "Intutive Solutions\nNo. #4/2\nimailTahir@gmail.com\n1st cross Annipura\n7406522888\nBangalore, Karnataka 560027\nGSTIN: 29AALPI3872K1Z5\nIndia\nPAN: AALPI3872K\nIntuitive Solutions\nINVOICE\nInvoice Number 0014\nSTRATACACHE INDIA PVT. LTD\nInvoice Date\n25/Jan/2026\n#58, HM Towers\nInvoice Total\nRs. 409,506.02\n4th Floor, A Wing, Brigade Road,\nBalance Due\nRs. 409,506.02\nBangalore, Karnataka 560001\nIndia\nGSTIN: AAHCA2544H\nPAN: 29AAHCA2544H2ZN\nItem\nDescription\nUnit Cost\nQuantity\nLine Total\nSoftware Development Consulting\nRs. 347,039.00\n1\nRs. 347,039.00\nBank Account Details:\nNet\nRs. 347,039.00\nElectronic Reference Number :\nSubtotal\nRs. 347,039.00\nSGST 9%\nRs. 31,233.51\nAccount holder name: Intuitive Solutions\nIGST 9%\nRs. 31,233.51\nAccount number: 020405011804\nTotal\nRs. 409,506.02\nName of the Bank: ICICI Bank\nPaid to Date\nRs. 0.00\nBranch Name: R.T Nagar Branch\nBalance Due\nRs. 409,506.02\nIFSC Code: ICIC0000204\nUPI ID: intuitivesolutions.ibz@icici :selected:\nInvoice Ninja",
+            "pages": [
+              {
+                "pageNumber": 1,
+                "angle": 0,
+                "width": 8.25,
+                "height": 11.6806,
+                "unit": "inch",
+                "words": [
+                  {
+                    "content": "Intutive",
+                    "polygon": [
+                      2.9055, 0.3295, 3.3112, 0.3346, 3.3162, 0.4613, 2.9055,
+                      0.4613
+                    ],
+                    "confidence": 0.945,
+                    "span": {
+                      "offset": 0,
+                      "length": 8
+                    }
+                  },
+                  {
+                    "content": "Solutions",
+                    "polygon": [
+                      3.3568, 0.3346, 3.874, 0.3346, 3.874, 0.4613, 3.3568,
+                      0.4613
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 9,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "No.",
+                    "polygon": [
+                      5.4865, 0.3346, 5.6944, 0.3346, 5.6944, 0.4563, 5.4865,
+                      0.4563
+                    ],
+                    "confidence": 0.915,
+                    "span": {
+                      "offset": 19,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "#4/2",
+                    "polygon": [
+                      5.7197, 0.3346, 5.9885, 0.3397, 5.9885, 0.4512, 5.7147,
+                      0.4563
+                    ],
+                    "confidence": 0.992,
+                    "span": {
+                      "offset": 23,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "imailTahir@gmail.com",
+                    "polygon": [
+                      2.9004, 0.5222, 4.1225, 0.5323, 4.1225, 0.6743, 2.9004,
+                      0.6692
+                    ],
+                    "confidence": 0.961,
+                    "span": {
+                      "offset": 28,
+                      "length": 20
+                    }
+                  },
+                  {
+                    "content": "1st",
+                    "polygon": [
+                      5.5017, 0.5222, 5.6589, 0.5272, 5.664, 0.6692, 5.5068,
+                      0.6692
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 49,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "cross",
+                    "polygon": [
+                      5.6893, 0.5272, 6.0088, 0.5323, 6.0088, 0.6692, 5.6893,
+                      0.6692
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 53,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Annipura",
+                    "polygon": [
+                      6.0341, 0.5323, 6.5412, 0.5323, 6.5412, 0.6743, 6.0392,
+                      0.6692
+                    ],
+                    "confidence": 0.979,
+                    "span": {
+                      "offset": 59,
+                      "length": 8
+                    }
+                  },
+                  {
+                    "content": "7406522888",
+                    "polygon": [
+                      2.9156, 0.7351, 3.6103, 0.7402, 3.6103, 0.8568, 2.9207,
+                      0.8568
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 68,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Bangalore,",
+                    "polygon": [
+                      5.4865, 0.7351, 6.0797, 0.73, 6.0797, 0.8771, 5.4915,
+                      0.8771
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 79,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Karnataka",
+                    "polygon": [
+                      6.1102, 0.73, 6.6832, 0.73, 6.6832, 0.8771, 6.1102, 0.8771
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 90,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "560027",
+                    "polygon": [
+                      6.7136, 0.73, 7.1395, 0.725, 7.1395, 0.8669, 6.7136,
+                      0.8771
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 100,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "GSTIN:",
+                    "polygon": [
+                      2.9055, 0.9278, 3.3112, 0.9278, 3.3112, 1.0545, 2.9106,
+                      1.0545
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 107,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "29AALPI3872K1Z5",
+                    "polygon": [
+                      3.3365, 0.9278, 4.3912, 0.9227, 4.3912, 1.0596, 3.3365,
+                      1.0545
+                    ],
+                    "confidence": 0.951,
+                    "span": {
+                      "offset": 114,
+                      "length": 15
+                    }
+                  },
+                  {
+                    "content": "India",
+                    "polygon": [
+                      5.4865, 0.9328, 5.7654, 0.9328, 5.7654, 1.0494, 5.4865,
+                      1.0494
+                    ],
+                    "confidence": 0.945,
+                    "span": {
+                      "offset": 130,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "PAN:",
+                    "polygon": [
+                      2.9004, 1.1305, 3.1844, 1.1356, 3.1844, 1.2674, 2.9055,
+                      1.2624
+                    ],
+                    "confidence": 0.99,
+                    "span": {
+                      "offset": 136,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "AALPI3872K",
+                    "polygon": [
+                      3.2097, 1.1356, 3.8943, 1.1356, 3.8943, 1.2674, 3.2097,
+                      1.2674
+                    ],
+                    "confidence": 0.973,
+                    "span": {
+                      "offset": 141,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Intuitive",
+                    "polygon": [
+                      0.6693, 1.308, 1.0547, 1.3029, 1.0547, 1.4043, 0.6693,
+                      1.4043
+                    ],
+                    "confidence": 0.95,
+                    "span": {
+                      "offset": 152,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "Solutions",
+                    "polygon": [
+                      1.0953, 1.3029, 1.5466, 1.3029, 1.5466, 1.4043, 1.0902,
+                      1.4043
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 162,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "INVOICE",
+                    "polygon": [
+                      0.4513, 2.2104, 0.9127, 2.2053, 0.9127, 2.3219, 0.4564,
+                      2.3168
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 172,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Invoice",
+                    "polygon": [
+                      0.4462, 2.6362, 0.8367, 2.6362, 0.8417, 2.7579, 0.4513,
+                      2.763
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 180,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Number",
+                    "polygon": [
+                      0.8671, 2.6362, 1.3336, 2.6362, 1.3387, 2.7579, 0.8722,
+                      2.7579
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 188,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "0014",
+                    "polygon": [
+                      1.4401, 2.6362, 1.719, 2.6362, 1.719, 2.763, 1.4451,
+                      2.7579
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 195,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "STRATACACHE",
+                    "polygon": [
+                      2.8954, 2.6312, 3.7472, 2.621, 3.7523, 2.768, 2.8954,
+                      2.763
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 200,
+                      "length": 11
+                    }
+                  },
+                  {
+                    "content": "INDIA",
+                    "polygon": [
+                      3.7777, 2.621, 4.1073, 2.621, 4.1123, 2.768, 3.7777, 2.768
+                    ],
+                    "confidence": 0.989,
+                    "span": {
+                      "offset": 212,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "PVT.",
+                    "polygon": [
+                      4.1377, 2.621, 4.3912, 2.621, 4.3963, 2.768, 4.1377, 2.768
+                    ],
+                    "confidence": 0.992,
+                    "span": {
+                      "offset": 218,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "LTD",
+                    "polygon": [
+                      4.4216, 2.621, 4.6194, 2.621, 4.6245, 2.768, 4.4216, 2.768
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 223,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "Invoice",
+                    "polygon": [
+                      0.4462, 2.8238, 0.8417, 2.8289, 0.8417, 2.9556, 0.4513,
+                      2.9607
+                    ],
+                    "confidence": 0.961,
+                    "span": {
+                      "offset": 227,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Date",
+                    "polygon": [
+                      0.8722, 2.8289, 1.1308, 2.8289, 1.1358, 2.9556, 0.8772,
+                      2.9556
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 235,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "25/Jan/2026",
+                    "polygon": [
+                      1.4401, 2.8238, 2.1703, 2.8238, 2.1703, 2.9506, 1.4451,
+                      2.9506
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 240,
+                      "length": 11
+                    }
+                  },
+                  {
+                    "content": "#58,",
+                    "polygon": [
+                      2.9004, 2.8238, 3.1388, 2.8238, 3.1388, 2.9556, 2.9004,
+                      2.9556
+                    ],
+                    "confidence": 0.986,
+                    "span": {
+                      "offset": 252,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "HM",
+                    "polygon": [
+                      3.1641, 2.8238, 3.3213, 2.8238, 3.3213, 2.9607, 3.1641,
+                      2.9607
+                    ],
+                    "confidence": 0.998,
+                    "span": {
+                      "offset": 257,
+                      "length": 2
+                    }
+                  },
+                  {
+                    "content": "Towers",
+                    "polygon": [
+                      3.4126, 2.8238, 3.8132, 2.8238, 3.8081, 2.9607, 3.4126,
+                      2.9607
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 260,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "Invoice",
+                    "polygon": [
+                      0.4462, 3.0317, 0.8468, 3.0317, 0.8468, 3.1635, 0.4462,
+                      3.1635
+                    ],
+                    "confidence": 0.961,
+                    "span": {
+                      "offset": 267,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Total",
+                    "polygon": [
+                      0.8823, 3.0317, 1.1663, 3.0266, 1.1663, 3.1635, 0.8823,
+                      3.1635
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 275,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      1.435, 3.0266, 1.6175, 3.0317, 1.6226, 3.1635, 1.435,
+                      3.1635
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 281,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "409,506.02",
+                    "polygon": [
+                      1.648, 3.0317, 2.2717, 3.0367, 2.2717, 3.1584, 1.648,
+                      3.1635
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 285,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "4th",
+                    "polygon": [
+                      2.9004, 3.0317, 3.0728, 3.0266, 3.0728, 3.1736, 2.9004,
+                      3.1686
+                    ],
+                    "confidence": 0.996,
+                    "span": {
+                      "offset": 296,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "Floor,",
+                    "polygon": [
+                      3.1033, 3.0266, 3.4126, 3.0266, 3.4126, 3.1736, 3.1033,
+                      3.1736
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 300,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "A",
+                    "polygon": [
+                      3.443, 3.0266, 3.5191, 3.0266, 3.5191, 3.1736, 3.443,
+                      3.1736
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 307,
+                      "length": 1
+                    }
+                  },
+                  {
+                    "content": "Wing,",
+                    "polygon": [
+                      3.5495, 3.0266, 3.8588, 3.0266, 3.8588, 3.1787, 3.5495,
+                      3.1736
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 309,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Brigade",
+                    "polygon": [
+                      3.8892, 3.0266, 4.3152, 3.0266, 4.3152, 3.1787, 3.8892,
+                      3.1787
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 315,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Road,",
+                    "polygon": [
+                      4.3456, 3.0266, 4.66, 3.0266, 4.66, 3.1787, 4.3456, 3.1787
+                    ],
+                    "confidence": 0.991,
+                    "span": {
+                      "offset": 323,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Balance",
+                    "polygon": [
+                      0.4411, 3.2243, 0.8975, 3.2243, 0.8975, 3.3561, 0.4462,
+                      3.3561
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 329,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Due",
+                    "polygon": [
+                      0.9229, 3.2243, 1.146, 3.2243, 1.146, 3.3561, 0.9229,
+                      3.3561
+                    ],
+                    "confidence": 0.977,
+                    "span": {
+                      "offset": 337,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      1.4299, 3.2193, 1.6125, 3.2243, 1.6175, 3.3561, 1.4401,
+                      3.3561
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 341,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "409,506.02",
+                    "polygon": [
+                      1.6429, 3.2243, 2.2717, 3.2243, 2.2717, 3.3561, 1.648,
+                      3.3561
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 345,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Bangalore,",
+                    "polygon": [
+                      2.9004, 3.2243, 3.4734, 3.2193, 3.4785, 3.3663, 2.9055,
+                      3.3663
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 356,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Karnataka",
+                    "polygon": [
+                      3.5038, 3.2193, 4.0819, 3.2193, 4.0819, 3.3612, 3.5089,
+                      3.3663
+                    ],
+                    "confidence": 0.989,
+                    "span": {
+                      "offset": 367,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "560001",
+                    "polygon": [
+                      4.1123, 3.2193, 4.5332, 3.2243, 4.5332, 3.3561, 4.1123,
+                      3.3612
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 377,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "India",
+                    "polygon": [
+                      2.8903, 3.4322, 3.1742, 3.4322, 3.1692, 3.5538, 2.8903,
+                      3.5488
+                    ],
+                    "confidence": 0.946,
+                    "span": {
+                      "offset": 384,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "GSTIN:",
+                    "polygon": [
+                      2.9004, 3.6299, 3.2909, 3.6299, 3.2909, 3.7566, 2.9004,
+                      3.7566
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 390,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "AAHCA2544H",
+                    "polygon": [
+                      3.3162, 3.6299, 4.0768, 3.6299, 4.0768, 3.7617, 3.3162,
+                      3.7566
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 397,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "PAN:",
+                    "polygon": [
+                      2.8954, 3.8276, 3.1844, 3.8327, 3.1844, 3.9645, 2.8954,
+                      3.9645
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 408,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "29AAHCA2544H2ZN",
+                    "polygon": [
+                      3.2097, 3.8327, 4.3405, 3.8327, 4.3405, 3.9645, 3.2097,
+                      3.9645
+                    ],
+                    "confidence": 0.985,
+                    "span": {
+                      "offset": 413,
+                      "length": 15
+                    }
+                  },
+                  {
+                    "content": "Item",
+                    "polygon": [
+                      0.4462, 4.289, 0.6541, 4.289, 0.6541, 4.4106, 0.4462,
+                      4.4056
+                    ],
+                    "confidence": 0.91,
+                    "span": {
+                      "offset": 429,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Description",
+                    "polygon": [
+                      3.3213, 4.2839, 3.9551, 4.289, 3.9602, 4.4258, 3.3213,
+                      4.4208
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 434,
+                      "length": 11
+                    }
+                  },
+                  {
+                    "content": "Unit",
+                    "polygon": [
+                      4.3506, 4.2839, 4.5839, 4.2839, 4.5839, 4.4106, 4.3506,
+                      4.4056
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 446,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Cost",
+                    "polygon": [
+                      4.6042, 4.2839, 4.8729, 4.2839, 4.8729, 4.4157, 4.6093,
+                      4.4106
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 451,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Quantity",
+                    "polygon": [
+                      5.7958, 4.2839, 6.2674, 4.2839, 6.2674, 4.436, 5.7958,
+                      4.4258
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 456,
+                      "length": 8
+                    }
+                  },
+                  {
+                    "content": "Line",
+                    "polygon": [
+                      7.2409, 4.2737, 7.4945, 4.2687, 7.4945, 4.436, 7.2359,
+                      4.436
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 465,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Total",
+                    "polygon": [
+                      7.5249, 4.2687, 7.8038, 4.2636, 7.8089, 4.436, 7.5249,
+                      4.436
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 470,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Software",
+                    "polygon": [
+                      0.4462, 4.7503, 0.9381, 4.7452, 0.9431, 4.8922, 0.4513,
+                      4.8922
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 476,
+                      "length": 8
+                    }
+                  },
+                  {
+                    "content": "Development",
+                    "polygon": [
+                      0.9685, 4.7452, 1.719, 4.7452, 1.719, 4.8973, 0.9685,
+                      4.8973
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 485,
+                      "length": 11
+                    }
+                  },
+                  {
+                    "content": "Consulting",
+                    "polygon": [
+                      1.7494, 4.7452, 2.3427, 4.7452, 2.3376, 4.9024, 1.7443,
+                      4.8973
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 497,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      4.3506, 4.7503, 4.5332, 4.7452, 4.5332, 4.8872, 4.3506,
+                      4.8872
+                    ],
+                    "confidence": 0.951,
+                    "span": {
+                      "offset": 508,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "347,039.00",
+                    "polygon": [
+                      4.5636, 4.7452, 5.1772, 4.7452, 5.1772, 4.8922, 4.5636,
+                      4.8872
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 512,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "1",
+                    "polygon": [
+                      5.8161, 4.7503, 5.8718, 4.7503, 5.8718, 4.8669, 5.8161,
+                      4.8669
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 523,
+                      "length": 1
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      6.9671, 4.7503, 7.1497, 4.7503, 7.1497, 4.8821, 6.9671,
+                      4.8821
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 525,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "347,039.00",
+                    "polygon": [
+                      7.175, 4.7503, 7.7987, 4.7503, 7.8038, 4.8872, 7.1801,
+                      4.8821
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 529,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Bank",
+                    "polygon": [
+                      0.4411, 5.1863, 0.72, 5.1914, 0.7251, 5.3282, 0.4462,
+                      5.3282
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 540,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Account",
+                    "polygon": [
+                      0.7555, 5.1914, 1.217, 5.1914, 1.217, 5.3282, 0.7606,
+                      5.3282
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 545,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Details:",
+                    "polygon": [
+                      1.2474, 5.1914, 1.6733, 5.1863, 1.6683, 5.3333, 1.2423,
+                      5.3282
+                    ],
+                    "confidence": 0.955,
+                    "span": {
+                      "offset": 553,
+                      "length": 8
+                    }
+                  },
+                  {
+                    "content": "Net",
+                    "polygon": [
+                      5.5524, 5.166, 5.7603, 5.166, 5.7552, 5.2877, 5.5524,
+                      5.2826
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 562,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      6.9671, 5.1609, 7.1497, 5.1609, 7.1497, 5.2928, 6.9722,
+                      5.2928
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 566,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "347,039.00",
+                    "polygon": [
+                      7.175, 5.1609, 7.7936, 5.1609, 7.7936, 5.2978, 7.1801,
+                      5.2928
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 570,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Electronic",
+                    "polygon": [
+                      0.4513, 5.4854, 0.9989, 5.4854, 0.9989, 5.6223, 0.4564,
+                      5.6223
+                    ],
+                    "confidence": 0.991,
+                    "span": {
+                      "offset": 581,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Reference",
+                    "polygon": [
+                      1.0243, 5.4854, 1.5871, 5.4854, 1.5871, 5.6223, 1.0293,
+                      5.6223
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 592,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "Number",
+                    "polygon": [
+                      1.6125, 5.4854, 2.0638, 5.4803, 2.0638, 5.6223, 1.6125,
+                      5.6223
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 602,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": ":",
+                    "polygon": [
+                      2.0891, 5.4803, 2.1398, 5.4803, 2.1398, 5.6223, 2.0891,
+                      5.6223
+                    ],
+                    "confidence": 0.961,
+                    "span": {
+                      "offset": 609,
+                      "length": 1
+                    }
+                  },
+                  {
+                    "content": "Subtotal",
+                    "polygon": [
+                      5.5575, 5.4144, 6.029, 5.4144, 6.029, 5.5412, 5.5625,
+                      5.5361
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 611,
+                      "length": 8
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      6.9671, 5.4094, 7.1547, 5.4144, 7.1547, 5.5412, 6.9671,
+                      5.5412
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 620,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "347,039.00",
+                    "polygon": [
+                      7.1801, 5.4144, 7.7987, 5.4094, 7.7987, 5.5462, 7.1801,
+                      5.5412
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 624,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "SGST",
+                    "polygon": [
+                      5.5524, 5.6426, 5.8668, 5.6426, 5.8668, 5.7693, 5.5575,
+                      5.7693
+                    ],
+                    "confidence": 0.988,
+                    "span": {
+                      "offset": 635,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "9%",
+                    "polygon": [
+                      5.8921, 5.6426, 6.0595, 5.6476, 6.0595, 5.7744, 5.8921,
+                      5.7693
+                    ],
+                    "confidence": 0.978,
+                    "span": {
+                      "offset": 640,
+                      "length": 2
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      7.0432, 5.6476, 7.2257, 5.6426, 7.2257, 5.7693, 7.0432,
+                      5.7693
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 643,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "31,233.51",
+                    "polygon": [
+                      7.2511, 5.6426, 7.7987, 5.6426, 7.7987, 5.7744, 7.2511,
+                      5.7693
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 647,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "Account",
+                    "polygon": [
+                      0.4462, 5.7845, 0.9026, 5.7794, 0.9026, 5.9163, 0.4513,
+                      5.9163
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 657,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "holder",
+                    "polygon": [
+                      0.9279, 5.7794, 1.2829, 5.7794, 1.288, 5.9214, 0.933,
+                      5.9163
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 665,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "name:",
+                    "polygon": [
+                      1.3133, 5.7794, 1.6581, 5.7744, 1.6581, 5.9214, 1.3133,
+                      5.9214
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 672,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Intuitive",
+                    "polygon": [
+                      1.6835, 5.7744, 2.1398, 5.7744, 2.1449, 5.9163, 1.6885,
+                      5.9214
+                    ],
+                    "confidence": 0.946,
+                    "span": {
+                      "offset": 678,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "Solutions",
+                    "polygon": [
+                      2.1753, 5.7744, 2.6925, 5.7794, 2.6976, 5.9163, 2.1804,
+                      5.9163
+                    ],
+                    "confidence": 0.972,
+                    "span": {
+                      "offset": 688,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "IGST",
+                    "polygon": [
+                      5.5524, 5.8859, 5.8262, 5.8808, 5.8262, 6.0126, 5.5524,
+                      6.0076
+                    ],
+                    "confidence": 0.99,
+                    "span": {
+                      "offset": 698,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "9%",
+                    "polygon": [
+                      5.8566, 5.8808, 6.029, 5.8808, 6.029, 6.0126, 5.8617,
+                      6.0126
+                    ],
+                    "confidence": 0.973,
+                    "span": {
+                      "offset": 703,
+                      "length": 2
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      7.0432, 5.8859, 7.2257, 5.8859, 7.2257, 6.0126, 7.0432,
+                      6.0126
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 706,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "31,233.51",
+                    "polygon": [
+                      7.2511, 5.8859, 7.8038, 5.8859, 7.8038, 6.0228, 7.2511,
+                      6.0126
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 710,
+                      "length": 9
+                    }
+                  },
+                  {
+                    "content": "Account",
+                    "polygon": [
+                      0.4462, 6.0786, 0.9077, 6.0735, 0.9077, 6.2104, 0.4462,
+                      6.2154
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 720,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "number:",
+                    "polygon": [
+                      0.933, 6.0735, 1.3995, 6.0735, 1.3995, 6.2053, 0.933,
+                      6.2104
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 728,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "020405011804",
+                    "polygon": [
+                      1.4249, 6.0735, 2.2818, 6.0684, 2.2818, 6.2053, 1.4249,
+                      6.2053
+                    ],
+                    "confidence": 0.992,
+                    "span": {
+                      "offset": 736,
+                      "length": 12
+                    }
+                  },
+                  {
+                    "content": "Total",
+                    "polygon": [
+                      5.5727, 6.1191, 5.8414, 6.1191, 5.8414, 6.2459, 5.5676,
+                      6.2459
+                    ],
+                    "confidence": 0.992,
+                    "span": {
+                      "offset": 749,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      6.962, 6.1191, 7.1497, 6.1191, 7.1497, 6.2509, 6.9671,
+                      6.2509
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 755,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "409,506.02",
+                    "polygon": [
+                      7.175, 6.1191, 7.7936, 6.1242, 7.7987, 6.256, 7.1801,
+                      6.2509
+                    ],
+                    "confidence": 0.994,
+                    "span": {
+                      "offset": 759,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "Name",
+                    "polygon": [
+                      0.4462, 6.3726, 0.7809, 6.3675, 0.786, 6.5044, 0.4513,
+                      6.5044
+                    ],
+                    "confidence": 0.992,
+                    "span": {
+                      "offset": 770,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "of",
+                    "polygon": [
+                      0.8113, 6.3675, 0.9178, 6.3625, 0.9229, 6.5044, 0.8113,
+                      6.5044
+                    ],
+                    "confidence": 0.972,
+                    "span": {
+                      "offset": 775,
+                      "length": 2
+                    }
+                  },
+                  {
+                    "content": "the",
+                    "polygon": [
+                      0.9482, 6.3625, 1.1409, 6.3625, 1.1409, 6.5044, 0.9482,
+                      6.5044
+                    ],
+                    "confidence": 0.996,
+                    "span": {
+                      "offset": 778,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "Bank:",
+                    "polygon": [
+                      1.1663, 6.3625, 1.4705, 6.3625, 1.4654, 6.5044, 1.1663,
+                      6.5044
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 782,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "ICICI",
+                    "polygon": [
+                      1.4959, 6.3625, 1.7798, 6.3625, 1.7798, 6.5044, 1.4959,
+                      6.5044
+                    ],
+                    "confidence": 0.932,
+                    "span": {
+                      "offset": 788,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Bank",
+                    "polygon": [
+                      1.8052, 6.3625, 2.0891, 6.3625, 2.0891, 6.4993, 1.8052,
+                      6.4993
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 794,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Paid",
+                    "polygon": [
+                      5.5524, 6.3726, 5.7958, 6.3726, 5.8009, 6.4943, 5.5524,
+                      6.4892
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 799,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "to",
+                    "polygon": [
+                      5.8313, 6.3726, 5.9378, 6.3726, 5.9378, 6.4993, 5.8313,
+                      6.4943
+                    ],
+                    "confidence": 0.996,
+                    "span": {
+                      "offset": 804,
+                      "length": 2
+                    }
+                  },
+                  {
+                    "content": "Date",
+                    "polygon": [
+                      5.9783, 6.3726, 6.2319, 6.3675, 6.2319, 6.4993, 5.9783,
+                      6.4993
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 807,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      7.3423, 6.3726, 7.53, 6.3726, 7.53, 6.4943, 7.3423, 6.4943
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 812,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "0.00",
+                    "polygon": [
+                      7.5502, 6.3726, 7.7886, 6.3726, 7.7886, 6.4943, 7.5553,
+                      6.4943
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 816,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Branch",
+                    "polygon": [
+                      0.4513, 6.6616, 0.8316, 6.6616, 0.8316, 6.7984, 0.4564,
+                      6.7984
+                    ],
+                    "confidence": 0.99,
+                    "span": {
+                      "offset": 821,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "Name:",
+                    "polygon": [
+                      0.8569, 6.6616, 1.2271, 6.6616, 1.2322, 6.7984, 0.8569,
+                      6.7984
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 828,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "R.T",
+                    "polygon": [
+                      1.2575, 6.6616, 1.4401, 6.6616, 1.4401, 6.8035, 1.2575,
+                      6.7984
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 834,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "Nagar",
+                    "polygon": [
+                      1.4654, 6.6616, 1.8204, 6.6616, 1.8153, 6.8035, 1.4654,
+                      6.8035
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 838,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "Branch",
+                    "polygon": [
+                      1.8457, 6.6616, 2.226, 6.6666, 2.226, 6.8035, 1.8457,
+                      6.8035
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 844,
+                      "length": 6
+                    }
+                  },
+                  {
+                    "content": "Balance",
+                    "polygon": [
+                      5.5524, 6.6109, 5.9986, 6.6058, 5.9986, 6.7275, 5.5524,
+                      6.7275
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 851,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Due",
+                    "polygon": [
+                      6.0341, 6.6058, 6.2471, 6.6058, 6.2471, 6.7325, 6.029,
+                      6.7275
+                    ],
+                    "confidence": 0.996,
+                    "span": {
+                      "offset": 859,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "Rs.",
+                    "polygon": [
+                      6.9671, 6.6007, 7.1446, 6.6007, 7.1497, 6.7325, 6.9671,
+                      6.7376
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 863,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "409,506.02",
+                    "polygon": [
+                      7.1699, 6.6007, 7.7987, 6.5957, 7.8038, 6.7376, 7.175,
+                      6.7325
+                    ],
+                    "confidence": 0.993,
+                    "span": {
+                      "offset": 867,
+                      "length": 10
+                    }
+                  },
+                  {
+                    "content": "IFSC",
+                    "polygon": [
+                      0.4411, 6.9455, 0.6998, 6.9505, 0.6998, 7.0824, 0.4411,
+                      7.0874
+                    ],
+                    "confidence": 0.99,
+                    "span": {
+                      "offset": 878,
+                      "length": 4
+                    }
+                  },
+                  {
+                    "content": "Code:",
+                    "polygon": [
+                      0.7352, 6.9505, 1.0547, 6.9505, 1.0547, 7.0824, 0.7352,
+                      7.0824
+                    ],
+                    "confidence": 0.93,
+                    "span": {
+                      "offset": 883,
+                      "length": 5
+                    }
+                  },
+                  {
+                    "content": "ICIC0000204",
+                    "polygon": [
+                      1.0801, 6.9505, 1.8204, 6.9505, 1.8204, 7.0773, 1.0801,
+                      7.0824
+                    ],
+                    "confidence": 0.992,
+                    "span": {
+                      "offset": 889,
+                      "length": 11
+                    }
+                  },
+                  {
+                    "content": "UPI",
+                    "polygon": [
+                      0.4462, 7.2446, 0.6288, 7.2446, 0.6338, 7.3815, 0.4462,
+                      7.3764
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 901,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "ID:",
+                    "polygon": [
+                      0.6592, 7.2446, 0.8062, 7.2395, 0.8113, 7.3815, 0.6643,
+                      7.3815
+                    ],
+                    "confidence": 0.995,
+                    "span": {
+                      "offset": 905,
+                      "length": 3
+                    }
+                  },
+                  {
+                    "content": "intuitivesolutions.ibz@icici",
+                    "polygon": [
+                      0.8367, 7.2395, 2.3325, 7.2446, 2.3325, 7.3865, 0.8367,
+                      7.3815
+                    ],
+                    "confidence": 0.947,
+                    "span": {
+                      "offset": 909,
+                      "length": 28
+                    }
+                  },
+                  {
+                    "content": "Invoice",
+                    "polygon": [
+                      0.786, 7.6451, 1.3437, 7.6451, 1.3488, 7.8276, 0.786,
+                      7.8276
+                    ],
+                    "confidence": 0.982,
+                    "span": {
+                      "offset": 949,
+                      "length": 7
+                    }
+                  },
+                  {
+                    "content": "Ninja",
+                    "polygon": [
+                      1.3792, 7.6451, 1.8102, 7.6349, 1.8102, 7.8276, 1.3843,
+                      7.8276
+                    ],
+                    "confidence": 0.984,
+                    "span": {
+                      "offset": 957,
+                      "length": 5
+                    }
+                  }
+                ],
+                "selectionMarks": [
+                  {
+                    "state": "selected",
+                    "polygon": [
+                      0.4365, 7.6473, 0.7607, 7.6473, 0.7607, 7.8145, 0.4365,
+                      7.8145
+                    ],
+                    "confidence": 0.451,
+                    "span": {
+                      "offset": 938,
+                      "length": 10
+                    }
+                  }
+                ],
+                "lines": [
+                  {
+                    "content": "Intutive Solutions",
+                    "polygon": [
+                      2.9004, 0.3295, 3.8791, 0.3295, 3.8791, 0.4613, 2.9004,
+                      0.4563
+                    ],
+                    "spans": [
+                      {
+                        "offset": 0,
+                        "length": 18
+                      }
+                    ]
+                  },
+                  {
+                    "content": "No. #4/2",
+                    "polygon": [
+                      5.4865, 0.3346, 5.9935, 0.3346, 5.9935, 0.4512, 5.4865,
+                      0.4512
+                    ],
+                    "spans": [
+                      {
+                        "offset": 19,
+                        "length": 8
+                      }
+                    ]
+                  },
+                  {
+                    "content": "imailTahir@gmail.com",
+                    "polygon": [
+                      2.9004, 0.5171, 4.158, 0.5222, 4.158, 0.6692, 2.9004,
+                      0.6641
+                    ],
+                    "spans": [
+                      {
+                        "offset": 28,
+                        "length": 20
+                      }
+                    ]
+                  },
+                  {
+                    "content": "1st cross Annipura",
+                    "polygon": [
+                      5.4915, 0.5222, 6.5412, 0.5272, 6.5412, 0.6692, 5.4915,
+                      0.6641
+                    ],
+                    "spans": [
+                      {
+                        "offset": 49,
+                        "length": 18
+                      }
+                    ]
+                  },
+                  {
+                    "content": "7406522888",
+                    "polygon": [
+                      2.9004, 0.73, 3.6205, 0.7351, 3.6205, 0.8568, 2.9004,
+                      0.8517
+                    ],
+                    "spans": [
+                      {
+                        "offset": 68,
+                        "length": 10
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Bangalore, Karnataka 560027",
+                    "polygon": [
+                      5.4865, 0.73, 7.1395, 0.725, 7.1395, 0.872, 5.4865, 0.8771
+                    ],
+                    "spans": [
+                      {
+                        "offset": 79,
+                        "length": 27
+                      }
+                    ]
+                  },
+                  {
+                    "content": "GSTIN: 29AALPI3872K1Z5",
+                    "polygon": [
+                      2.9004, 0.9176, 4.4014, 0.9176, 4.4014, 1.0545, 2.9004,
+                      1.0545
+                    ],
+                    "spans": [
+                      {
+                        "offset": 107,
+                        "length": 22
+                      }
+                    ]
+                  },
+                  {
+                    "content": "India",
+                    "polygon": [
+                      5.4814, 0.9328, 5.7755, 0.9328, 5.7755, 1.0494, 5.4865,
+                      1.0494
+                    ],
+                    "spans": [
+                      {
+                        "offset": 130,
+                        "length": 5
+                      }
+                    ]
+                  },
+                  {
+                    "content": "PAN: AALPI3872K",
+                    "polygon": [
+                      2.8903, 1.1305, 3.9348, 1.1305, 3.9348, 1.2624, 2.8903,
+                      1.2624
+                    ],
+                    "spans": [
+                      {
+                        "offset": 136,
+                        "length": 15
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Intuitive Solutions",
+                    "polygon": [
+                      0.6693, 1.3029, 1.5466, 1.3029, 1.5466, 1.3992, 0.6693,
+                      1.3992
+                    ],
+                    "spans": [
+                      {
+                        "offset": 152,
+                        "length": 19
+                      }
+                    ]
+                  },
+                  {
+                    "content": "INVOICE",
+                    "polygon": [
+                      0.4462, 2.2002, 0.9381, 2.2002, 0.9381, 2.3219, 0.4462,
+                      2.3219
+                    ],
+                    "spans": [
+                      {
+                        "offset": 172,
+                        "length": 7
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Invoice Number 0014",
+                    "polygon": [
+                      0.4411, 2.6312, 1.7291, 2.6312, 1.7291, 2.7579, 0.4411,
+                      2.7579
+                    ],
+                    "spans": [
+                      {
+                        "offset": 180,
+                        "length": 19
+                      }
+                    ]
+                  },
+                  {
+                    "content": "STRATACACHE INDIA PVT. LTD",
+                    "polygon": [
+                      2.8852, 2.616, 4.6447, 2.616, 4.6447, 2.763, 2.8852, 2.768
+                    ],
+                    "spans": [
+                      {
+                        "offset": 200,
+                        "length": 26
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Invoice Date",
+                    "polygon": [
+                      0.4462, 2.8238, 1.1561, 2.8238, 1.151, 2.9556, 0.4462,
+                      2.9556
+                    ],
+                    "spans": [
+                      {
+                        "offset": 227,
+                        "length": 12
+                      }
+                    ]
+                  },
+                  {
+                    "content": "25/Jan/2026",
+                    "polygon": [
+                      1.4299, 2.8187, 2.1855, 2.8187, 2.1855, 2.9506, 1.4299,
+                      2.9506
+                    ],
+                    "spans": [
+                      {
+                        "offset": 240,
+                        "length": 11
+                      }
+                    ]
+                  },
+                  {
+                    "content": "#58, HM Towers",
+                    "polygon": [
+                      2.8954, 2.8187, 3.8081, 2.8238, 3.8081, 2.9556, 2.8954,
+                      2.9506
+                    ],
+                    "spans": [
+                      {
+                        "offset": 252,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Invoice Total",
+                    "polygon": [
+                      0.4411, 3.0266, 1.1713, 3.0266, 1.1713, 3.1584, 0.4411,
+                      3.1635
+                    ],
+                    "spans": [
+                      {
+                        "offset": 267,
+                        "length": 13
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 409,506.02",
+                    "polygon": [
+                      1.4299, 3.0266, 2.2666, 3.0266, 2.2666, 3.1635, 1.4299,
+                      3.1584
+                    ],
+                    "spans": [
+                      {
+                        "offset": 281,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "4th Floor, A Wing, Brigade Road,",
+                    "polygon": [
+                      2.9004, 3.0266, 4.66, 3.0266, 4.66, 3.1736, 2.9004, 3.1686
+                    ],
+                    "spans": [
+                      {
+                        "offset": 296,
+                        "length": 32
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Balance Due",
+                    "polygon": [
+                      0.4411, 3.2193, 1.151, 3.2193, 1.151, 3.3511, 0.4411,
+                      3.3511
+                    ],
+                    "spans": [
+                      {
+                        "offset": 329,
+                        "length": 11
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 409,506.02",
+                    "polygon": [
+                      1.4249, 3.2193, 2.2767, 3.2193, 2.2717, 3.3561, 1.4249,
+                      3.3511
+                    ],
+                    "spans": [
+                      {
+                        "offset": 341,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Bangalore, Karnataka 560001",
+                    "polygon": [
+                      2.8954, 3.2193, 4.5332, 3.2193, 4.5332, 3.3612, 2.8954,
+                      3.3663
+                    ],
+                    "spans": [
+                      {
+                        "offset": 356,
+                        "length": 27
+                      }
+                    ]
+                  },
+                  {
+                    "content": "India",
+                    "polygon": [
+                      2.8903, 3.4322, 3.1793, 3.4372, 3.1742, 3.5538, 2.8954,
+                      3.5538
+                    ],
+                    "spans": [
+                      {
+                        "offset": 384,
+                        "length": 5
+                      }
+                    ]
+                  },
+                  {
+                    "content": "GSTIN: AAHCA2544H",
+                    "polygon": [
+                      2.8903, 3.6248, 4.1225, 3.6248, 4.1225, 3.7566, 2.8903,
+                      3.7566
+                    ],
+                    "spans": [
+                      {
+                        "offset": 390,
+                        "length": 17
+                      }
+                    ]
+                  },
+                  {
+                    "content": "PAN: 29AAHCA2544H2ZN",
+                    "polygon": [
+                      2.8852, 3.8225, 4.3709, 3.8276, 4.3709, 3.9645, 2.8852,
+                      3.9594
+                    ],
+                    "spans": [
+                      {
+                        "offset": 408,
+                        "length": 20
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Item",
+                    "polygon": [
+                      0.4462, 4.289, 0.715, 4.289, 0.715, 4.4106, 0.4462, 4.4005
+                    ],
+                    "spans": [
+                      {
+                        "offset": 429,
+                        "length": 4
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Description",
+                    "polygon": [
+                      3.3162, 4.2839, 3.9703, 4.2839, 3.9703, 4.4258, 3.3162,
+                      4.4208
+                    ],
+                    "spans": [
+                      {
+                        "offset": 434,
+                        "length": 11
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Unit Cost",
+                    "polygon": [
+                      4.3456, 4.2788, 4.878, 4.2788, 4.878, 4.4106, 4.3456,
+                      4.4056
+                    ],
+                    "spans": [
+                      {
+                        "offset": 446,
+                        "length": 9
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Quantity",
+                    "polygon": [
+                      5.7806, 4.2788, 6.2724, 4.2788, 6.2674, 4.4309, 5.7806,
+                      4.4258
+                    ],
+                    "spans": [
+                      {
+                        "offset": 456,
+                        "length": 8
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Line Total",
+                    "polygon": [
+                      7.2257, 4.2687, 7.8089, 4.2636, 7.8089, 4.4309, 7.2257,
+                      4.436
+                    ],
+                    "spans": [
+                      {
+                        "offset": 465,
+                        "length": 10
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Software Development Consulting",
+                    "polygon": [
+                      0.4361, 4.7402, 2.3427, 4.7452, 2.3427, 4.8973, 0.4361,
+                      4.8922
+                    ],
+                    "spans": [
+                      {
+                        "offset": 476,
+                        "length": 31
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 347,039.00",
+                    "polygon": [
+                      4.3405, 4.7452, 5.1822, 4.7452, 5.1822, 4.8872, 4.3405,
+                      4.8872
+                    ],
+                    "spans": [
+                      {
+                        "offset": 508,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "1",
+                    "polygon": [
+                      5.8009, 4.7554, 5.8718, 4.7503, 5.8769, 4.8669, 5.8059,
+                      4.8618
+                    ],
+                    "spans": [
+                      {
+                        "offset": 523,
+                        "length": 1
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 347,039.00",
+                    "polygon": [
+                      6.962, 4.7452, 7.8038, 4.7452, 7.8038, 4.8821, 6.962,
+                      4.877
+                    ],
+                    "spans": [
+                      {
+                        "offset": 525,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Bank Account Details:",
+                    "polygon": [
+                      0.4411, 5.1863, 1.6733, 5.1863, 1.6733, 5.3282, 0.4411,
+                      5.3282
+                    ],
+                    "spans": [
+                      {
+                        "offset": 540,
+                        "length": 21
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Net",
+                    "polygon": [
+                      5.5473, 5.166, 5.7603, 5.166, 5.7603, 5.2877, 5.5524,
+                      5.2826
+                    ],
+                    "spans": [
+                      {
+                        "offset": 562,
+                        "length": 3
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 347,039.00",
+                    "polygon": [
+                      6.9671, 5.1559, 7.7987, 5.1609, 7.7987, 5.2978, 6.9671,
+                      5.2877
+                    ],
+                    "spans": [
+                      {
+                        "offset": 566,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Electronic Reference Number :",
+                    "polygon": [
+                      0.4513, 5.4803, 2.1348, 5.4803, 2.1348, 5.6172, 0.4513,
+                      5.6172
+                    ],
+                    "spans": [
+                      {
+                        "offset": 581,
+                        "length": 29
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Subtotal",
+                    "polygon": [
+                      5.5423, 5.4094, 6.029, 5.4144, 6.029, 5.5361, 5.5423,
+                      5.5361
+                    ],
+                    "spans": [
+                      {
+                        "offset": 611,
+                        "length": 8
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 347,039.00",
+                    "polygon": [
+                      6.962, 5.4043, 7.8038, 5.4043, 7.8038, 5.5412, 6.962,
+                      5.5412
+                    ],
+                    "spans": [
+                      {
+                        "offset": 620,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "SGST 9%",
+                    "polygon": [
+                      5.5423, 5.6375, 6.0645, 5.6426, 6.0595, 5.7693, 5.5423,
+                      5.7642
+                    ],
+                    "spans": [
+                      {
+                        "offset": 635,
+                        "length": 7
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 31,233.51",
+                    "polygon": [
+                      7.0381, 5.6375, 7.7987, 5.6375, 7.7987, 5.7693, 7.0381,
+                      5.7693
+                    ],
+                    "spans": [
+                      {
+                        "offset": 643,
+                        "length": 13
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Account holder name: Intuitive Solutions",
+                    "polygon": [
+                      0.4361, 5.7744, 2.7027, 5.7744, 2.7027, 5.9113, 0.4361,
+                      5.9163
+                    ],
+                    "spans": [
+                      {
+                        "offset": 657,
+                        "length": 40
+                      }
+                    ]
+                  },
+                  {
+                    "content": "IGST 9%",
+                    "polygon": [
+                      5.5473, 5.8808, 6.029, 5.8808, 6.029, 6.0126, 5.5473,
+                      6.0076
+                    ],
+                    "spans": [
+                      {
+                        "offset": 698,
+                        "length": 7
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 31,233.51",
+                    "polygon": [
+                      7.0381, 5.8808, 7.7987, 5.8808, 7.7987, 6.0177, 7.0381,
+                      6.0126
+                    ],
+                    "spans": [
+                      {
+                        "offset": 706,
+                        "length": 13
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Account number: 020405011804",
+                    "polygon": [
+                      0.4361, 6.0735, 2.2818, 6.0684, 2.2818, 6.2002, 0.4361,
+                      6.2104
+                    ],
+                    "spans": [
+                      {
+                        "offset": 720,
+                        "length": 28
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Total",
+                    "polygon": [
+                      5.5473, 6.1242, 5.8414, 6.1191, 5.8465, 6.2459, 5.5473,
+                      6.2357
+                    ],
+                    "spans": [
+                      {
+                        "offset": 749,
+                        "length": 5
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 409,506.02",
+                    "polygon": [
+                      6.962, 6.114, 7.8038, 6.1191, 7.7987, 6.2509, 6.962,
+                      6.2459
+                    ],
+                    "spans": [
+                      {
+                        "offset": 755,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Name of the Bank: ICICI Bank",
+                    "polygon": [
+                      0.4411, 6.3625, 2.0993, 6.3574, 2.0993, 6.4993, 0.4462,
+                      6.5044
+                    ],
+                    "spans": [
+                      {
+                        "offset": 770,
+                        "length": 28
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Paid to Date",
+                    "polygon": [
+                      5.5423, 6.3675, 6.242, 6.3675, 6.242, 6.4943, 5.5423,
+                      6.4892
+                    ],
+                    "spans": [
+                      {
+                        "offset": 799,
+                        "length": 12
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 0.00",
+                    "polygon": [
+                      7.3373, 6.3675, 7.7987, 6.3675, 7.7987, 6.4892, 7.3373,
+                      6.4892
+                    ],
+                    "spans": [
+                      {
+                        "offset": 812,
+                        "length": 8
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Branch Name: R.T Nagar Branch",
+                    "polygon": [
+                      0.4513, 6.6565, 2.2412, 6.6616, 2.2412, 6.7984, 0.4513,
+                      6.7934
+                    ],
+                    "spans": [
+                      {
+                        "offset": 821,
+                        "length": 29
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Balance Due",
+                    "polygon": [
+                      5.5473, 6.6007, 6.2623, 6.6007, 6.2623, 6.7275, 5.5473,
+                      6.7275
+                    ],
+                    "spans": [
+                      {
+                        "offset": 851,
+                        "length": 11
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Rs. 409,506.02",
+                    "polygon": [
+                      6.957, 6.5957, 7.8089, 6.5957, 7.8089, 6.7325, 6.957,
+                      6.7325
+                    ],
+                    "spans": [
+                      {
+                        "offset": 863,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "content": "IFSC Code: ICIC0000204",
+                    "polygon": [
+                      0.4361, 6.9455, 1.8254, 6.9455, 1.8254, 7.0773, 0.4361,
+                      7.0824
+                    ],
+                    "spans": [
+                      {
+                        "offset": 878,
+                        "length": 22
+                      }
+                    ]
+                  },
+                  {
+                    "content": "UPI ID: intuitivesolutions.ibz@icici",
+                    "polygon": [
+                      0.4361, 7.2395, 2.3376, 7.2395, 2.3376, 7.3865, 0.4361,
+                      7.3815
+                    ],
+                    "spans": [
+                      {
+                        "offset": 901,
+                        "length": 36
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Invoice Ninja",
+                    "polygon": [
+                      0.7707, 7.6349, 1.8102, 7.6349, 1.8102, 7.8225, 0.7758,
+                      7.8276
+                    ],
+                    "spans": [
+                      {
+                        "offset": 949,
+                        "length": 13
+                      }
+                    ]
+                  }
+                ],
+                "spans": [
+                  {
+                    "offset": 0,
+                    "length": 962
+                  }
+                ]
+              }
+            ],
+            "tables": [
+              {
+                "rowCount": 9,
+                "columnCount": 5,
+                "cells": [
+                  {
+                    "kind": "columnHeader",
+                    "rowIndex": 0,
+                    "columnIndex": 0,
+                    "content": "Item",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.321, 4.1334, 3.0042, 4.1334, 3.0042, 4.613, 0.3289,
+                          4.6051
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 429,
+                        "length": 4
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "columnHeader",
+                    "rowIndex": 0,
+                    "columnIndex": 1,
+                    "content": "Description",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 4.1334, 4.153, 4.1334, 4.153, 4.6051, 3.0042,
+                          4.613
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 434,
+                        "length": 11
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "columnHeader",
+                    "rowIndex": 0,
+                    "columnIndex": 2,
+                    "content": "Unit Cost",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.153, 4.1334, 5.3569, 4.1334, 5.3647, 4.6051, 4.153,
+                          4.6051
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 446,
+                        "length": 9
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "columnHeader",
+                    "rowIndex": 0,
+                    "columnIndex": 3,
+                    "content": "Quantity",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3569, 4.1334, 6.6001, 4.1334, 6.6001, 4.6051,
+                          5.3647, 4.6051
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 456,
+                        "length": 8
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "columnHeader",
+                    "rowIndex": 0,
+                    "columnIndex": 4,
+                    "content": "Line Total",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6001, 4.1334, 7.9141, 4.1334, 7.922, 4.5973, 6.6001,
+                          4.6051
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 465,
+                        "length": 10
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 1,
+                    "columnIndex": 0,
+                    "content": "Software Development Consulting",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.3289, 4.6051, 3.0042, 4.613, 3.0042, 5.0139, 0.3289,
+                          5.0139
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 476,
+                        "length": 31
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 1,
+                    "columnIndex": 1,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 4.613, 4.153, 4.6051, 4.153, 5.0061, 3.0042,
+                          5.0139
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 1,
+                    "columnIndex": 2,
+                    "content": "Rs. 347,039.00",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.153, 4.6051, 5.3647, 4.6051, 5.3647, 5.0061, 4.153,
+                          5.0061
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 508,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 1,
+                    "columnIndex": 3,
+                    "content": "1",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3647, 4.6051, 6.6001, 4.6051, 6.6079, 5.0139,
+                          5.3647, 5.0061
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 523,
+                        "length": 1
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 1,
+                    "columnIndex": 4,
+                    "content": "Rs. 347,039.00",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6001, 4.6051, 7.922, 4.5973, 7.922, 5.0061, 6.6079,
+                          5.0139
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 525,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 2,
+                    "columnIndex": 0,
+                    "content": "Bank Account Details:",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.3289, 5.0139, 3.0042, 5.0139, 3.0042, 5.3677,
+                          0.3289, 5.3756
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 540,
+                        "length": 21
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 2,
+                    "columnIndex": 1,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 5.0139, 4.153, 5.0061, 4.153, 5.3677, 3.0042,
+                          5.3677
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 2,
+                    "columnIndex": 2,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.153, 5.0061, 5.3647, 5.0061, 5.3647, 5.3677, 4.153,
+                          5.3677
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 2,
+                    "columnIndex": 3,
+                    "content": "Net",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3647, 5.0061, 6.6079, 5.0139, 6.6079, 5.3677,
+                          5.3647, 5.3677
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 562,
+                        "length": 3
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 2,
+                    "columnIndex": 4,
+                    "content": "Rs. 347,039.00",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6079, 5.0139, 7.922, 5.0061, 7.922, 5.352, 6.6079,
+                          5.3677
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 566,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 3,
+                    "columnIndex": 0,
+                    "content": "Electronic Reference Number :",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.3289, 5.3756, 3.0042, 5.3677, 3.0042, 5.6193,
+                          0.3289, 5.6272
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 581,
+                        "length": 29
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 3,
+                    "columnIndex": 1,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 5.3677, 4.153, 5.3677, 4.153, 5.6114, 3.0042,
+                          5.6193
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 3,
+                    "columnIndex": 2,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.153, 5.3677, 5.3647, 5.3677, 5.3647, 5.6114, 4.153,
+                          5.6114
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 3,
+                    "columnIndex": 3,
+                    "content": "Subtotal",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3647, 5.3677, 6.6079, 5.3677, 6.6079, 5.6114,
+                          5.3647, 5.6114
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 611,
+                        "length": 8
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 3,
+                    "columnIndex": 4,
+                    "content": "Rs. 347,039.00",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6079, 5.3677, 7.922, 5.352, 7.922, 5.6114, 6.6079,
+                          5.6114
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 620,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 4,
+                    "columnIndex": 0,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.3289, 5.6272, 3.0042, 5.6193, 3.0042, 5.7765,
+                          0.3289, 5.7608
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 4,
+                    "columnIndex": 1,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 5.6193, 4.153, 5.6114, 4.153, 5.7765, 3.0042,
+                          5.7765
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 4,
+                    "columnIndex": 2,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.153, 5.6114, 5.3647, 5.6114, 5.3647, 5.7765, 4.153,
+                          5.7765
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 4,
+                    "columnIndex": 3,
+                    "content": "SGST 9%",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3647, 5.6114, 6.6079, 5.6114, 6.6079, 5.7765,
+                          5.3647, 5.7765
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 635,
+                        "length": 7
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 4,
+                    "columnIndex": 4,
+                    "content": "Rs. 31,233.51",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6079, 5.6114, 7.922, 5.6114, 7.922, 5.7765, 6.6079,
+                          5.7765
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 643,
+                        "length": 13
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 5,
+                    "columnIndex": 0,
+                    "content": "Account holder name: Intuitive Solutions",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.3289, 5.7608, 3.0042, 5.7765, 3.0042, 6.0281,
+                          0.3289, 6.036
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 657,
+                        "length": 40
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 5,
+                    "columnIndex": 1,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 5.7765, 4.153, 5.7765, 4.153, 6.0281, 3.0042,
+                          6.0281
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 5,
+                    "columnIndex": 2,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.153, 5.7765, 5.3647, 5.7765, 5.3647, 6.0281, 4.153,
+                          6.0281
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 5,
+                    "columnIndex": 3,
+                    "content": "IGST 9%",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3647, 5.7765, 6.6079, 5.7765, 6.6079, 6.0281,
+                          5.3647, 6.0281
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 698,
+                        "length": 7
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 5,
+                    "columnIndex": 4,
+                    "content": "Rs. 31,233.51",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6079, 5.7765, 7.922, 5.7765, 7.9298, 6.036, 6.6079,
+                          6.0281
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 706,
+                        "length": 13
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 6,
+                    "columnIndex": 0,
+                    "content": "Account number: 020405011804",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.3289, 6.036, 3.0042, 6.0281, 3.0042, 6.2954, 0.3289,
+                          6.2954
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 720,
+                        "length": 28
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 6,
+                    "columnIndex": 1,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 6.0281, 4.153, 6.0281, 4.153, 6.2954, 3.0042,
+                          6.2954
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 6,
+                    "columnIndex": 2,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.153, 6.0281, 5.3647, 6.0281, 5.3647, 6.2954, 4.153,
+                          6.2954
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 6,
+                    "columnIndex": 3,
+                    "content": "Total",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3647, 6.0281, 6.6079, 6.0281, 6.6079, 6.2954,
+                          5.3647, 6.2954
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 749,
+                        "length": 5
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 6,
+                    "columnIndex": 4,
+                    "content": "Rs. 409,506.02",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6079, 6.0281, 7.9298, 6.036, 7.9298, 6.2954, 6.6079,
+                          6.2954
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 755,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 7,
+                    "columnIndex": 0,
+                    "content": "Name of the Bank: ICICI Bank",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.3289, 6.2954, 3.0042, 6.2954, 3.0042, 6.5549,
+                          0.3289, 6.5627
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 770,
+                        "length": 28
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 7,
+                    "columnIndex": 1,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 6.2954, 4.153, 6.2954, 4.1608, 6.5549, 3.0042,
+                          6.5549
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 7,
+                    "columnIndex": 2,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.153, 6.2954, 5.3647, 6.2954, 5.3647, 6.5549, 4.1608,
+                          6.5549
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 7,
+                    "columnIndex": 3,
+                    "content": "Paid to Date",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3647, 6.2954, 6.6079, 6.2954, 6.6079, 6.5549,
+                          5.3647, 6.5549
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 799,
+                        "length": 12
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 7,
+                    "columnIndex": 4,
+                    "content": "Rs. 0.00",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6079, 6.2954, 7.9298, 6.2954, 7.9298, 6.5549,
+                          6.6079, 6.5549
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 812,
+                        "length": 8
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 8,
+                    "columnIndex": 0,
+                    "content": "Branch Name: R.T Nagar Branch",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.3289, 6.5627, 3.0042, 6.5549, 3.012, 6.8693, 0.3289,
+                          6.8772
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 821,
+                        "length": 29
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 8,
+                    "columnIndex": 1,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.0042, 6.5549, 4.1608, 6.5549, 4.1608, 6.8615, 3.012,
+                          6.8693
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 8,
+                    "columnIndex": 2,
+                    "content": "",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          4.1608, 6.5549, 5.3647, 6.5549, 5.3647, 6.8615,
+                          4.1608, 6.8615
+                        ]
+                      }
+                    ],
+                    "spans": []
+                  },
+                  {
+                    "rowIndex": 8,
+                    "columnIndex": 3,
+                    "content": "Balance Due",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.3647, 6.5549, 6.6079, 6.5549, 6.6079, 6.8615,
+                          5.3647, 6.8615
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 851,
+                        "length": 11
+                      }
+                    ]
+                  },
+                  {
+                    "rowIndex": 8,
+                    "columnIndex": 4,
+                    "content": "Rs. 409,506.02",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.6079, 6.5549, 7.9298, 6.5549, 7.9298, 6.8615,
+                          6.6079, 6.8615
+                        ]
+                      }
+                    ],
+                    "spans": [
+                      {
+                        "offset": 863,
+                        "length": 14
+                      }
+                    ]
+                  }
+                ],
+                "boundingRegions": [
+                  {
+                    "pageNumber": 1,
+                    "polygon": [
+                      0.2986, 4.1747, 7.9662, 4.157, 7.9738, 6.9078, 0.3049,
+                      6.9253
+                    ]
+                  }
+                ],
+                "spans": [
+                  {
+                    "offset": 429,
+                    "length": 448
+                  }
+                ]
+              }
+            ],
+            "styles": [],
+            "documents": [
+              {
+                "docType": "invoice",
+                "boundingRegions": [
+                  {
+                    "pageNumber": 1,
+                    "polygon": [0, 0, 8.25, 0, 8.25, 11.6806, 0, 11.6806]
+                  }
+                ],
+                "fields": {
+                  "AmountDue": {
+                    "type": "currency",
+                    "valueCurrency": {
+                      "currencySymbol": "Rs",
+                      "amount": 409.506,
+                      "currencyCode": "INR"
+                    },
+                    "content": "Rs. 409,506.02",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.9671, 6.5956, 7.8038, 6.5957, 7.8038, 6.7377,
+                          6.9671, 6.7376
+                        ]
+                      }
+                    ],
+                    "confidence": 0.928,
+                    "spans": [
+                      {
+                        "offset": 863,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  "CustomerAddress": {
+                    "type": "address",
+                    "content": "#58, HM Towers\n4th Floor, A Wing, Brigade Road,\nBangalore, Karnataka 560001\nIndia",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          2.8903, 2.8238, 4.66, 2.8238, 4.66, 3.5538, 2.8903,
+                          3.5538
+                        ]
+                      }
+                    ],
+                    "confidence": 0.824,
+                    "spans": [
+                      {
+                        "offset": 252,
+                        "length": 14
+                      },
+                      {
+                        "offset": 296,
+                        "length": 32
+                      },
+                      {
+                        "offset": 356,
+                        "length": 33
+                      }
+                    ],
+                    "valueAddress": {
+                      "houseNumber": "#58",
+                      "road": "HM Towers",
+                      "postalCode": "560001",
+                      "city": "Bangalore",
+                      "state": "Karnataka",
+                      "countryRegion": "India",
+                      "streetAddress": "#58 HM Towers",
+                      "level": "4th Floor, A"
+                    }
+                  },
+                  "CustomerAddressRecipient": {
+                    "type": "string",
+                    "valueString": "STRATACACHE INDIA PVT. LTD",
+                    "content": "STRATACACHE INDIA PVT. LTD",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          2.8954, 2.621, 4.6245, 2.621, 4.6245, 2.768, 2.8954,
+                          2.768
+                        ]
+                      }
+                    ],
+                    "confidence": 0.915,
+                    "spans": [
+                      {
+                        "offset": 200,
+                        "length": 26
+                      }
+                    ]
+                  },
+                  "CustomerName": {
+                    "type": "string",
+                    "valueString": "STRATACACHE INDIA PVT. LTD",
+                    "content": "STRATACACHE INDIA PVT. LTD",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          2.8954, 2.621, 4.6245, 2.621, 4.6245, 2.768, 2.8954,
+                          2.768
+                        ]
+                      }
+                    ],
+                    "confidence": 0.915,
+                    "spans": [
+                      {
+                        "offset": 200,
+                        "length": 26
+                      }
+                    ]
+                  },
+                  "CustomerTaxId": {
+                    "type": "string",
+                    "valueString": "AAHCA2544H",
+                    "content": "AAHCA2544H",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.3162, 3.6299, 4.0768, 3.6299, 4.0768, 3.7617,
+                          3.3162, 3.7566
+                        ]
+                      }
+                    ],
+                    "confidence": 0.937,
+                    "spans": [
+                      {
+                        "offset": 397,
+                        "length": 10
+                      }
+                    ]
+                  },
+                  "InvoiceDate": {
+                    "type": "date",
+                    "valueDate": "2026-01-25",
+                    "content": "25/Jan/2026",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          1.4401, 2.8238, 2.1703, 2.8238, 2.1703, 2.9506,
+                          1.4451, 2.9506
+                        ]
+                      }
+                    ],
+                    "confidence": 0.972,
+                    "spans": [
+                      {
+                        "offset": 240,
+                        "length": 11
+                      }
+                    ]
+                  },
+                  "InvoiceId": {
+                    "type": "string",
+                    "valueString": "0014",
+                    "content": "0014",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          1.4401, 2.6362, 1.719, 2.6362, 1.719, 2.763, 1.4451,
+                          2.7579
+                        ]
+                      }
+                    ],
+                    "confidence": 0.973,
+                    "spans": [
+                      {
+                        "offset": 195,
+                        "length": 4
+                      }
+                    ]
+                  },
+                  "InvoiceTotal": {
+                    "type": "currency",
+                    "valueCurrency": {
+                      "currencySymbol": "Rs",
+                      "amount": 409.506,
+                      "currencyCode": "INR"
+                    },
+                    "content": "Rs. 409,506.02",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.962, 6.1173, 7.7998, 6.1243, 7.7987, 6.2578, 6.9609,
+                          6.2508
+                        ]
+                      }
+                    ],
+                    "confidence": 0.927,
+                    "spans": [
+                      {
+                        "offset": 755,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  "Items": {
+                    "type": "array",
+                    "valueArray": [
+                      {
+                        "type": "object",
+                        "valueObject": {
+                          "Amount": {
+                            "type": "currency",
+                            "valueCurrency": {
+                              "currencySymbol": "Rs",
+                              "amount": 347.039,
+                              "currencyCode": "INR"
+                            },
+                            "content": "Rs. 347,039.00",
+                            "boundingRegions": [
+                              {
+                                "pageNumber": 1,
+                                "polygon": [
+                                  6.9671, 4.7469, 7.8044, 4.7503, 7.8038,
+                                  4.8872, 6.9666, 4.8838
+                                ]
+                              }
+                            ],
+                            "confidence": 0.921,
+                            "spans": [
+                              {
+                                "offset": 525,
+                                "length": 14
+                              }
+                            ]
+                          },
+                          "Quantity": {
+                            "type": "number",
+                            "valueNumber": 1,
+                            "content": "1",
+                            "boundingRegions": [
+                              {
+                                "pageNumber": 1,
+                                "polygon": [
+                                  5.8161, 4.7503, 5.8718, 4.7503, 5.8718,
+                                  4.8669, 5.8161, 4.8669
+                                ]
+                              }
+                            ],
+                            "confidence": 0.921,
+                            "spans": [
+                              {
+                                "offset": 523,
+                                "length": 1
+                              }
+                            ]
+                          },
+                          "UnitPrice": {
+                            "type": "currency",
+                            "valueCurrency": {
+                              "currencySymbol": "Rs",
+                              "amount": 347.039,
+                              "currencyCode": "INR"
+                            },
+                            "content": "Rs. 347,039.00",
+                            "boundingRegions": [
+                              {
+                                "pageNumber": 1,
+                                "polygon": [
+                                  4.3506, 4.7418, 5.1778, 4.7452, 5.1772,
+                                  4.8922, 4.35, 4.8888
+                                ]
+                              }
+                            ],
+                            "confidence": 0.922,
+                            "spans": [
+                              {
+                                "offset": 508,
+                                "length": 14
+                              }
+                            ]
+                          }
+                        },
+                        "content": "Software Development Consulting\nRs. 347,039.00\n1\nRs. 347,039.00",
+                        "boundingRegions": [
+                          {
+                            "pageNumber": 1,
+                            "polygon": [
+                              0.4462, 4.7452, 7.8038, 4.7452, 7.8038, 4.9024,
+                              0.4462, 4.9024
+                            ]
+                          }
+                        ],
+                        "confidence": 0.923,
+                        "spans": [
+                          {
+                            "offset": 476,
+                            "length": 63
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "SubTotal": {
+                    "type": "currency",
+                    "valueCurrency": {
+                      "currencySymbol": "Rs",
+                      "amount": 347.039,
+                      "currencyCode": "INR"
+                    },
+                    "content": "Rs. 347,039.00",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          6.9672, 5.3983, 7.8005, 5.4094, 7.7986, 5.5523,
+                          6.9653, 5.5412
+                        ]
+                      }
+                    ],
+                    "confidence": 0.936,
+                    "spans": [
+                      {
+                        "offset": 620,
+                        "length": 14
+                      }
+                    ]
+                  },
+                  "TaxDetails": {
+                    "type": "array",
+                    "valueArray": [
+                      {
+                        "type": "object",
+                        "valueObject": {
+                          "Amount": {
+                            "type": "currency",
+                            "valueCurrency": {
+                              "currencySymbol": "Rs",
+                              "amount": 31233.51,
+                              "currencyCode": "INR"
+                            },
+                            "content": "Rs. 31,233.51",
+                            "boundingRegions": [
+                              {
+                                "pageNumber": 1,
+                                "polygon": [
+                                  7.0432, 5.6391, 7.7993, 5.6426, 7.7987,
+                                  5.7744, 7.0426, 5.7709
+                                ]
+                              }
+                            ],
+                            "confidence": 0.919,
+                            "spans": [
+                              {
+                                "offset": 643,
+                                "length": 13
+                              }
+                            ]
+                          },
+                          "Rate": {
+                            "type": "string",
+                            "valueString": "9%",
+                            "content": "9%",
+                            "boundingRegions": [
+                              {
+                                "pageNumber": 1,
+                                "polygon": [
+                                  5.8921, 5.6426, 6.0595, 5.6476, 6.0595,
+                                  5.7744, 5.8921, 5.7693
+                                ]
+                              }
+                            ],
+                            "confidence": 0.922,
+                            "spans": [
+                              {
+                                "offset": 640,
+                                "length": 2
+                              }
+                            ]
+                          }
+                        },
+                        "content": "SGST 9%\nRs. 31,233.51",
+                        "boundingRegions": [
+                          {
+                            "pageNumber": 1,
+                            "polygon": [
+                              5.5524, 5.6321, 7.7993, 5.6426, 7.7987, 5.7825,
+                              5.5518, 5.772
+                            ]
+                          }
+                        ],
+                        "confidence": 0.911,
+                        "spans": [
+                          {
+                            "offset": 635,
+                            "length": 21
+                          }
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "valueObject": {
+                          "Amount": {
+                            "type": "currency",
+                            "valueCurrency": {
+                              "currencySymbol": "Rs",
+                              "amount": 31233.51,
+                              "currencyCode": "INR"
+                            },
+                            "content": "Rs. 31,233.51",
+                            "boundingRegions": [
+                              {
+                                "pageNumber": 1,
+                                "polygon": [
+                                  7.0433, 5.8789, 7.8051, 5.8859, 7.8038,
+                                  6.0228, 7.042, 6.0158
+                                ]
+                              }
+                            ],
+                            "confidence": 0.919,
+                            "spans": [
+                              {
+                                "offset": 706,
+                                "length": 13
+                              }
+                            ]
+                          },
+                          "Rate": {
+                            "type": "string",
+                            "valueString": "9%",
+                            "content": "9%",
+                            "boundingRegions": [
+                              {
+                                "pageNumber": 1,
+                                "polygon": [
+                                  5.8566, 5.8808, 6.029, 5.8808, 6.029, 6.0126,
+                                  5.8617, 6.0126
+                                ]
+                              }
+                            ],
+                            "confidence": 0.922,
+                            "spans": [
+                              {
+                                "offset": 703,
+                                "length": 2
+                              }
+                            ]
+                          }
+                        },
+                        "content": "IGST 9%\nRs. 31,233.51",
+                        "boundingRegions": [
+                          {
+                            "pageNumber": 1,
+                            "polygon": [
+                              5.5524, 5.8808, 7.8038, 5.8808, 7.8038, 6.0228,
+                              5.5524, 6.0228
+                            ]
+                          }
+                        ],
+                        "confidence": 0.912,
+                        "spans": [
+                          {
+                            "offset": 698,
+                            "length": 21
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "VendorAddress": {
+                    "type": "address",
+                    "content": "No. #4/2\n1st cross Annipura\nBangalore, Karnataka 560027\nIndia",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          5.4865, 0.3346, 7.1395, 0.3346, 7.1395, 1.0494,
+                          5.4865, 1.0494
+                        ]
+                      }
+                    ],
+                    "confidence": 0.865,
+                    "spans": [
+                      {
+                        "offset": 19,
+                        "length": 8
+                      },
+                      {
+                        "offset": 49,
+                        "length": 18
+                      },
+                      {
+                        "offset": 79,
+                        "length": 27
+                      },
+                      {
+                        "offset": 130,
+                        "length": 5
+                      }
+                    ],
+                    "valueAddress": {
+                      "houseNumber": "#4/2",
+                      "road": "No.",
+                      "postalCode": "560027",
+                      "city": "Bangalore",
+                      "state": "Karnataka",
+                      "countryRegion": "India",
+                      "streetAddress": "#4/2 No."
+                    }
+                  },
+                  "VendorAddressRecipient": {
+                    "type": "string",
+                    "valueString": "Solutions",
+                    "content": "Solutions",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.3568, 0.3346, 3.874, 0.3346, 3.874, 0.4613, 3.3568,
+                          0.4613
+                        ]
+                      }
+                    ],
+                    "confidence": 0.416,
+                    "spans": [
+                      {
+                        "offset": 9,
+                        "length": 9
+                      }
+                    ]
+                  },
+                  "VendorName": {
+                    "type": "string",
+                    "valueString": "Intuitive Solutions",
+                    "content": "Intuitive Solutions",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          0.6693, 1.3029, 1.5466, 1.3029, 1.5466, 1.4043,
+                          0.6693, 1.4043
+                        ]
+                      }
+                    ],
+                    "confidence": 0.888,
+                    "spans": [
+                      {
+                        "offset": 152,
+                        "length": 19
+                      }
+                    ]
+                  },
+                  "VendorTaxId": {
+                    "type": "string",
+                    "valueString": "29AALPI3872K1Z5",
+                    "content": "29AALPI3872K1Z5",
+                    "boundingRegions": [
+                      {
+                        "pageNumber": 1,
+                        "polygon": [
+                          3.3365, 0.9278, 4.3912, 0.9227, 4.3912, 1.0596,
+                          3.3365, 1.0545
+                        ]
+                      }
+                    ],
+                    "confidence": 0.965,
+                    "spans": [
+                      {
+                        "offset": 114,
+                        "length": 15
+                      }
+                    ]
+                  }
+                },
+                "confidence": 1,
+                "spans": [
+                  {
+                    "offset": 0,
+                    "length": 962
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "IMAP Email Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Attachments": {
+      "main": [
+        [
+          {
+            "node": "Loop Each Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Each Attachment": {
+      "main": [
+        [
+          {
+            "node": "Is PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is PDF": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Document Type": {
+      "main": [
+        [
+          {
+            "node": "Is Valid Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Valid Invoice": {
+      "main": [
+        [
+          {
+            "node": "Parse Invoice Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Each Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Validate Document Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2505ec4f-9213-423c-9935-ab95d75c7d7f",
+  "meta": {
+    "instanceId": "7049e8f52f4a8b5eddcfbc7601c36c0a32779966c03f9b643c8db461d2762391"
+  },
+  "id": "ESmyuzywoE0ziRUo",
+  "tags": []
+}
