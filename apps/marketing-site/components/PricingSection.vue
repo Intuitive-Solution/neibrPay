@@ -165,7 +165,7 @@
             <div class="flex items-baseline">
               <span class="text-5xl font-bold text-primary-800">Custom</span>
             </div>
-            <p class="text-sm text-gray-500 mt-2">Beyond 25 units</p>
+            <p class="text-sm text-gray-500 mt-2">Beyond 20 units</p>
           </div>
 
           <ul class="space-y-3 mb-8">
