@@ -85,7 +85,7 @@
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span class="text-gray-700">Up to 25 units</span>
+              <span class="text-gray-700">Up to 20 units</span>
             </li>
             <li class="flex items-start">
               <svg
@@ -247,7 +247,7 @@
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span class="text-gray-700">Dedicated account manager</span>
+              <span class="text-gray-700">Dedicated Tech Support</span>
             </li>
           </ul>
 
