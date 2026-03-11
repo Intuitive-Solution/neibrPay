@@ -98,7 +98,12 @@ export const unitsApi = {
    */
   async addOwners(
     id: number,
-    owners: Array<{ owner_id: number; type: 'owner' | 'tenant' }> | number[]
+    owners:
+      | Array<{
+          owner_id: number;
+          type: 'owner' | 'tenant' | 'property_manager';
+        }>
+      | number[]
   ): Promise<Unit> {
     // Support both new format (with type) and legacy format (just IDs)
     const payload =
@@ -121,7 +126,7 @@ export const unitsApi = {
   async updateOwnerType(
     unitId: number,
     ownerId: number,
-    type: 'owner' | 'tenant'
+    type: 'owner' | 'tenant' | 'property_manager'
   ): Promise<void> {
     await apiClient.put(`/units/${unitId}/owners/${ownerId}/type`, {
       type: type,

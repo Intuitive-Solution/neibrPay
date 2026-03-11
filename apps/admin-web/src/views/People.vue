@@ -394,6 +394,11 @@
                 </div>
               </th>
               <th
+                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell"
+              >
+                <span>UNIT</span>
+              </th>
+              <th
                 @click="sortBy('email')"
                 class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
@@ -484,36 +489,6 @@
                 </div>
               </th>
               <th
-                @click="sortBy('role')"
-                class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
-              >
-                <div class="flex items-center space-x-1">
-                  <span>ROLE</span>
-                  <svg
-                    v-if="sortColumn === 'role'"
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      v-if="sortDirection === 'asc'"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 15l7-7 7 7"
-                    />
-                    <path
-                      v-else
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </th>
-              <th
                 class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
               ></th>
             </tr>
@@ -534,77 +509,92 @@
                     : '',
                 ]"
               >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <div
-                        :class="[
-                          'h-10 w-10 rounded-full flex items-center justify-center',
-                          resident.deleted_at ? 'bg-red-100' : 'bg-gray-100',
-                        ]"
-                      >
-                        <span
-                          :class="[
-                            'text-sm font-medium',
-                            resident.deleted_at
-                              ? 'text-red-600'
-                              : 'text-gray-700',
-                          ]"
-                        >
-                          {{ resident.name.charAt(0).toUpperCase() }}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="ml-4">
-                      <div class="flex items-center space-x-2">
-                        <div
-                          :class="[
-                            'text-sm font-medium',
-                            resident.deleted_at
-                              ? 'text-red-600 line-through'
-                              : 'text-gray-900',
-                          ]"
-                        >
-                          {{ resident.name }}
-                        </div>
-                        <span
-                          v-if="resident.deleted_at"
-                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
-                        >
-                          Deleted
-                        </span>
-                      </div>
-                      <!-- Mobile-only additional info -->
-                      <div class="sm:hidden mt-1">
-                        <div
-                          :class="[
-                            'text-xs',
-                            resident.deleted_at
-                              ? 'text-red-400'
-                              : 'text-gray-500',
-                          ]"
-                        >
-                          {{ resident.email }} • {{ resident.phone }}
-                        </div>
-                        <div class="mt-1">
-                          <span
-                            v-if="resident.deleted_at"
-                            class="badge badge-overdue text-xs"
-                          >
-                            Deleted
-                          </span>
-                          <span
-                            v-else
-                            :class="getStatusBadgeClass(resident)"
-                            class="badge text-xs"
-                          >
-                            {{ getStatusText(resident) }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                <div class="flex items-center space-x-2">
+                  <div
+                    :class="[
+                      'text-sm font-medium',
+                      resident.deleted_at
+                        ? 'text-red-600 line-through'
+                        : 'text-gray-900',
+                    ]"
+                  >
+                    {{ resident.name }}
+                  </div>
+                  <svg
+                    v-if="resident.role === 'admin'"
+                    class="w-4 h-4 text-purple-600 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    aria-label="Admin"
+                  >
+                    <title>Admin</title>
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <span
+                    v-if="resident.deleted_at"
+                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+                  >
+                    Deleted
+                  </span>
+                </div>
+                <!-- Mobile-only additional info -->
+                <div class="sm:hidden mt-1">
+                  <div
+                    :class="[
+                      'text-xs',
+                      resident.deleted_at ? 'text-red-400' : 'text-gray-500',
+                    ]"
+                  >
+                    {{ resident.email }} • {{ resident.phone }}
+                  </div>
+                  <div class="mt-1">
+                    <span
+                      v-if="resident.deleted_at"
+                      class="badge badge-overdue text-xs"
+                    >
+                      Deleted
+                    </span>
+                    <span
+                      v-else
+                      :class="getStatusBadgeClass(resident)"
+                      class="badge text-xs"
+                    >
+                      {{ getStatusText(resident) }}
+                    </span>
                   </div>
                 </div>
+              </td>
+
+              <!-- Unit Column -->
+              <td class="px-6 py-4 hidden sm:table-cell">
+                <div v-if="resident.units && resident.units.length > 0">
+                  <div
+                    v-for="unit in resident.units"
+                    :key="unit.id"
+                    :class="[
+                      'text-sm',
+                      resident.deleted_at
+                        ? 'text-red-600 line-through'
+                        : 'text-gray-900',
+                    ]"
+                  >
+                    {{ unit.title }}
+                    <span class="text-gray-500 text-xs"
+                      >({{
+                        unit.pivot?.type === 'owner'
+                          ? 'Owner'
+                          : unit.pivot?.type === 'property_manager'
+                            ? 'Property Manager'
+                            : 'Tenant'
+                      }})</span
+                    >
+                  </div>
+                </div>
+                <span v-else class="text-sm text-gray-400">&mdash;</span>
               </td>
 
               <!-- Email Column -->
@@ -646,23 +636,6 @@
                   class="badge"
                 >
                   {{ getStatusText(resident) }}
-                </span>
-              </td>
-
-              <!-- Role Column -->
-              <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                <span
-                  v-if="resident.role"
-                  :class="[
-                    'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
-                    resident.role === 'admin'
-                      ? 'bg-purple-100 text-purple-800'
-                      : resident.role === 'bookkeeper'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-blue-100 text-blue-800',
-                  ]"
-                >
-                  {{ formatRole(resident.role) }}
                 </span>
               </td>
 
@@ -864,9 +837,7 @@ const successMessage = ref('');
 const errorMessage = ref('');
 const showSuccessMessage = ref(false);
 const showErrorMessage = ref(false);
-const sortColumn = ref<'name' | 'email' | 'phone' | 'status' | 'role' | null>(
-  null
-);
+const sortColumn = ref<'name' | 'email' | 'phone' | 'status' | null>(null);
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
 // Debounced search
@@ -990,10 +961,6 @@ const filteredResidents = computed(() => {
               ? 'active'
               : 'inactive';
           break;
-        case 'role':
-          aValue = a.role || 'resident';
-          bValue = b.role || 'resident';
-          break;
         default:
           return 0;
       }
@@ -1023,7 +990,7 @@ const filterByStatus = (status: 'active' | 'all') => {
   }
 };
 
-const sortBy = (column: 'name' | 'email' | 'phone' | 'status' | 'role') => {
+const sortBy = (column: 'name' | 'email' | 'phone' | 'status') => {
   if (sortColumn.value === column) {
     // Toggle direction if clicking the same column
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
@@ -1042,15 +1009,6 @@ const getStatusText = (resident: Resident) => {
 const getStatusBadgeClass = (resident: Resident) => {
   if (resident.deleted_at) return 'badge-overdue';
   return resident.is_active ? 'badge-paid' : 'badge-draft';
-};
-
-const formatRole = (role: string): string => {
-  const roleMap: Record<string, string> = {
-    admin: 'Admin',
-    resident: 'Resident',
-    bookkeeper: 'Bookkeeper',
-  };
-  return roleMap[role] || role;
 };
 
 const editResident = (residentId: number) => {

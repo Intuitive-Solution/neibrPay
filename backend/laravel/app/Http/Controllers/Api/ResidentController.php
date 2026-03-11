@@ -36,7 +36,7 @@ class ResidentController extends Controller
         
         $query = User::forTenant($user->tenant_id)
             ->whereIn('role', ['resident', 'admin'])
-            ->with('tenant');
+            ->with(['tenant', 'ownedUnits']);
             
         if ($includeDeleted) {
             $query->withTrashed();
@@ -48,6 +48,12 @@ class ResidentController extends Controller
         $transformedResidents = $residents->map(function ($resident) {
             $resident->phone = $resident->phone_number;
             unset($resident->phone_number);
+            $resident->units = $resident->ownedUnits->map(fn ($unit) => [
+                'id' => $unit->id,
+                'title' => $unit->title,
+                'pivot' => ['type' => $unit->pivot->type],
+            ])->values();
+            unset($resident->ownedUnits);
             return $resident;
         });
 
@@ -175,7 +181,7 @@ class ResidentController extends Controller
         
         // Validate the request
         $request->validate([
-            'type' => 'required|in:owner,tenant'
+            'type' => 'required|in:owner,tenant,property_manager'
         ]);
         
         // Check if the unit is associated with this resident
@@ -257,7 +263,7 @@ class ResidentController extends Controller
         $request->validate([
             'units' => 'required|array|min:1',
             'units.*.unit_id' => 'required|integer|exists:units,id',
-            'units.*.type' => 'required|in:owner,tenant'
+            'units.*.type' => 'required|in:owner,tenant,property_manager'
         ]);
         
         $unitsData = $request->input('units');
