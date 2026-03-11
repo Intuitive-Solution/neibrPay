@@ -36,7 +36,7 @@ class ResidentController extends Controller
         
         $query = User::forTenant($user->tenant_id)
             ->whereIn('role', ['resident', 'admin'])
-            ->with('tenant');
+            ->with(['tenant', 'ownedUnits']);
             
         if ($includeDeleted) {
             $query->withTrashed();
@@ -48,6 +48,12 @@ class ResidentController extends Controller
         $transformedResidents = $residents->map(function ($resident) {
             $resident->phone = $resident->phone_number;
             unset($resident->phone_number);
+            $resident->units = $resident->ownedUnits->map(fn ($unit) => [
+                'id' => $unit->id,
+                'title' => $unit->title,
+                'pivot' => ['type' => $unit->pivot->type],
+            ])->values();
+            unset($resident->ownedUnits);
             return $resident;
         });
 

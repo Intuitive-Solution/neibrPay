@@ -16,6 +16,11 @@ export interface Resident {
     name: string;
     slug: string;
   };
+  units?: Array<{
+    id: number;
+    title: string;
+    pivot?: { type: 'owner' | 'tenant' };
+  }>;
 }
 
 export interface CreateResidentRequest {
