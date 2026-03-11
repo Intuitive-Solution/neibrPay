@@ -585,7 +585,11 @@
                     {{ unit.title }}
                     <span class="text-gray-500 text-xs"
                       >({{
-                        unit.pivot?.type === 'owner' ? 'Owner' : 'Tenant'
+                        unit.pivot?.type === 'owner'
+                          ? 'Owner'
+                          : unit.pivot?.type === 'property_manager'
+                            ? 'Property Manager'
+                            : 'Tenant'
                       }})</span
                     >
                   </div>

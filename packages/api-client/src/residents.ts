@@ -58,7 +58,7 @@ export const residentsApi = {
   async updateResidentUnitType(
     residentId: number,
     unitId: number,
-    type: 'owner' | 'tenant'
+    type: 'owner' | 'tenant' | 'property_manager'
   ): Promise<void> {
     await apiClient.put(`/residents/${residentId}/units/${unitId}/type`, {
       type: type,
@@ -80,7 +80,10 @@ export const residentsApi = {
    */
   async addResidentUnits(
     residentId: number,
-    units: Array<{ unit_id: number; type: 'owner' | 'tenant' }>
+    units: Array<{
+      unit_id: number;
+      type: 'owner' | 'tenant' | 'property_manager';
+    }>
   ): Promise<void> {
     await apiClient.post(`/residents/${residentId}/units`, {
       units: units,

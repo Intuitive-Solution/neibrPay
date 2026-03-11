@@ -245,7 +245,7 @@ class UnitsController extends Controller
             $validated = $request->validate([
                 'owners' => 'required|array|min:1',
                 'owners.*.owner_id' => 'required|integer|exists:users,id',
-                'owners.*.type' => 'required|in:owner,tenant'
+                'owners.*.type' => 'required|in:owner,tenant,property_manager'
             ]);
 
             $ownersData = $validated['owners'];
@@ -313,7 +313,7 @@ class UnitsController extends Controller
 
         // Validate the request
         $request->validate([
-            'type' => 'required|in:owner,tenant'
+            'type' => 'required|in:owner,tenant,property_manager'
         ]);
 
         // Check if the owner exists and belongs to the same tenant

@@ -19,7 +19,7 @@ export interface Resident {
   units?: Array<{
     id: number;
     title: string;
-    pivot?: { type: 'owner' | 'tenant' };
+    pivot?: { type: 'owner' | 'tenant' | 'property_manager' };
   }>;
 }
 

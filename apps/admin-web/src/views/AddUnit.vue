@@ -498,7 +498,9 @@
                         :class="[
                           owner.pivot?.type === 'owner'
                             ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                            : 'bg-green-100 text-green-800 hover:bg-green-200',
+                            : owner.pivot?.type === 'property_manager'
+                              ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                              : 'bg-green-100 text-green-800 hover:bg-green-200',
                           isUpdatingOwnerType === owner.id
                             ? 'opacity-50 cursor-not-allowed'
                             : '',
@@ -506,6 +508,9 @@
                       >
                         <option value="owner">Owner</option>
                         <option value="tenant">Tenant</option>
+                        <option value="property_manager">
+                          Property Manager
+                        </option>
                       </select>
                     </td>
                     <td
@@ -1120,7 +1125,9 @@
                         :class="[
                           owner.pivot?.type === 'owner'
                             ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                            : 'bg-green-100 text-green-800 hover:bg-green-200',
+                            : owner.pivot?.type === 'property_manager'
+                              ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                              : 'bg-green-100 text-green-800 hover:bg-green-200',
                           isUpdatingOwnerType === owner.id
                             ? 'opacity-50 cursor-not-allowed'
                             : '',
@@ -1129,6 +1136,9 @@
                       >
                         <option value="owner">Owner</option>
                         <option value="tenant">Tenant</option>
+                        <option value="property_manager">
+                          Property Manager
+                        </option>
                       </select>
                     </td>
                     <td
@@ -1447,6 +1457,24 @@
                       />
                       <span class="ml-2 text-sm text-gray-700">Tenant</span>
                     </label>
+                    <label class="flex items-center">
+                      <input
+                        type="radio"
+                        :name="`person-type-${person.id}`"
+                        value="property_manager"
+                        :checked="
+                          getSelectedPersonType(person.id) ===
+                          'property_manager'
+                        "
+                        @change="
+                          updatePersonType(person.id, 'property_manager')
+                        "
+                        class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <span class="ml-2 text-sm text-gray-700"
+                        >Property Manager</span
+                      >
+                    </label>
                   </div>
                 </div>
               </div>
@@ -1660,7 +1688,7 @@ const activeTab = ref('owner');
 const searchQuery = ref('');
 const showAddOwnerModal = ref(false);
 const selectedPeople = ref<
-  Array<{ owner_id: number; type: 'owner' | 'tenant' }>
+  Array<{ owner_id: number; type: 'owner' | 'tenant' | 'property_manager' }>
 >([]);
 const modalSearchQuery = ref('');
 const isAddingOwners = ref(false);
@@ -1892,7 +1920,7 @@ const closeRemoveOwnerModal = () => {
 
 const togglePersonSelection = (personId: number) => {
   const index = selectedPeople.value.findIndex(
-    (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+    (p: { owner_id: number; type: 'owner' | 'tenant' | 'property_manager' }) =>
       p.owner_id === personId
   );
   if (index > -1) {
@@ -1902,9 +1930,12 @@ const togglePersonSelection = (personId: number) => {
   }
 };
 
-const updatePersonType = (personId: number, type: 'owner' | 'tenant') => {
+const updatePersonType = (
+  personId: number,
+  type: 'owner' | 'tenant' | 'property_manager'
+) => {
   const index = selectedPeople.value.findIndex(
-    (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+    (p: { owner_id: number; type: 'owner' | 'tenant' | 'property_manager' }) =>
       p.owner_id === personId
   );
   if (index > -1) {
@@ -1914,14 +1945,16 @@ const updatePersonType = (personId: number, type: 'owner' | 'tenant') => {
 
 const isPersonSelected = (personId: number): boolean => {
   return selectedPeople.value.some(
-    (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+    (p: { owner_id: number; type: 'owner' | 'tenant' | 'property_manager' }) =>
       p.owner_id === personId
   );
 };
 
-const getSelectedPersonType = (personId: number): 'owner' | 'tenant' => {
+const getSelectedPersonType = (
+  personId: number
+): 'owner' | 'tenant' | 'property_manager' => {
   const selected = selectedPeople.value.find(
-    (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
+    (p: { owner_id: number; type: 'owner' | 'tenant' | 'property_manager' }) =>
       p.owner_id === personId
   );
   return selected?.type || 'owner';
@@ -1935,14 +1968,19 @@ const addSelectedOwners = async () => {
   try {
     // Get the selected people with their types
     const selectedOwnerIds = selectedPeople.value.map(
-      (p: { owner_id: number; type: 'owner' | 'tenant' }) => p.owner_id
+      (p: {
+        owner_id: number;
+        type: 'owner' | 'tenant' | 'property_manager';
+      }) => p.owner_id
     );
     const newOwners = allPeople.value
       .filter((person: any) => selectedOwnerIds.includes(person.id))
       .map((person: any) => {
         const selectedPerson = selectedPeople.value.find(
-          (p: { owner_id: number; type: 'owner' | 'tenant' }) =>
-            p.owner_id === person.id
+          (p: {
+            owner_id: number;
+            type: 'owner' | 'tenant' | 'property_manager';
+          }) => p.owner_id === person.id
         );
         return {
           ...person,
@@ -2033,13 +2071,13 @@ const removeOwner = (ownerId: number) => {
 
 const handleOwnerTypeChange = (ownerId: number, event: Event) => {
   const target = event.target as HTMLSelectElement;
-  const type = target.value as 'owner' | 'tenant';
+  const type = target.value as 'owner' | 'tenant' | 'property_manager';
   updateOwnerTypeForUnit(ownerId, type);
 };
 
 const updateOwnerTypeForUnit = async (
   ownerId: number,
-  type: 'owner' | 'tenant'
+  type: 'owner' | 'tenant' | 'property_manager'
 ) => {
   if (!unitId.value || !isEditMode.value) {
     // In add mode, just update local state

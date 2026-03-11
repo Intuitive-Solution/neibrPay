@@ -181,7 +181,7 @@ class ResidentController extends Controller
         
         // Validate the request
         $request->validate([
-            'type' => 'required|in:owner,tenant'
+            'type' => 'required|in:owner,tenant,property_manager'
         ]);
         
         // Check if the unit is associated with this resident
@@ -263,7 +263,7 @@ class ResidentController extends Controller
         $request->validate([
             'units' => 'required|array|min:1',
             'units.*.unit_id' => 'required|integer|exists:units,id',
-            'units.*.type' => 'required|in:owner,tenant'
+            'units.*.type' => 'required|in:owner,tenant,property_manager'
         ]);
         
         $unitsData = $request->input('units');

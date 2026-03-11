@@ -415,7 +415,9 @@
                         :class="[
                           unit.pivot?.type === 'owner'
                             ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                            : 'bg-green-100 text-green-800 hover:bg-green-200',
+                            : unit.pivot?.type === 'property_manager'
+                              ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                              : 'bg-green-100 text-green-800 hover:bg-green-200',
                           isUpdatingUnitType === unit.id
                             ? 'opacity-50 cursor-not-allowed'
                             : '',
@@ -423,6 +425,9 @@
                       >
                         <option value="owner">Owner</option>
                         <option value="tenant">Tenant</option>
+                        <option value="property_manager">
+                          Property Manager
+                        </option>
                       </select>
                     </td>
                     <td
@@ -982,13 +987,11 @@
                         <label class="text-sm font-medium text-gray-700"
                           >Type:</label
                         >
-                        <div class="flex space-x-4">
+                        <div class="flex flex-wrap gap-x-4 gap-y-2">
                           <label class="flex items-center">
                             <input
                               type="radio"
-                              name="unit-type-{{
-                                unit.id
-                              }}"
+                              :name="`unit-type-${unit.id}`"
                               value="owner"
                               :checked="
                                 getSelectedUnitType(unit.id) === 'owner'
@@ -1003,9 +1006,7 @@
                           <label class="flex items-center">
                             <input
                               type="radio"
-                              name="unit-type-{{
-                                unit.id
-                              }}"
+                              :name="`unit-type-${unit.id}`"
                               value="tenant"
                               :checked="
                                 getSelectedUnitType(unit.id) === 'tenant'
@@ -1015,6 +1016,24 @@
                             />
                             <span class="ml-2 text-sm text-gray-700"
                               >Tenant</span
+                            >
+                          </label>
+                          <label class="flex items-center">
+                            <input
+                              type="radio"
+                              :name="`unit-type-${unit.id}`"
+                              value="property_manager"
+                              :checked="
+                                getSelectedUnitType(unit.id) ===
+                                'property_manager'
+                              "
+                              @change="
+                                updateUnitType(unit.id, 'property_manager')
+                              "
+                              class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                            />
+                            <span class="ml-2 text-sm text-gray-700"
+                              >Property Manager</span
                             >
                           </label>
                         </div>
@@ -1161,9 +1180,9 @@ const isRemovingUnit = ref(false);
 
 // Add units modal state
 const showAddUnitsModal = ref(false);
-const selectedUnits = ref<Array<{ unit_id: number; type: 'owner' | 'tenant' }>>(
-  []
-);
+const selectedUnits = ref<
+  Array<{ unit_id: number; type: 'owner' | 'tenant' | 'property_manager' }>
+>([]);
 const isAddingUnits = ref(false);
 const addUnitsSearchQuery = ref('');
 
@@ -1355,7 +1374,8 @@ const openAddUnitPage = () => {
 
 const toggleUnitSelection = (unitId: number) => {
   const index = selectedUnits.value.findIndex(
-    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+    (u: { unit_id: number; type: 'owner' | 'tenant' | 'property_manager' }) =>
+      u.unit_id === unitId
   );
   if (index > -1) {
     selectedUnits.value.splice(index, 1);
@@ -1364,9 +1384,13 @@ const toggleUnitSelection = (unitId: number) => {
   }
 };
 
-const updateUnitType = (unitId: number, type: 'owner' | 'tenant') => {
+const updateUnitType = (
+  unitId: number,
+  type: 'owner' | 'tenant' | 'property_manager'
+) => {
   const index = selectedUnits.value.findIndex(
-    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+    (u: { unit_id: number; type: 'owner' | 'tenant' | 'property_manager' }) =>
+      u.unit_id === unitId
   );
   if (index > -1) {
     selectedUnits.value[index].type = type;
@@ -1375,13 +1399,17 @@ const updateUnitType = (unitId: number, type: 'owner' | 'tenant') => {
 
 const isUnitSelected = (unitId: number): boolean => {
   return selectedUnits.value.some(
-    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+    (u: { unit_id: number; type: 'owner' | 'tenant' | 'property_manager' }) =>
+      u.unit_id === unitId
   );
 };
 
-const getSelectedUnitType = (unitId: number): 'owner' | 'tenant' => {
+const getSelectedUnitType = (
+  unitId: number
+): 'owner' | 'tenant' | 'property_manager' => {
   const selected = selectedUnits.value.find(
-    (u: { unit_id: number; type: 'owner' | 'tenant' }) => u.unit_id === unitId
+    (u: { unit_id: number; type: 'owner' | 'tenant' | 'property_manager' }) =>
+      u.unit_id === unitId
   );
   return selected?.type || 'owner';
 };
@@ -1409,13 +1437,13 @@ const confirmAddUnits = async () => {
 
 const handleUnitTypeChange = (unitId: number, event: Event) => {
   const target = event.target as HTMLSelectElement;
-  const type = target.value as 'owner' | 'tenant';
+  const type = target.value as 'owner' | 'tenant' | 'property_manager';
   updateUnitTypeForResident(unitId, type);
 };
 
 const updateUnitTypeForResident = async (
   unitId: number,
-  type: 'owner' | 'tenant'
+  type: 'owner' | 'tenant' | 'property_manager'
 ) => {
   if (!residentId.value) return;
 
