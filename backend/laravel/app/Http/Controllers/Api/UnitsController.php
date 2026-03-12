@@ -51,9 +51,14 @@ class UnitsController extends Controller
             ->orderBy('title', 'asc')
             ->get()
             ->map(function ($unit) {
-                // Get the first owner's name (assuming one owner per unit for now)
-                $residentName = $unit->owners->first()?->name ?? 'No Resident';
-                
+                $residentNames = $unit->owners
+                    ->pluck('name')
+                    ->filter()
+                    ->values();
+                $residentName = $residentNames->isNotEmpty()
+                    ? $residentNames->implode('/ ')
+                    : 'No Resident';
+
                 return [
                     'id' => $unit->id,
                     'title' => $unit->title,
