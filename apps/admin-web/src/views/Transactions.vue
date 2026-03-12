@@ -435,13 +435,13 @@
                 <td class="px-6 py-4 font-medium whitespace-nowrap">
                   <span
                     :class="[
-                      Number(transaction.amount) >= 0
+                      -Number(transaction.amount) >= 0
                         ? 'text-green-600'
                         : 'text-red-600',
                     ]"
                   >
-                    {{ Number(transaction.amount) >= 0 ? '+' : ''
-                    }}{{ formatCurrency(Number(transaction.amount)) }}
+                    {{ -Number(transaction.amount) >= 0 ? '+' : ''
+                    }}{{ formatCurrency(-Number(transaction.amount)) }}
                   </span>
                 </td>
                 <td class="px-6 py-4">
@@ -606,11 +606,11 @@ const pagination = computed(() => ({
   total_amount: transactionsData.value?.pagination?.total_amount ?? 0,
 }));
 
-// Safely compute total amount for display
+// Safely compute total amount for display (negated from Plaid convention)
 const totalAmount = computed(() => {
   const amount = pagination.value.total_amount;
   const numAmount = Number(amount);
-  return isNaN(numAmount) ? 0 : numAmount;
+  return isNaN(numAmount) ? 0 : -numAmount;
 });
 
 // Calculate total balances across all accounts
