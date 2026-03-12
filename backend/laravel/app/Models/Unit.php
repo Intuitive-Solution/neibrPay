@@ -76,6 +76,22 @@ class Unit extends Model
     }
 
     /**
+     * Get a formatted string of all resident names associated with this unit.
+     */
+    public function getResidentNameAttribute(): string
+    {
+        if (!$this->relationLoaded('owners')) {
+            $this->load(['owners' => function ($query) {
+                $query->select('users.id', 'users.name');
+            }]);
+        }
+
+        $names = $this->owners->pluck('name')->filter()->values();
+
+        return $names->isNotEmpty() ? $names->implode('/ ') : 'No Resident';
+    }
+
+    /**
      * Scope a query to only include units for a specific tenant.
      */
     public function scopeForTenant($query, $tenantId)

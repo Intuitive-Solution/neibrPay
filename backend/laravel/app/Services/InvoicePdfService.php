@@ -130,9 +130,14 @@ class InvoicePdfService
      */
     public function generateInvoiceHtml(InvoiceUnit $invoiceUnit, $payment = null): string
     {
-        // Load tenant relationship if not already loaded
+        // Load tenant and unit.owners relationships if not already loaded
         if (!$invoiceUnit->relationLoaded('tenant')) {
             $invoiceUnit->load('tenant');
+        }
+        if (!$invoiceUnit->relationLoaded('unit') || ($invoiceUnit->unit && !$invoiceUnit->unit->relationLoaded('owners'))) {
+            $invoiceUnit->load(['unit.owners' => function ($query) {
+                $query->select('users.id', 'users.name');
+            }]);
         }
         
         $tenant = $invoiceUnit->tenant;
