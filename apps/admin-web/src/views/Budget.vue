@@ -453,6 +453,113 @@
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">Income</h2>
         </div>
+        <!-- Income Bar Chart: Forecast vs Actual by month -->
+        <div class="px-6 py-4 border-b border-gray-100">
+          <div
+            class="relative w-full overflow-x-auto"
+            style="min-height: 200px"
+          >
+            <svg
+              :viewBox="`0 0 ${budgetBarChartWidth} ${budgetBarChartHeight}`"
+              class="w-full min-h-[200px]"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <!-- Y-axis grid and labels -->
+              <g
+                v-for="(tick, i) in incomeChartYAxisTicks"
+                :key="'income-grid-' + i"
+              >
+                <line
+                  :x1="budgetBarPadding.left"
+                  :y1="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (incomeChartYAxisTicks.length - 1))
+                  "
+                  :x2="budgetBarChartWidth - budgetBarPadding.right"
+                  :y2="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (incomeChartYAxisTicks.length - 1))
+                  "
+                  stroke="#E5E7EB"
+                  stroke-width="1"
+                  stroke-dasharray="2,2"
+                />
+                <text
+                  :x="budgetBarPadding.left - 4"
+                  :y="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (incomeChartYAxisTicks.length - 1))
+                  "
+                  text-anchor="end"
+                  dominant-baseline="middle"
+                  class="text-[10px] fill-gray-500"
+                >
+                  {{ tick }}
+                </text>
+              </g>
+              <!-- Bars and X labels -->
+              <g
+                v-for="(d, i) in incomeMonthlyChartData"
+                :key="'income-bar-' + i"
+              >
+                <!-- Forecast bar -->
+                <rect
+                  :x="
+                    budgetBarPadding.left +
+                    (i / 12) * budgetBarInnerWidth +
+                    (budgetBarInnerWidth / 24) * 0.5
+                  "
+                  :y="incomeBarY(d.forecast)"
+                  :width="budgetBarInnerWidth / 24 - 2"
+                  :height="Math.max(0, incomeBarHeight(d.forecast))"
+                  fill="#93C5FD"
+                  class="hover:opacity-90"
+                />
+                <!-- Actual bar -->
+                <rect
+                  :x="
+                    budgetBarPadding.left +
+                    (i / 12) * budgetBarInnerWidth +
+                    (budgetBarInnerWidth / 24) * 1.5 +
+                    2
+                  "
+                  :y="incomeBarY(d.actual)"
+                  :width="budgetBarInnerWidth / 24 - 2"
+                  :height="Math.max(0, incomeBarHeight(d.actual))"
+                  fill="#22C55E"
+                  class="hover:opacity-90"
+                />
+                <text
+                  :x="
+                    budgetBarPadding.left +
+                    ((i + 0.5) / 12) * budgetBarInnerWidth +
+                    budgetBarInnerWidth / 24
+                  "
+                  :y="budgetBarChartHeight - budgetBarPadding.bottom + 14"
+                  text-anchor="middle"
+                  class="text-[10px] fill-gray-500"
+                >
+                  {{ getMonthAbbr(d.month) }}
+                </text>
+              </g>
+            </svg>
+          </div>
+          <div
+            class="flex gap-4 mt-1 justify-center flex-wrap text-xs text-gray-600"
+          >
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-sm bg-[#93C5FD]"></span>
+              Forecast
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-sm bg-[#22C55E]"></span>
+              Actual
+            </span>
+          </div>
+        </div>
         <BudgetTable
           :categories="budgetData.income"
           :is-resident="isResident"
@@ -466,6 +573,109 @@
       <div class="card-modern bg-white rounded-lg shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">Expense</h2>
+        </div>
+        <!-- Expense Bar Chart: Forecast vs Actual by month -->
+        <div class="px-6 py-4 border-b border-gray-100">
+          <div
+            class="relative w-full overflow-x-auto"
+            style="min-height: 200px"
+          >
+            <svg
+              :viewBox="`0 0 ${budgetBarChartWidth} ${budgetBarChartHeight}`"
+              class="w-full min-h-[200px]"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <g
+                v-for="(tick, i) in expenseChartYAxisTicks"
+                :key="'expense-grid-' + i"
+              >
+                <line
+                  :x1="budgetBarPadding.left"
+                  :y1="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (expenseChartYAxisTicks.length - 1))
+                  "
+                  :x2="budgetBarChartWidth - budgetBarPadding.right"
+                  :y2="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (expenseChartYAxisTicks.length - 1))
+                  "
+                  stroke="#E5E7EB"
+                  stroke-width="1"
+                  stroke-dasharray="2,2"
+                />
+                <text
+                  :x="budgetBarPadding.left - 4"
+                  :y="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (expenseChartYAxisTicks.length - 1))
+                  "
+                  text-anchor="end"
+                  dominant-baseline="middle"
+                  class="text-[10px] fill-gray-500"
+                >
+                  {{ tick }}
+                </text>
+              </g>
+              <g
+                v-for="(d, i) in expenseMonthlyChartData"
+                :key="'expense-bar-' + i"
+              >
+                <rect
+                  :x="
+                    budgetBarPadding.left +
+                    (i / 12) * budgetBarInnerWidth +
+                    (budgetBarInnerWidth / 24) * 0.5
+                  "
+                  :y="expenseBarY(d.forecast)"
+                  :width="budgetBarInnerWidth / 24 - 2"
+                  :height="Math.max(0, expenseBarHeight(d.forecast))"
+                  fill="#FCA5A5"
+                  class="hover:opacity-90"
+                />
+                <rect
+                  :x="
+                    budgetBarPadding.left +
+                    (i / 12) * budgetBarInnerWidth +
+                    (budgetBarInnerWidth / 24) * 1.5 +
+                    2
+                  "
+                  :y="expenseBarY(d.actual)"
+                  :width="budgetBarInnerWidth / 24 - 2"
+                  :height="Math.max(0, expenseBarHeight(d.actual))"
+                  fill="#EF4444"
+                  class="hover:opacity-90"
+                />
+                <text
+                  :x="
+                    budgetBarPadding.left +
+                    ((i + 0.5) / 12) * budgetBarInnerWidth +
+                    budgetBarInnerWidth / 24
+                  "
+                  :y="budgetBarChartHeight - budgetBarPadding.bottom + 14"
+                  text-anchor="middle"
+                  class="text-[10px] fill-gray-500"
+                >
+                  {{ getMonthAbbr(d.month) }}
+                </text>
+              </g>
+            </svg>
+          </div>
+          <div
+            class="flex gap-4 mt-1 justify-center flex-wrap text-xs text-gray-600"
+          >
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-sm bg-[#FCA5A5]"></span>
+              Forecast
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-sm bg-[#EF4444]"></span>
+              Actual
+            </span>
+          </div>
         </div>
         <BudgetTable
           :categories="budgetData.expense"
@@ -738,6 +948,99 @@ const summaryForecast = computed(() => {
 const summaryActual = computed(() => {
   return incomeActual.value - expenseActual.value;
 });
+
+// --- Income / Expense bar chart (monthly Forecast vs Actual) ---
+const budgetBarChartWidth = 700;
+const budgetBarChartHeight = 200;
+const budgetBarPadding = { top: 16, right: 16, bottom: 28, left: 48 };
+const budgetBarInnerWidth =
+  budgetBarChartWidth - budgetBarPadding.left - budgetBarPadding.right;
+const budgetBarInnerHeight =
+  budgetBarChartHeight - budgetBarPadding.top - budgetBarPadding.bottom;
+
+const incomeMonthlyChartData = computed(() => {
+  if (!budgetData.value) return [];
+  return Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    let forecast = 0;
+    let actual = 0;
+    for (const cat of budgetData.value!.income) {
+      forecast += cat.months[month]?.forecast ?? 0;
+      actual += cat.months[month]?.actual ?? 0;
+    }
+    return { month, forecast, actual };
+  });
+});
+
+const incomeChartMax = computed(() => {
+  let max = 0;
+  for (const d of incomeMonthlyChartData.value) {
+    if (d.forecast > max) max = d.forecast;
+    if (d.actual > max) max = d.actual;
+  }
+  return max || 1;
+});
+
+const incomeChartYAxisTicks = computed(() => {
+  const max = incomeChartMax.value;
+  const count = 5;
+  return Array.from({ length: count }, (_, i) =>
+    formatCurrency((max * i) / (count - 1))
+  );
+});
+
+function incomeBarHeight(value: number): number {
+  const max = incomeChartMax.value;
+  if (max <= 0) return 0;
+  return (value / max) * budgetBarInnerHeight;
+}
+
+function incomeBarY(value: number): number {
+  const h = incomeBarHeight(value);
+  return budgetBarPadding.top + budgetBarInnerHeight - h;
+}
+
+const expenseMonthlyChartData = computed(() => {
+  if (!budgetData.value) return [];
+  return Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    let forecast = 0;
+    let actual = 0;
+    for (const cat of budgetData.value!.expense) {
+      forecast += cat.months[month]?.forecast ?? 0;
+      actual += cat.months[month]?.actual ?? 0;
+    }
+    return { month, forecast, actual };
+  });
+});
+
+const expenseChartMax = computed(() => {
+  let max = 0;
+  for (const d of expenseMonthlyChartData.value) {
+    if (d.forecast > max) max = d.forecast;
+    if (d.actual > max) max = d.actual;
+  }
+  return max || 1;
+});
+
+const expenseChartYAxisTicks = computed(() => {
+  const max = expenseChartMax.value;
+  const count = 5;
+  return Array.from({ length: count }, (_, i) =>
+    formatCurrency((max * i) / (count - 1))
+  );
+});
+
+function expenseBarHeight(value: number): number {
+  const max = expenseChartMax.value;
+  if (max <= 0) return 0;
+  return (value / max) * budgetBarInnerHeight;
+}
+
+function expenseBarY(value: number): number {
+  const h = expenseBarHeight(value);
+  return budgetBarPadding.top + budgetBarInnerHeight - h;
+}
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
