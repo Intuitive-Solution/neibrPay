@@ -59,6 +59,48 @@
                 </svg>
                 Manage Categories
               </button>
+              <button
+                type="button"
+                class="btn-secondary btn-sm whitespace-nowrap"
+                :disabled="!budgetData || isExportingPdf"
+                @click="downloadBudgetPdf"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                {{ isExportingPdf ? 'Generating…' : 'Download PDF' }}
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-sm whitespace-nowrap"
+                :disabled="!budgetData || isExportingExcel"
+                @click="downloadBudgetExcel"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                {{ isExportingExcel ? 'Generating…' : 'Download Excel' }}
+              </button>
             </template>
           </div>
         </div>
@@ -807,11 +849,20 @@
         </div>
       </template>
     </ConfirmDialog>
+
+    <!-- Hidden container for PDF export (filled and shown only during export) -->
+    <div
+      ref="budgetExportContainer"
+      class="fixed left-[-9999px] top-0 z-[-1] w-[800px] bg-white p-6 text-gray-900"
+      aria-hidden="true"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { useBudget, useCopyBudget } from '../composables/useBudget';
 import { useAuthStore } from '../stores/auth';
 import { useRunningBalance } from '@neibrpay/api-client';
@@ -892,6 +943,11 @@ const handleCancelCopy = () => {
 
 // Category manager
 const showCategoryManager = ref(false);
+
+// PDF/Excel export
+const budgetExportContainer = ref<HTMLElement | null>(null);
+const isExportingPdf = ref(false);
+const isExportingExcel = ref(false);
 
 // Update entry handler
 const handleUpdateEntry = (entry: BudgetEntryUpdateDto) => {
@@ -1219,5 +1275,472 @@ function getMonthAbbr(month: number): string {
 function formatTableBalance(value: number | undefined): string {
   if (value === undefined) return '—';
   return formatCurrency(value);
+}
+
+function buildRunningBalanceChartSvg(): string {
+  const data = runningBalanceChartData.value;
+  if (data.length === 0) return '';
+  const w = chartWidth,
+    h = chartHeight;
+  const p = chartPadding;
+  const iW = chartInnerWidth,
+    iH = chartInnerHeight;
+  const [eMin, eMax] = chartExtent.value;
+  const ticks = chartYAxisTicks.value;
+  const scaleY = (value: number) => {
+    const t = (value - eMin) / (eMax - eMin);
+    return p.top + iH * (1 - t);
+  };
+  let svg = '';
+  for (let i = 0; i < ticks.length; i++) {
+    const y = p.top + iH * (1 - i / (ticks.length - 1));
+    svg += `<line x1="${p.left}" y1="${y}" x2="${w - p.right}" y2="${y}" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="2,2"/>`;
+    svg += `<text x="${p.left - 6}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="#6B7280">${ticks[i]}</text>`;
+  }
+  for (let i = 0; i < data.length; i++) {
+    const x = p.left + (i / 11) * iW + iW / 22;
+    svg += `<text x="${x}" y="${h - p.bottom + 16}" text-anchor="middle" font-size="10" fill="#6B7280">${getMonthAbbr(data[i].month)}</text>`;
+  }
+  const actualPts: string[] = [];
+  for (let i = 0; i < data.length; i++) {
+    const v = data[i].actual;
+    if (v === null) continue;
+    const x = p.left + (i / 11) * iW + iW / 22;
+    actualPts.push(`${actualPts.length === 0 ? 'M' : 'L'} ${x} ${scaleY(v)}`);
+  }
+  if (actualPts.length)
+    svg += `<path d="${actualPts.join(' ')}" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const last = lastCompletedMonth.value;
+  if (last < 12) {
+    const forecastPts: string[] = [];
+    const startIdx = last > 0 ? last - 1 : 0;
+    for (let i = startIdx; i < data.length; i++) {
+      const v = i <= last - 1 ? data[i].actual : data[i].forecast;
+      if (v === null) continue;
+      const x = p.left + (i / 11) * iW + iW / 22;
+      forecastPts.push(
+        `${forecastPts.length === 0 ? 'M' : 'L'} ${x} ${scaleY(v)}`
+      );
+    }
+    if (forecastPts.length)
+      svg += `<path d="${forecastPts.join(' ')}" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="4,4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="background:#fff">${svg}</svg>`;
+}
+
+function buildBarChartSvg(
+  chartData: Array<{ month: number; forecast: number; actual: number }>,
+  maxVal: number,
+  forecastColor: string,
+  actualColor: string
+): string {
+  if (chartData.length === 0) return '';
+  const w = budgetBarChartWidth,
+    h = budgetBarChartHeight;
+  const p = budgetBarPadding;
+  const iW = budgetBarInnerWidth,
+    iH = budgetBarInnerHeight;
+  const mx = maxVal || 1;
+  const count = 5;
+  const ticks = Array.from({ length: count }, (_, i) =>
+    formatCurrency((mx * i) / (count - 1))
+  );
+  let svg = '';
+  for (let i = 0; i < ticks.length; i++) {
+    const y = p.top + iH * (1 - i / (ticks.length - 1));
+    svg += `<line x1="${p.left}" y1="${y}" x2="${w - p.right}" y2="${y}" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="2,2"/>`;
+    svg += `<text x="${p.left - 4}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="#6B7280">${ticks[i]}</text>`;
+  }
+  for (let i = 0; i < chartData.length; i++) {
+    const d = chartData[i];
+    const groupX = p.left + (i / 12) * iW;
+    const barW = iW / 24 - 2;
+    const fH = Math.max(0, (d.forecast / mx) * iH);
+    const aH = Math.max(0, (d.actual / mx) * iH);
+    svg += `<rect x="${groupX + (iW / 24) * 0.5}" y="${p.top + iH - fH}" width="${barW}" height="${fH}" fill="${forecastColor}"/>`;
+    svg += `<rect x="${groupX + (iW / 24) * 1.5 + 2}" y="${p.top + iH - aH}" width="${barW}" height="${aH}" fill="${actualColor}"/>`;
+    svg += `<text x="${groupX + iW / 24 + iW / 24}" y="${h - p.bottom + 14}" text-anchor="middle" font-size="10" fill="#6B7280">${getMonthAbbr(d.month)}</text>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="background:#fff">${svg}</svg>`;
+}
+
+function svgStringToPng(
+  svgStr: string,
+  width: number,
+  height: number
+): Promise<string> {
+  return new Promise(resolve => {
+    if (!svgStr) {
+      resolve('');
+      return;
+    }
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      const ctx = canvas.getContext('2d')!;
+      ctx.scale(2, 2);
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve('');
+    };
+    img.src = url;
+  });
+}
+
+function buildExportHtml(chartImages: {
+  rbChart: string;
+  incomeChart: string;
+  expenseChart: string;
+}): string {
+  const year = selectedYear.value;
+  const rbRow = runningBalanceTableRow.value;
+  const rbCells = Array.from(
+    { length: 12 },
+    (_, i) =>
+      `<td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(rbRow[i + 1])}</td>`
+  ).join('');
+  const yearDelta = runningBalanceYearDelta.value;
+  const yearDeltaText =
+    yearDelta !== null
+      ? ` ${yearDelta >= 0 ? '+' : ''}${formatCurrency(yearDelta)} ${yearDelta >= 0 ? 'Increase' : 'Decrease'}`
+      : '';
+
+  let incomeRows = '';
+  if (budgetData.value) {
+    for (const cat of budgetData.value.income) {
+      const cells = Array.from({ length: 12 }, (_, i) => {
+        const m = i + 1;
+        const f = cat.months[m]?.forecast ?? 0;
+        const a = cat.months[m]?.actual ?? 0;
+        return `<td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(f)}</td><td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(a)}</td>`;
+      }).join('');
+      incomeRows += `<tr><td style="padding:4px;border:1px solid #e5e7eb">${cat.name}</td>${cells}<td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(cat.total.forecast)}</td><td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(cat.total.actual)}</td></tr>`;
+    }
+  }
+
+  let expenseRows = '';
+  if (budgetData.value) {
+    for (const cat of budgetData.value.expense) {
+      const cells = Array.from({ length: 12 }, (_, i) => {
+        const m = i + 1;
+        const f = cat.months[m]?.forecast ?? 0;
+        const a = cat.months[m]?.actual ?? 0;
+        return `<td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(f)}</td><td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(a)}</td>`;
+      }).join('');
+      expenseRows += `<tr><td style="padding:4px;border:1px solid #e5e7eb">${cat.name}</td>${cells}<td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(cat.total.forecast)}</td><td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(cat.total.actual)}</td></tr>`;
+    }
+  }
+
+  const monthHeaderCells = Array.from({ length: 12 }, (_, i) => {
+    const abbr = getMonthAbbr(i + 1);
+    return `<th style="padding:4px;border:1px solid #e5e7eb">${abbr} F</th><th style="padding:4px;border:1px solid #e5e7eb">${abbr} A</th>`;
+  }).join('');
+
+  return `
+    <div style="font-family:system-ui,sans-serif;font-size:12px">
+      <h1 style="font-size:18px;margin-bottom:16px">Budget Report – ${year}</h1>
+      <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+          <div style="font-weight:600;color:#374151">Summary</div>
+          <div style="margin-top:8px">Forecast ${formatCurrency(summaryForecast.value)}</div>
+          <div>Actual ${formatCurrency(summaryActual.value)}</div>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+          <div style="font-weight:600;color:#374151">Income</div>
+          <div style="margin-top:8px">Forecast ${formatCurrency(incomeForecast.value)}</div>
+          <div>Actual ${formatCurrency(incomeActual.value)}</div>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+          <div style="font-weight:600;color:#374151">Expense</div>
+          <div style="margin-top:8px">Forecast ${formatCurrency(expenseForecast.value)}</div>
+          <div>Actual ${formatCurrency(expenseActual.value)}</div>
+        </div>
+      </div>
+      <h2 style="font-size:14px;margin-bottom:8px">Running Balance – HOA Account (${year})</h2>
+      ${chartImages.rbChart ? `<div style="margin-bottom:12px"><img src="${chartImages.rbChart}" style="width:100%;max-width:700px" /></div>` : ''}
+      <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
+        <tr>
+          <th style="padding:6px;text-align:left;border:1px solid #e5e7eb">Running Balance</th>
+          <th style="padding:6px;border:1px solid #e5e7eb">Opening</th>
+          ${Array.from({ length: 12 }, (_, i) => `<th style="padding:6px;border:1px solid #e5e7eb">${getMonthAbbr(i + 1)}</th>`).join('')}
+          <th style="padding:6px;border:1px solid #e5e7eb">YEAR</th>
+        </tr>
+        <tr>
+          <td style="padding:6px;border:1px solid #e5e7eb">Cash Balance</td>
+          <td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(openingBalance.value)}</td>
+          ${rbCells}
+          <td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(runningBalanceYearEnd.value)}${yearDeltaText}</td>
+        </tr>
+      </table>
+      <h2 style="font-size:14px;margin-bottom:8px">Income</h2>
+      ${chartImages.incomeChart ? `<div style="margin-bottom:12px"><img src="${chartImages.incomeChart}" style="width:100%;max-width:700px" /></div>` : ''}
+      <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
+        <tr>
+          <th style="padding:4px;border:1px solid #e5e7eb">Category</th>
+          ${monthHeaderCells}
+          <th style="padding:4px;border:1px solid #e5e7eb">Total F</th>
+          <th style="padding:4px;border:1px solid #e5e7eb">Total A</th>
+        </tr>
+        ${incomeRows}
+      </table>
+      <h2 style="font-size:14px;margin-bottom:8px">Expense</h2>
+      ${chartImages.expenseChart ? `<div style="margin-bottom:12px"><img src="${chartImages.expenseChart}" style="width:100%;max-width:700px" /></div>` : ''}
+      <table style="border-collapse:collapse;width:100%">
+        <tr>
+          <th style="padding:4px;border:1px solid #e5e7eb">Category</th>
+          ${monthHeaderCells}
+          <th style="padding:4px;border:1px solid #e5e7eb">Total F</th>
+          <th style="padding:4px;border:1px solid #e5e7eb">Total A</th>
+        </tr>
+        ${expenseRows}
+      </table>
+    </div>
+  `;
+}
+
+async function generateChartImages(): Promise<{
+  rbChart: string;
+  incomeChart: string;
+  expenseChart: string;
+}> {
+  const [rbChart, incomeChart, expenseChart] = await Promise.all([
+    svgStringToPng(buildRunningBalanceChartSvg(), chartWidth, chartHeight),
+    svgStringToPng(
+      buildBarChartSvg(
+        incomeMonthlyChartData.value,
+        incomeChartMax.value,
+        '#93C5FD',
+        '#22C55E'
+      ),
+      budgetBarChartWidth,
+      budgetBarChartHeight
+    ),
+    svgStringToPng(
+      buildBarChartSvg(
+        expenseMonthlyChartData.value,
+        expenseChartMax.value,
+        '#FCA5A5',
+        '#EF4444'
+      ),
+      budgetBarChartWidth,
+      budgetBarChartHeight
+    ),
+  ]);
+  return { rbChart, incomeChart, expenseChart };
+}
+
+async function downloadBudgetPdf(): Promise<void> {
+  if (!budgetData.value || !budgetExportContainer.value) return;
+  isExportingPdf.value = true;
+  try {
+    const chartImages = await generateChartImages();
+    const container = budgetExportContainer.value;
+    container.innerHTML = buildExportHtml(chartImages);
+    await nextTick();
+    const imgs = container.querySelectorAll(
+      'img'
+    ) as NodeListOf<HTMLImageElement>;
+    await Promise.all(
+      Array.from(imgs).map((img: HTMLImageElement) =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise(r => {
+              img.onload = r;
+              img.onerror = r;
+            })
+      )
+    );
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const a4W = 210;
+    const a4H = 297;
+    const imgW = canvas.width;
+    const imgH = canvas.height;
+    const ratio = a4W / imgW;
+    const totalHeightMm = imgH * ratio;
+    if (totalHeightMm <= a4H) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, a4W, totalHeightMm);
+    } else {
+      const totalPages = Math.ceil(totalHeightMm / a4H);
+      const sliceHeightPx = a4H / ratio;
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = imgW;
+      pageCanvas.height = Math.ceil(sliceHeightPx);
+      const ctx = pageCanvas.getContext('2d');
+      for (let p = 0; p < totalPages; p++) {
+        if (p > 0) pdf.addPage();
+        const sy = p * sliceHeightPx;
+        const sh = Math.min(sliceHeightPx, imgH - sy);
+        pageCanvas.height = Math.ceil(sh);
+        ctx?.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx?.drawImage(canvas, 0, sy, imgW, sh, 0, 0, imgW, sh);
+        const pageData = pageCanvas.toDataURL('image/jpeg', 0.92);
+        const sliceHMm = (sh * a4W) / imgW;
+        pdf.addImage(pageData, 'JPEG', 0, 0, a4W, sliceHMm);
+      }
+    }
+    pdf.save(`budget-${selectedYear.value}.pdf`);
+  } catch (e) {
+    console.error('Budget PDF export failed:', e);
+  } finally {
+    if (budgetExportContainer.value) budgetExportContainer.value.innerHTML = '';
+    isExportingPdf.value = false;
+  }
+}
+
+async function downloadBudgetExcel(): Promise<void> {
+  if (!budgetData.value) return;
+  isExportingExcel.value = true;
+  try {
+    const [{ Workbook }, chartImages] = await Promise.all([
+      import('exceljs'),
+      generateChartImages(),
+    ]);
+    const workbook = new Workbook();
+    workbook.creator = 'NeibrPay';
+    workbook.created = new Date();
+
+    const year = selectedYear.value;
+    const monthAbbrs = Array.from({ length: 12 }, (_, i) =>
+      getMonthAbbr(i + 1)
+    );
+
+    const addChartImage = (
+      sheet: InstanceType<typeof Workbook>['worksheets'][0],
+      dataUrl: string,
+      startRow: number
+    ) => {
+      if (!dataUrl) return;
+      const base64 = dataUrl.split(',')[1];
+      if (!base64) return;
+      const imageId = workbook.addImage({ base64, extension: 'png' });
+      sheet.addImage(imageId, {
+        tl: { col: 0, row: startRow } as any,
+        ext: { width: 700, height: 280 },
+      });
+    };
+
+    const summarySheet = workbook.addWorksheet('Summary', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    summarySheet.columns = [
+      { header: 'Section', width: 14 },
+      { header: 'Forecast', width: 14 },
+      { header: 'Actual', width: 14 },
+    ];
+    summarySheet.addRow([
+      'Summary',
+      summaryForecast.value,
+      summaryActual.value,
+    ]);
+    summarySheet.addRow(['Income', incomeForecast.value, incomeActual.value]);
+    summarySheet.addRow([
+      'Expense',
+      expenseForecast.value,
+      expenseActual.value,
+    ]);
+    summarySheet.getRow(1).font = { bold: true };
+
+    const rbSheet = workbook.addWorksheet('Running Balance', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    rbSheet.columns = [
+      { header: 'Running Balance', width: 16 },
+      { header: 'Opening', width: 12 },
+      ...monthAbbrs.map(m => ({ header: m, width: 10 })),
+      { header: 'YEAR', width: 14 },
+    ];
+    const rbRow = runningBalanceTableRow.value;
+    const rbValues = [
+      'Cash Balance',
+      openingBalance.value,
+      ...Array.from({ length: 12 }, (_, i) => rbRow[i + 1] ?? ''),
+      runningBalanceYearEnd.value,
+    ];
+    rbSheet.addRow(rbValues);
+    rbSheet.getRow(1).font = { bold: true };
+    addChartImage(rbSheet, chartImages.rbChart, 3);
+
+    const incomeSheet = workbook.addWorksheet('Income', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    const incomeHeaders = [
+      'Category',
+      ...monthAbbrs.flatMap(m => [`${m} F`, `${m} A`]),
+      'Total F',
+      'Total A',
+    ];
+    incomeSheet.columns = incomeHeaders.map(h => ({ header: h, width: 10 }));
+    incomeSheet.getRow(1).font = { bold: true };
+    for (const cat of budgetData.value.income) {
+      const row = [
+        cat.name,
+        ...Array.from({ length: 12 }, (_, i) => {
+          const m = i + 1;
+          return [cat.months[m]?.forecast ?? 0, cat.months[m]?.actual ?? 0];
+        }).flat(),
+        cat.total.forecast,
+        cat.total.actual,
+      ];
+      incomeSheet.addRow(row);
+    }
+    const incomeDataRows = budgetData.value.income.length;
+    addChartImage(incomeSheet, chartImages.incomeChart, incomeDataRows + 2);
+
+    const expenseSheet = workbook.addWorksheet('Expense', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    const expenseHeaders = [
+      'Category',
+      ...monthAbbrs.flatMap(m => [`${m} F`, `${m} A`]),
+      'Total F',
+      'Total A',
+    ];
+    expenseSheet.columns = expenseHeaders.map(h => ({ header: h, width: 10 }));
+    expenseSheet.getRow(1).font = { bold: true };
+    for (const cat of budgetData.value.expense) {
+      const row = [
+        cat.name,
+        ...Array.from({ length: 12 }, (_, i) => {
+          const m = i + 1;
+          return [cat.months[m]?.forecast ?? 0, cat.months[m]?.actual ?? 0];
+        }).flat(),
+        cat.total.forecast,
+        cat.total.actual,
+      ];
+      expenseSheet.addRow(row);
+    }
+    const expenseDataRows = budgetData.value.expense.length;
+    addChartImage(expenseSheet, chartImages.expenseChart, expenseDataRows + 2);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `budget-${year}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error('Budget Excel export failed:', e);
+  } finally {
+    isExportingExcel.value = false;
+  }
 }
 </script>
