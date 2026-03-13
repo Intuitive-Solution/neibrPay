@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { computed, unref } from 'vue';
+import { computed, unref, type Ref } from 'vue';
 import { apiClient } from './apiClient';
 import { plaidKeys } from './queryKeys';
 
@@ -94,6 +94,12 @@ export interface GetTransactionsResponse {
   };
 }
 
+export interface RunningBalanceResponse {
+  opening_balance: number;
+  current_balance: number;
+  monthly_balances: Array<{ month: number; balance: number }>;
+}
+
 export interface SyncAccountRequest {
   bank_account_id: number;
 }
@@ -166,6 +172,17 @@ export const plaidApi = {
   },
 
   /**
+   * Get monthly running balance for a year (from plaid_transactions only)
+   */
+  async getRunningBalance(year: number): Promise<RunningBalanceResponse> {
+    const response = await apiClient.get<RunningBalanceResponse>(
+      '/plaid/running-balance',
+      { params: { year } }
+    );
+    return response.data;
+  },
+
+  /**
    * Manually sync a specific bank account
    */
   async syncAccount(data: SyncAccountRequest): Promise<SyncAccountResponse> {
@@ -216,6 +233,20 @@ export function useTransactions(params: GetTransactionsRequest | any) {
       const unwrappedParams = unref(params);
       return plaidApi.getTransactions(unwrappedParams);
     },
+  });
+}
+
+/**
+ * Hook to fetch running balance for a year (from plaid_transactions only)
+ */
+export function useRunningBalance(year: number | Ref<number>) {
+  const queryKey = computed(() =>
+    plaidKeys.runningBalance(unref(year) as number)
+  );
+  return useQuery({
+    queryKey,
+    queryFn: () => plaidApi.getRunningBalance(unref(year) as number),
+    enabled: computed(() => typeof unref(year) === 'number'),
   });
 }
 

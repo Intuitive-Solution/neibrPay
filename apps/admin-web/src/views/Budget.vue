@@ -59,6 +59,48 @@
                 </svg>
                 Manage Categories
               </button>
+              <button
+                type="button"
+                class="btn-secondary btn-sm whitespace-nowrap"
+                :disabled="!budgetData || isExportingPdf"
+                @click="downloadBudgetPdf"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                {{ isExportingPdf ? 'Generating…' : 'Download PDF' }}
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-sm whitespace-nowrap"
+                :disabled="!budgetData || isExportingExcel"
+                @click="downloadBudgetExcel"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                {{ isExportingExcel ? 'Generating…' : 'Download Excel' }}
+              </button>
             </template>
           </div>
         </div>
@@ -259,10 +301,306 @@
 
     <!-- Budget Content -->
     <template v-else-if="budgetData">
+      <!-- Running Balance Chart and Table -->
+      <div class="card-modern bg-white rounded-lg shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Running Balance – HOA Account ({{ selectedYear }})
+          </h2>
+        </div>
+        <div class="p-6 space-y-6">
+          <!-- Chart -->
+          <div v-if="runningBalanceChartData.length > 0" class="relative">
+            <div
+              class="relative w-full overflow-x-auto"
+              style="min-height: 280px"
+            >
+              <svg
+                :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
+                class="w-full min-h-[280px]"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <!-- Y-axis grid and labels (max at top, min at bottom) -->
+                <g v-for="(tick, i) in chartYAxisTicks" :key="'grid-' + i">
+                  <line
+                    :x1="chartPadding.left"
+                    :y1="
+                      chartPadding.top +
+                      chartInnerHeight * (1 - i / (chartYAxisTicks.length - 1))
+                    "
+                    :x2="chartWidth - chartPadding.right"
+                    :y2="
+                      chartPadding.top +
+                      chartInnerHeight * (1 - i / (chartYAxisTicks.length - 1))
+                    "
+                    stroke="#E5E7EB"
+                    stroke-width="1"
+                    stroke-dasharray="2,2"
+                  />
+                  <text
+                    :x="chartPadding.left - 6"
+                    :y="
+                      chartPadding.top +
+                      chartInnerHeight * (1 - i / (chartYAxisTicks.length - 1))
+                    "
+                    text-anchor="end"
+                    dominant-baseline="middle"
+                    class="text-[10px] fill-gray-500"
+                  >
+                    {{ tick }}
+                  </text>
+                </g>
+                <!-- X-axis labels -->
+                <g v-for="(d, i) in runningBalanceChartData" :key="'x-' + i">
+                  <text
+                    :x="
+                      chartPadding.left +
+                      (i / 11) * chartInnerWidth +
+                      chartInnerWidth / 22
+                    "
+                    :y="chartHeight - chartPadding.bottom + 16"
+                    text-anchor="middle"
+                    class="text-[10px] fill-gray-500"
+                  >
+                    {{ getMonthAbbr(d.month) }}
+                  </text>
+                </g>
+                <!-- Actual line (solid) -->
+                <path
+                  v-if="actualPathD"
+                  :d="actualPathD"
+                  fill="none"
+                  stroke="#374151"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <!-- Forecast line (dotted) -->
+                <path
+                  v-if="forecastPathD"
+                  :d="forecastPathD"
+                  fill="none"
+                  stroke="#9CA3AF"
+                  stroke-width="1.5"
+                  stroke-dasharray="4,4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div class="flex gap-4 mt-2 justify-center flex-wrap">
+              <span class="flex items-center gap-2 text-xs text-gray-600">
+                <span class="inline-block w-4 h-0.5 bg-gray-700"></span>
+                Actual
+              </span>
+              <span class="flex items-center gap-2 text-xs text-gray-600">
+                <span
+                  class="inline-block w-4 h-0.5 border-t-2 border-dashed border-gray-400"
+                ></span>
+                Forecast
+              </span>
+            </div>
+          </div>
+          <div
+            v-else-if="!isRunningBalanceLoading && runningBalanceError"
+            class="py-8 text-center text-sm text-gray-500"
+          >
+            No running balance data. Connect bank accounts and sync transactions
+            to see actuals.
+          </div>
+          <div
+            v-else-if="isRunningBalanceLoading"
+            class="py-8 text-center text-sm text-gray-500"
+          >
+            Loading running balance…
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="w-full text-sm min-w-[800px]">
+              <thead>
+                <tr class="bg-red-50 border-b border-gray-200">
+                  <th
+                    class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase"
+                  >
+                    Running Balance
+                  </th>
+                  <th
+                    class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase border-l border-gray-200"
+                  >
+                    Opening
+                  </th>
+                  <th
+                    v-for="m in 12"
+                    :key="m"
+                    class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase border-l border-gray-200"
+                  >
+                    {{ getMonthAbbr(m) }}
+                  </th>
+                  <th
+                    class="px-4 py-2 text-center text-xs font-semibold text-gray-700 uppercase border-l border-gray-200 bg-gray-50"
+                  >
+                    YEAR
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="bg-white border-b border-gray-200">
+                  <td class="px-4 py-3 font-medium text-gray-900">
+                    Cash Balance
+                  </td>
+                  <td
+                    class="px-3 py-3 text-center text-gray-900 border-l border-gray-200"
+                  >
+                    {{ formatTableBalance(openingBalance) }}
+                  </td>
+                  <td
+                    v-for="m in 12"
+                    :key="m"
+                    class="px-3 py-3 text-center text-gray-900 border-l border-gray-200"
+                  >
+                    {{ formatTableBalance(runningBalanceTableRow[m]) }}
+                  </td>
+                  <td
+                    class="px-4 py-3 text-center border-l border-gray-200 bg-gray-50"
+                  >
+                    <span class="font-medium text-gray-900">
+                      {{ formatTableBalance(runningBalanceYearEnd) }}
+                    </span>
+                    <span
+                      v-if="runningBalanceYearDelta !== null"
+                      :class="[
+                        'ml-1 text-xs',
+                        runningBalanceYearDelta >= 0
+                          ? 'text-green-600'
+                          : 'text-red-600',
+                      ]"
+                    >
+                      {{ runningBalanceYearDelta >= 0 ? '+' : ''
+                      }}{{ formatCurrency(runningBalanceYearDelta) }}
+                      {{
+                        runningBalanceYearDelta >= 0 ? 'Increase' : 'Decrease'
+                      }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Income Section -->
       <div class="card-modern bg-white rounded-lg shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">Income</h2>
+        </div>
+        <!-- Income Bar Chart: Forecast vs Actual by month -->
+        <div class="px-6 py-4 border-b border-gray-100">
+          <div
+            class="relative w-full overflow-x-auto"
+            style="min-height: 200px"
+          >
+            <svg
+              :viewBox="`0 0 ${budgetBarChartWidth} ${budgetBarChartHeight}`"
+              class="w-full min-h-[200px]"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <!-- Y-axis grid and labels -->
+              <g
+                v-for="(tick, i) in incomeChartYAxisTicks"
+                :key="'income-grid-' + i"
+              >
+                <line
+                  :x1="budgetBarPadding.left"
+                  :y1="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (incomeChartYAxisTicks.length - 1))
+                  "
+                  :x2="budgetBarChartWidth - budgetBarPadding.right"
+                  :y2="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (incomeChartYAxisTicks.length - 1))
+                  "
+                  stroke="#E5E7EB"
+                  stroke-width="1"
+                  stroke-dasharray="2,2"
+                />
+                <text
+                  :x="budgetBarPadding.left - 4"
+                  :y="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (incomeChartYAxisTicks.length - 1))
+                  "
+                  text-anchor="end"
+                  dominant-baseline="middle"
+                  class="text-[10px] fill-gray-500"
+                >
+                  {{ tick }}
+                </text>
+              </g>
+              <!-- Bars and X labels -->
+              <g
+                v-for="(d, i) in incomeMonthlyChartData"
+                :key="'income-bar-' + i"
+              >
+                <!-- Forecast bar -->
+                <rect
+                  :x="
+                    budgetBarPadding.left +
+                    (i / 12) * budgetBarInnerWidth +
+                    (budgetBarInnerWidth / 24) * 0.5
+                  "
+                  :y="incomeBarY(d.forecast)"
+                  :width="budgetBarInnerWidth / 24 - 2"
+                  :height="Math.max(0, incomeBarHeight(d.forecast))"
+                  fill="#93C5FD"
+                  class="hover:opacity-90"
+                />
+                <!-- Actual bar -->
+                <rect
+                  :x="
+                    budgetBarPadding.left +
+                    (i / 12) * budgetBarInnerWidth +
+                    (budgetBarInnerWidth / 24) * 1.5 +
+                    2
+                  "
+                  :y="incomeBarY(d.actual)"
+                  :width="budgetBarInnerWidth / 24 - 2"
+                  :height="Math.max(0, incomeBarHeight(d.actual))"
+                  fill="#22C55E"
+                  class="hover:opacity-90"
+                />
+                <text
+                  :x="
+                    budgetBarPadding.left +
+                    ((i + 0.5) / 12) * budgetBarInnerWidth +
+                    budgetBarInnerWidth / 24
+                  "
+                  :y="budgetBarChartHeight - budgetBarPadding.bottom + 14"
+                  text-anchor="middle"
+                  class="text-[10px] fill-gray-500"
+                >
+                  {{ getMonthAbbr(d.month) }}
+                </text>
+              </g>
+            </svg>
+          </div>
+          <div
+            class="flex gap-4 mt-1 justify-center flex-wrap text-xs text-gray-600"
+          >
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-sm bg-[#93C5FD]"></span>
+              Forecast
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-sm bg-[#22C55E]"></span>
+              Actual
+            </span>
+          </div>
         </div>
         <BudgetTable
           :categories="budgetData.income"
@@ -277,6 +615,109 @@
       <div class="card-modern bg-white rounded-lg shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">Expense</h2>
+        </div>
+        <!-- Expense Bar Chart: Forecast vs Actual by month -->
+        <div class="px-6 py-4 border-b border-gray-100">
+          <div
+            class="relative w-full overflow-x-auto"
+            style="min-height: 200px"
+          >
+            <svg
+              :viewBox="`0 0 ${budgetBarChartWidth} ${budgetBarChartHeight}`"
+              class="w-full min-h-[200px]"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <g
+                v-for="(tick, i) in expenseChartYAxisTicks"
+                :key="'expense-grid-' + i"
+              >
+                <line
+                  :x1="budgetBarPadding.left"
+                  :y1="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (expenseChartYAxisTicks.length - 1))
+                  "
+                  :x2="budgetBarChartWidth - budgetBarPadding.right"
+                  :y2="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (expenseChartYAxisTicks.length - 1))
+                  "
+                  stroke="#E5E7EB"
+                  stroke-width="1"
+                  stroke-dasharray="2,2"
+                />
+                <text
+                  :x="budgetBarPadding.left - 4"
+                  :y="
+                    budgetBarPadding.top +
+                    budgetBarInnerHeight *
+                      (1 - i / (expenseChartYAxisTicks.length - 1))
+                  "
+                  text-anchor="end"
+                  dominant-baseline="middle"
+                  class="text-[10px] fill-gray-500"
+                >
+                  {{ tick }}
+                </text>
+              </g>
+              <g
+                v-for="(d, i) in expenseMonthlyChartData"
+                :key="'expense-bar-' + i"
+              >
+                <rect
+                  :x="
+                    budgetBarPadding.left +
+                    (i / 12) * budgetBarInnerWidth +
+                    (budgetBarInnerWidth / 24) * 0.5
+                  "
+                  :y="expenseBarY(d.forecast)"
+                  :width="budgetBarInnerWidth / 24 - 2"
+                  :height="Math.max(0, expenseBarHeight(d.forecast))"
+                  fill="#FCA5A5"
+                  class="hover:opacity-90"
+                />
+                <rect
+                  :x="
+                    budgetBarPadding.left +
+                    (i / 12) * budgetBarInnerWidth +
+                    (budgetBarInnerWidth / 24) * 1.5 +
+                    2
+                  "
+                  :y="expenseBarY(d.actual)"
+                  :width="budgetBarInnerWidth / 24 - 2"
+                  :height="Math.max(0, expenseBarHeight(d.actual))"
+                  fill="#EF4444"
+                  class="hover:opacity-90"
+                />
+                <text
+                  :x="
+                    budgetBarPadding.left +
+                    ((i + 0.5) / 12) * budgetBarInnerWidth +
+                    budgetBarInnerWidth / 24
+                  "
+                  :y="budgetBarChartHeight - budgetBarPadding.bottom + 14"
+                  text-anchor="middle"
+                  class="text-[10px] fill-gray-500"
+                >
+                  {{ getMonthAbbr(d.month) }}
+                </text>
+              </g>
+            </svg>
+          </div>
+          <div
+            class="flex gap-4 mt-1 justify-center flex-wrap text-xs text-gray-600"
+          >
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-sm bg-[#FCA5A5]"></span>
+              Forecast
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-sm bg-[#EF4444]"></span>
+              Actual
+            </span>
+          </div>
         </div>
         <BudgetTable
           :categories="budgetData.expense"
@@ -408,18 +849,31 @@
         </div>
       </template>
     </ConfirmDialog>
+
+    <!-- Hidden container for PDF export (filled and shown only during export) -->
+    <div
+      ref="budgetExportContainer"
+      class="fixed left-[-9999px] top-0 z-[-1] w-[1400px] bg-white p-6 text-gray-900"
+      aria-hidden="true"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { useBudget, useCopyBudget } from '../composables/useBudget';
 import { useAuthStore } from '../stores/auth';
+import { useRunningBalance } from '@neibrpay/api-client';
 import BudgetTable from '../components/BudgetTable.vue';
 import BudgetAuditLog from '../components/BudgetAuditLog.vue';
 import CategoryManager from '../components/CategoryManager.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
-import type { BudgetEntryUpdateDto } from '@neibrpay/models';
+import {
+  type BudgetEntryUpdateDto,
+  getMonthAbbreviation,
+} from '@neibrpay/models';
 
 const authStore = useAuthStore();
 const isResident = computed(() => authStore.isResident);
@@ -437,6 +891,13 @@ const availableYears = computed(() => {
 
 // Budget data
 const { data: budgetData, isLoading, error } = useBudget(selectedYear);
+
+// Running balance (from plaid_transactions only)
+const {
+  data: runningBalanceData,
+  isLoading: isRunningBalanceLoading,
+  error: runningBalanceError,
+} = useRunningBalance(selectedYear);
 
 // Copy budget
 const showCopyModal = ref(false);
@@ -482,6 +943,11 @@ const handleCancelCopy = () => {
 
 // Category manager
 const showCategoryManager = ref(false);
+
+// PDF/Excel export
+const budgetExportContainer = ref<HTMLElement | null>(null);
+const isExportingPdf = ref(false);
+const isExportingExcel = ref(false);
 
 // Update entry handler
 const handleUpdateEntry = (entry: BudgetEntryUpdateDto) => {
@@ -539,6 +1005,99 @@ const summaryActual = computed(() => {
   return incomeActual.value - expenseActual.value;
 });
 
+// --- Income / Expense bar chart (monthly Forecast vs Actual) ---
+const budgetBarChartWidth = 700;
+const budgetBarChartHeight = 200;
+const budgetBarPadding = { top: 16, right: 16, bottom: 28, left: 48 };
+const budgetBarInnerWidth =
+  budgetBarChartWidth - budgetBarPadding.left - budgetBarPadding.right;
+const budgetBarInnerHeight =
+  budgetBarChartHeight - budgetBarPadding.top - budgetBarPadding.bottom;
+
+const incomeMonthlyChartData = computed(() => {
+  if (!budgetData.value) return [];
+  return Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    let forecast = 0;
+    let actual = 0;
+    for (const cat of budgetData.value!.income) {
+      forecast += cat.months[month]?.forecast ?? 0;
+      actual += cat.months[month]?.actual ?? 0;
+    }
+    return { month, forecast, actual };
+  });
+});
+
+const incomeChartMax = computed(() => {
+  let max = 0;
+  for (const d of incomeMonthlyChartData.value) {
+    if (d.forecast > max) max = d.forecast;
+    if (d.actual > max) max = d.actual;
+  }
+  return max || 1;
+});
+
+const incomeChartYAxisTicks = computed(() => {
+  const max = incomeChartMax.value;
+  const count = 5;
+  return Array.from({ length: count }, (_, i) =>
+    formatCurrency((max * i) / (count - 1))
+  );
+});
+
+function incomeBarHeight(value: number): number {
+  const max = incomeChartMax.value;
+  if (max <= 0) return 0;
+  return (value / max) * budgetBarInnerHeight;
+}
+
+function incomeBarY(value: number): number {
+  const h = incomeBarHeight(value);
+  return budgetBarPadding.top + budgetBarInnerHeight - h;
+}
+
+const expenseMonthlyChartData = computed(() => {
+  if (!budgetData.value) return [];
+  return Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    let forecast = 0;
+    let actual = 0;
+    for (const cat of budgetData.value!.expense) {
+      forecast += cat.months[month]?.forecast ?? 0;
+      actual += cat.months[month]?.actual ?? 0;
+    }
+    return { month, forecast, actual };
+  });
+});
+
+const expenseChartMax = computed(() => {
+  let max = 0;
+  for (const d of expenseMonthlyChartData.value) {
+    if (d.forecast > max) max = d.forecast;
+    if (d.actual > max) max = d.actual;
+  }
+  return max || 1;
+});
+
+const expenseChartYAxisTicks = computed(() => {
+  const max = expenseChartMax.value;
+  const count = 5;
+  return Array.from({ length: count }, (_, i) =>
+    formatCurrency((max * i) / (count - 1))
+  );
+});
+
+function expenseBarHeight(value: number): number {
+  const max = expenseChartMax.value;
+  if (max <= 0) return 0;
+  return (value / max) * budgetBarInnerHeight;
+}
+
+function expenseBarY(value: number): number {
+  const h = expenseBarHeight(value);
+  return budgetBarPadding.top + budgetBarInnerHeight - h;
+}
+
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -547,4 +1106,906 @@ const formatCurrency = (amount: number): string => {
     maximumFractionDigits: 0,
   }).format(amount);
 };
+
+// --- Running Balance chart and table ---
+const currentMonth = new Date().getMonth() + 1; // 1-12
+
+const lastCompletedMonth = computed(() => {
+  const y = selectedYear.value;
+  if (y < currentYear) return 12;
+  if (y > currentYear) return 0;
+  return Math.max(0, currentMonth - 1);
+});
+
+const runningBalanceByMonth = computed(() => {
+  const list = runningBalanceData.value?.monthly_balances ?? [];
+  const map: Record<number, number> = {};
+  for (const { month, balance } of list) {
+    map[month] = balance;
+  }
+  return map;
+});
+
+const openingBalance = computed(
+  () => runningBalanceData.value?.opening_balance ?? 0
+);
+
+const monthlyNetForecast = computed(() => {
+  if (!budgetData.value) return {} as Record<number, number>;
+  const net: Record<number, number> = {};
+  for (let m = 1; m <= 12; m++) {
+    let income = 0;
+    let expense = 0;
+    for (const cat of budgetData.value!.income) {
+      income += cat.months[m]?.forecast ?? 0;
+    }
+    for (const cat of budgetData.value!.expense) {
+      expense += cat.months[m]?.forecast ?? 0;
+    }
+    net[m] = income - expense;
+  }
+  return net;
+});
+
+const runningBalanceChartData = computed(() => {
+  const last = lastCompletedMonth.value;
+  const byMonth = runningBalanceByMonth.value;
+  const netForecast = monthlyNetForecast.value;
+  const opening = openingBalance.value;
+  const result: Array<{
+    month: number;
+    actual: number | null;
+    forecast: number | null;
+  }> = [];
+  let forecastRunning = last > 0 ? (byMonth[last] ?? opening) : opening;
+  for (let m = 1; m <= 12; m++) {
+    const actual = last >= m ? (byMonth[m] ?? null) : null;
+    if (m > last) {
+      forecastRunning += netForecast[m] ?? 0;
+      result.push({ month: m, actual, forecast: forecastRunning });
+    } else {
+      result.push({ month: m, actual, forecast: null });
+    }
+  }
+  return result;
+});
+
+const chartPadding = { top: 20, right: 20, bottom: 36, left: 52 };
+const chartWidth = 700;
+const chartHeight = 280;
+const chartInnerWidth = chartWidth - chartPadding.left - chartPadding.right;
+const chartInnerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+
+const chartExtent = computed(() => {
+  let min = 0;
+  let max = 0;
+  for (const d of runningBalanceChartData.value) {
+    const v = d.actual ?? d.forecast ?? 0;
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+  if (min === max) {
+    min = Math.min(0, min - 1000);
+    max = Math.max(0, max + 1000);
+  }
+  const pad = (max - min) * 0.05 || 1000;
+  return [min - pad, max + pad];
+});
+
+const chartYAxisTicks = computed(() => {
+  const [min, max] = chartExtent.value;
+  const count = 6;
+  const step = (max - min) / (count - 1);
+  return Array.from({ length: count }, (_, i) =>
+    formatCurrency(min + i * step)
+  );
+});
+
+const chartScaleY = (value: number) => {
+  const [min, max] = chartExtent.value;
+  const t = (value - min) / (max - min);
+  return chartPadding.top + chartInnerHeight * (1 - t);
+};
+
+const actualPathD = computed(() => {
+  const points: string[] = [];
+  const data = runningBalanceChartData.value;
+  for (let i = 0; i < data.length; i++) {
+    const v = data[i].actual;
+    if (v === null) continue;
+    const x =
+      chartPadding.left + (i / 11) * chartInnerWidth + chartInnerWidth / 22;
+    const y = chartScaleY(v);
+    points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+  }
+  return points.join(' ');
+});
+
+const forecastPathD = computed(() => {
+  const points: string[] = [];
+  const data = runningBalanceChartData.value;
+  const last = lastCompletedMonth.value;
+  if (last >= 12) return '';
+  // Start from last actual month so the dotted line connects to the solid line
+  const startIdx = last > 0 ? last - 1 : 0;
+  for (let i = startIdx; i < data.length; i++) {
+    const v = i <= last - 1 ? data[i].actual : data[i].forecast;
+    if (v === null) continue;
+    const x =
+      chartPadding.left + (i / 11) * chartInnerWidth + chartInnerWidth / 22;
+    const y = chartScaleY(v);
+    points.push(`${points.length === 0 ? 'M' : 'L'} ${x} ${y}`);
+  }
+  return points.join(' ');
+});
+
+const runningBalanceTableRow = computed(() => {
+  const last = lastCompletedMonth.value;
+  const byMonth = runningBalanceByMonth.value;
+  const netForecast = monthlyNetForecast.value;
+  const opening = openingBalance.value;
+  const row: Record<number, number> = {};
+  let forecastRunning = last > 0 ? (byMonth[last] ?? opening) : opening;
+  for (let m = 1; m <= 12; m++) {
+    if (m <= last) {
+      row[m] = byMonth[m] ?? opening;
+    } else {
+      forecastRunning += netForecast[m] ?? 0;
+      row[m] = forecastRunning;
+    }
+  }
+  return row;
+});
+
+const runningBalanceYearEnd = computed(() => {
+  return runningBalanceTableRow.value[12] ?? 0;
+});
+
+const runningBalanceYearDelta = computed(() => {
+  const open = openingBalance.value;
+  const end = runningBalanceYearEnd.value;
+  if (open === 0 && end === 0) return null;
+  return end - open;
+});
+
+function getMonthAbbr(month: number): string {
+  return getMonthAbbreviation(month);
+}
+
+function formatTableBalance(value: number | undefined): string {
+  if (value === undefined) return '—';
+  return formatCurrency(value);
+}
+
+function buildRunningBalanceChartSvg(): string {
+  const data = runningBalanceChartData.value;
+  if (data.length === 0) return '';
+  const w = chartWidth,
+    h = chartHeight;
+  const p = chartPadding;
+  const iW = chartInnerWidth,
+    iH = chartInnerHeight;
+  const [eMin, eMax] = chartExtent.value;
+  const ticks = chartYAxisTicks.value;
+  const scaleY = (value: number) => {
+    const t = (value - eMin) / (eMax - eMin);
+    return p.top + iH * (1 - t);
+  };
+  let svg = '';
+  for (let i = 0; i < ticks.length; i++) {
+    const y = p.top + iH * (1 - i / (ticks.length - 1));
+    svg += `<line x1="${p.left}" y1="${y}" x2="${w - p.right}" y2="${y}" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="2,2"/>`;
+    svg += `<text x="${p.left - 6}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="#6B7280">${ticks[i]}</text>`;
+  }
+  for (let i = 0; i < data.length; i++) {
+    const x = p.left + (i / 11) * iW + iW / 22;
+    svg += `<text x="${x}" y="${h - p.bottom + 16}" text-anchor="middle" font-size="10" fill="#6B7280">${getMonthAbbr(data[i].month)}</text>`;
+  }
+  const actualPts: string[] = [];
+  for (let i = 0; i < data.length; i++) {
+    const v = data[i].actual;
+    if (v === null) continue;
+    const x = p.left + (i / 11) * iW + iW / 22;
+    actualPts.push(`${actualPts.length === 0 ? 'M' : 'L'} ${x} ${scaleY(v)}`);
+  }
+  if (actualPts.length)
+    svg += `<path d="${actualPts.join(' ')}" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const last = lastCompletedMonth.value;
+  if (last < 12) {
+    const forecastPts: string[] = [];
+    const startIdx = last > 0 ? last - 1 : 0;
+    for (let i = startIdx; i < data.length; i++) {
+      const v = i <= last - 1 ? data[i].actual : data[i].forecast;
+      if (v === null) continue;
+      const x = p.left + (i / 11) * iW + iW / 22;
+      forecastPts.push(
+        `${forecastPts.length === 0 ? 'M' : 'L'} ${x} ${scaleY(v)}`
+      );
+    }
+    if (forecastPts.length)
+      svg += `<path d="${forecastPts.join(' ')}" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-dasharray="4,4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="background:#fff">${svg}</svg>`;
+}
+
+function buildBarChartSvg(
+  chartData: Array<{ month: number; forecast: number; actual: number }>,
+  maxVal: number,
+  forecastColor: string,
+  actualColor: string
+): string {
+  if (chartData.length === 0) return '';
+  const w = budgetBarChartWidth,
+    h = budgetBarChartHeight;
+  const p = budgetBarPadding;
+  const iW = budgetBarInnerWidth,
+    iH = budgetBarInnerHeight;
+  const mx = maxVal || 1;
+  const count = 5;
+  const ticks = Array.from({ length: count }, (_, i) =>
+    formatCurrency((mx * i) / (count - 1))
+  );
+  let svg = '';
+  for (let i = 0; i < ticks.length; i++) {
+    const y = p.top + iH * (1 - i / (ticks.length - 1));
+    svg += `<line x1="${p.left}" y1="${y}" x2="${w - p.right}" y2="${y}" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="2,2"/>`;
+    svg += `<text x="${p.left - 4}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="#6B7280">${ticks[i]}</text>`;
+  }
+  for (let i = 0; i < chartData.length; i++) {
+    const d = chartData[i];
+    const groupX = p.left + (i / 12) * iW;
+    const barW = iW / 24 - 2;
+    const fH = Math.max(0, (d.forecast / mx) * iH);
+    const aH = Math.max(0, (d.actual / mx) * iH);
+    svg += `<rect x="${groupX + (iW / 24) * 0.5}" y="${p.top + iH - fH}" width="${barW}" height="${fH}" fill="${forecastColor}"/>`;
+    svg += `<rect x="${groupX + (iW / 24) * 1.5 + 2}" y="${p.top + iH - aH}" width="${barW}" height="${aH}" fill="${actualColor}"/>`;
+    svg += `<text x="${groupX + iW / 24 + iW / 24}" y="${h - p.bottom + 14}" text-anchor="middle" font-size="10" fill="#6B7280">${getMonthAbbr(d.month)}</text>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="background:#fff">${svg}</svg>`;
+}
+
+function svgStringToPng(
+  svgStr: string,
+  width: number,
+  height: number
+): Promise<string> {
+  return new Promise(resolve => {
+    if (!svgStr) {
+      resolve('');
+      return;
+    }
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      const ctx = canvas.getContext('2d')!;
+      ctx.scale(2, 2);
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve('');
+    };
+    img.src = url;
+  });
+}
+
+function buildExportSections(chartImages: {
+  rbChart: string;
+  incomeChart: string;
+  expenseChart: string;
+}): string[] {
+  const year = selectedYear.value;
+  const wrap = (inner: string) =>
+    `<div style="font-family:system-ui,sans-serif;font-size:12px">${inner}</div>`;
+
+  const rbRow = runningBalanceTableRow.value;
+  const rbCells = Array.from(
+    { length: 12 },
+    (_, i) =>
+      `<td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(rbRow[i + 1])}</td>`
+  ).join('');
+  const yearDelta = runningBalanceYearDelta.value;
+  const yearDeltaText =
+    yearDelta !== null
+      ? ` ${yearDelta >= 0 ? '+' : ''}${formatCurrency(yearDelta)} ${yearDelta >= 0 ? 'Increase' : 'Decrease'}`
+      : '';
+
+  const monthHeaderCells = Array.from({ length: 12 }, (_, i) => {
+    const abbr = getMonthAbbr(i + 1);
+    return `<th style="padding:4px;border:1px solid #e5e7eb">${abbr} F</th><th style="padding:4px;border:1px solid #e5e7eb">${abbr} A</th>`;
+  }).join('');
+
+  const section1 = wrap(`
+    <h1 style="font-size:18px;margin-bottom:16px">Budget Report – ${year}</h1>
+    <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+        <div style="font-weight:600;color:#374151">Summary</div>
+        <div style="margin-top:8px">Forecast ${formatCurrency(summaryForecast.value)}</div>
+        <div>Actual ${formatCurrency(summaryActual.value)}</div>
+      </div>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+        <div style="font-weight:600;color:#374151">Income</div>
+        <div style="margin-top:8px">Forecast ${formatCurrency(incomeForecast.value)}</div>
+        <div>Actual ${formatCurrency(incomeActual.value)}</div>
+      </div>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+        <div style="font-weight:600;color:#374151">Expense</div>
+        <div style="margin-top:8px">Forecast ${formatCurrency(expenseForecast.value)}</div>
+        <div>Actual ${formatCurrency(expenseActual.value)}</div>
+      </div>
+    </div>
+  `);
+
+  const section2 = wrap(`
+    <h2 style="font-size:14px;margin-bottom:8px">Running Balance – HOA Account (${year})</h2>
+    ${chartImages.rbChart ? `<div style="margin-bottom:12px"><img src="${chartImages.rbChart}" style="width:100%;max-width:700px" /></div>` : ''}
+    <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
+      <tr>
+        <th style="padding:6px;text-align:left;border:1px solid #e5e7eb">Running Balance</th>
+        <th style="padding:6px;border:1px solid #e5e7eb">Opening</th>
+        ${Array.from({ length: 12 }, (_, i) => `<th style="padding:6px;border:1px solid #e5e7eb">${getMonthAbbr(i + 1)}</th>`).join('')}
+        <th style="padding:6px;border:1px solid #e5e7eb">YEAR</th>
+      </tr>
+      <tr>
+        <td style="padding:6px;border:1px solid #e5e7eb">Cash Balance</td>
+        <td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(openingBalance.value)}</td>
+        ${rbCells}
+        <td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(runningBalanceYearEnd.value)}${yearDeltaText}</td>
+      </tr>
+    </table>
+  `);
+
+  let incomeRows = '';
+  if (budgetData.value) {
+    for (const cat of budgetData.value.income) {
+      const cells = Array.from({ length: 12 }, (_, i) => {
+        const m = i + 1;
+        const f = cat.months[m]?.forecast ?? 0;
+        const a = cat.months[m]?.actual ?? 0;
+        return `<td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(f)}</td><td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(a)}</td>`;
+      }).join('');
+      incomeRows += `<tr><td style="padding:4px;border:1px solid #e5e7eb">${cat.name}</td>${cells}<td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(cat.total.forecast)}</td><td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(cat.total.actual)}</td></tr>`;
+    }
+  }
+
+  const section3 = wrap(`
+    <h2 style="font-size:14px;margin-bottom:8px">Income</h2>
+    ${chartImages.incomeChart ? `<div style="margin-bottom:12px"><img src="${chartImages.incomeChart}" style="width:100%;max-width:700px" /></div>` : ''}
+    <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
+      <tr>
+        <th style="padding:4px;border:1px solid #e5e7eb">Category</th>
+        ${monthHeaderCells}
+        <th style="padding:4px;border:1px solid #e5e7eb">Total F</th>
+        <th style="padding:4px;border:1px solid #e5e7eb">Total A</th>
+      </tr>
+      ${incomeRows}
+    </table>
+  `);
+
+  let expenseRows = '';
+  if (budgetData.value) {
+    for (const cat of budgetData.value.expense) {
+      const cells = Array.from({ length: 12 }, (_, i) => {
+        const m = i + 1;
+        const f = cat.months[m]?.forecast ?? 0;
+        const a = cat.months[m]?.actual ?? 0;
+        return `<td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(f)}</td><td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(a)}</td>`;
+      }).join('');
+      expenseRows += `<tr><td style="padding:4px;border:1px solid #e5e7eb">${cat.name}</td>${cells}<td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(cat.total.forecast)}</td><td style="padding:4px;text-align:center;border:1px solid #e5e7eb">${formatCurrency(cat.total.actual)}</td></tr>`;
+    }
+  }
+
+  const section4 = wrap(`
+    <h2 style="font-size:14px;margin-bottom:8px">Expense</h2>
+    ${chartImages.expenseChart ? `<div style="margin-bottom:12px"><img src="${chartImages.expenseChart}" style="width:100%;max-width:700px" /></div>` : ''}
+    <table style="border-collapse:collapse;width:100%">
+      <tr>
+        <th style="padding:4px;border:1px solid #e5e7eb">Category</th>
+        ${monthHeaderCells}
+        <th style="padding:4px;border:1px solid #e5e7eb">Total F</th>
+        <th style="padding:4px;border:1px solid #e5e7eb">Total A</th>
+      </tr>
+      ${expenseRows}
+    </table>
+  `);
+
+  return [section1, section2, section3, section4];
+}
+
+async function generateChartImages(): Promise<{
+  rbChart: string;
+  incomeChart: string;
+  expenseChart: string;
+}> {
+  const [rbChart, incomeChart, expenseChart] = await Promise.all([
+    svgStringToPng(buildRunningBalanceChartSvg(), chartWidth, chartHeight),
+    svgStringToPng(
+      buildBarChartSvg(
+        incomeMonthlyChartData.value,
+        incomeChartMax.value,
+        '#93C5FD',
+        '#22C55E'
+      ),
+      budgetBarChartWidth,
+      budgetBarChartHeight
+    ),
+    svgStringToPng(
+      buildBarChartSvg(
+        expenseMonthlyChartData.value,
+        expenseChartMax.value,
+        '#FCA5A5',
+        '#EF4444'
+      ),
+      budgetBarChartWidth,
+      budgetBarChartHeight
+    ),
+  ]);
+  return { rbChart, incomeChart, expenseChart };
+}
+
+async function renderSectionToCanvas(
+  container: HTMLElement,
+  html: string
+): Promise<HTMLCanvasElement> {
+  container.innerHTML = html;
+  await nextTick();
+  const imgs = container.querySelectorAll(
+    'img'
+  ) as NodeListOf<HTMLImageElement>;
+  await Promise.all(
+    Array.from(imgs).map((img: HTMLImageElement) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise(r => {
+            img.onload = r;
+            img.onerror = r;
+          })
+    )
+  );
+  return html2canvas(container, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+  });
+}
+
+function addCanvasToPdf(
+  pdf: InstanceType<typeof jsPDF>,
+  canvas: HTMLCanvasElement,
+  isFirstSection: boolean
+): void {
+  // A4 landscape: 297mm x 210mm
+  const a4W = 297;
+  const a4H = 210;
+  const imgW = canvas.width;
+  const imgH = canvas.height;
+  const ratio = a4W / imgW;
+  const totalHeightMm = imgH * ratio;
+
+  if (!isFirstSection) pdf.addPage('a4', 'l');
+
+  if (totalHeightMm <= a4H) {
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    pdf.addImage(imgData, 'JPEG', 0, 0, a4W, totalHeightMm);
+  } else {
+    const totalPages = Math.ceil(totalHeightMm / a4H);
+    const sliceHeightPx = a4H / ratio;
+    const pageCanvas = document.createElement('canvas');
+    pageCanvas.width = imgW;
+    const ctx = pageCanvas.getContext('2d');
+    for (let p = 0; p < totalPages; p++) {
+      if (p > 0) pdf.addPage('a4', 'l');
+      const sy = p * sliceHeightPx;
+      const sh = Math.min(sliceHeightPx, imgH - sy);
+      pageCanvas.height = Math.ceil(sh);
+      ctx?.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx?.drawImage(canvas, 0, sy, imgW, sh, 0, 0, imgW, sh);
+      const pageData = pageCanvas.toDataURL('image/jpeg', 0.92);
+      const sliceHMm = (sh * a4W) / imgW;
+      pdf.addImage(pageData, 'JPEG', 0, 0, a4W, sliceHMm);
+    }
+  }
+}
+
+async function downloadBudgetPdf(): Promise<void> {
+  if (!budgetData.value || !budgetExportContainer.value) return;
+  isExportingPdf.value = true;
+  try {
+    const chartImages = await generateChartImages();
+    const sections = buildExportSections(chartImages);
+    const container = budgetExportContainer.value;
+    const pdf = new jsPDF('l', 'mm', 'a4');
+
+    for (let i = 0; i < sections.length; i++) {
+      const canvas = await renderSectionToCanvas(container, sections[i]);
+      addCanvasToPdf(pdf, canvas, i === 0);
+    }
+
+    pdf.save(`budget-${selectedYear.value}.pdf`);
+  } catch (e) {
+    console.error('Budget PDF export failed:', e);
+  } finally {
+    if (budgetExportContainer.value) budgetExportContainer.value.innerHTML = '';
+    isExportingPdf.value = false;
+  }
+}
+
+function excelColLetter(n: number): string {
+  let s = '';
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    s = String.fromCharCode(65 + rem) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
+function buildExcelLineChartXml(): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"',
+    ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"',
+    ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
+    '<c:chart><c:autoTitleDeleted val="1"/><c:plotArea><c:layout/>',
+    '<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>',
+    '<c:ser><c:idx val="0"/><c:order val="0"/>',
+    "<c:tx><c:strRef><c:f>'Running Balance'!$A$2</c:f></c:strRef></c:tx>",
+    '<c:spPr><a:ln w="22225"><a:solidFill><a:srgbClr val="374151"/></a:solidFill></a:ln></c:spPr>',
+    '<c:marker><c:symbol val="circle"/><c:size val="4"/></c:marker>',
+    "<c:cat><c:strRef><c:f>'Running Balance'!$C$1:$N$1</c:f></c:strRef></c:cat>",
+    "<c:val><c:numRef><c:f>'Running Balance'!$C$2:$N$2</c:f></c:numRef></c:val>",
+    '<c:smooth val="0"/></c:ser>',
+    '<c:axId val="111111111"/><c:axId val="222222222"/></c:lineChart>',
+    '<c:catAx><c:axId val="111111111"/><c:scaling><c:orientation val="minMax"/></c:scaling>',
+    '<c:delete val="0"/><c:axPos val="b"/><c:crossAx val="222222222"/></c:catAx>',
+    '<c:valAx><c:axId val="222222222"/><c:scaling><c:orientation val="minMax"/></c:scaling>',
+    '<c:delete val="0"/><c:axPos val="l"/>',
+    '<c:numFmt formatCode="$#,##0" sourceLinked="0"/>',
+    '<c:crossAx val="111111111"/></c:valAx>',
+    '</c:plotArea><c:legend><c:legendPos val="b"/></c:legend></c:chart></c:chartSpace>',
+  ].join('');
+}
+
+function buildExcelBarChartXml(
+  sheetName: string,
+  dataRowCount: number,
+  forecastColor: string,
+  actualColor: string
+): string {
+  const hdrRow = dataRowCount + 3;
+  const startRow = hdrRow + 1;
+  const endRow = hdrRow + 12;
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"',
+    ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"',
+    ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
+    '<c:chart><c:autoTitleDeleted val="1"/><c:plotArea><c:layout/>',
+    '<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>',
+    '<c:ser><c:idx val="0"/><c:order val="0"/>',
+    `<c:tx><c:strRef><c:f>'${sheetName}'!$B$${hdrRow}</c:f></c:strRef></c:tx>`,
+    `<c:spPr><a:solidFill><a:srgbClr val="${forecastColor}"/></a:solidFill></c:spPr>`,
+    `<c:cat><c:strRef><c:f>'${sheetName}'!$A$${startRow}:$A$${endRow}</c:f></c:strRef></c:cat>`,
+    `<c:val><c:numRef><c:f>'${sheetName}'!$B$${startRow}:$B$${endRow}</c:f></c:numRef></c:val>`,
+    '</c:ser>',
+    '<c:ser><c:idx val="1"/><c:order val="1"/>',
+    `<c:tx><c:strRef><c:f>'${sheetName}'!$C$${hdrRow}</c:f></c:strRef></c:tx>`,
+    `<c:spPr><a:solidFill><a:srgbClr val="${actualColor}"/></a:solidFill></c:spPr>`,
+    `<c:cat><c:strRef><c:f>'${sheetName}'!$A$${startRow}:$A$${endRow}</c:f></c:strRef></c:cat>`,
+    `<c:val><c:numRef><c:f>'${sheetName}'!$C$${startRow}:$C$${endRow}</c:f></c:numRef></c:val>`,
+    '</c:ser>',
+    '<c:axId val="111111111"/><c:axId val="222222222"/></c:barChart>',
+    '<c:catAx><c:axId val="111111111"/><c:scaling><c:orientation val="minMax"/></c:scaling>',
+    '<c:delete val="0"/><c:axPos val="b"/><c:crossAx val="222222222"/></c:catAx>',
+    '<c:valAx><c:axId val="222222222"/><c:scaling><c:orientation val="minMax"/></c:scaling>',
+    '<c:delete val="0"/><c:axPos val="l"/>',
+    '<c:numFmt formatCode="$#,##0" sourceLinked="0"/>',
+    '<c:crossAx val="111111111"/></c:valAx>',
+    '</c:plotArea><c:legend><c:legendPos val="b"/></c:legend></c:chart></c:chartSpace>',
+  ].join('');
+}
+
+function buildExcelDrawingXml(
+  startRow: number,
+  endRow: number,
+  endCol: number
+): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"',
+    ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"',
+    ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
+    '<xdr:twoCellAnchor>',
+    `<xdr:from><xdr:col>0</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${startRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>`,
+    `<xdr:to><xdr:col>${endCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${endRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>`,
+    '<xdr:graphicFrame macro="">',
+    '<xdr:nvGraphicFramePr><xdr:cNvPr id="2" name="Chart 1"/>',
+    '<xdr:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></xdr:cNvGraphicFramePr></xdr:nvGraphicFramePr>',
+    '<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>',
+    '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">',
+    '<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" r:id="rId1"/>',
+    '</a:graphicData></a:graphic></xdr:graphicFrame>',
+    '<xdr:clientData/></xdr:twoCellAnchor></xdr:wsDr>',
+  ].join('');
+}
+
+function buildExcelDrawingRelsXml(chartIdx: number): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">',
+    `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart${chartIdx}.xml"/>`,
+    '</Relationships>',
+  ].join('');
+}
+
+async function injectNativeExcelCharts(
+  buffer: ArrayBuffer,
+  incomeRowCount: number,
+  expenseRowCount: number
+): Promise<ArrayBuffer> {
+  const JSZipMod = await import('jszip');
+  const JSZip = JSZipMod.default || JSZipMod;
+  const zip = await JSZip.loadAsync(buffer);
+
+  const charts = [
+    {
+      sheetIdx: 2,
+      chartIdx: 1,
+      drawIdx: 1,
+      xml: buildExcelLineChartXml(),
+      anchorStart: 3,
+      anchorEnd: 18,
+      anchorCol: 15,
+    },
+    {
+      sheetIdx: 3,
+      chartIdx: 2,
+      drawIdx: 2,
+      xml: buildExcelBarChartXml('Income', incomeRowCount, '93C5FD', '22C55E'),
+      anchorStart: incomeRowCount + 16,
+      anchorEnd: incomeRowCount + 31,
+      anchorCol: 10,
+    },
+    {
+      sheetIdx: 4,
+      chartIdx: 3,
+      drawIdx: 3,
+      xml: buildExcelBarChartXml(
+        'Expense',
+        expenseRowCount,
+        'FCA5A5',
+        'EF4444'
+      ),
+      anchorStart: expenseRowCount + 16,
+      anchorEnd: expenseRowCount + 31,
+      anchorCol: 10,
+    },
+  ];
+
+  for (const c of charts) {
+    zip.file(`xl/charts/chart${c.chartIdx}.xml`, c.xml);
+    zip.file(
+      `xl/drawings/drawing${c.drawIdx}.xml`,
+      buildExcelDrawingXml(c.anchorStart, c.anchorEnd, c.anchorCol)
+    );
+    zip.file(
+      `xl/drawings/_rels/drawing${c.drawIdx}.xml.rels`,
+      buildExcelDrawingRelsXml(c.chartIdx)
+    );
+  }
+
+  for (const c of charts) {
+    const sheetPath = `xl/worksheets/sheet${c.sheetIdx}.xml`;
+    let sheetXml: string = await zip.file(sheetPath)!.async('string');
+    sheetXml = sheetXml.replace(
+      /<\/worksheet>/,
+      `<drawing r:id="rId99"/></worksheet>`
+    );
+    zip.file(sheetPath, sheetXml);
+
+    const relsPath = `xl/worksheets/_rels/sheet${c.sheetIdx}.xml.rels`;
+    const existing = zip.file(relsPath);
+    const drawingRel = `<Relationship Id="rId99" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${c.drawIdx}.xml"/>`;
+    if (existing) {
+      let relsXml: string = await existing.async('string');
+      relsXml = relsXml.replace(
+        /<\/Relationships>/,
+        drawingRel + '</Relationships>'
+      );
+      zip.file(relsPath, relsXml);
+    } else {
+      zip.file(
+        relsPath,
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${drawingRel}</Relationships>`
+      );
+    }
+  }
+
+  let ct: string = await zip.file('[Content_Types].xml')!.async('string');
+  let overrides = '';
+  for (const c of charts) {
+    overrides += `<Override PartName="/xl/charts/chart${c.chartIdx}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>`;
+    overrides += `<Override PartName="/xl/drawings/drawing${c.drawIdx}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`;
+  }
+  ct = ct.replace(/<\/Types>/, overrides + '</Types>');
+  zip.file('[Content_Types].xml', ct);
+
+  return zip.generateAsync({ type: 'arraybuffer' });
+}
+
+async function downloadBudgetExcel(): Promise<void> {
+  if (!budgetData.value) return;
+  isExportingExcel.value = true;
+  try {
+    const { Workbook } = await import('exceljs');
+    const workbook = new Workbook();
+    workbook.creator = 'NeibrPay';
+    workbook.created = new Date();
+
+    const year = selectedYear.value;
+    const monthAbbrs = Array.from({ length: 12 }, (_, i) =>
+      getMonthAbbr(i + 1)
+    );
+
+    const summarySheet = workbook.addWorksheet('Summary', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    summarySheet.columns = [
+      { header: 'Section', width: 14 },
+      { header: 'Forecast', width: 14 },
+      { header: 'Actual', width: 14 },
+    ];
+    summarySheet.addRow([
+      'Summary',
+      summaryForecast.value,
+      summaryActual.value,
+    ]);
+    summarySheet.addRow(['Income', incomeForecast.value, incomeActual.value]);
+    summarySheet.addRow([
+      'Expense',
+      expenseForecast.value,
+      expenseActual.value,
+    ]);
+    summarySheet.getRow(1).font = { bold: true };
+
+    const rbSheet = workbook.addWorksheet('Running Balance', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    rbSheet.columns = [
+      { header: 'Running Balance', width: 16 },
+      { header: 'Opening', width: 12 },
+      ...monthAbbrs.map(m => ({ header: m, width: 10 })),
+      { header: 'YEAR', width: 14 },
+    ];
+    const rbRow = runningBalanceTableRow.value;
+    const rbValues = [
+      'Cash Balance',
+      openingBalance.value,
+      ...Array.from({ length: 12 }, (_, i) => rbRow[i + 1] ?? ''),
+      runningBalanceYearEnd.value,
+    ];
+    rbSheet.addRow(rbValues);
+    rbSheet.getRow(1).font = { bold: true };
+
+    const incomeSheet = workbook.addWorksheet('Income', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    const incomeHeaders = [
+      'Category',
+      ...monthAbbrs.flatMap(m => [`${m} F`, `${m} A`]),
+      'Total F',
+      'Total A',
+    ];
+    incomeSheet.columns = incomeHeaders.map(h => ({ header: h, width: 10 }));
+    incomeSheet.getRow(1).font = { bold: true };
+    for (const cat of budgetData.value.income) {
+      const row = [
+        cat.name,
+        ...Array.from({ length: 12 }, (_, i) => {
+          const m = i + 1;
+          return [cat.months[m]?.forecast ?? 0, cat.months[m]?.actual ?? 0];
+        }).flat(),
+        cat.total.forecast,
+        cat.total.actual,
+      ];
+      incomeSheet.addRow(row);
+    }
+    const incomeDataCount = budgetData.value.income.length;
+    const incomeChartHdrRow = incomeDataCount + 3;
+    const incomeChartRow = incomeSheet.getRow(incomeChartHdrRow);
+    incomeChartRow.getCell(1).value = 'Month';
+    incomeChartRow.getCell(2).value = 'Forecast';
+    incomeChartRow.getCell(3).value = 'Actual';
+    incomeChartRow.font = { bold: true };
+    for (let m = 0; m < 12; m++) {
+      const fCol = excelColLetter(2 + 2 * m);
+      const aCol = excelColLetter(3 + 2 * m);
+      const lastDataRow = 1 + incomeDataCount;
+      const r = incomeSheet.getRow(incomeChartHdrRow + 1 + m);
+      r.getCell(1).value = getMonthAbbr(m + 1);
+      r.getCell(2).value = {
+        formula: `SUM(${fCol}2:${fCol}${lastDataRow})`,
+        result: incomeMonthlyChartData.value[m]?.forecast ?? 0,
+      } as any;
+      r.getCell(3).value = {
+        formula: `SUM(${aCol}2:${aCol}${lastDataRow})`,
+        result: incomeMonthlyChartData.value[m]?.actual ?? 0,
+      } as any;
+    }
+
+    const expenseSheet = workbook.addWorksheet('Expense', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    const expenseHeaders = [
+      'Category',
+      ...monthAbbrs.flatMap(m => [`${m} F`, `${m} A`]),
+      'Total F',
+      'Total A',
+    ];
+    expenseSheet.columns = expenseHeaders.map(h => ({ header: h, width: 10 }));
+    expenseSheet.getRow(1).font = { bold: true };
+    for (const cat of budgetData.value.expense) {
+      const row = [
+        cat.name,
+        ...Array.from({ length: 12 }, (_, i) => {
+          const m = i + 1;
+          return [cat.months[m]?.forecast ?? 0, cat.months[m]?.actual ?? 0];
+        }).flat(),
+        cat.total.forecast,
+        cat.total.actual,
+      ];
+      expenseSheet.addRow(row);
+    }
+    const expenseDataCount = budgetData.value.expense.length;
+    const expenseChartHdrRow = expenseDataCount + 3;
+    const expenseChartRow = expenseSheet.getRow(expenseChartHdrRow);
+    expenseChartRow.getCell(1).value = 'Month';
+    expenseChartRow.getCell(2).value = 'Forecast';
+    expenseChartRow.getCell(3).value = 'Actual';
+    expenseChartRow.font = { bold: true };
+    for (let m = 0; m < 12; m++) {
+      const fCol = excelColLetter(2 + 2 * m);
+      const aCol = excelColLetter(3 + 2 * m);
+      const lastDataRow = 1 + expenseDataCount;
+      const r = expenseSheet.getRow(expenseChartHdrRow + 1 + m);
+      r.getCell(1).value = getMonthAbbr(m + 1);
+      r.getCell(2).value = {
+        formula: `SUM(${fCol}2:${fCol}${lastDataRow})`,
+        result: expenseMonthlyChartData.value[m]?.forecast ?? 0,
+      } as any;
+      r.getCell(3).value = {
+        formula: `SUM(${aCol}2:${aCol}${lastDataRow})`,
+        result: expenseMonthlyChartData.value[m]?.actual ?? 0,
+      } as any;
+    }
+
+    const rawBuffer = await workbook.xlsx.writeBuffer();
+    const finalBuffer = await injectNativeExcelCharts(
+      rawBuffer as ArrayBuffer,
+      incomeDataCount,
+      expenseDataCount
+    );
+
+    const blob = new Blob([finalBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `budget-${year}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error('Budget Excel export failed:', e);
+  } finally {
+    isExportingExcel.value = false;
+  }
+}
 </script>

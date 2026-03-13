@@ -257,6 +257,78 @@ class PlaidController extends Controller
     }
 
     /**
+     * GET /api/plaid/running-balance
+     * Get monthly running balance for the given year from plaid_transactions only (no Plaid API).
+     */
+    public function getRunningBalance(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            if (!$user || !$user->tenant_id) {
+                return response()->json(['error' => 'User not found'], 401);
+            }
+
+            $validated = $request->validate([
+                'year' => 'required|integer|min:2000|max:2100',
+            ]);
+            $year = (int) $validated['year'];
+
+            $startDate = "{$year}-01-01";
+            $endDate = "{$year}-12-31";
+
+            // Current total balance across all bank accounts (from DB only)
+            $currentBalance = (float) PlaidBankAccount::forTenant($user->tenant_id)
+                ->active()
+                ->sum('current_balance');
+
+            // Sum of all posted transaction amounts in the year (Plaid: negative = credit, positive = debit)
+            // Net change in balance = -sum(amount), so opening_balance = current_balance + sum(amount)
+            $ytdNet = (float) PlaidTransaction::forTenant($user->tenant_id)
+                ->posted()
+                ->dateBetween($startDate, $endDate)
+                ->sum('amount');
+
+            $openingBalance = $currentBalance + $ytdNet;
+
+            // Monthly net: aggregate in PHP for DB portability (SQLite vs MySQL)
+            $transactions = PlaidTransaction::forTenant($user->tenant_id)
+                ->posted()
+                ->dateBetween($startDate, $endDate)
+                ->select('date', 'amount')
+                ->get();
+
+            $monthlySums = array_fill(1, 12, 0.0);
+            foreach ($transactions as $t) {
+                $month = (int) $t->date->format('n');
+                if ($month >= 1 && $month <= 12) {
+                    $monthlySums[$month] += (float) $t->amount;
+                }
+            }
+
+            $monthlyBalances = [];
+            $cumulative = 0.0;
+            for ($month = 1; $month <= 12; $month++) {
+                $cumulative += $monthlySums[$month];
+                $monthlyBalances[] = [
+                    'month' => $month,
+                    'balance' => round($openingBalance - $cumulative, 2),
+                ];
+            }
+
+            return response()->json([
+                'opening_balance' => round($openingBalance, 2),
+                'current_balance' => round($currentBalance, 2),
+                'monthly_balances' => $monthlyBalances,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Running Balance Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to compute running balance'], 500);
+        }
+    }
+
+    /**
      * POST /api/plaid/sync-all
      * Manual trigger to sync all active bank accounts (secured with API key)
      */
