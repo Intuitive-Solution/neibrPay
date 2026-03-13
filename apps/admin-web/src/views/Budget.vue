@@ -1395,12 +1395,15 @@ function svgStringToPng(
   });
 }
 
-function buildExportHtml(chartImages: {
+function buildExportSections(chartImages: {
   rbChart: string;
   incomeChart: string;
   expenseChart: string;
-}): string {
+}): string[] {
   const year = selectedYear.value;
+  const wrap = (inner: string) =>
+    `<div style="font-family:system-ui,sans-serif;font-size:12px">${inner}</div>`;
+
   const rbRow = runningBalanceTableRow.value;
   const rbCells = Array.from(
     { length: 12 },
@@ -1412,6 +1415,48 @@ function buildExportHtml(chartImages: {
     yearDelta !== null
       ? ` ${yearDelta >= 0 ? '+' : ''}${formatCurrency(yearDelta)} ${yearDelta >= 0 ? 'Increase' : 'Decrease'}`
       : '';
+
+  const monthHeaderCells = Array.from({ length: 12 }, (_, i) => {
+    const abbr = getMonthAbbr(i + 1);
+    return `<th style="padding:4px;border:1px solid #e5e7eb">${abbr} F</th><th style="padding:4px;border:1px solid #e5e7eb">${abbr} A</th>`;
+  }).join('');
+
+  const section1 = wrap(`
+    <h1 style="font-size:18px;margin-bottom:16px">Budget Report – ${year}</h1>
+    <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+        <div style="font-weight:600;color:#374151">Summary</div>
+        <div style="margin-top:8px">Forecast ${formatCurrency(summaryForecast.value)}</div>
+        <div>Actual ${formatCurrency(summaryActual.value)}</div>
+      </div>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+        <div style="font-weight:600;color:#374151">Income</div>
+        <div style="margin-top:8px">Forecast ${formatCurrency(incomeForecast.value)}</div>
+        <div>Actual ${formatCurrency(incomeActual.value)}</div>
+      </div>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
+        <div style="font-weight:600;color:#374151">Expense</div>
+        <div style="margin-top:8px">Forecast ${formatCurrency(expenseForecast.value)}</div>
+        <div>Actual ${formatCurrency(expenseActual.value)}</div>
+      </div>
+    </div>
+    <h2 style="font-size:14px;margin-bottom:8px">Running Balance – HOA Account (${year})</h2>
+    ${chartImages.rbChart ? `<div style="margin-bottom:12px"><img src="${chartImages.rbChart}" style="width:100%;max-width:700px" /></div>` : ''}
+    <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
+      <tr>
+        <th style="padding:6px;text-align:left;border:1px solid #e5e7eb">Running Balance</th>
+        <th style="padding:6px;border:1px solid #e5e7eb">Opening</th>
+        ${Array.from({ length: 12 }, (_, i) => `<th style="padding:6px;border:1px solid #e5e7eb">${getMonthAbbr(i + 1)}</th>`).join('')}
+        <th style="padding:6px;border:1px solid #e5e7eb">YEAR</th>
+      </tr>
+      <tr>
+        <td style="padding:6px;border:1px solid #e5e7eb">Cash Balance</td>
+        <td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(openingBalance.value)}</td>
+        ${rbCells}
+        <td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(runningBalanceYearEnd.value)}${yearDeltaText}</td>
+      </tr>
+    </table>
+  `);
 
   let incomeRows = '';
   if (budgetData.value) {
@@ -1426,6 +1471,20 @@ function buildExportHtml(chartImages: {
     }
   }
 
+  const section2 = wrap(`
+    <h2 style="font-size:14px;margin-bottom:8px">Income</h2>
+    ${chartImages.incomeChart ? `<div style="margin-bottom:12px"><img src="${chartImages.incomeChart}" style="width:100%;max-width:700px" /></div>` : ''}
+    <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
+      <tr>
+        <th style="padding:4px;border:1px solid #e5e7eb">Category</th>
+        ${monthHeaderCells}
+        <th style="padding:4px;border:1px solid #e5e7eb">Total F</th>
+        <th style="padding:4px;border:1px solid #e5e7eb">Total A</th>
+      </tr>
+      ${incomeRows}
+    </table>
+  `);
+
   let expenseRows = '';
   if (budgetData.value) {
     for (const cat of budgetData.value.expense) {
@@ -1439,71 +1498,21 @@ function buildExportHtml(chartImages: {
     }
   }
 
-  const monthHeaderCells = Array.from({ length: 12 }, (_, i) => {
-    const abbr = getMonthAbbr(i + 1);
-    return `<th style="padding:4px;border:1px solid #e5e7eb">${abbr} F</th><th style="padding:4px;border:1px solid #e5e7eb">${abbr} A</th>`;
-  }).join('');
+  const section3 = wrap(`
+    <h2 style="font-size:14px;margin-bottom:8px">Expense</h2>
+    ${chartImages.expenseChart ? `<div style="margin-bottom:12px"><img src="${chartImages.expenseChart}" style="width:100%;max-width:700px" /></div>` : ''}
+    <table style="border-collapse:collapse;width:100%">
+      <tr>
+        <th style="padding:4px;border:1px solid #e5e7eb">Category</th>
+        ${monthHeaderCells}
+        <th style="padding:4px;border:1px solid #e5e7eb">Total F</th>
+        <th style="padding:4px;border:1px solid #e5e7eb">Total A</th>
+      </tr>
+      ${expenseRows}
+    </table>
+  `);
 
-  return `
-    <div style="font-family:system-ui,sans-serif;font-size:12px">
-      <h1 style="font-size:18px;margin-bottom:16px">Budget Report – ${year}</h1>
-      <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">
-        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
-          <div style="font-weight:600;color:#374151">Summary</div>
-          <div style="margin-top:8px">Forecast ${formatCurrency(summaryForecast.value)}</div>
-          <div>Actual ${formatCurrency(summaryActual.value)}</div>
-        </div>
-        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
-          <div style="font-weight:600;color:#374151">Income</div>
-          <div style="margin-top:8px">Forecast ${formatCurrency(incomeForecast.value)}</div>
-          <div>Actual ${formatCurrency(incomeActual.value)}</div>
-        </div>
-        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;min-width:180px">
-          <div style="font-weight:600;color:#374151">Expense</div>
-          <div style="margin-top:8px">Forecast ${formatCurrency(expenseForecast.value)}</div>
-          <div>Actual ${formatCurrency(expenseActual.value)}</div>
-        </div>
-      </div>
-      <h2 style="font-size:14px;margin-bottom:8px">Running Balance – HOA Account (${year})</h2>
-      ${chartImages.rbChart ? `<div style="margin-bottom:12px"><img src="${chartImages.rbChart}" style="width:100%;max-width:700px" /></div>` : ''}
-      <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
-        <tr>
-          <th style="padding:6px;text-align:left;border:1px solid #e5e7eb">Running Balance</th>
-          <th style="padding:6px;border:1px solid #e5e7eb">Opening</th>
-          ${Array.from({ length: 12 }, (_, i) => `<th style="padding:6px;border:1px solid #e5e7eb">${getMonthAbbr(i + 1)}</th>`).join('')}
-          <th style="padding:6px;border:1px solid #e5e7eb">YEAR</th>
-        </tr>
-        <tr>
-          <td style="padding:6px;border:1px solid #e5e7eb">Cash Balance</td>
-          <td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(openingBalance.value)}</td>
-          ${rbCells}
-          <td style="padding:6px;text-align:center;border:1px solid #e5e7eb">${formatTableBalance(runningBalanceYearEnd.value)}${yearDeltaText}</td>
-        </tr>
-      </table>
-      <h2 style="font-size:14px;margin-bottom:8px">Income</h2>
-      ${chartImages.incomeChart ? `<div style="margin-bottom:12px"><img src="${chartImages.incomeChart}" style="width:100%;max-width:700px" /></div>` : ''}
-      <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
-        <tr>
-          <th style="padding:4px;border:1px solid #e5e7eb">Category</th>
-          ${monthHeaderCells}
-          <th style="padding:4px;border:1px solid #e5e7eb">Total F</th>
-          <th style="padding:4px;border:1px solid #e5e7eb">Total A</th>
-        </tr>
-        ${incomeRows}
-      </table>
-      <h2 style="font-size:14px;margin-bottom:8px">Expense</h2>
-      ${chartImages.expenseChart ? `<div style="margin-bottom:12px"><img src="${chartImages.expenseChart}" style="width:100%;max-width:700px" /></div>` : ''}
-      <table style="border-collapse:collapse;width:100%">
-        <tr>
-          <th style="padding:4px;border:1px solid #e5e7eb">Category</th>
-          ${monthHeaderCells}
-          <th style="padding:4px;border:1px solid #e5e7eb">Total F</th>
-          <th style="padding:4px;border:1px solid #e5e7eb">Total A</th>
-        </tr>
-        ${expenseRows}
-      </table>
-    </div>
-  `;
+  return [section1, section2, section3];
 }
 
 async function generateChartImages(): Promise<{
@@ -1537,62 +1546,84 @@ async function generateChartImages(): Promise<{
   return { rbChart, incomeChart, expenseChart };
 }
 
+async function renderSectionToCanvas(
+  container: HTMLElement,
+  html: string
+): Promise<HTMLCanvasElement> {
+  container.innerHTML = html;
+  await nextTick();
+  const imgs = container.querySelectorAll(
+    'img'
+  ) as NodeListOf<HTMLImageElement>;
+  await Promise.all(
+    Array.from(imgs).map((img: HTMLImageElement) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise(r => {
+            img.onload = r;
+            img.onerror = r;
+          })
+    )
+  );
+  return html2canvas(container, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+  });
+}
+
+function addCanvasToPdf(
+  pdf: InstanceType<typeof jsPDF>,
+  canvas: HTMLCanvasElement,
+  isFirstSection: boolean
+): void {
+  const a4W = 210;
+  const a4H = 297;
+  const imgW = canvas.width;
+  const imgH = canvas.height;
+  const ratio = a4W / imgW;
+  const totalHeightMm = imgH * ratio;
+
+  if (!isFirstSection) pdf.addPage();
+
+  if (totalHeightMm <= a4H) {
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    pdf.addImage(imgData, 'JPEG', 0, 0, a4W, totalHeightMm);
+  } else {
+    const totalPages = Math.ceil(totalHeightMm / a4H);
+    const sliceHeightPx = a4H / ratio;
+    const pageCanvas = document.createElement('canvas');
+    pageCanvas.width = imgW;
+    const ctx = pageCanvas.getContext('2d');
+    for (let p = 0; p < totalPages; p++) {
+      if (p > 0) pdf.addPage();
+      const sy = p * sliceHeightPx;
+      const sh = Math.min(sliceHeightPx, imgH - sy);
+      pageCanvas.height = Math.ceil(sh);
+      ctx?.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx?.drawImage(canvas, 0, sy, imgW, sh, 0, 0, imgW, sh);
+      const pageData = pageCanvas.toDataURL('image/jpeg', 0.92);
+      const sliceHMm = (sh * a4W) / imgW;
+      pdf.addImage(pageData, 'JPEG', 0, 0, a4W, sliceHMm);
+    }
+  }
+}
+
 async function downloadBudgetPdf(): Promise<void> {
   if (!budgetData.value || !budgetExportContainer.value) return;
   isExportingPdf.value = true;
   try {
     const chartImages = await generateChartImages();
+    const sections = buildExportSections(chartImages);
     const container = budgetExportContainer.value;
-    container.innerHTML = buildExportHtml(chartImages);
-    await nextTick();
-    const imgs = container.querySelectorAll(
-      'img'
-    ) as NodeListOf<HTMLImageElement>;
-    await Promise.all(
-      Array.from(imgs).map((img: HTMLImageElement) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise(r => {
-              img.onload = r;
-              img.onerror = r;
-            })
-      )
-    );
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-    });
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const a4W = 210;
-    const a4H = 297;
-    const imgW = canvas.width;
-    const imgH = canvas.height;
-    const ratio = a4W / imgW;
-    const totalHeightMm = imgH * ratio;
-    if (totalHeightMm <= a4H) {
-      pdf.addImage(imgData, 'JPEG', 0, 0, a4W, totalHeightMm);
-    } else {
-      const totalPages = Math.ceil(totalHeightMm / a4H);
-      const sliceHeightPx = a4H / ratio;
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = imgW;
-      pageCanvas.height = Math.ceil(sliceHeightPx);
-      const ctx = pageCanvas.getContext('2d');
-      for (let p = 0; p < totalPages; p++) {
-        if (p > 0) pdf.addPage();
-        const sy = p * sliceHeightPx;
-        const sh = Math.min(sliceHeightPx, imgH - sy);
-        pageCanvas.height = Math.ceil(sh);
-        ctx?.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-        ctx?.drawImage(canvas, 0, sy, imgW, sh, 0, 0, imgW, sh);
-        const pageData = pageCanvas.toDataURL('image/jpeg', 0.92);
-        const sliceHMm = (sh * a4W) / imgW;
-        pdf.addImage(pageData, 'JPEG', 0, 0, a4W, sliceHMm);
-      }
+
+    for (let i = 0; i < sections.length; i++) {
+      const canvas = await renderSectionToCanvas(container, sections[i]);
+      addCanvasToPdf(pdf, canvas, i === 0);
     }
+
     pdf.save(`budget-${selectedYear.value}.pdf`);
   } catch (e) {
     console.error('Budget PDF export failed:', e);
