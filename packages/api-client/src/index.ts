@@ -44,6 +44,7 @@ export {
   usePlaidLinkToken,
   useBankAccounts,
   useTransactions,
+  useRunningBalance,
   useExchangeToken,
   useDisconnectBankAccount,
   useSyncAccount,
@@ -55,6 +56,7 @@ export {
   type GetBankAccountsResponse,
   type GetTransactionsRequest,
   type GetTransactionsResponse,
+  type RunningBalanceResponse,
   type SyncAccountRequest,
   type SyncAccountResponse,
 } from './plaid';

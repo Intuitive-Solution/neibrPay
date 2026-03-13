@@ -218,6 +218,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/bank-accounts', [PlaidController::class, 'getBankAccounts']);
         Route::delete('/bank-accounts/{id}', [PlaidController::class, 'disconnectBankAccount']);
         Route::get('/transactions', [PlaidController::class, 'getTransactions']);
+        Route::get('/running-balance', [PlaidController::class, 'getRunningBalance']);
         Route::post('/sync', [PlaidController::class, 'syncAccount']);
     });
 

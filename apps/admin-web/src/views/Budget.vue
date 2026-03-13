@@ -259,6 +259,195 @@
 
     <!-- Budget Content -->
     <template v-else-if="budgetData">
+      <!-- Running Balance Chart and Table -->
+      <div class="card-modern bg-white rounded-lg shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Running Balance – HOA Account ({{ selectedYear }})
+          </h2>
+        </div>
+        <div class="p-6 space-y-6">
+          <!-- Chart -->
+          <div v-if="runningBalanceChartData.length > 0" class="relative">
+            <div
+              class="relative w-full overflow-x-auto"
+              style="min-height: 280px"
+            >
+              <svg
+                :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
+                class="w-full min-h-[280px]"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <!-- Y-axis grid and labels (max at top, min at bottom) -->
+                <g v-for="(tick, i) in chartYAxisTicks" :key="'grid-' + i">
+                  <line
+                    :x1="chartPadding.left"
+                    :y1="
+                      chartPadding.top +
+                      chartInnerHeight * (1 - i / (chartYAxisTicks.length - 1))
+                    "
+                    :x2="chartWidth - chartPadding.right"
+                    :y2="
+                      chartPadding.top +
+                      chartInnerHeight * (1 - i / (chartYAxisTicks.length - 1))
+                    "
+                    stroke="#E5E7EB"
+                    stroke-width="1"
+                    stroke-dasharray="2,2"
+                  />
+                  <text
+                    :x="chartPadding.left - 6"
+                    :y="
+                      chartPadding.top +
+                      chartInnerHeight * (1 - i / (chartYAxisTicks.length - 1))
+                    "
+                    text-anchor="end"
+                    dominant-baseline="middle"
+                    class="text-[10px] fill-gray-500"
+                  >
+                    {{ tick }}
+                  </text>
+                </g>
+                <!-- X-axis labels -->
+                <g v-for="(d, i) in runningBalanceChartData" :key="'x-' + i">
+                  <text
+                    :x="
+                      chartPadding.left +
+                      (i / 11) * chartInnerWidth +
+                      chartInnerWidth / 22
+                    "
+                    :y="chartHeight - chartPadding.bottom + 16"
+                    text-anchor="middle"
+                    class="text-[10px] fill-gray-500"
+                  >
+                    {{ getMonthAbbr(d.month) }}
+                  </text>
+                </g>
+                <!-- Actual line (solid) -->
+                <path
+                  v-if="actualPathD"
+                  :d="actualPathD"
+                  fill="none"
+                  stroke="#374151"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <!-- Forecast line (dotted) -->
+                <path
+                  v-if="forecastPathD"
+                  :d="forecastPathD"
+                  fill="none"
+                  stroke="#9CA3AF"
+                  stroke-width="1.5"
+                  stroke-dasharray="4,4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div class="flex gap-4 mt-2 justify-center flex-wrap">
+              <span class="flex items-center gap-2 text-xs text-gray-600">
+                <span class="inline-block w-4 h-0.5 bg-gray-700"></span>
+                Actual
+              </span>
+              <span class="flex items-center gap-2 text-xs text-gray-600">
+                <span
+                  class="inline-block w-4 h-0.5 border-t-2 border-dashed border-gray-400"
+                ></span>
+                Forecast
+              </span>
+            </div>
+          </div>
+          <div
+            v-else-if="!isRunningBalanceLoading && runningBalanceError"
+            class="py-8 text-center text-sm text-gray-500"
+          >
+            No running balance data. Connect bank accounts and sync transactions
+            to see actuals.
+          </div>
+          <div
+            v-else-if="isRunningBalanceLoading"
+            class="py-8 text-center text-sm text-gray-500"
+          >
+            Loading running balance…
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="w-full text-sm min-w-[800px]">
+              <thead>
+                <tr class="bg-red-50 border-b border-gray-200">
+                  <th
+                    class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase"
+                  >
+                    Running Balance
+                  </th>
+                  <th
+                    class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase border-l border-gray-200"
+                  >
+                    Opening
+                  </th>
+                  <th
+                    v-for="m in 12"
+                    :key="m"
+                    class="px-3 py-2 text-center text-xs font-semibold text-gray-700 uppercase border-l border-gray-200"
+                  >
+                    {{ getMonthAbbr(m) }}
+                  </th>
+                  <th
+                    class="px-4 py-2 text-center text-xs font-semibold text-gray-700 uppercase border-l border-gray-200 bg-gray-50"
+                  >
+                    YEAR
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="bg-white border-b border-gray-200">
+                  <td class="px-4 py-3 font-medium text-gray-900">
+                    Cash Balance
+                  </td>
+                  <td
+                    class="px-3 py-3 text-center text-gray-900 border-l border-gray-200"
+                  >
+                    {{ formatTableBalance(openingBalance) }}
+                  </td>
+                  <td
+                    v-for="m in 12"
+                    :key="m"
+                    class="px-3 py-3 text-center text-gray-900 border-l border-gray-200"
+                  >
+                    {{ formatTableBalance(runningBalanceTableRow[m]) }}
+                  </td>
+                  <td
+                    class="px-4 py-3 text-center border-l border-gray-200 bg-gray-50"
+                  >
+                    <span class="font-medium text-gray-900">
+                      {{ formatTableBalance(runningBalanceYearEnd) }}
+                    </span>
+                    <span
+                      v-if="runningBalanceYearDelta !== null"
+                      :class="[
+                        'ml-1 text-xs',
+                        runningBalanceYearDelta >= 0
+                          ? 'text-green-600'
+                          : 'text-red-600',
+                      ]"
+                    >
+                      {{ runningBalanceYearDelta >= 0 ? '+' : ''
+                      }}{{ formatCurrency(runningBalanceYearDelta) }}
+                      {{
+                        runningBalanceYearDelta >= 0 ? 'Increase' : 'Decrease'
+                      }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Income Section -->
       <div class="card-modern bg-white rounded-lg shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200">
@@ -415,11 +604,15 @@
 import { ref, computed, watch } from 'vue';
 import { useBudget, useCopyBudget } from '../composables/useBudget';
 import { useAuthStore } from '../stores/auth';
+import { useRunningBalance } from '@neibrpay/api-client';
 import BudgetTable from '../components/BudgetTable.vue';
 import BudgetAuditLog from '../components/BudgetAuditLog.vue';
 import CategoryManager from '../components/CategoryManager.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
-import type { BudgetEntryUpdateDto } from '@neibrpay/models';
+import {
+  type BudgetEntryUpdateDto,
+  getMonthAbbreviation,
+} from '@neibrpay/models';
 
 const authStore = useAuthStore();
 const isResident = computed(() => authStore.isResident);
@@ -437,6 +630,13 @@ const availableYears = computed(() => {
 
 // Budget data
 const { data: budgetData, isLoading, error } = useBudget(selectedYear);
+
+// Running balance (from plaid_transactions only)
+const {
+  data: runningBalanceData,
+  isLoading: isRunningBalanceLoading,
+  error: runningBalanceError,
+} = useRunningBalance(selectedYear);
 
 // Copy budget
 const showCopyModal = ref(false);
@@ -547,4 +747,174 @@ const formatCurrency = (amount: number): string => {
     maximumFractionDigits: 0,
   }).format(amount);
 };
+
+// --- Running Balance chart and table ---
+const currentMonth = new Date().getMonth() + 1; // 1-12
+
+const lastCompletedMonth = computed(() => {
+  const y = selectedYear.value;
+  if (y < currentYear) return 12;
+  if (y > currentYear) return 0;
+  return Math.max(0, currentMonth - 1);
+});
+
+const runningBalanceByMonth = computed(() => {
+  const list = runningBalanceData.value?.monthly_balances ?? [];
+  const map: Record<number, number> = {};
+  for (const { month, balance } of list) {
+    map[month] = balance;
+  }
+  return map;
+});
+
+const openingBalance = computed(
+  () => runningBalanceData.value?.opening_balance ?? 0
+);
+
+const monthlyNetForecast = computed(() => {
+  if (!budgetData.value) return {} as Record<number, number>;
+  const net: Record<number, number> = {};
+  for (let m = 1; m <= 12; m++) {
+    let income = 0;
+    let expense = 0;
+    for (const cat of budgetData.value!.income) {
+      income += cat.months[m]?.forecast ?? 0;
+    }
+    for (const cat of budgetData.value!.expense) {
+      expense += cat.months[m]?.forecast ?? 0;
+    }
+    net[m] = income - expense;
+  }
+  return net;
+});
+
+const runningBalanceChartData = computed(() => {
+  const last = lastCompletedMonth.value;
+  const byMonth = runningBalanceByMonth.value;
+  const netForecast = monthlyNetForecast.value;
+  const opening = openingBalance.value;
+  const result: Array<{
+    month: number;
+    actual: number | null;
+    forecast: number | null;
+  }> = [];
+  let forecastRunning = last > 0 ? (byMonth[last] ?? opening) : opening;
+  for (let m = 1; m <= 12; m++) {
+    const actual = last >= m ? (byMonth[m] ?? null) : null;
+    if (m > last) {
+      forecastRunning += netForecast[m] ?? 0;
+      result.push({ month: m, actual, forecast: forecastRunning });
+    } else {
+      result.push({ month: m, actual, forecast: null });
+    }
+  }
+  return result;
+});
+
+const chartPadding = { top: 20, right: 20, bottom: 36, left: 52 };
+const chartWidth = 700;
+const chartHeight = 280;
+const chartInnerWidth = chartWidth - chartPadding.left - chartPadding.right;
+const chartInnerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+
+const chartExtent = computed(() => {
+  let min = 0;
+  let max = 0;
+  for (const d of runningBalanceChartData.value) {
+    const v = d.actual ?? d.forecast ?? 0;
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+  if (min === max) {
+    min = Math.min(0, min - 1000);
+    max = Math.max(0, max + 1000);
+  }
+  const pad = (max - min) * 0.05 || 1000;
+  return [min - pad, max + pad];
+});
+
+const chartYAxisTicks = computed(() => {
+  const [min, max] = chartExtent.value;
+  const count = 6;
+  const step = (max - min) / (count - 1);
+  return Array.from({ length: count }, (_, i) =>
+    formatCurrency(min + i * step)
+  );
+});
+
+const chartScaleY = (value: number) => {
+  const [min, max] = chartExtent.value;
+  const t = (value - min) / (max - min);
+  return chartPadding.top + chartInnerHeight * (1 - t);
+};
+
+const actualPathD = computed(() => {
+  const points: string[] = [];
+  const data = runningBalanceChartData.value;
+  for (let i = 0; i < data.length; i++) {
+    const v = data[i].actual;
+    if (v === null) continue;
+    const x =
+      chartPadding.left + (i / 11) * chartInnerWidth + chartInnerWidth / 22;
+    const y = chartScaleY(v);
+    points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+  }
+  return points.join(' ');
+});
+
+const forecastPathD = computed(() => {
+  const points: string[] = [];
+  const data = runningBalanceChartData.value;
+  const last = lastCompletedMonth.value;
+  if (last >= 12) return '';
+  // Start from last actual month so the dotted line connects to the solid line
+  const startIdx = last > 0 ? last - 1 : 0;
+  for (let i = startIdx; i < data.length; i++) {
+    const v = i <= last - 1 ? data[i].actual : data[i].forecast;
+    if (v === null) continue;
+    const x =
+      chartPadding.left + (i / 11) * chartInnerWidth + chartInnerWidth / 22;
+    const y = chartScaleY(v);
+    points.push(`${points.length === 0 ? 'M' : 'L'} ${x} ${y}`);
+  }
+  return points.join(' ');
+});
+
+const runningBalanceTableRow = computed(() => {
+  const last = lastCompletedMonth.value;
+  const byMonth = runningBalanceByMonth.value;
+  const netForecast = monthlyNetForecast.value;
+  const opening = openingBalance.value;
+  const row: Record<number, number> = {};
+  let forecastRunning = last > 0 ? (byMonth[last] ?? opening) : opening;
+  for (let m = 1; m <= 12; m++) {
+    if (m <= last) {
+      row[m] = byMonth[m] ?? opening;
+    } else {
+      forecastRunning += netForecast[m] ?? 0;
+      row[m] = forecastRunning;
+    }
+  }
+  return row;
+});
+
+const runningBalanceYearEnd = computed(() => {
+  return runningBalanceTableRow.value[12] ?? 0;
+});
+
+const runningBalanceYearDelta = computed(() => {
+  const open = openingBalance.value;
+  const end = runningBalanceYearEnd.value;
+  if (open === 0 && end === 0) return null;
+  return end - open;
+});
+
+function getMonthAbbr(month: number): string {
+  return getMonthAbbreviation(month);
+}
+
+function formatTableBalance(value: number | undefined): string {
+  if (value === undefined) return '—';
+  return formatCurrency(value);
+}
 </script>

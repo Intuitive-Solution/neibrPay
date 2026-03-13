@@ -109,6 +109,8 @@ export const plaidKeys = {
   bankAccounts: () => [...plaidKeys.all, 'bank-accounts'] as const,
   transactions: (params: Record<string, any> = {}) =>
     [...plaidKeys.all, 'transactions', params] as const,
+  runningBalance: (year: number) =>
+    [...plaidKeys.all, 'running-balance', year] as const,
 } as const;
 
 export const budgetKeys = {
