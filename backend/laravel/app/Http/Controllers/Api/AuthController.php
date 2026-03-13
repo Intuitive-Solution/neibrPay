@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Cache;
@@ -736,6 +737,51 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             Log::error('Get user info failed: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to get user information'], 500);
+        }
+    }
+
+    /**
+     * Update authenticated user profile (name, email, phone_number)
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            $validated = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => [
+                    'sometimes',
+                    'email',
+                    'max:255',
+                    Rule::unique('users', 'email')->ignore($user->id),
+                ],
+                'phone_number' => 'sometimes|nullable|string|max:50',
+            ]);
+
+            $user->fill($validated)->save();
+
+            return response()->json([
+                'message' => 'Profile updated successfully',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone_number' => $user->phone_number ?? '',
+                ],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Update profile failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update profile'], 500);
         }
     }
 

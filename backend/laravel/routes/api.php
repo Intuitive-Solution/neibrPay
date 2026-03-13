@@ -75,6 +75,7 @@ Route::prefix('auth')->group(function () {
     // Protected routes (require Sanctum authentication)
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/user/profile', [AuthController::class, 'updateProfile']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
 });
