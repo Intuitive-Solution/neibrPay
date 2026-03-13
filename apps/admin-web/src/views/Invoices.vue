@@ -800,7 +800,7 @@
                   <template v-if="isResident">
                     <button
                       v-if="invoice.status === 'sent' && !invoice.deleted_at"
-                      @click.stop="recordPayment(invoice.id)"
+                      @click.stop="viewInvoice(invoice.id)"
                       class="btn-primary text-sm py-2 px-4"
                     >
                       Pay Now
