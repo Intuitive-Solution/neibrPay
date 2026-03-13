@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { unitsApi, unitKeys } from '@neibrpay/api-client';
-import { computed, type Ref } from 'vue';
+import { computed, unref, type Ref } from 'vue';
 import type {
   Unit,
   CreateUnitRequest,
@@ -23,11 +23,11 @@ export function useUnits(includeDeleted: Ref<boolean> | boolean = false) {
   });
 }
 
-export function useUnit(id: number) {
+export function useUnit(id: Ref<number> | number) {
   return useQuery({
-    queryKey: unitKeys.detail(id),
-    queryFn: () => unitsApi.getUnit(id),
-    enabled: !!id,
+    queryKey: computed(() => unitKeys.detail(unref(id))),
+    queryFn: () => unitsApi.getUnit(unref(id)),
+    enabled: computed(() => !!unref(id)),
     staleTime: 0, // Always fetch fresh data
     refetchOnWindowFocus: true, // Refetch when window gains focus
   });

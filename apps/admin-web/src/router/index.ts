@@ -13,6 +13,7 @@ import People from '../views/People.vue';
 import AddResident from '../views/AddResident.vue';
 import Units from '../views/Units.vue';
 import AddUnit from '../views/AddUnit.vue';
+import UnitDetail from '../views/UnitDetail.vue';
 import Payments from '../views/Payments.vue';
 import Expenses from '../views/Expenses.vue';
 import AddExpense from '../views/AddExpense.vue';
@@ -122,6 +123,12 @@ const router = createRouter({
       path: '/units/add',
       name: 'AddUnit',
       component: AddUnit,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/units/view/:id',
+      name: 'ViewUnit',
+      component: UnitDetail,
       meta: { requiresAuth: true },
     },
     {
