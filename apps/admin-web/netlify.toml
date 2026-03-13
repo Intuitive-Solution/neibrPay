@@ -8,10 +8,10 @@
   # Directory to publish (relative to base)
   publish = "apps/admin-web/dist"
   
-  # Node.js version
+  # Node.js version and npm (11.3+ fixes optional deps bug with oxc-parser in monorepos)
   [build.environment]
     NODE_VERSION = "18"
-    NPM_VERSION = "9"
+    NPM_VERSION = "11"
 
 # Redirect rules for SPA routing
 [[redirects]]
