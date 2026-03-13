@@ -1848,6 +1848,7 @@
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-medium text-gray-900">Invoice PDF</h3>
               <button
+                v-if="isAdmin"
                 type="button"
                 :disabled="isRegeneratingPdf || !invoiceId"
                 class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
