@@ -1637,14 +1637,214 @@ async function downloadBudgetPdf(): Promise<void> {
   }
 }
 
+function excelColLetter(n: number): string {
+  let s = '';
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    s = String.fromCharCode(65 + rem) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
+function buildExcelLineChartXml(): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"',
+    ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"',
+    ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
+    '<c:chart><c:autoTitleDeleted val="1"/><c:plotArea><c:layout/>',
+    '<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>',
+    '<c:ser><c:idx val="0"/><c:order val="0"/>',
+    "<c:tx><c:strRef><c:f>'Running Balance'!$A$2</c:f></c:strRef></c:tx>",
+    '<c:spPr><a:ln w="22225"><a:solidFill><a:srgbClr val="374151"/></a:solidFill></a:ln></c:spPr>',
+    '<c:marker><c:symbol val="circle"/><c:size val="4"/></c:marker>',
+    "<c:cat><c:strRef><c:f>'Running Balance'!$C$1:$N$1</c:f></c:strRef></c:cat>",
+    "<c:val><c:numRef><c:f>'Running Balance'!$C$2:$N$2</c:f></c:numRef></c:val>",
+    '<c:smooth val="0"/></c:ser>',
+    '<c:axId val="111111111"/><c:axId val="222222222"/></c:lineChart>',
+    '<c:catAx><c:axId val="111111111"/><c:scaling><c:orientation val="minMax"/></c:scaling>',
+    '<c:delete val="0"/><c:axPos val="b"/><c:crossAx val="222222222"/></c:catAx>',
+    '<c:valAx><c:axId val="222222222"/><c:scaling><c:orientation val="minMax"/></c:scaling>',
+    '<c:delete val="0"/><c:axPos val="l"/>',
+    '<c:numFmt formatCode="$#,##0" sourceLinked="0"/>',
+    '<c:crossAx val="111111111"/></c:valAx>',
+    '</c:plotArea><c:legend><c:legendPos val="b"/></c:legend></c:chart></c:chartSpace>',
+  ].join('');
+}
+
+function buildExcelBarChartXml(
+  sheetName: string,
+  dataRowCount: number,
+  forecastColor: string,
+  actualColor: string
+): string {
+  const hdrRow = dataRowCount + 3;
+  const startRow = hdrRow + 1;
+  const endRow = hdrRow + 12;
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"',
+    ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"',
+    ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
+    '<c:chart><c:autoTitleDeleted val="1"/><c:plotArea><c:layout/>',
+    '<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>',
+    '<c:ser><c:idx val="0"/><c:order val="0"/>',
+    `<c:tx><c:strRef><c:f>'${sheetName}'!$B$${hdrRow}</c:f></c:strRef></c:tx>`,
+    `<c:spPr><a:solidFill><a:srgbClr val="${forecastColor}"/></a:solidFill></c:spPr>`,
+    `<c:cat><c:strRef><c:f>'${sheetName}'!$A$${startRow}:$A$${endRow}</c:f></c:strRef></c:cat>`,
+    `<c:val><c:numRef><c:f>'${sheetName}'!$B$${startRow}:$B$${endRow}</c:f></c:numRef></c:val>`,
+    '</c:ser>',
+    '<c:ser><c:idx val="1"/><c:order val="1"/>',
+    `<c:tx><c:strRef><c:f>'${sheetName}'!$C$${hdrRow}</c:f></c:strRef></c:tx>`,
+    `<c:spPr><a:solidFill><a:srgbClr val="${actualColor}"/></a:solidFill></c:spPr>`,
+    `<c:cat><c:strRef><c:f>'${sheetName}'!$A$${startRow}:$A$${endRow}</c:f></c:strRef></c:cat>`,
+    `<c:val><c:numRef><c:f>'${sheetName}'!$C$${startRow}:$C$${endRow}</c:f></c:numRef></c:val>`,
+    '</c:ser>',
+    '<c:axId val="111111111"/><c:axId val="222222222"/></c:barChart>',
+    '<c:catAx><c:axId val="111111111"/><c:scaling><c:orientation val="minMax"/></c:scaling>',
+    '<c:delete val="0"/><c:axPos val="b"/><c:crossAx val="222222222"/></c:catAx>',
+    '<c:valAx><c:axId val="222222222"/><c:scaling><c:orientation val="minMax"/></c:scaling>',
+    '<c:delete val="0"/><c:axPos val="l"/>',
+    '<c:numFmt formatCode="$#,##0" sourceLinked="0"/>',
+    '<c:crossAx val="111111111"/></c:valAx>',
+    '</c:plotArea><c:legend><c:legendPos val="b"/></c:legend></c:chart></c:chartSpace>',
+  ].join('');
+}
+
+function buildExcelDrawingXml(
+  startRow: number,
+  endRow: number,
+  endCol: number
+): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"',
+    ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"',
+    ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
+    '<xdr:twoCellAnchor>',
+    `<xdr:from><xdr:col>0</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${startRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>`,
+    `<xdr:to><xdr:col>${endCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${endRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>`,
+    '<xdr:graphicFrame macro="">',
+    '<xdr:nvGraphicFramePr><xdr:cNvPr id="2" name="Chart 1"/>',
+    '<xdr:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></xdr:cNvGraphicFramePr></xdr:nvGraphicFramePr>',
+    '<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>',
+    '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">',
+    '<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" r:id="rId1"/>',
+    '</a:graphicData></a:graphic></xdr:graphicFrame>',
+    '<xdr:clientData/></xdr:twoCellAnchor></xdr:wsDr>',
+  ].join('');
+}
+
+function buildExcelDrawingRelsXml(chartIdx: number): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">',
+    `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart${chartIdx}.xml"/>`,
+    '</Relationships>',
+  ].join('');
+}
+
+async function injectNativeExcelCharts(
+  buffer: ArrayBuffer,
+  incomeRowCount: number,
+  expenseRowCount: number
+): Promise<ArrayBuffer> {
+  const JSZipMod = await import('jszip');
+  const JSZip = JSZipMod.default || JSZipMod;
+  const zip = await JSZip.loadAsync(buffer);
+
+  const charts = [
+    {
+      sheetIdx: 2,
+      chartIdx: 1,
+      drawIdx: 1,
+      xml: buildExcelLineChartXml(),
+      anchorStart: 3,
+      anchorEnd: 18,
+      anchorCol: 15,
+    },
+    {
+      sheetIdx: 3,
+      chartIdx: 2,
+      drawIdx: 2,
+      xml: buildExcelBarChartXml('Income', incomeRowCount, '93C5FD', '22C55E'),
+      anchorStart: incomeRowCount + 16,
+      anchorEnd: incomeRowCount + 31,
+      anchorCol: 10,
+    },
+    {
+      sheetIdx: 4,
+      chartIdx: 3,
+      drawIdx: 3,
+      xml: buildExcelBarChartXml(
+        'Expense',
+        expenseRowCount,
+        'FCA5A5',
+        'EF4444'
+      ),
+      anchorStart: expenseRowCount + 16,
+      anchorEnd: expenseRowCount + 31,
+      anchorCol: 10,
+    },
+  ];
+
+  for (const c of charts) {
+    zip.file(`xl/charts/chart${c.chartIdx}.xml`, c.xml);
+    zip.file(
+      `xl/drawings/drawing${c.drawIdx}.xml`,
+      buildExcelDrawingXml(c.anchorStart, c.anchorEnd, c.anchorCol)
+    );
+    zip.file(
+      `xl/drawings/_rels/drawing${c.drawIdx}.xml.rels`,
+      buildExcelDrawingRelsXml(c.chartIdx)
+    );
+  }
+
+  for (const c of charts) {
+    const sheetPath = `xl/worksheets/sheet${c.sheetIdx}.xml`;
+    let sheetXml: string = await zip.file(sheetPath)!.async('string');
+    sheetXml = sheetXml.replace(
+      /<\/worksheet>/,
+      `<drawing r:id="rId99"/></worksheet>`
+    );
+    zip.file(sheetPath, sheetXml);
+
+    const relsPath = `xl/worksheets/_rels/sheet${c.sheetIdx}.xml.rels`;
+    const existing = zip.file(relsPath);
+    const drawingRel = `<Relationship Id="rId99" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${c.drawIdx}.xml"/>`;
+    if (existing) {
+      let relsXml: string = await existing.async('string');
+      relsXml = relsXml.replace(
+        /<\/Relationships>/,
+        drawingRel + '</Relationships>'
+      );
+      zip.file(relsPath, relsXml);
+    } else {
+      zip.file(
+        relsPath,
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${drawingRel}</Relationships>`
+      );
+    }
+  }
+
+  let ct: string = await zip.file('[Content_Types].xml')!.async('string');
+  let overrides = '';
+  for (const c of charts) {
+    overrides += `<Override PartName="/xl/charts/chart${c.chartIdx}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>`;
+    overrides += `<Override PartName="/xl/drawings/drawing${c.drawIdx}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`;
+  }
+  ct = ct.replace(/<\/Types>/, overrides + '</Types>');
+  zip.file('[Content_Types].xml', ct);
+
+  return zip.generateAsync({ type: 'arraybuffer' });
+}
+
 async function downloadBudgetExcel(): Promise<void> {
   if (!budgetData.value) return;
   isExportingExcel.value = true;
   try {
-    const [{ Workbook }, chartImages] = await Promise.all([
-      import('exceljs'),
-      generateChartImages(),
-    ]);
+    const { Workbook } = await import('exceljs');
     const workbook = new Workbook();
     workbook.creator = 'NeibrPay';
     workbook.created = new Date();
@@ -1653,21 +1853,6 @@ async function downloadBudgetExcel(): Promise<void> {
     const monthAbbrs = Array.from({ length: 12 }, (_, i) =>
       getMonthAbbr(i + 1)
     );
-
-    const addChartImage = (
-      sheet: InstanceType<typeof Workbook>['worksheets'][0],
-      dataUrl: string,
-      startRow: number
-    ) => {
-      if (!dataUrl) return;
-      const base64 = dataUrl.split(',')[1];
-      if (!base64) return;
-      const imageId = workbook.addImage({ base64, extension: 'png' });
-      sheet.addImage(imageId, {
-        tl: { col: 0, row: startRow } as any,
-        ext: { width: 700, height: 280 },
-      });
-    };
 
     const summarySheet = workbook.addWorksheet('Summary', {
       views: [{ state: 'frozen', ySplit: 1 }],
@@ -1708,7 +1893,6 @@ async function downloadBudgetExcel(): Promise<void> {
     ];
     rbSheet.addRow(rbValues);
     rbSheet.getRow(1).font = { bold: true };
-    addChartImage(rbSheet, chartImages.rbChart, 3);
 
     const incomeSheet = workbook.addWorksheet('Income', {
       views: [{ state: 'frozen', ySplit: 1 }],
@@ -1733,8 +1917,28 @@ async function downloadBudgetExcel(): Promise<void> {
       ];
       incomeSheet.addRow(row);
     }
-    const incomeDataRows = budgetData.value.income.length;
-    addChartImage(incomeSheet, chartImages.incomeChart, incomeDataRows + 2);
+    const incomeDataCount = budgetData.value.income.length;
+    const incomeChartHdrRow = incomeDataCount + 3;
+    const incomeChartRow = incomeSheet.getRow(incomeChartHdrRow);
+    incomeChartRow.getCell(1).value = 'Month';
+    incomeChartRow.getCell(2).value = 'Forecast';
+    incomeChartRow.getCell(3).value = 'Actual';
+    incomeChartRow.font = { bold: true };
+    for (let m = 0; m < 12; m++) {
+      const fCol = excelColLetter(2 + 2 * m);
+      const aCol = excelColLetter(3 + 2 * m);
+      const lastDataRow = 1 + incomeDataCount;
+      const r = incomeSheet.getRow(incomeChartHdrRow + 1 + m);
+      r.getCell(1).value = getMonthAbbr(m + 1);
+      r.getCell(2).value = {
+        formula: `SUM(${fCol}2:${fCol}${lastDataRow})`,
+        result: incomeMonthlyChartData.value[m]?.forecast ?? 0,
+      } as any;
+      r.getCell(3).value = {
+        formula: `SUM(${aCol}2:${aCol}${lastDataRow})`,
+        result: incomeMonthlyChartData.value[m]?.actual ?? 0,
+      } as any;
+    }
 
     const expenseSheet = workbook.addWorksheet('Expense', {
       views: [{ state: 'frozen', ySplit: 1 }],
@@ -1759,11 +1963,37 @@ async function downloadBudgetExcel(): Promise<void> {
       ];
       expenseSheet.addRow(row);
     }
-    const expenseDataRows = budgetData.value.expense.length;
-    addChartImage(expenseSheet, chartImages.expenseChart, expenseDataRows + 2);
+    const expenseDataCount = budgetData.value.expense.length;
+    const expenseChartHdrRow = expenseDataCount + 3;
+    const expenseChartRow = expenseSheet.getRow(expenseChartHdrRow);
+    expenseChartRow.getCell(1).value = 'Month';
+    expenseChartRow.getCell(2).value = 'Forecast';
+    expenseChartRow.getCell(3).value = 'Actual';
+    expenseChartRow.font = { bold: true };
+    for (let m = 0; m < 12; m++) {
+      const fCol = excelColLetter(2 + 2 * m);
+      const aCol = excelColLetter(3 + 2 * m);
+      const lastDataRow = 1 + expenseDataCount;
+      const r = expenseSheet.getRow(expenseChartHdrRow + 1 + m);
+      r.getCell(1).value = getMonthAbbr(m + 1);
+      r.getCell(2).value = {
+        formula: `SUM(${fCol}2:${fCol}${lastDataRow})`,
+        result: expenseMonthlyChartData.value[m]?.forecast ?? 0,
+      } as any;
+      r.getCell(3).value = {
+        formula: `SUM(${aCol}2:${aCol}${lastDataRow})`,
+        result: expenseMonthlyChartData.value[m]?.actual ?? 0,
+      } as any;
+    }
 
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
+    const rawBuffer = await workbook.xlsx.writeBuffer();
+    const finalBuffer = await injectNativeExcelCharts(
+      rawBuffer as ArrayBuffer,
+      incomeDataCount,
+      expenseDataCount
+    );
+
+    const blob = new Blob([finalBuffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
     const url = URL.createObjectURL(blob);
