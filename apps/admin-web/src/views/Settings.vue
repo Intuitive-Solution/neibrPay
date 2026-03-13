@@ -126,17 +126,6 @@
             Localization
           </button>
           <button
-            @click="activeTab = 'security'"
-            :class="[
-              activeTab === 'security'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-              'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
-            ]"
-          >
-            Security
-          </button>
-          <button
             v-if="!isResident"
             @click="activeTab = 'payments'"
             :class="[
@@ -353,72 +342,6 @@
             >
               <span v-if="isSavingLocalization">Saving...</span>
               <span v-else>Save Changes</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Security Tab -->
-        <div v-if="activeTab === 'security'" class="space-y-6">
-          <h2 class="text-base font-semibold text-gray-900">
-            Security Settings
-          </h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Current Password</label
-              >
-              <input
-                v-model="passwordForm.current_password"
-                type="password"
-                class="input-field"
-                placeholder="Enter current password"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >New Password</label
-              >
-              <input
-                v-model="passwordForm.new_password"
-                type="password"
-                class="input-field"
-                placeholder="Enter new password"
-              />
-              <p class="mt-1 text-xs text-gray-500">
-                Password must be at least 8 characters long
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Confirm New Password</label
-              >
-              <input
-                v-model="passwordForm.new_password_confirmation"
-                type="password"
-                class="input-field"
-                placeholder="Confirm new password"
-              />
-              <p
-                v-if="
-                  passwordForm.new_password &&
-                  passwordForm.new_password_confirmation &&
-                  passwordForm.new_password !==
-                    passwordForm.new_password_confirmation
-                "
-                class="mt-1 text-xs text-red-500"
-              >
-                Passwords do not match
-              </p>
-            </div>
-          </div>
-          <div class="flex justify-end pt-4 border-t border-gray-200">
-            <button
-              @click="savePassword"
-              :disabled="isSavingPassword || !isPasswordFormValid"
-              class="btn-primary"
-            >
-              <span v-if="isSavingPassword">Saving...</span>
-              <span v-else>Change Password</span>
             </button>
           </div>
         </div>
@@ -870,7 +793,6 @@ import {
   useSettings,
   useUpdateTenantSettings,
   useUpdateUserProfile,
-  useUpdatePassword,
   useUpdateLocalization,
   stripeApi,
   useVerifyStripeStatus,
@@ -947,14 +869,7 @@ async function initHoaAddressAutocomplete() {
 }
 
 // Tab state - initialize from hash if present
-const validTabs = [
-  'hoa',
-  'user',
-  'localization',
-  'security',
-  'payments',
-  'bank',
-] as const;
+const validTabs = ['hoa', 'user', 'localization', 'payments', 'bank'] as const;
 type TabType = (typeof validTabs)[number];
 
 const getInitialTab = (): TabType => {
@@ -994,7 +909,7 @@ watch(
   [isResident, activeTab],
   ([isResidentValue, currentTab]: [
     boolean,
-    'hoa' | 'user' | 'localization' | 'security' | 'payments' | 'bank',
+    'hoa' | 'user' | 'localization' | 'payments' | 'bank',
   ]) => {
     if (
       isResidentValue &&
@@ -1035,12 +950,6 @@ const localizationForm = ref({
   first_month_of_year: 'January',
 });
 
-const passwordForm = ref({
-  current_password: '',
-  new_password: '',
-  new_password_confirmation: '',
-});
-
 // Months array
 const months = [
   'January',
@@ -1061,26 +970,14 @@ const months = [
 const { data: settingsData, isLoading } = useSettings();
 const updateTenantMutation = useUpdateTenantSettings();
 const updateUserMutation = useUpdateUserProfile();
-const updatePasswordMutation = useUpdatePassword();
 const updateLocalizationMutation = useUpdateLocalization();
 
 // Loading states
 const isSavingHoa = computed(() => updateTenantMutation.isPending.value);
 const isSavingUser = computed(() => updateUserMutation.isPending.value);
-const isSavingPassword = computed(() => updatePasswordMutation.isPending.value);
 const isSavingLocalization = computed(
   () => updateLocalizationMutation.isPending.value
 );
-
-// Password form validation
-const isPasswordFormValid = computed(() => {
-  return (
-    passwordForm.value.current_password.length > 0 &&
-    passwordForm.value.new_password.length >= 8 &&
-    passwordForm.value.new_password ===
-      passwordForm.value.new_password_confirmation
-  );
-});
 
 // Watch for settings data and populate forms
 watch(
@@ -1185,26 +1082,6 @@ const saveLocalizationSettings = async () => {
     showSuccess('Localization settings updated successfully');
   } catch (error: any) {
     showError(error.message || 'Failed to update localization settings');
-  }
-};
-
-const savePassword = async () => {
-  if (!isPasswordFormValid.value) {
-    showError('Please fill all password fields correctly');
-    return;
-  }
-
-  try {
-    await updatePasswordMutation.mutateAsync(passwordForm.value);
-    showSuccess('Password updated successfully');
-    // Reset password form
-    passwordForm.value = {
-      current_password: '',
-      new_password: '',
-      new_password_confirmation: '',
-    };
-  } catch (error: any) {
-    showError(error.message || 'Failed to update password');
   }
 };
 
