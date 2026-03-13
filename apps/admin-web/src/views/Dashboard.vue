@@ -3,7 +3,101 @@
     <!-- Announcements Carousel -->
     <AnnouncementsCarousel />
 
-    <!-- Dashboard Stats -->
+    <!-- Resident: My HOA Dues and Open Invoice Cards -->
+    <div
+      v-if="isResident"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+    >
+      <!-- My HOA Dues Card -->
+      <div
+        class="card card-hover cursor-pointer transition-all duration-200 ring-2 ring-primary"
+        @click="navigateToInvoices"
+      >
+        <div class="flex items-center">
+          <div class="p-3 bg-primary-100 rounded-lg">
+            <svg
+              class="w-6 h-6 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <div class="ml-4 flex-1">
+            <h3 class="text-sm font-medium text-gray-600">My HOA Dues</h3>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ activeInvoicesCount }}
+              {{ activeInvoicesCount === 1 ? 'open invoice' : 'open invoices' }}
+            </p>
+            <p class="text-sm font-semibold text-gray-700 mt-0.5">
+              {{ formatCurrency(activeInvoicesBalanceDue) }} due
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Open Invoice Cards (one per invoice) -->
+      <div
+        v-for="invoice in activeInvoices"
+        :key="invoice.id"
+        class="card card-hover cursor-pointer transition-all duration-200 ring-2 ring-primary flex flex-col"
+        @click="navigateToInvoice(invoice.id)"
+      >
+        <div class="flex-1 flex flex-col">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-600">
+                Invoice #{{ invoice.invoice_number }}
+              </p>
+              <p class="text-xl font-bold text-gray-900 mt-1">
+                {{ formatCurrency(getInvoiceBalanceDue(invoice)) }}
+              </p>
+              <div
+                class="mt-2 flex items-center gap-1.5"
+                :class="
+                  isInvoiceOverdue(invoice) ? 'text-red-600' : 'text-gray-600'
+                "
+              >
+                <svg
+                  v-if="isInvoiceOverdue(invoice)"
+                  class="w-4 h-4 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <span class="text-sm font-medium">
+                  Due {{ getInvoiceDueDateDisplay(invoice) }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              class="btn-primary w-full text-sm py-2"
+              @click.stop="navigateToInvoice(invoice.id)"
+            >
+              Pay Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Stats (residents see Expenses, Budget, HOA Account Balance only) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Units and Residents Container - Stacked at lg, separate at md -->
       <!-- Hidden at md (Units and Residents will be individual grid items) -->
@@ -128,8 +222,12 @@
         </div>
       </div>
 
-      <!-- Combined Invoices & Payments Chart -->
-      <div class="card card-hover cursor-pointer" @click="navigateToInvoices">
+      <!-- Combined Invoices & Payments Chart (admin only) -->
+      <div
+        v-if="!isResident"
+        class="card card-hover cursor-pointer"
+        @click="navigateToInvoices"
+      >
         <div class="flex flex-col h-full">
           <div class="flex items-center mb-4">
             <div class="p-3 bg-primary-100 rounded-lg">
@@ -486,7 +584,7 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-sm font-medium text-gray-600">
-              Total Account Balance
+              HOA Account Balance
             </h3>
             <p class="text-2xl font-bold text-gray-900 mt-1">
               {{ formatCurrency(totalAccountBalance) }}
@@ -749,6 +847,110 @@ const activeInvoicesAmount = computed(() => {
 
   return total;
 });
+
+// Total balance due across active invoices (for Resident "My HOA Dues" card)
+const activeInvoicesBalanceDue = computed(() => {
+  if (!activeInvoices.value || activeInvoices.value.length === 0) return 0;
+  return activeInvoices.value.reduce((sum: number, invoice: InvoiceUnit) => {
+    const balance =
+      typeof invoice.balance_due === 'number' && !isNaN(invoice.balance_due)
+        ? invoice.balance_due
+        : typeof invoice.balance_due === 'string'
+          ? parseFloat(invoice.balance_due) || 0
+          : 0;
+    return sum + balance;
+  }, 0);
+});
+
+// Format date for display (e.g. "Mar 13, 2025")
+const formatDate = (dateString: string): string => {
+  if (!dateString) return 'N/A';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+// Get due date display string for an invoice (mirrors InvoiceDetail getDueDate logic)
+const getInvoiceDueDateDisplay = (invoice: InvoiceUnit): string => {
+  if (!invoice?.start_date) return 'N/A';
+  const startDate = new Date(invoice.start_date);
+  let dueDate = new Date(startDate);
+  const dueDateEnum = invoice.due_date || 'use_payment_terms';
+
+  switch (dueDateEnum) {
+    case 'net_15':
+      dueDate.setDate(startDate.getDate() + 15);
+      break;
+    case 'net_30':
+      dueDate.setDate(startDate.getDate() + 30);
+      break;
+    case 'net_45':
+      dueDate.setDate(startDate.getDate() + 45);
+      break;
+    case 'net_60':
+      dueDate.setDate(startDate.getDate() + 60);
+      break;
+    case 'due_on_receipt':
+      return 'on Receipt';
+    case 'use_payment_terms':
+    default:
+      return '—';
+  }
+  return formatDate(dueDate.toISOString());
+};
+
+// Check if invoice due date is in the past (for overdue styling)
+const isInvoiceOverdue = (invoice: InvoiceUnit): boolean => {
+  if (
+    !invoice?.start_date ||
+    invoice.status === 'paid' ||
+    invoice.status === 'cancelled'
+  ) {
+    return false;
+  }
+  const dueDateEnum = invoice.due_date || 'use_payment_terms';
+  if (dueDateEnum === 'due_on_receipt' || dueDateEnum === 'use_payment_terms') {
+    return false;
+  }
+  const startDate = new Date(invoice.start_date);
+  const dueDate = new Date(startDate);
+  switch (dueDateEnum) {
+    case 'net_15':
+      dueDate.setDate(startDate.getDate() + 15);
+      break;
+    case 'net_30':
+      dueDate.setDate(startDate.getDate() + 30);
+      break;
+    case 'net_45':
+      dueDate.setDate(startDate.getDate() + 45);
+      break;
+    case 'net_60':
+      dueDate.setDate(startDate.getDate() + 60);
+      break;
+    default:
+      return false;
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
+  return dueDate < today;
+};
+
+// Get balance due for display (handles number or string from API)
+const getInvoiceBalanceDue = (invoice: InvoiceUnit): number => {
+  if (invoice.balance_due == null) return 0;
+  const n =
+    typeof invoice.balance_due === 'string'
+      ? parseFloat(invoice.balance_due)
+      : invoice.balance_due;
+  return typeof n === 'number' && !isNaN(n) ? n : 0;
+};
+
+const navigateToInvoice = (id: number) => {
+  router.push(`/invoices/${id}`);
+};
 
 const activeResidentsCount = computed(() => {
   if (!residents.value) return 0;
