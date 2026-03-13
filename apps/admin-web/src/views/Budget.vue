@@ -1578,14 +1578,15 @@ function addCanvasToPdf(
   canvas: HTMLCanvasElement,
   isFirstSection: boolean
 ): void {
-  const a4W = 210;
-  const a4H = 297;
+  // A4 landscape: 297mm x 210mm
+  const a4W = 297;
+  const a4H = 210;
   const imgW = canvas.width;
   const imgH = canvas.height;
   const ratio = a4W / imgW;
   const totalHeightMm = imgH * ratio;
 
-  if (!isFirstSection) pdf.addPage();
+  if (!isFirstSection) pdf.addPage('a4', 'l');
 
   if (totalHeightMm <= a4H) {
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
@@ -1597,7 +1598,7 @@ function addCanvasToPdf(
     pageCanvas.width = imgW;
     const ctx = pageCanvas.getContext('2d');
     for (let p = 0; p < totalPages; p++) {
-      if (p > 0) pdf.addPage();
+      if (p > 0) pdf.addPage('a4', 'l');
       const sy = p * sliceHeightPx;
       const sh = Math.min(sliceHeightPx, imgH - sy);
       pageCanvas.height = Math.ceil(sh);
@@ -1617,7 +1618,7 @@ async function downloadBudgetPdf(): Promise<void> {
     const chartImages = await generateChartImages();
     const sections = buildExportSections(chartImages);
     const container = budgetExportContainer.value;
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF('l', 'mm', 'a4');
 
     for (let i = 0; i < sections.length; i++) {
       const canvas = await renderSectionToCanvas(container, sections[i]);
