@@ -853,7 +853,7 @@
     <!-- Hidden container for PDF export (filled and shown only during export) -->
     <div
       ref="budgetExportContainer"
-      class="fixed left-[-9999px] top-0 z-[-1] w-[800px] bg-white p-6 text-gray-900"
+      class="fixed left-[-9999px] top-0 z-[-1] w-[1400px] bg-white p-6 text-gray-900"
       aria-hidden="true"
     />
   </div>
@@ -1440,6 +1440,9 @@ function buildExportSections(chartImages: {
         <div>Actual ${formatCurrency(expenseActual.value)}</div>
       </div>
     </div>
+  `);
+
+  const section2 = wrap(`
     <h2 style="font-size:14px;margin-bottom:8px">Running Balance – HOA Account (${year})</h2>
     ${chartImages.rbChart ? `<div style="margin-bottom:12px"><img src="${chartImages.rbChart}" style="width:100%;max-width:700px" /></div>` : ''}
     <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
@@ -1471,7 +1474,7 @@ function buildExportSections(chartImages: {
     }
   }
 
-  const section2 = wrap(`
+  const section3 = wrap(`
     <h2 style="font-size:14px;margin-bottom:8px">Income</h2>
     ${chartImages.incomeChart ? `<div style="margin-bottom:12px"><img src="${chartImages.incomeChart}" style="width:100%;max-width:700px" /></div>` : ''}
     <table style="border-collapse:collapse;margin-bottom:24px;width:100%">
@@ -1498,7 +1501,7 @@ function buildExportSections(chartImages: {
     }
   }
 
-  const section3 = wrap(`
+  const section4 = wrap(`
     <h2 style="font-size:14px;margin-bottom:8px">Expense</h2>
     ${chartImages.expenseChart ? `<div style="margin-bottom:12px"><img src="${chartImages.expenseChart}" style="width:100%;max-width:700px" /></div>` : ''}
     <table style="border-collapse:collapse;width:100%">
@@ -1512,7 +1515,7 @@ function buildExportSections(chartImages: {
     </table>
   `);
 
-  return [section1, section2, section3];
+  return [section1, section2, section3, section4];
 }
 
 async function generateChartImages(): Promise<{
