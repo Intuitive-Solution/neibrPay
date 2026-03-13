@@ -470,36 +470,38 @@
                         </svg>
                         View
                       </button>
-                      <div class="border-t border-gray-200 my-1"></div>
-                      <button
-                        @click="
-                          () => {
-                            deletePayment(payment);
-                            close();
-                          }
-                        "
-                        :disabled="deletingPaymentId === payment.id"
-                        class="dropdown-item dropdown-item-danger"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      <template v-if="!isResident">
+                        <div class="border-t border-gray-200 my-1"></div>
+                        <button
+                          @click="
+                            () => {
+                              deletePayment(payment);
+                              close();
+                            }
+                          "
+                          :disabled="deletingPaymentId === payment.id"
+                          class="dropdown-item dropdown-item-danger"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                        {{
-                          deletingPaymentId === payment.id
-                            ? 'Deleting...'
-                            : 'Delete'
-                        }}
-                      </button>
+                          <svg
+                            class="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                          {{
+                            deletingPaymentId === payment.id
+                              ? 'Deleting...'
+                              : 'Delete'
+                          }}
+                        </button>
+                      </template>
                     </template>
                   </DropdownMenu>
                 </div>
@@ -517,9 +519,11 @@ import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePayments, useDeletePayment } from '../composables/usePayments';
 import type { PaymentFilters } from '@neibrpay/models';
+import { useAuthStore } from '../stores/auth';
 import DropdownMenu from '../components/DropdownMenu.vue';
 
 const router = useRouter();
+const isResident = computed(() => useAuthStore().isResident);
 
 // Local state
 const filters = ref<PaymentFilters>({

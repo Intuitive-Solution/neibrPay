@@ -131,9 +131,13 @@
           <strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment
         </p>
         <p><strong>Make checks payable to:</strong> {{ communityName }}</p>
+        <br />
+        <p><strong>Mail or drop off check to:</strong></p>
+        <p>{{ communityMailingAddress }}</p>
+        <br />
         <p>
-          <strong>For questions about this invoice, contact:</strong> (555)
-          123-4567
+          <strong>For questions about this invoice, contact:</strong>
+          {{ communityPhone || 'N/A' }}
         </p>
       </div>
     </div>
@@ -255,6 +259,17 @@ const formattedAddress = computed(() => {
   }
 
   return parts;
+});
+
+// Full one-line address for "Mail or drop off check to"
+const communityMailingAddress = computed(() => {
+  const parts = [
+    communityAddress.value,
+    [communityCity.value, communityState.value, communityZipCode.value]
+      .filter(Boolean)
+      .join(', '),
+  ].filter(Boolean);
+  return parts.length ? parts.join(', ') : '';
 });
 
 const publicNotes = computed(() => props.tabContent['public-notes']);

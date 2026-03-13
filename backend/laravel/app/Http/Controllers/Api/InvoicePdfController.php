@@ -64,6 +64,39 @@ class InvoicePdfController extends Controller
     }
 
     /**
+     * Regenerate PDF from current invoice data (server builds HTML and generates PDF).
+     */
+    public function regenerate(Request $request, InvoiceUnit $invoice): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($invoice->tenant_id !== $user->tenant_id) {
+            return response()->json(['message' => 'Invoice not found'], 404);
+        }
+
+        try {
+            $invoice->load(['unit', 'notes', 'tenant']);
+
+            $payment = null;
+            if ($invoice->status === 'paid') {
+                $payment = $invoice->payments()->approved()->latest()->first();
+            }
+
+            $html = $this->pdfService->generateInvoiceHtml($invoice, $payment);
+            $invoicePdf = $this->pdfService->generatePdf($invoice, $html, $user->id);
+
+            return response()->json([
+                'data' => $invoicePdf->load('generator'),
+                'message' => 'PDF generated successfully',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to generate PDF: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Get the latest PDF info for an invoice.
      */
     public function latest(Request $request, InvoiceUnit $invoice): JsonResponse

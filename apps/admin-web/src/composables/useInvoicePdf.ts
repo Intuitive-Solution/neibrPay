@@ -35,6 +35,24 @@ export function useGenerateInvoicePdf() {
 }
 
 /**
+ * Regenerate PDF from current invoice data (server builds HTML and generates PDF).
+ */
+export function useRegenerateInvoicePdf() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (invoiceId: number) => {
+      return await invoicesApi.regenerateInvoicePdf(invoiceId);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: invoicePdfKeys.latest(variables),
+      });
+    },
+  });
+}
+
+/**
  * Get the latest PDF for an invoice
  */
 export function useLatestInvoicePdf(invoiceId: number) {

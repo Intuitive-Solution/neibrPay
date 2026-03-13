@@ -75,6 +75,7 @@ Route::prefix('auth')->group(function () {
     // Protected routes (require Sanctum authentication)
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/user/profile', [AuthController::class, 'updateProfile']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
 });
@@ -135,6 +136,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Invoice PDF management routes
     Route::post('invoices/{invoice}/pdf/generate', [InvoicePdfController::class, 'generate']);
+    Route::post('invoices/{invoice}/pdf/regenerate', [InvoicePdfController::class, 'regenerate']);
     Route::get('invoices/{invoice}/pdf', [InvoicePdfController::class, 'view']);
     Route::get('invoices/{invoice}/pdf/url', [InvoicePdfController::class, 'getSignedUrl']); // New endpoint for signed URL
     Route::get('invoices/{invoice}/pdf/info', [InvoicePdfController::class, 'latest']);

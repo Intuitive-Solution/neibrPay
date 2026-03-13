@@ -209,6 +209,16 @@ export const invoicesApi = {
   },
 
   /**
+   * Regenerate PDF from current invoice data (server builds HTML and generates PDF).
+   */
+  async regenerateInvoicePdf(invoiceId: number): Promise<any> {
+    const response = await apiClient.post(
+      `/invoices/${invoiceId}/pdf/regenerate`
+    );
+    return response.data.data;
+  },
+
+  /**
    * Get the latest PDF info for an invoice
    */
   async getLatestInvoicePdf(invoiceId: number): Promise<any> {

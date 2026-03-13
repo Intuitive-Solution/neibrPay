@@ -6,19 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Stripe\Account;
 use Stripe\Exception\ApiErrorException;
-use Stripe\Stripe;
 use Stripe\StripeClient;
 
 class StripeConnectController extends Controller
 {
     private StripeClient $stripe;
+    private const STRIPE_API_VERSION = '2025-10-29.clover';
 
     public function __construct()
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
+        $this->stripe = new StripeClient([
+            'api_key' => config('services.stripe.secret'),
+            'stripe_version' => self::STRIPE_API_VERSION,
+        ]);
     }
 
     /**
@@ -85,17 +86,22 @@ class StripeConnectController extends Controller
             }
             Log::info('Business profile', ['business_profile' => $businessProfile]);
 
-            // Create Express account with capabilities for card payments, ACH, and Link
+            // Create connected account using controller properties (replaces deprecated 'type' param).
+            // Equivalent to Express: platform pays fees/losses, Stripe handles requirements,
+            // connected account gets the Express Dashboard.
             $account = $this->stripe->accounts->create([
-                'type' => 'express',
+                'controller' => [
+                    'stripe_dashboard' => ['type' => 'express'],
+                    'fees' => ['payer' => 'application'],
+                    'losses' => ['payments' => 'application'],
+                ],
                 'country' => $tenant->country ?? 'US',
                 'email' => $tenant->email ?? $user->email,
-
                 'capabilities' => [
-                    'card_payments' => ['requested' => true],      // Accept card payments
-                    'transfers' => ['requested' => true],          // Receive payouts
-                    'us_bank_account_ach_payments' => ['requested' => true], // Accept ACH payments
-                    'link_payments' => ['requested' => true],      // Enable Stripe Link
+                    'card_payments' => ['requested' => true],
+                    'transfers' => ['requested' => true],
+                    'us_bank_account_ach_payments' => ['requested' => true],
+                    'link_payments' => ['requested' => true],
                 ],
                 'business_profile' => $businessProfile,
             ]);
@@ -126,8 +132,9 @@ class StripeConnectController extends Controller
         } catch (ApiErrorException $e) {
             Log::error('Stripe Connect API error', [
                 'error' => $e->getMessage(),
+                'stripe_code' => $e->getStripeCode(),
             ]);
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => 'Failed to create Stripe Connect account. Please try again.'], 400);
         } catch (\Exception $e) {
             Log::error('Stripe Connect error', [
                 'error' => $e->getMessage(),
@@ -171,8 +178,9 @@ class StripeConnectController extends Controller
         } catch (ApiErrorException $e) {
             Log::error('Stripe dashboard link error', [
                 'error' => $e->getMessage(),
+                'stripe_code' => $e->getStripeCode(),
             ]);
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => 'Failed to get dashboard link. Please try again.'], 400);
         } catch (\Exception $e) {
             Log::error('Stripe dashboard error', [
                 'error' => $e->getMessage(),
@@ -247,8 +255,9 @@ class StripeConnectController extends Controller
         } catch (ApiErrorException $e) {
             Log::error('Stripe verification error', [
                 'error' => $e->getMessage(),
+                'stripe_code' => $e->getStripeCode(),
             ]);
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => 'Failed to verify Stripe account. Please try again.'], 400);
         } catch (\Exception $e) {
             Log::error('Stripe verify error', [
                 'error' => $e->getMessage(),
@@ -321,8 +330,9 @@ class StripeConnectController extends Controller
         } catch (ApiErrorException $e) {
             Log::error('Stripe disconnect API error', [
                 'error' => $e->getMessage(),
+                'stripe_code' => $e->getStripeCode(),
             ]);
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => 'Failed to disconnect Stripe account. Please try again.'], 400);
         } catch (\Exception $e) {
             Log::error('Stripe disconnect error', [
                 'error' => $e->getMessage(),

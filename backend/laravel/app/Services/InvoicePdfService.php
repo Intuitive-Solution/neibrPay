@@ -327,6 +327,14 @@ class InvoicePdfService
                 .paid-stamp { position: absolute; top: 10px; right: 15mm; z-index: 10; }
                 .paid-stamp-content { background: #10b981; color: white; padding: 3px 6px; border-radius: 2px; font-weight: bold; font-size: 11px; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transform: rotate(-15deg); }' : '';
 
+        // One-line mailing address for "Mail or drop off check to" (streetAddress/cityStateZip already escaped)
+        $mailingAddress = trim($streetAddress . ($cityStateZip ? ', ' . $cityStateZip : ''));
+        if ($mailingAddress === '') {
+            $mailingAddress = htmlspecialchars($tenantAddress ?? '');
+        }
+
+        $contactPhone = htmlspecialchars($tenantPhone ?: 'N/A');
+
         return "
         <!DOCTYPE html>
         <html>
@@ -456,8 +464,11 @@ class InvoicePdfService
                 <div class=\"payment-section\">
                     <h3 class=\"section-title\">Payment Information</h3>
                     <div class=\"payment-details\">
-                        <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p>
-                        <p><strong>Make checks payable to:</strong> {$tenantName}</p>
+                        <p><strong>Payment Methods:</strong> Check, Bank Transfer, Online Payment</p><br/>
+                        <p><strong>Make checks payable to:</strong> {$tenantName}</p><br/>
+                        <p><strong>Mail or drop off check to:</strong></p>
+                        <p>{$mailingAddress}</p><br/>
+                        <p><strong>For questions about this invoice, contact:</strong> {$contactPhone}</p>
                     </div>
                 </div>
             </div>

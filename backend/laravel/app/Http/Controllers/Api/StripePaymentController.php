@@ -15,7 +15,6 @@ use Stripe\Charge;
 use Stripe\Checkout\Session;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
-use Stripe\Stripe;
 use Stripe\StripeClient;
 use Stripe\Webhook;
 
@@ -25,10 +24,14 @@ class StripePaymentController extends Controller
     protected AnalyticsService $analytics;
     protected InvoicePdfService $pdfService;
 
+    private const STRIPE_API_VERSION = '2025-10-29.clover';
+
     public function __construct(AnalyticsService $analytics, InvoicePdfService $pdfService)
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
+        $this->stripe = new StripeClient([
+            'api_key' => config('services.stripe.secret'),
+            'stripe_version' => self::STRIPE_API_VERSION,
+        ]);
         $this->analytics = $analytics;
         $this->pdfService = $pdfService;
     }
@@ -168,8 +171,7 @@ class StripePaymentController extends Controller
         }
 
         try {
-            // Get frontend URL from env (set in .env file)
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+            $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
 
             // Check if tenant has Stripe Connect set up
             $tenant = $invoice->tenant;
@@ -205,9 +207,10 @@ class StripePaymentController extends Controller
             $totalFee = round($platformFee + $stripeFee, 2);
             $totalChargeAmount = round($amount + $totalFee, 2);
 
-            // Convert to cents for Stripe
-            $amountInCents = (int)($amount * 100);
-            $totalChargeInCents = (int)($totalChargeAmount * 100);
+            // Convert to cents for Stripe — use round() to avoid
+            // IEEE 754 truncation (e.g. (int)(19.99*100) = 1998)
+            $amountInCents = (int)round($amount * 100);
+            $totalChargeInCents = (int)round($totalChargeAmount * 100);
             $platformFeeInCents = (int)round($platformFee * 100);
 
             // Build checkout session params with fee structure
@@ -393,6 +396,10 @@ class StripePaymentController extends Controller
                     $this->handlePaymentIntentFailed($event->data->object);
                     break;
 
+                case 'checkout.session.expired':
+                    $this->handleCheckoutSessionExpired($event->data->object);
+                    break;
+
                 default:
                     Log::info('Unhandled Stripe webhook event', [
                         'type' => $event->type,
@@ -403,13 +410,15 @@ class StripePaymentController extends Controller
         } catch (\Exception $e) {
             Log::error('Error processing Stripe webhook', [
                 'event_type' => $event->type,
+                'event_id' => $event->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return response()->json([
-                'error' => 'Webhook processing failed',
-            ], 500);
+            // Always return 200 after successful signature verification.
+            // Returning 5xx causes Stripe to retry for up to 3 days,
+            // creating a retry storm if the error is a code bug.
+            return response()->json(['received' => true, 'processing_error' => true]);
         }
     }
 
@@ -875,6 +884,40 @@ class StripePaymentController extends Controller
             'payment_intent_id' => $paymentIntent->id,
             'failure_reason' => $failureReason,
         ]);
+    }
+
+    /**
+     * Handle checkout.session.expired event.
+     * Cleans up the orphaned pending payment record that was created
+     * when the Checkout Session was initiated but never completed.
+     */
+    private function handleCheckoutSessionExpired(Session $session): void
+    {
+        $payment = InvoicePayment::where('stripe_checkout_session_id', $session->id)->first();
+
+        if (!$payment) {
+            Log::info('No pending payment found for expired checkout session', [
+                'session_id' => $session->id,
+            ]);
+            return;
+        }
+
+        // Only delete if still in pending state (no payment intent = never completed)
+        if ($payment->status === 'pending' && !$payment->stripe_payment_intent_id) {
+            $invoiceId = $payment->invoice_unit_id;
+            $payment->delete();
+
+            Log::info('Deleted orphaned pending payment for expired checkout session', [
+                'session_id' => $session->id,
+                'invoice_id' => $invoiceId,
+            ]);
+        } else {
+            Log::info('Skipping deletion of payment for expired session (already processed)', [
+                'session_id' => $session->id,
+                'payment_id' => $payment->id,
+                'status' => $payment->status,
+            ]);
+        }
     }
 
     /**

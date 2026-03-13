@@ -446,7 +446,10 @@
             >
               <!-- Title Column -->
               <td
-                @click.stop="!unit.deleted_at && editUnit(unit.id)"
+                @click.stop="
+                  !unit.deleted_at &&
+                  (isResident ? viewUnit(unit.id) : editUnit(unit.id))
+                "
                 :class="[
                   'px-6 py-4 whitespace-nowrap',
                   !unit.deleted_at
@@ -575,9 +578,12 @@
                 </span>
               </td>
 
-              <!-- Actions Column -->
+              <!-- Actions Column (hidden for residents when unit is active - no actions) -->
               <td class="px-6 py-4 whitespace-nowrap text-right">
-                <div class="flex items-center justify-end relative">
+                <div
+                  v-if="!isResident || unit.deleted_at"
+                  class="flex items-center justify-end relative"
+                >
                   <!-- Enhanced Kebab Menu - More Visible -->
                   <DropdownMenu
                     trigger-class="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
@@ -614,6 +620,7 @@
                       <!-- Actions for active units -->
                       <template v-else>
                         <button
+                          v-if="!isResident"
                           @click="
                             () => {
                               editUnit(unit.id);
@@ -637,8 +644,12 @@
                           </svg>
                           Edit
                         </button>
-                        <div class="border-t border-gray-200 my-1"></div>
+                        <div
+                          v-if="!isResident"
+                          class="border-t border-gray-200 my-1"
+                        ></div>
                         <button
+                          v-if="!isResident"
                           @click="
                             () => {
                               deleteUnit(unit);
@@ -723,10 +734,12 @@ import { useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { unitsApi, queryKeys } from '@neibrpay/api-client';
 import type { Unit } from '@neibrpay/models';
+import { useAuthStore } from '../stores/auth';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DropdownMenu from '../components/DropdownMenu.vue';
 
 const router = useRouter();
+const isResident = computed(() => useAuthStore().isResident);
 const queryClient = useQueryClient();
 
 // Local state
@@ -914,6 +927,10 @@ const getStatusText = (unit: Unit) => {
 const getStatusBadgeClass = (unit: Unit) => {
   if (unit.deleted_at) return 'badge-overdue';
   return 'badge-paid';
+};
+
+const viewUnit = (unitId: number) => {
+  router.push(`/units/view/${unitId}`);
 };
 
 const editUnit = (unitId: number) => {
