@@ -164,9 +164,10 @@ const handleCheckout = async () => {
         ? paymentAmount.value
         : undefined; // undefined means use balance_due
 
-    // Create Stripe Checkout session
+    // Create Stripe Checkout session (default to card, pass amount as 3rd arg)
     const response = await paymentsApi.createStripeCheckout(
       props.invoice.id,
+      'card',
       amount
     );
 
