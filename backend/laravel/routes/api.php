@@ -135,6 +135,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Invoice PDF management routes
     Route::post('invoices/{invoice}/pdf/generate', [InvoicePdfController::class, 'generate']);
+    Route::post('invoices/{invoice}/pdf/regenerate', [InvoicePdfController::class, 'regenerate']);
     Route::get('invoices/{invoice}/pdf', [InvoicePdfController::class, 'view']);
     Route::get('invoices/{invoice}/pdf/url', [InvoicePdfController::class, 'getSignedUrl']); // New endpoint for signed URL
     Route::get('invoices/{invoice}/pdf/info', [InvoicePdfController::class, 'latest']);

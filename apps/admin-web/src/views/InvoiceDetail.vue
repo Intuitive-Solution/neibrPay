@@ -1847,6 +1847,34 @@
           <div class="bg-gray-100 px-6 py-3 rounded-t-lg">
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-medium text-gray-900">Invoice PDF</h3>
+              <button
+                type="button"
+                :disabled="isRegeneratingPdf || !invoiceId"
+                class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                @click="onRegeneratePdf"
+              >
+                <svg
+                  v-if="isRegeneratingPdf"
+                  class="animate-spin -ml-0.5 mr-2 h-4 w-4 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  />
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                {{ isRegeneratingPdf ? 'Regenerating...' : 'Regenerate PDF' }}
+              </button>
             </div>
           </div>
           <div class="p-6">
@@ -1993,7 +2021,10 @@ import {
   useRestoreInvoice,
   useCloneInvoice,
 } from '../composables/useInvoices';
-import { useLatestInvoicePdf } from '../composables/useInvoicePdf';
+import {
+  useLatestInvoicePdf,
+  useRegenerateInvoicePdf,
+} from '../composables/useInvoicePdf';
 import {
   useInvoiceAttachments,
   useDownloadInvoiceAttachment,
@@ -2034,6 +2065,9 @@ const {
   isLoading: isLoadingPdf,
   refetch: refetchLatestPdf,
 } = useLatestInvoicePdf(invoiceId.value);
+
+const regeneratePdfMutation = useRegenerateInvoicePdf();
+const isRegeneratingPdf = computed(() => regeneratePdfMutation.isPending.value);
 
 // Fetch invoice attachments
 const {
@@ -2252,6 +2286,24 @@ const pdfViewerUrl = computed(() => {
   // Do not append query params, as that invalidates the signature.
   return pdfSignedUrl.value;
 });
+
+const onRegeneratePdf = async () => {
+  const id = invoiceId.value;
+  if (!id || isNaN(id)) return;
+  try {
+    await regeneratePdfMutation.mutateAsync(id);
+    await refetchLatestPdf();
+    await fetchSignedPdfUrl();
+    pdfRefreshKey.value = Date.now();
+    showSuccess('PDF regenerated successfully.');
+  } catch (error: any) {
+    showError(
+      error?.message ||
+        error?.response?.data?.message ||
+        'Failed to regenerate PDF'
+    );
+  }
+};
 
 // Computed properties for financial summary
 const amountPaid = computed(() => {
