@@ -568,6 +568,7 @@
                 </div>
               </th>
               <th
+                v-if="!isResident"
                 @click="sortBy('status')"
                 class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
@@ -674,7 +675,7 @@
                       >
                         {{ formatDate(invoice.created_at) }}
                       </div>
-                      <!-- Mobile-only additional info -->
+                      <!-- Mobile-only additional info (hide status for residents) -->
                       <div class="sm:hidden mt-1">
                         <div
                           :class="[
@@ -688,7 +689,7 @@
                             formatCurrency(invoice.total)
                           }}
                         </div>
-                        <div class="mt-1">
+                        <div v-if="!isResident" class="mt-1">
                           <span
                             v-if="invoice.deleted_at"
                             class="badge badge-overdue text-xs"
@@ -769,8 +770,11 @@
                 {{ formatDate(invoice.start_date) }}
               </td>
 
-              <!-- Status Column -->
-              <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+              <!-- Status Column (hidden for residents) -->
+              <td
+                v-if="!isResident"
+                class="px-6 py-4 whitespace-nowrap hidden sm:table-cell"
+              >
                 <span v-if="invoice.deleted_at" class="badge badge-overdue">
                   Deleted
                 </span>
@@ -792,8 +796,26 @@
               <!-- Actions Column -->
               <td class="px-6 py-4 whitespace-nowrap text-right">
                 <div class="flex items-center justify-end relative">
-                  <!-- Enhanced Kebab Menu - More Visible -->
+                  <!-- Resident: Pay Now (when sent) or View only -->
+                  <template v-if="isResident">
+                    <button
+                      v-if="invoice.status === 'sent' && !invoice.deleted_at"
+                      @click.stop="recordPayment(invoice.id)"
+                      class="btn-primary text-sm py-2 px-4"
+                    >
+                      Pay Now
+                    </button>
+                    <button
+                      v-else
+                      @click.stop="viewInvoice(invoice.id)"
+                      class="btn-secondary text-sm py-2 px-4"
+                    >
+                      View
+                    </button>
+                  </template>
+                  <!-- Admin/Bookkeeper: Enhanced Kebab Menu -->
                   <DropdownMenu
+                    v-else
                     trigger-class="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <template #default="{ close }">
