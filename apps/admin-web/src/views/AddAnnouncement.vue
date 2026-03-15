@@ -338,17 +338,20 @@
           </div>
         </div>
 
-        <!-- Removal Date -->
+        <!-- Removal Date (optional) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
           <label class="block text-sm font-medium text-gray-700 lg:pt-3">
             Removal Date
           </label>
           <div class="lg:col-span-2">
-            <div v-if="!form.removal_date" class="flex items-center">
+            <div
+              v-if="!showDatePicker && !form.removal_date"
+              class="flex items-center"
+            >
               <button
                 type="button"
                 @click="showDatePicker = true"
-                class="text-primary hover:text-primary-600 text-sm font-medium"
+                class="text-primary hover:text-primary-600 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
               >
                 + Set removal date
               </button>
@@ -357,19 +360,19 @@
               <input
                 v-model="form.removal_date"
                 type="date"
-                :min="minDate"
                 class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm"
               />
               <button
                 type="button"
-                @click="form.removal_date = null"
-                class="text-red-600 hover:text-red-700 text-sm"
+                @click="clearRemovalDate"
+                class="text-red-600 hover:text-red-700 text-sm font-medium focus:outline-none"
               >
-                Remove
+                {{ form.removal_date ? 'Remove' : 'Cancel' }}
               </button>
             </div>
             <p class="mt-1 text-xs text-gray-500">
-              Announcement will be automatically hidden after this date
+              Optional. Announcement will be automatically hidden after this
+              date.
             </p>
           </div>
         </div>
@@ -514,11 +517,16 @@ watch(
     if (newAnnouncement && isEditMode.value) {
       form.value.subject = newAnnouncement.subject;
       form.value.message = newAnnouncement.message;
-      form.value.removal_date = newAnnouncement.removal_date || null;
+      form.value.removal_date = toDateOnly(newAnnouncement.removal_date);
       form.value.recipients = (newAnnouncement.recipients || []).map(r => ({
         recipient_type: r.recipient_type,
         recipient_id: r.recipient_id,
       }));
+
+      // Show date input when editing an announcement that has a removal date
+      if (form.value.removal_date) {
+        showDatePicker.value = true;
+      }
 
       // Set editor content
       nextTick(() => {
@@ -531,11 +539,15 @@ watch(
   { immediate: true }
 );
 
-const minDate = computed(() => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toISOString().split('T')[0];
-});
+/** Normalize API date (e.g. ISO 8601) to YYYY-MM-DD for input[type="date"] */
+function toDateOnly(value: string | null | undefined): string | null {
+  if (value == null || value === '') return null;
+  const trimmed = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().slice(0, 10);
+}
 
 function getRecipientLabel(recipient: Recipient): string {
   if (recipient.recipient_type === 'all_members') return 'All Members';
@@ -699,6 +711,11 @@ const handleSubmit = async () => {
 
 const handleCancel = () => {
   router.push('/announcements');
+};
+
+const clearRemovalDate = () => {
+  form.value.removal_date = null;
+  showDatePicker.value = false;
 };
 
 onMounted(() => {
