@@ -106,7 +106,7 @@
               <div class="ml-3">
                 <div class="text-sm font-medium text-gray-900">All Members</div>
                 <div class="text-sm text-gray-500">
-                  All residents in the community
+                  All residents and administrators in the community
                 </div>
               </div>
             </div>

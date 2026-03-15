@@ -74,7 +74,8 @@ class AnnouncementController extends Controller
         $userAnnouncements = $announcements->filter(function ($announcement) use ($user) {
             foreach ($announcement->recipients as $recipient) {
                 // Check if user matches any recipient criteria
-                if ($recipient->recipient_type === 'all_members' && $user->isResident()) {
+                if ($recipient->recipient_type === 'all_members') {
+                    // All Members = residents and admins (any community user)
                     return true;
                 }
                 
@@ -315,13 +316,12 @@ class AnnouncementController extends Controller
         
         foreach ($announcement->recipients as $recipient) {
             if ($recipient->recipient_type === 'all_members') {
-                // Get all resident emails
-                $residentEmails = User::forTenant($tenantId)
-                    ->byRole('resident')
+                // Get all community member emails (residents and admins)
+                $memberEmails = User::forTenant($tenantId)
                     ->where('is_active', true)
                     ->pluck('email')
                     ->toArray();
-                $emails = array_merge($emails, $residentEmails);
+                $emails = array_merge($emails, $memberEmails);
             } elseif ($recipient->recipient_type === 'all_admins') {
                 // Get all admin emails
                 $adminEmails = User::forTenant($tenantId)
