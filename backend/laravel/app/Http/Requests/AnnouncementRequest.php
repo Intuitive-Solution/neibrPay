@@ -33,7 +33,6 @@ class AnnouncementRequest extends FormRequest
             'removal_date' => [
                 'nullable',
                 'date',
-                'after:today',
             ],
             'recipients' => [
                 'required',
@@ -65,7 +64,6 @@ class AnnouncementRequest extends FormRequest
             'message.required' => 'The message is required.',
             
             'removal_date.date' => 'Please enter a valid date.',
-            'removal_date.after' => 'The removal date must be in the future.',
             
             'recipients.required' => 'At least one recipient must be selected.',
             'recipients.array' => 'Recipients must be an array.',
