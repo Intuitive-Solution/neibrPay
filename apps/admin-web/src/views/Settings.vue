@@ -514,8 +514,12 @@
                       <img
                         :src="zelleQrUrl"
                         alt="Zelle QR code"
-                        class="w-32 h-32 object-contain border border-gray-200 rounded"
+                        class="w-[360px] h-[360px] min-w-[360px] min-h-[360px] object-contain border border-gray-200 rounded-lg bg-white"
                       />
+                      <p class="text-sm text-gray-600">
+                        Scan this QR code with your phone to verify it works
+                        before asking residents to use it.
+                      </p>
                       <div class="flex gap-2">
                         <input
                           ref="zelleQrInputRef"

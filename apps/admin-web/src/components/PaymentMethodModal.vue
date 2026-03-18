@@ -159,62 +159,41 @@
           <!-- Zelle payment info (when Zelle selected or singleMethod zelle) -->
           <div
             v-if="showZelleContent && invoice"
-            class="mt-6 pt-6 border-t border-gray-200"
+            class="mt-6 pt-6 border-t border-gray-200 flex flex-col"
           >
-            <h4 class="text-sm font-medium text-gray-900 mb-3">
-              Pay with Zelle
-            </h4>
-            <!-- Zelle breakdown: amount = invoice only, no fees -->
-            <div class="bg-gray-50 rounded-lg p-4 space-y-3 mb-4">
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-600">HOA Dues Amount</span>
-                <span class="font-medium text-gray-900">
-                  {{ formatCurrency(zellePaymentAmount) }}
-                </span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Processing Fee</span>
-                <span class="font-medium text-gray-900">$0.00</span>
-              </div>
-              <div class="border-t border-gray-200 pt-3 flex justify-between">
-                <span class="font-semibold text-gray-900">Total to Pay</span>
-                <span class="font-bold text-lg text-indigo-600">
-                  {{ formatCurrency(zellePaymentAmount) }}
-                </span>
-              </div>
+            <!-- QR code: large for easy phone scanning -->
+            <div
+              v-if="zelleQrUrl"
+              class="flex flex-col items-center justify-center py-2"
+            >
+              <img
+                :src="zelleQrUrl"
+                alt="Zelle QR code"
+                class="w-[360px] h-[360px] min-w-[360px] min-h-[360px] object-contain border border-gray-200 rounded-lg bg-white"
+              />
+              <p
+                v-if="zelleInstructions"
+                class="text-xs text-gray-600 mt-4 text-center whitespace-pre-wrap max-w-sm"
+              >
+                {{ zelleInstructions }}
+              </p>
             </div>
-            <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+            <!-- Minimal details: amount and recipient -->
+            <div class="mt-4 space-y-2 border-t border-gray-100 pt-4">
               <p class="text-sm text-gray-900">
                 Send
                 <span class="font-semibold">{{
                   formatCurrency(zellePaymentAmount)
                 }}</span>
-                to {{ hoaName }} using one of the following:
+                to {{ hoaName }}
               </p>
-              <div class="text-sm text-gray-700 space-y-1">
-                <p v-if="zelleEmail">
-                  <span class="font-medium">Email:</span> {{ zelleEmail }}
-                </p>
-                <p v-if="zellePhone">
-                  <span class="font-medium">Phone:</span> {{ zellePhone }}
-                </p>
-              </div>
-              <div v-if="zelleQrUrl" class="pt-2">
-                <img
-                  :src="zelleQrUrl"
-                  alt="Zelle QR code"
-                  class="w-28 h-28 object-contain border border-gray-200 rounded"
-                />
-                <p
-                  v-if="zelleInstructions"
-                  class="text-xs text-gray-600 mt-2 whitespace-pre-wrap"
-                >
-                  {{ zelleInstructions }}
-                </p>
+              <div class="text-xs text-gray-600 space-y-0.5">
+                <p v-if="zelleEmail">Email: {{ zelleEmail }}</p>
+                <p v-if="zellePhone">Phone: {{ zellePhone }}</p>
               </div>
               <p
-                v-else-if="zelleInstructions"
-                class="text-xs text-gray-600 whitespace-pre-wrap"
+                v-if="!zelleQrUrl && zelleInstructions"
+                class="text-xs text-gray-600 mt-2 whitespace-pre-wrap"
               >
                 {{ zelleInstructions }}
               </p>
