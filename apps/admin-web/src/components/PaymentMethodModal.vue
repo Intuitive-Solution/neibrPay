@@ -51,19 +51,18 @@
                 class="text-lg leading-6 font-medium text-gray-900"
                 id="modal-title"
               >
-                Select Payment Method
+                {{ modalTitle }}
               </h3>
-              <div class="mt-2">
+              <div v-if="modalSubtitle" class="mt-2">
                 <p class="text-sm text-gray-500">
-                  Choose how you want to pay. You'll see the processing fees for
-                  each method.
+                  {{ modalSubtitle }}
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Payment Method Selection -->
-          <div class="mt-6 space-y-4">
+          <!-- Payment Method Selection (hidden in single-method mode) -->
+          <div v-if="showMethodSelector" class="mt-6 space-y-4">
             <!-- Card Option -->
             <label
               class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors"
@@ -127,9 +126,9 @@
               </div>
             </label>
 
-            <!-- Zelle Option -->
+            <!-- Zelle Option (only when all methods shown; hidden in Stripe-only modal) -->
             <label
-              v-if="showZelleOption"
+              v-if="showZelleOption && !singleMethod"
               class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors"
               :class="
                 selectedMethod === 'zelle'
@@ -157,9 +156,9 @@
             </label>
           </div>
 
-          <!-- Zelle payment info (when Zelle selected) -->
+          <!-- Zelle payment info (when Zelle selected or singleMethod zelle) -->
           <div
-            v-if="selectedMethod === 'zelle' && invoice"
+            v-if="showZelleContent && invoice"
             class="mt-6 pt-6 border-t border-gray-200"
           >
             <h4 class="text-sm font-medium text-gray-900 mb-3">
@@ -222,9 +221,9 @@
             </div>
           </div>
 
-          <!-- Fee Breakdown (Card/ACH only) -->
+          <!-- Fee Breakdown (Card/ACH only; hidden when singleMethod zelle) -->
           <div
-            v-if="fees && selectedMethod !== 'zelle'"
+            v-if="showStripeContent && fees && selectedMethod !== 'zelle'"
             class="mt-6 pt-6 border-t border-gray-200"
           >
             <h4 class="text-sm font-medium text-gray-900 mb-4">
@@ -252,8 +251,11 @@
             </div>
           </div>
 
-          <!-- Check Payment Information Note -->
-          <div class="mt-6 pt-6 border-t border-gray-200">
+          <!-- Check Payment Information Note (hidden in single-method mode) -->
+          <div
+            v-if="showCheckSection"
+            class="mt-6 pt-6 border-t border-gray-200"
+          >
             <h4 class="text-sm font-medium text-gray-900 mb-3">
               Alternative: Pay by Check
             </h4>
@@ -344,6 +346,8 @@ interface Props {
   invoice: InvoiceUnit | null;
   hoaName: string;
   hoaAddress: string;
+  /** When set, modal shows only this method's content (no others, no check section). */
+  singleMethod?: 'card' | 'ach' | 'zelle';
 }
 
 interface Emits {
@@ -355,11 +359,48 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   hoaName: '',
   hoaAddress: '',
+  singleMethod: undefined,
 });
 const emit = defineEmits<Emits>();
 
 const { data: settingsData } = useSettings();
 const selectedMethod = ref<'card' | 'ach' | 'zelle'>('card');
+
+/** When singleMethod is set, only that method's content is shown. */
+const showMethodSelector = computed(
+  () =>
+    !props.singleMethod ||
+    props.singleMethod === 'card' ||
+    props.singleMethod === 'ach'
+);
+const showCheckSection = computed(() => !props.singleMethod);
+const showStripeContent = computed(
+  () =>
+    (props.singleMethod === 'card' ||
+      props.singleMethod === 'ach' ||
+      selectedMethod.value === 'card' ||
+      selectedMethod.value === 'ach') &&
+    props.singleMethod !== 'zelle'
+);
+const showZelleContent = computed(
+  () =>
+    (props.singleMethod === 'zelle' || selectedMethod.value === 'zelle') &&
+    props.singleMethod !== 'card' &&
+    props.singleMethod !== 'ach'
+);
+
+const modalTitle = computed(() => {
+  if (props.singleMethod === 'zelle') return 'Pay with Zelle';
+  if (props.singleMethod === 'card' || props.singleMethod === 'ach')
+    return 'Pay with Stripe (Card or ACH)';
+  return 'Select Payment Method';
+});
+const modalSubtitle = computed(() => {
+  if (props.singleMethod === 'zelle') return null;
+  if (props.singleMethod === 'card' || props.singleMethod === 'ach')
+    return 'Choose card or bank account and complete payment.';
+  return "Choose how you want to pay. You'll see the processing fees for each method.";
+});
 const fees = ref<FeeCalculation | null>(null);
 const isLoading = ref(false);
 const errorMessage = ref('');
@@ -548,7 +589,12 @@ watch(
   () => props.isOpen,
   newVal => {
     if (newVal) {
-      fetchFees();
+      if (props.singleMethod) {
+        selectedMethod.value = props.singleMethod;
+      }
+      if (props.singleMethod !== 'zelle') {
+        fetchFees();
+      }
     }
   }
 );

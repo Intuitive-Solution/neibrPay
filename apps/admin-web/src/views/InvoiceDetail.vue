@@ -800,17 +800,16 @@
         "
         class="mb-6 flex flex-wrap gap-3"
       >
-        <!-- Pay Now button - show for residents when invoice is payment_rejected, hide for in_review or processing -->
+        <!-- Pay Now using Stripe (ACH/Card) -->
         <button
           v-if="
             !isProcessingPayment &&
-            ((isStripeConfigured &&
-              invoice?.balance_due > 0 &&
-              invoice.status !== 'in_review' &&
-              invoice.status !== 'payment_rejected') ||
-              (isResident && invoice.status === 'payment_rejected'))
+            isStripeConfigured &&
+            invoice?.balance_due > 0 &&
+            invoice.status !== 'in_review' &&
+            invoice.status !== 'payment_rejected'
           "
-          @click="showStripePaymentModal = true"
+          @click="openPaymentModal('card')"
           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
         >
           <svg
@@ -826,7 +825,60 @@
               d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
             />
           </svg>
-          Pay Now
+          Pay with Stripe (ACH/Card)
+        </button>
+        <!-- Pay Now using Zelle -->
+        <button
+          v-if="
+            !isProcessingPayment &&
+            isZelleEnabled &&
+            invoice?.balance_due > 0 &&
+            invoice.status !== 'in_review' &&
+            invoice.status !== 'payment_rejected'
+          "
+          @click="openPaymentModal('zelle')"
+          class="inline-flex items-center px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+            />
+          </svg>
+          Pay with Zelle
+        </button>
+        <!-- Pay Now using Check -->
+        <button
+          v-if="
+            !isProcessingPayment &&
+            invoice?.balance_due > 0 &&
+            invoice.status !== 'in_review' &&
+            invoice.status !== 'payment_rejected'
+          "
+          @click="showCheckPaymentModal = true"
+          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+            />
+          </svg>
+          Pay with Check
         </button>
         <!-- Resubmit button for residents when invoice is payment_rejected -->
         <button
@@ -887,15 +939,9 @@
           </svg>
           View Payment
         </button>
-        <!-- Mark as Paid button - hidden for residents when invoice is in_review or payment_rejected -->
+        <!-- Mark as Paid button - admins only (never shown to residents) -->
         <button
-          v-else-if="
-            !(
-              isResident &&
-              (invoice.status === 'in_review' ||
-                invoice.status === 'payment_rejected')
-            )
-          "
+          v-else-if="!isResident"
           @click="showPaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
         >
@@ -1999,15 +2045,26 @@
       @close="showPaymentViewModal = false"
     />
 
-    <!-- Payment Method Modal -->
+    <!-- Payment Method Modal (Stripe or Zelle, single-method when opened from three buttons) -->
     <PaymentMethodModal
       :is-open="showStripePaymentModal"
       :invoice="invoice || null"
       :hoa-name="hoaName"
       :hoa-address="hoaAddress"
-      @close="showStripePaymentModal = false"
+      :single-method="paymentModalSingleMethod"
+      @close="handlePaymentMethodModalClose"
       @success="handleStripePaymentSuccess"
       @error="handleStripePaymentError"
+    />
+
+    <!-- Pay by Check Modal (resident only) -->
+    <PayByCheckModal
+      :is-open="showCheckPaymentModal"
+      :invoice="invoice || null"
+      :hoa-name="hoaName"
+      :hoa-address="hoaAddress"
+      @close="showCheckPaymentModal = false"
+      @success="handleCheckPaymentSuccess"
     />
   </div>
 </template>
@@ -2040,6 +2097,7 @@ import PaymentReviewModal from '../components/PaymentReviewModal.vue';
 import PaymentViewModal from '../components/PaymentViewModal.vue';
 import StripePaymentModal from '../components/StripePaymentModal.vue';
 import PaymentMethodModal from '../components/PaymentMethodModal.vue';
+import PayByCheckModal from '../components/PayByCheckModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -2120,6 +2178,10 @@ const isRestoring = computed(() => restoreInvoiceMutation.isPending.value);
 const showDeleteModal = ref(false);
 const showPaymentModal = ref(false);
 const showStripePaymentModal = ref(false);
+const showCheckPaymentModal = ref(false);
+const paymentModalSingleMethod = ref<'card' | 'ach' | 'zelle' | undefined>(
+  undefined
+);
 const showPaymentUpdateModal = ref(false);
 const showPaymentReviewModal = ref(false);
 const showPaymentViewModal = ref(false);
@@ -2135,6 +2197,23 @@ const isStripeConfigured = computed(() => {
     settingsData.value?.tenant?.settings?.charges_enabled
   );
 });
+
+// Check if Zelle is enabled for the tenant
+const isZelleEnabled = computed(() => {
+  const settings = settingsData.value?.tenant?.settings;
+  if (!settings?.zelle_enabled) return false;
+  return !!(settings.zelle_email || settings.zelle_phone);
+});
+
+function openPaymentModal(method: 'card' | 'ach' | 'zelle') {
+  paymentModalSingleMethod.value = method;
+  showStripePaymentModal.value = true;
+}
+
+function handlePaymentMethodModalClose() {
+  showStripePaymentModal.value = false;
+  paymentModalSingleMethod.value = undefined;
+}
 
 // Success/Error messages
 const successMessage = ref('');
@@ -2659,7 +2738,7 @@ const handlePaymentUpdateSuccess = () => {
 
 const handleStripePaymentSuccess = async (sessionId: string) => {
   if (sessionId === 'zelle') {
-    showStripePaymentModal.value = false;
+    handlePaymentMethodModalClose();
     await refetchInvoice();
     showSuccess(
       'Payment submitted. It will be marked paid once we receive your Zelle transfer.'
@@ -2673,6 +2752,14 @@ const handleStripePaymentSuccess = async (sessionId: string) => {
 const handleStripePaymentError = (error: string) => {
   showError(error || 'Failed to create payment session');
   // Keep modal open on error so user can try again
+};
+
+const handleCheckPaymentSuccess = async () => {
+  showCheckPaymentModal.value = false;
+  await refetchInvoice();
+  showSuccess(
+    'Check payment recorded. Status is in review until we receive your check.'
+  );
 };
 
 const formatPaymentMethod = (method: string) => {
