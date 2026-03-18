@@ -51,6 +51,14 @@ Route::get('invoices/{invoice}/pdf/signed', [InvoicePdfController::class, 'viewS
     ->name('invoices.pdf.signed')
     ->middleware('signed');
 
+// Public signed routes for tenant assets (logo, Zelle QR) - same pattern as invoice PDF
+Route::get('tenant/{tenant}/hoa-logo/signed', [TenantController::class, 'serveHoaLogoSigned'])
+    ->name('tenant.hoa-logo.signed')
+    ->middleware('signed');
+Route::get('tenant/{tenant}/zelle-qr/signed', [TenantController::class, 'serveZelleQrSigned'])
+    ->name('tenant.zelle-qr.signed')
+    ->middleware('signed');
+
 // Authentication routes (public)
 Route::prefix('auth')->group(function () {
     // Email-based authentication

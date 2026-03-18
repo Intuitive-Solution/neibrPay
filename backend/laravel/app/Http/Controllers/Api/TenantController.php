@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Tenant;
 use App\Services\FileStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class TenantController extends Controller
 {
@@ -381,7 +384,12 @@ class TenantController extends Controller
                 ['ResponseCacheControl' => 'no-store, max-age=0']
             );
         } else {
-            $signedUrl = $this->fileStorage->getTemporaryUrl($logoPath, 6);
+            $signedUrl = URL::temporarySignedRoute(
+                'tenant.hoa-logo.signed',
+                now()->addMinutes(6),
+                ['tenant' => $tenant->id],
+                true
+            );
             if (str_starts_with($signedUrl, 'http://') && (config('app.env') === 'production' || str_contains($signedUrl, 'neibrpay.com'))) {
                 $signedUrl = str_replace('http://', 'https://', $signedUrl);
             }
@@ -391,6 +399,28 @@ class TenantController extends Controller
             'data' => [
                 'file_url' => $signedUrl,
             ],
+        ]);
+    }
+
+    /**
+     * Serve tenant HOA logo via signed URL (local storage; no auth header needed).
+     */
+    public function serveHoaLogoSigned(Tenant $tenant): Response
+    {
+        $settings = $tenant->settings ?? [];
+        $logoPath = $settings['logo_path'] ?? null;
+        if (!$logoPath || !$this->fileStorage->exists($logoPath)) {
+            abort(404, 'HOA logo not found');
+        }
+        $content = $this->fileStorage->get($logoPath);
+        if ($content === null) {
+            abort(404, 'HOA logo not found');
+        }
+        $mime = $this->mimeFromPath($logoPath);
+        return response($content, 200, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="hoa-logo"',
+            'Cache-Control' => 'no-store, max-age=0',
         ]);
     }
 
@@ -423,7 +453,12 @@ class TenantController extends Controller
                 ['ResponseCacheControl' => 'no-store, max-age=0']
             );
         } else {
-            $signedUrl = $this->fileStorage->getTemporaryUrl($zelleQrPath, 6);
+            $signedUrl = URL::temporarySignedRoute(
+                'tenant.zelle-qr.signed',
+                now()->addMinutes(6),
+                ['tenant' => $tenant->id],
+                true
+            );
             if (str_starts_with($signedUrl, 'http://') && (config('app.env') === 'production' || str_contains($signedUrl, 'neibrpay.com'))) {
                 $signedUrl = str_replace('http://', 'https://', $signedUrl);
             }
@@ -434,6 +469,40 @@ class TenantController extends Controller
                 'file_url' => $signedUrl,
             ],
         ]);
+    }
+
+    /**
+     * Serve tenant Zelle QR image via signed URL (local storage; no auth header needed).
+     */
+    public function serveZelleQrSigned(Tenant $tenant): Response
+    {
+        $settings = $tenant->settings ?? [];
+        $zelleQrPath = $settings['zelle_qr_path'] ?? null;
+        if (!$zelleQrPath || !$this->fileStorage->exists($zelleQrPath)) {
+            abort(404, 'Zelle QR code not found');
+        }
+        $content = $this->fileStorage->get($zelleQrPath);
+        if ($content === null) {
+            abort(404, 'Zelle QR code not found');
+        }
+        $mime = $this->mimeFromPath($zelleQrPath);
+        return response($content, 200, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="zelle-qr"',
+            'Cache-Control' => 'no-store, max-age=0',
+        ]);
+    }
+
+    private function mimeFromPath(string $path): string
+    {
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        return match ($ext) {
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => 'application/octet-stream',
+        };
     }
 }
 
