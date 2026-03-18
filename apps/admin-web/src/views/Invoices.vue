@@ -1455,6 +1455,7 @@ const getStatusText = (status: string) => {
     overdue: 'Overdue',
     cancelled: 'Cancelled',
     in_review: 'In Review',
+    payment_rejected: 'Payment Rejected',
   };
   return statusMap[status] || 'Unknown';
 };
@@ -1467,6 +1468,7 @@ const getStatusBadgeClass = (status: string) => {
     partial: 'badge-partial',
     overdue: 'badge-overdue',
     cancelled: 'badge-partial',
+    payment_rejected: 'badge-overdue',
   };
   return statusClasses[status] || 'badge-draft';
 };

@@ -806,8 +806,7 @@
             !isProcessingPayment &&
             isStripeConfigured &&
             invoice?.balance_due > 0 &&
-            invoice.status !== 'in_review' &&
-            invoice.status !== 'payment_rejected'
+            invoice.status !== 'in_review'
           "
           @click="openPaymentModal('card')"
           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
@@ -833,8 +832,7 @@
             !isProcessingPayment &&
             isZelleEnabled &&
             invoice?.balance_due > 0 &&
-            invoice.status !== 'in_review' &&
-            invoice.status !== 'payment_rejected'
+            invoice.status !== 'in_review'
           "
           @click="openPaymentModal('zelle')"
           class="inline-flex items-center px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200 font-medium"
@@ -859,8 +857,7 @@
           v-if="
             !isProcessingPayment &&
             invoice?.balance_due > 0 &&
-            invoice.status !== 'in_review' &&
-            invoice.status !== 'payment_rejected'
+            invoice.status !== 'in_review'
           "
           @click="showCheckPaymentModal = true"
           class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
@@ -879,34 +876,6 @@
             />
           </svg>
           Pay with Check
-        </button>
-        <!-- Resubmit button for residents when invoice is payment_rejected -->
-        <button
-          v-if="
-            isResident &&
-            invoice.status === 'payment_rejected' &&
-            paymentInReviewOrRejected
-          "
-          @click="
-            selectedPaymentForReview = paymentInReviewOrRejected;
-            showPaymentModal = true;
-          "
-          class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
-        >
-          <svg
-            class="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-          Resubmit Payment
         </button>
         <!-- View Payment button for residents when invoice is in_review (not payment_rejected) -->
         <button
