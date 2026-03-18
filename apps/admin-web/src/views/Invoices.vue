@@ -568,7 +568,6 @@
                 </div>
               </th>
               <th
-                v-if="!isResident"
                 @click="sortBy('status')"
                 class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-200 transition-colors"
               >
@@ -675,7 +674,7 @@
                       >
                         {{ formatDate(invoice.created_at) }}
                       </div>
-                      <!-- Mobile-only additional info (hide status for residents) -->
+                      <!-- Mobile-only additional info (status shown for all) -->
                       <div class="sm:hidden mt-1">
                         <div
                           :class="[
@@ -689,7 +688,7 @@
                             formatCurrency(invoice.total)
                           }}
                         </div>
-                        <div v-if="!isResident" class="mt-1">
+                        <div class="mt-1">
                           <span
                             v-if="invoice.deleted_at"
                             class="badge badge-overdue text-xs"
@@ -707,7 +706,7 @@
                             :class="getStatusBadgeClass(invoice.status)"
                             class="badge text-xs"
                           >
-                            {{ getStatusText(invoice.status) }}
+                            {{ getStatusText(invoice.status, isResident) }}
                           </span>
                         </div>
                       </div>
@@ -770,11 +769,8 @@
                 {{ formatDate(invoice.start_date) }}
               </td>
 
-              <!-- Status Column (hidden for residents) -->
-              <td
-                v-if="!isResident"
-                class="px-6 py-4 whitespace-nowrap hidden sm:table-cell"
-              >
+              <!-- Status Column -->
+              <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                 <span v-if="invoice.deleted_at" class="badge badge-overdue">
                   Deleted
                 </span>
@@ -789,14 +785,14 @@
                   :class="getStatusBadgeClass(invoice.status)"
                   class="badge"
                 >
-                  {{ getStatusText(invoice.status) }}
+                  {{ getStatusText(invoice.status, isResident) }}
                 </span>
               </td>
 
               <!-- Actions Column -->
               <td class="px-6 py-4 whitespace-nowrap text-right">
                 <div class="flex items-center justify-end relative">
-                  <!-- Resident: Pay Now (when sent) or View only -->
+                  <!-- Resident: Pay Now (when sent), Retry Payment (when rejected), or View -->
                   <template v-if="isResident">
                     <button
                       v-if="invoice.status === 'sent' && !invoice.deleted_at"
@@ -804,6 +800,16 @@
                       class="btn-primary text-sm py-2 px-4"
                     >
                       Pay Now
+                    </button>
+                    <button
+                      v-else-if="
+                        invoice.status === 'payment_rejected' &&
+                        !invoice.deleted_at
+                      "
+                      @click.stop="viewInvoice(invoice.id)"
+                      class="btn-primary text-sm py-2 px-4"
+                    >
+                      Retry Payment
                     </button>
                     <button
                       v-else
@@ -1446,7 +1452,8 @@ const formatCurrency = (amount: number | string) => {
   return numAmount.toFixed(2);
 };
 
-const getStatusText = (status: string) => {
+const getStatusText = (status: string, forResident = false) => {
+  if (forResident && status === 'sent') return 'Due';
   const statusMap: Record<string, string> = {
     draft: 'Draft',
     sent: 'Sent',
