@@ -1003,6 +1003,8 @@ import {
   useRemoveZelleQr,
   useUploadHoaLogo,
   useRemoveHoaLogo,
+  useTenantLogoUrl,
+  useTenantZelleQrUrl,
   settingsApi,
   settingsKeys,
   stripeApi,
@@ -1188,6 +1190,8 @@ const months = [
 // Query and mutations
 const queryClient = useQueryClient();
 const { data: settingsData, isLoading } = useSettings();
+const { logoUrl: tenantLogoUrl } = useTenantLogoUrl(settingsData);
+const { zelleQrUrl: tenantZelleQrUrl } = useTenantZelleQrUrl(settingsData);
 const updateTenantMutation = useUpdateTenantSettings();
 const updateUserMutation = useUpdateUserProfile();
 const updateLocalizationMutation = useUpdateLocalization();
@@ -1205,14 +1209,10 @@ const isSavingLocalization = computed(
 const isSavingZelle = computed(() => updateZelleMutation.isPending.value);
 const isRemovingZelleQr = computed(() => removeZelleQrMutation.isPending.value);
 
-const zelleQrUrl = computed(
-  () => settingsData.value?.tenant?.settings?.zelle_qr_url ?? null
-);
+const zelleQrUrl = computed(() => tenantZelleQrUrl.value ?? null);
 const isUploadingZelleQr = ref(false);
 
-const hoaLogoUrl = computed(
-  () => settingsData.value?.tenant?.settings?.logo_url ?? null
-);
+const hoaLogoUrl = computed(() => tenantLogoUrl.value ?? null);
 const hoaLogoInputRef = ref<HTMLInputElement | null>(null);
 const isUploadingHoaLogo = computed(
   () => uploadHoaLogoMutation.isPending.value
@@ -1355,6 +1355,7 @@ const onZelleQrFileChange = async (e: Event) => {
     await settingsApi.uploadZelleQr(file);
     showSuccess('QR code uploaded');
     queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    queryClient.invalidateQueries({ queryKey: settingsKeys.zelleQrUrl() });
   } catch (error: any) {
     showError(error.message || 'Failed to upload QR code');
   } finally {

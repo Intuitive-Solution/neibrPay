@@ -351,5 +351,89 @@ class TenantController extends Controller
             return response()->json(['error' => 'Failed to remove HOA logo'], 500);
         }
     }
+
+    /**
+     * Get a short-lived signed URL for the tenant HOA logo (same pattern as Invoice PDF).
+     */
+    public function getHoaLogoUrl(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        $user->load('tenant');
+        if (!$user->tenant) {
+            return response()->json(['message' => 'Tenant not found'], 404);
+        }
+
+        $tenant = $user->tenant;
+        $settings = $tenant->settings ?? [];
+        $logoPath = $settings['logo_path'] ?? null;
+
+        if (!$logoPath || !$this->fileStorage->exists($logoPath)) {
+            return response()->json(['message' => 'HOA logo not found'], 404);
+        }
+
+        if ($this->fileStorage->isS3Disk()) {
+            $signedUrl = $this->fileStorage->getTemporaryUrl(
+                $logoPath,
+                6,
+                ['ResponseCacheControl' => 'no-store, max-age=0']
+            );
+        } else {
+            $signedUrl = $this->fileStorage->getTemporaryUrl($logoPath, 6);
+            if (str_starts_with($signedUrl, 'http://') && (config('app.env') === 'production' || str_contains($signedUrl, 'neibrpay.com'))) {
+                $signedUrl = str_replace('http://', 'https://', $signedUrl);
+            }
+        }
+
+        return response()->json([
+            'data' => [
+                'file_url' => $signedUrl,
+            ],
+        ]);
+    }
+
+    /**
+     * Get a short-lived signed URL for the tenant Zelle QR image (same pattern as Invoice PDF).
+     */
+    public function getZelleQrUrl(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        $user->load('tenant');
+        if (!$user->tenant) {
+            return response()->json(['message' => 'Tenant not found'], 404);
+        }
+
+        $tenant = $user->tenant;
+        $settings = $tenant->settings ?? [];
+        $zelleQrPath = $settings['zelle_qr_path'] ?? null;
+
+        if (!$zelleQrPath || !$this->fileStorage->exists($zelleQrPath)) {
+            return response()->json(['message' => 'Zelle QR code not found'], 404);
+        }
+
+        if ($this->fileStorage->isS3Disk()) {
+            $signedUrl = $this->fileStorage->getTemporaryUrl(
+                $zelleQrPath,
+                6,
+                ['ResponseCacheControl' => 'no-store, max-age=0']
+            );
+        } else {
+            $signedUrl = $this->fileStorage->getTemporaryUrl($zelleQrPath, 6);
+            if (str_starts_with($signedUrl, 'http://') && (config('app.env') === 'production' || str_contains($signedUrl, 'neibrpay.com'))) {
+                $signedUrl = str_replace('http://', 'https://', $signedUrl);
+            }
+        }
+
+        return response()->json([
+            'data' => [
+                'file_url' => $signedUrl,
+            ],
+        ]);
+    }
 }
 

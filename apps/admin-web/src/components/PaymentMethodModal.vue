@@ -316,6 +316,7 @@ import { ref, computed, onMounted, watch, withDefaults } from 'vue';
 import {
   paymentsApi,
   useSettings,
+  useTenantZelleQrUrl,
   type FeeCalculation,
 } from '@neibrpay/api-client';
 import type { InvoiceUnit } from '@neibrpay/models';
@@ -343,6 +344,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>();
 
 const { data: settingsData } = useSettings();
+const { zelleQrUrl: tenantZelleQrUrl } = useTenantZelleQrUrl(settingsData);
 const selectedMethod = ref<'card' | 'ach' | 'zelle'>('card');
 
 /** When singleMethod is set, only that method's content is shown. */
@@ -393,9 +395,7 @@ const zelleEmail = computed(
 const zellePhone = computed(
   () => settingsData.value?.tenant?.settings?.zelle_phone ?? null
 );
-const zelleQrUrl = computed(
-  () => settingsData.value?.tenant?.settings?.zelle_qr_url ?? null
-);
+const zelleQrUrl = computed(() => tenantZelleQrUrl.value ?? null);
 const zelleInstructions = computed(
   () => settingsData.value?.tenant?.settings?.zelle_instructions ?? null
 );

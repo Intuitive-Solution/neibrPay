@@ -794,12 +794,13 @@
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { useSettings } from '@neibrpay/api-client';
+import { useSettings, useTenantLogoUrl } from '@neibrpay/api-client';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const { data: settingsData } = useSettings();
+const { logoUrl: tenantLogoUrl } = useTenantLogoUrl(settingsData);
 
 // Hover state for sidebar expansion
 const isExpanded = ref(false);
@@ -839,9 +840,7 @@ const closeCreateDropdown = () => {
 
 // Computed properties
 const communityName = computed(() => authStore.tenantName || 'Community');
-const communityLogoUrl = computed(
-  () => settingsData.value?.tenant?.settings?.logo_url ?? null
-);
+const communityLogoUrl = computed(() => tenantLogoUrl.value ?? null);
 const userDisplayName = computed(() => authStore.userDisplayName || 'User');
 const userEmail = computed(() => authStore.user?.email || '');
 const isResident = computed(() => authStore.isResident);
