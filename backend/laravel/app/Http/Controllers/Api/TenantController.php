@@ -254,5 +254,98 @@ class TenantController extends Controller
             return response()->json(['error' => 'Failed to remove Zelle QR code'], 500);
         }
     }
+
+    /**
+     * Upload HOA/community logo
+     */
+    public function uploadHoaLogo(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'file' => 'required|file|max:2048|mimes:png,jpg,jpeg',
+            ]);
+
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            $user->load('tenant');
+            if (!$user->tenant) {
+                return response()->json(['error' => 'Tenant not found'], 404);
+            }
+
+            $tenant = $user->tenant;
+            $file = $validated['file'];
+            $extension = $file->getClientOriginalExtension() ?: 'png';
+            $filename = 'hoa-logo.' . $extension;
+            $dir = 'tenant-settings/' . $tenant->id;
+            $filePath = $dir . '/' . $filename;
+
+            $stored = $this->fileStorage->store($filePath, file_get_contents($file->getRealPath()));
+            if (!$stored) {
+                return response()->json(['message' => 'Failed to store logo image'], 500);
+            }
+
+            $settings = $tenant->settings ?? [];
+            $settings['logo_path'] = $filePath;
+            $tenant->settings = $settings;
+            $tenant->save();
+
+            $logoUrl = null;
+            if ($this->fileStorage->exists($filePath)) {
+                try {
+                    $logoUrl = $this->fileStorage->getUrl($filePath);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to get HOA logo URL after upload', ['path' => $filePath, 'error' => $e->getMessage()]);
+                }
+            }
+
+            return response()->json([
+                'message' => 'HOA logo uploaded successfully',
+                'logo_path' => $filePath,
+                'logo_url' => $logoUrl,
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Upload HOA logo failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to upload HOA logo'], 500);
+        }
+    }
+
+    /**
+     * Remove HOA/community logo
+     */
+    public function removeHoaLogo(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            $user->load('tenant');
+            if (!$user->tenant) {
+                return response()->json(['error' => 'Tenant not found'], 404);
+            }
+
+            $tenant = $user->tenant;
+            $settings = $tenant->settings ?? [];
+            $logoPath = $settings['logo_path'] ?? null;
+
+            if ($logoPath) {
+                $this->fileStorage->delete($logoPath);
+                unset($settings['logo_path']);
+                $tenant->settings = $settings;
+                $tenant->save();
+            }
+
+            return response()->json([
+                'message' => 'HOA logo removed successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Remove HOA logo failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to remove HOA logo'], 500);
+        }
+    }
 }
 

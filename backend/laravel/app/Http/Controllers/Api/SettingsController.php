@@ -46,6 +46,16 @@ class SettingsController extends Controller
                 }
             }
 
+            $logoPath = $settings['logo_path'] ?? null;
+            $logoUrl = null;
+            if ($logoPath && $this->fileStorage->exists($logoPath)) {
+                try {
+                    $logoUrl = $this->fileStorage->getUrl($logoPath);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to get HOA logo URL', ['path' => $logoPath, 'error' => $e->getMessage()]);
+                }
+            }
+
             return response()->json([
                 'tenant' => [
                     'id' => $tenant->id,
@@ -71,6 +81,7 @@ class SettingsController extends Controller
                         'zelle_phone' => $settings['zelle_phone'] ?? null,
                         'zelle_qr_url' => $zelleQrUrl,
                         'zelle_instructions' => $settings['zelle_instructions'] ?? null,
+                        'logo_url' => $logoUrl,
                     ],
                 ],
                 'user' => [

@@ -195,6 +195,69 @@
                 placeholder="Enter phone number"
               />
             </div>
+
+            <!-- Community logo (optional) -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Community logo (optional)</label
+              >
+              <p class="text-xs text-gray-500 mb-2">
+                Shown in the header, on invoices, and in PDFs. PNG or JPG, max
+                2MB.
+              </p>
+              <div v-if="hoaLogoUrl" class="flex flex-col gap-2">
+                <img
+                  :src="hoaLogoUrl"
+                  alt="Community logo"
+                  class="max-h-20 w-auto object-contain border border-gray-200 rounded-lg bg-white"
+                />
+                <div class="flex gap-2">
+                  <input
+                    ref="hoaLogoInputRef"
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg"
+                    class="hidden"
+                    @change="onHoaLogoFileChange"
+                  />
+                  <button
+                    type="button"
+                    @click="triggerHoaLogoInput"
+                    :disabled="isUploadingHoaLogo"
+                    class="btn-secondary text-sm"
+                  >
+                    <span v-if="isUploadingHoaLogo">Uploading...</span>
+                    <span v-else>Replace logo</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="removeHoaLogo"
+                    :disabled="isRemovingHoaLogo"
+                    class="btn-secondary text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  >
+                    <span v-if="isRemovingHoaLogo">Removing...</span>
+                    <span v-else>Remove logo</span>
+                  </button>
+                </div>
+              </div>
+              <div v-else class="flex flex-col gap-2">
+                <input
+                  ref="hoaLogoInputRef"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  class="hidden"
+                  @change="onHoaLogoFileChange"
+                />
+                <button
+                  type="button"
+                  @click="triggerHoaLogoInput"
+                  :disabled="isUploadingHoaLogo"
+                  class="btn-secondary text-sm w-fit"
+                >
+                  <span v-if="isUploadingHoaLogo">Uploading...</span>
+                  <span v-else>Add logo</span>
+                </button>
+              </div>
+            </div>
           </div>
           <div
             v-if="!isResident"
@@ -941,6 +1004,8 @@ import {
   useUpdateLocalization,
   useUpdateZelleSettings,
   useRemoveZelleQr,
+  useUploadHoaLogo,
+  useRemoveHoaLogo,
   settingsApi,
   settingsKeys,
   stripeApi,
@@ -1131,6 +1196,8 @@ const updateUserMutation = useUpdateUserProfile();
 const updateLocalizationMutation = useUpdateLocalization();
 const updateZelleMutation = useUpdateZelleSettings();
 const removeZelleQrMutation = useRemoveZelleQr();
+const uploadHoaLogoMutation = useUploadHoaLogo();
+const removeHoaLogoMutation = useRemoveHoaLogo();
 
 // Loading states
 const isSavingHoa = computed(() => updateTenantMutation.isPending.value);
@@ -1145,6 +1212,15 @@ const zelleQrUrl = computed(
   () => settingsData.value?.tenant?.settings?.zelle_qr_url ?? null
 );
 const isUploadingZelleQr = ref(false);
+
+const hoaLogoUrl = computed(
+  () => settingsData.value?.tenant?.settings?.logo_url ?? null
+);
+const hoaLogoInputRef = ref<HTMLInputElement | null>(null);
+const isUploadingHoaLogo = computed(
+  () => uploadHoaLogoMutation.isPending.value
+);
+const isRemovingHoaLogo = computed(() => removeHoaLogoMutation.isPending.value);
 
 // Watch for settings data and populate forms
 watch(
@@ -1302,6 +1378,34 @@ const removeZelleQr = async () => {
 const triggerZelleQrInput = () => {
   const el = zelleQrInputRef.value;
   if (el && 'click' in el) (el as HTMLInputElement).click();
+};
+
+const onHoaLogoFileChange = async (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  try {
+    await uploadHoaLogoMutation.mutateAsync(file);
+    showSuccess('Logo uploaded');
+  } catch (error: unknown) {
+    showError(error instanceof Error ? error.message : 'Failed to upload logo');
+  } finally {
+    input.value = '';
+  }
+};
+
+const removeHoaLogo = async () => {
+  try {
+    await removeHoaLogoMutation.mutateAsync();
+    showSuccess('Logo removed');
+  } catch (error: unknown) {
+    showError(error instanceof Error ? error.message : 'Failed to remove logo');
+  }
+};
+
+const triggerHoaLogoInput = () => {
+  const el = hoaLogoInputRef.value;
+  if (el?.click) el.click();
 };
 
 // ============ STRIPE PAYMENTS SECTION ============

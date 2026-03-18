@@ -35,6 +35,8 @@ export {
   useUpdateLocalization,
   useUpdateZelleSettings,
   useRemoveZelleQr,
+  useUploadHoaLogo,
+  useRemoveHoaLogo,
   type SettingsData,
   type UpdateTenantSettingsRequest,
   type UpdateUserProfileRequest,
@@ -42,6 +44,7 @@ export {
   type UpdateLocalizationRequest,
   type UpdateZelleSettingsRequest,
   type UploadZelleQrResponse,
+  type UploadHoaLogoResponse,
 } from './settings';
 export {
   plaidApi,

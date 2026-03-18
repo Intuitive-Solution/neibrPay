@@ -208,6 +208,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('tenant/zelle', [TenantController::class, 'updateZelleSettings']);
     Route::post('tenant/zelle-qr', [TenantController::class, 'uploadZelleQr']);
     Route::delete('tenant/zelle-qr', [TenantController::class, 'removeZelleQr']);
+    Route::post('tenant/hoa-logo', [TenantController::class, 'uploadHoaLogo']);
+    Route::delete('tenant/hoa-logo', [TenantController::class, 'removeHoaLogo']);
     
     // Announcement routes
     Route::get('announcements/for-user', [AnnouncementController::class, 'forUser']);

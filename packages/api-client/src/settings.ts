@@ -27,6 +27,7 @@ export interface SettingsData {
       zelle_phone?: string | null;
       zelle_qr_url?: string | null;
       zelle_instructions?: string | null;
+      logo_url?: string | null;
     };
   };
   user: {
@@ -74,6 +75,12 @@ export interface UploadZelleQrResponse {
   message: string;
   zelle_qr_path: string;
   zelle_qr_url: string | null;
+}
+
+export interface UploadHoaLogoResponse {
+  message: string;
+  logo_path: string;
+  logo_url: string | null;
 }
 
 export interface SettingsResponse {
@@ -205,6 +212,29 @@ export const settingsApi = {
     );
     return response.data;
   },
+
+  /**
+   * Upload HOA/community logo
+   */
+  async uploadHoaLogo(file: File): Promise<UploadHoaLogoResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fileUploadClient.post<UploadHoaLogoResponse>(
+      '/tenant/hoa-logo',
+      formData
+    );
+    return response.data;
+  },
+
+  /**
+   * Remove HOA/community logo
+   */
+  async removeHoaLogo(): Promise<{ message: string }> {
+    const response = await apiClient.delete<{ message: string }>(
+      '/tenant/hoa-logo'
+    );
+    return response.data;
+  },
 };
 
 /**
@@ -295,6 +325,34 @@ export function useRemoveZelleQr() {
 
   return useMutation({
     mutationFn: () => settingsApi.removeZelleQr(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
+ * TanStack Query mutation to upload HOA logo
+ */
+export function useUploadHoaLogo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => settingsApi.uploadHoaLogo(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
+ * TanStack Query mutation to remove HOA logo
+ */
+export function useRemoveHoaLogo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => settingsApi.removeHoaLogo(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
     },
