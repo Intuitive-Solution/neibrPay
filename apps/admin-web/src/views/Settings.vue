@@ -92,6 +92,7 @@
       <div class="border-b border-gray-200 mb-6">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
           <button
+            v-if="!isResident"
             @click="activeTab = 'hoa'"
             :class="[
               activeTab === 'hoa'
@@ -154,8 +155,8 @@
 
       <!-- Tab Content -->
       <div class="card-modern">
-        <!-- HOA Tab -->
-        <div v-if="activeTab === 'hoa'" class="space-y-6">
+        <!-- HOA Tab (hidden from residents; they cannot see or update community settings) -->
+        <div v-if="activeTab === 'hoa' && !isResident" class="space-y-6">
           <h2 class="text-base font-semibold text-gray-900">
             Community Settings
           </h2>
@@ -1117,7 +1118,7 @@ watch(activeTab, (newTab: TabType) => {
   window.location.hash = currentParams ? `${newTab}?${currentParams}` : newTab;
 });
 
-// Redirect to 'user' tab if resident tries to access admin-only tabs
+// Redirect to 'user' tab if resident tries to access admin-only tabs (including HOA)
 watch(
   [isResident, activeTab],
   ([isResidentValue, currentTab]: [
@@ -1126,7 +1127,8 @@ watch(
   ]) => {
     if (
       isResidentValue &&
-      (currentTab === 'localization' ||
+      (currentTab === 'hoa' ||
+        currentTab === 'localization' ||
         currentTab === 'payments' ||
         currentTab === 'bank')
     ) {
@@ -1224,12 +1226,14 @@ watch(
   settingsData,
   (data: SettingsData | undefined) => {
     if (data) {
-      // Populate HOA form
-      hoaForm.value = {
-        name: data.tenant.name || '',
-        address: data.tenant.address || '',
-        phone: data.tenant.phone || '',
-      };
+      // Populate HOA form only for non-residents (residents cannot see or update HOA)
+      if (!isResident.value) {
+        hoaForm.value = {
+          name: data.tenant.name || '',
+          address: data.tenant.address || '',
+          phone: data.tenant.phone || '',
+        };
+      }
 
       // Populate user form
       userForm.value = {
@@ -1262,7 +1266,7 @@ watch(
 onMounted(async () => {
   await loadGoogleMapsScript();
 
-  if (activeTab.value === 'hoa') {
+  if (!isResident.value && activeTab.value === 'hoa') {
     await nextTick();
     initHoaAddressAutocomplete();
   }
@@ -1281,7 +1285,7 @@ onMounted(async () => {
 });
 
 watch(activeTab, async tab => {
-  if (tab === 'hoa') {
+  if (!isResident.value && tab === 'hoa') {
     await nextTick();
     initHoaAddressAutocomplete();
   }
