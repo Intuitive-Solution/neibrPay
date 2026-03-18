@@ -451,7 +451,6 @@ const isPayButtonDisabled = computed(() => {
 
 const fetchFees = async () => {
   if (!props.invoice) {
-    errorMessage.value = 'Invoice information is missing.';
     return;
   }
 
@@ -550,9 +549,11 @@ const handleClose = () => {
   }
 };
 
-// Fetch fees when modal opens and invoice changes
+// Fetch fees when modal is open and invoice is available (not on every mount)
 onMounted(() => {
-  fetchFees();
+  if (props.isOpen && props.invoice && props.singleMethod !== 'zelle') {
+    fetchFees();
+  }
 });
 
 watch(
@@ -568,6 +569,7 @@ watch(
   () => props.isOpen,
   newVal => {
     if (newVal) {
+      errorMessage.value = '';
       if (props.singleMethod) {
         selectedMethod.value = props.singleMethod;
       }
