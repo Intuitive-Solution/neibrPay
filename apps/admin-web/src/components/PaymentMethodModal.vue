@@ -385,7 +385,7 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 
 const zelleEnabled = computed(
-  () => settingsData.value?.tenant?.settings?.zelle_enabled ?? false
+  () => settingsData.value?.tenant?.settings?.zelle_enabled === true
 );
 const zelleEmail = computed(
   () => settingsData.value?.tenant?.settings?.zelle_email ?? null

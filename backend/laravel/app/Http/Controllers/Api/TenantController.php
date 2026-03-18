@@ -147,6 +147,10 @@ class TenantController extends Controller
             foreach ($validated as $key => $value) {
                 $settings[$key] = $value;
             }
+            // Always persist zelle_enabled from request so unchecking the checkbox updates the DB
+            if ($request->has('zelle_enabled')) {
+                $settings['zelle_enabled'] = $request->boolean('zelle_enabled');
+            }
             $tenant->settings = $settings;
             $tenant->save();
 

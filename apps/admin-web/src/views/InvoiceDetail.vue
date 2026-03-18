@@ -2198,10 +2198,10 @@ const isStripeConfigured = computed(() => {
   );
 });
 
-// Check if Zelle is enabled for the tenant
+// Check if Zelle is enabled for the tenant (only show when explicitly enabled in settings)
 const isZelleEnabled = computed(() => {
   const settings = settingsData.value?.tenant?.settings;
-  if (!settings?.zelle_enabled) return false;
+  if (settings?.zelle_enabled !== true) return false;
   return !!(settings.zelle_email || settings.zelle_phone);
 });
 

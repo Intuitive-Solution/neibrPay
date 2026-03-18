@@ -645,10 +645,7 @@
                     </div>
                   </div>
                 </div>
-                <div
-                  v-if="zelleForm.zelle_enabled"
-                  class="flex justify-end pt-4 border-t border-gray-200"
-                >
+                <div class="flex justify-end pt-4 border-t border-gray-200">
                   <button
                     @click="saveZelleSettings"
                     :disabled="isSavingZelle"
@@ -1338,7 +1335,7 @@ const saveLocalizationSettings = async () => {
 const saveZelleSettings = async () => {
   try {
     await updateZelleMutation.mutateAsync({
-      zelle_enabled: zelleForm.value.zelle_enabled,
+      zelle_enabled: Boolean(zelleForm.value.zelle_enabled),
       zelle_email: zelleForm.value.zelle_email || null,
       zelle_phone: zelleForm.value.zelle_phone || null,
       zelle_instructions: zelleForm.value.zelle_instructions || null,
