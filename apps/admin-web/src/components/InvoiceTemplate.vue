@@ -159,7 +159,7 @@
 import { computed } from 'vue';
 import type { UnitWithResident } from '@neibrpay/models';
 import { useAuthStore } from '../stores/auth';
-import { useSettings } from '@neibrpay/api-client';
+import { useSettings, useTenantLogoUrl } from '@neibrpay/api-client';
 
 // Props
 interface Props {
@@ -199,6 +199,7 @@ interface Props {
 const props = defineProps<Props>();
 const authStore = useAuthStore();
 const { data: settingsData } = useSettings();
+const { logoUrl: tenantLogoUrl } = useTenantLogoUrl(settingsData);
 
 // Computed properties
 const invoiceNumber = computed(() => props.form.invoice_number);
@@ -217,9 +218,7 @@ const communityZipCode = computed(
 );
 const communityPhone = computed(() => settingsData.value?.tenant?.phone || '');
 const communityEmail = computed(() => settingsData.value?.tenant?.email || '');
-const communityLogoUrl = computed(
-  () => settingsData.value?.tenant?.settings?.logo_url ?? null
-);
+const communityLogoUrl = computed(() => tenantLogoUrl.value ?? null);
 
 // Format full address - street address on first line, city/state/zip on second line
 const formattedAddress = computed(() => {

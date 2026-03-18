@@ -73,6 +73,8 @@ export const settingsKeys = {
   all: ['settings'] as const,
   details: () => [...settingsKeys.all, 'detail'] as const,
   detail: () => [...settingsKeys.details()] as const,
+  hoaLogoUrl: () => [...settingsKeys.detail(), 'hoa-logo-url'] as const,
+  zelleQrUrl: () => [...settingsKeys.detail(), 'zelle-qr-url'] as const,
 } as const;
 
 export const documentKeys = {

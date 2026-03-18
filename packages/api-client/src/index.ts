@@ -37,6 +37,8 @@ export {
   useRemoveZelleQr,
   useUploadHoaLogo,
   useRemoveHoaLogo,
+  useTenantLogoUrl,
+  useTenantZelleQrUrl,
   type SettingsData,
   type UpdateTenantSettingsRequest,
   type UpdateUserProfileRequest,

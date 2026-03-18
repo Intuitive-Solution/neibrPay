@@ -37,24 +37,13 @@ class SettingsController extends Controller
             $settings = $tenant->settings ?? [];
 
             $zelleQrPath = $settings['zelle_qr_path'] ?? null;
-            $zelleQrUrl = null;
-            if ($zelleQrPath && $this->fileStorage->exists($zelleQrPath)) {
-                try {
-                    $zelleQrUrl = $this->fileStorage->getUrl($zelleQrPath);
-                } catch (\Throwable $e) {
-                    Log::warning('Failed to get Zelle QR URL', ['path' => $zelleQrPath, 'error' => $e->getMessage()]);
-                }
-            }
+            $hasZelleQr = $zelleQrPath && $this->fileStorage->exists($zelleQrPath);
 
             $logoPath = $settings['logo_path'] ?? null;
-            $logoUrl = null;
-            if ($logoPath && $this->fileStorage->exists($logoPath)) {
-                try {
-                    $logoUrl = $this->fileStorage->getUrl($logoPath);
-                } catch (\Throwable $e) {
-                    Log::warning('Failed to get HOA logo URL', ['path' => $logoPath, 'error' => $e->getMessage()]);
-                }
-            }
+            $hasLogo = $logoPath && $this->fileStorage->exists($logoPath);
+
+            // Logo and Zelle QR are fetched via signed-URL endpoints (tenant/hoa-logo/url, tenant/zelle-qr/url)
+            // like Invoice PDFs; no long-lived URLs in settings response.
 
             return response()->json([
                 'tenant' => [
@@ -79,9 +68,9 @@ class SettingsController extends Controller
                         'zelle_enabled' => (bool) ($settings['zelle_enabled'] ?? false),
                         'zelle_email' => $settings['zelle_email'] ?? null,
                         'zelle_phone' => $settings['zelle_phone'] ?? null,
-                        'zelle_qr_url' => $zelleQrUrl,
+                        'has_zelle_qr' => $hasZelleQr,
                         'zelle_instructions' => $settings['zelle_instructions'] ?? null,
-                        'logo_url' => $logoUrl,
+                        'has_logo' => $hasLogo,
                     ],
                 ],
                 'user' => [

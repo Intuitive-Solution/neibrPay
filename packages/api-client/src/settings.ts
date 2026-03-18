@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import { computed, type Ref } from 'vue';
 import { apiClient, fileUploadClient } from './apiClient';
 import { settingsKeys } from './queryKeys';
 
@@ -25,9 +26,9 @@ export interface SettingsData {
       zelle_enabled?: boolean;
       zelle_email?: string | null;
       zelle_phone?: string | null;
-      zelle_qr_url?: string | null;
+      has_zelle_qr?: boolean;
       zelle_instructions?: string | null;
-      logo_url?: string | null;
+      has_logo?: boolean;
     };
   };
   user: {
@@ -235,6 +236,26 @@ export const settingsApi = {
     );
     return response.data;
   },
+
+  /**
+   * Get a short-lived signed URL for the tenant HOA logo (same pattern as Invoice PDF).
+   */
+  async getHoaLogoUrl(): Promise<{ file_url: string }> {
+    const response = await apiClient.get<{ data: { file_url: string } }>(
+      '/tenant/hoa-logo/url'
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get a short-lived signed URL for the tenant Zelle QR image (same pattern as Invoice PDF).
+   */
+  async getZelleQrUrl(): Promise<{ file_url: string }> {
+    const response = await apiClient.get<{ data: { file_url: string } }>(
+      '/tenant/zelle-qr/url'
+    );
+    return response.data.data;
+  },
 };
 
 /**
@@ -327,6 +348,7 @@ export function useRemoveZelleQr() {
     mutationFn: () => settingsApi.removeZelleQr(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+      queryClient.invalidateQueries({ queryKey: settingsKeys.zelleQrUrl() });
     },
   });
 }
@@ -341,6 +363,7 @@ export function useUploadHoaLogo() {
     mutationFn: (file: File) => settingsApi.uploadHoaLogo(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+      queryClient.invalidateQueries({ queryKey: settingsKeys.hoaLogoUrl() });
     },
   });
 }
@@ -355,6 +378,52 @@ export function useRemoveHoaLogo() {
     mutationFn: () => settingsApi.removeHoaLogo(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+      queryClient.invalidateQueries({ queryKey: settingsKeys.hoaLogoUrl() });
     },
   });
+}
+
+/** Stale time for tenant asset signed URLs (4 min; backend expiry is 6 min) */
+const TENANT_ASSET_URL_STALE_MS = 4 * 60 * 1000;
+
+/**
+ * Fetch short-lived signed URL for tenant HOA logo (same pattern as Invoice PDF).
+ * Enabled only when settings indicate has_logo. Refetches before expiry.
+ */
+export function useTenantLogoUrl(settingsData: Ref<SettingsData | undefined>) {
+  const query = useQuery({
+    queryKey: settingsKeys.hoaLogoUrl(),
+    queryFn: () => settingsApi.getHoaLogoUrl(),
+    enabled: computed(
+      () => settingsData.value?.tenant?.settings?.has_logo === true
+    ),
+    staleTime: TENANT_ASSET_URL_STALE_MS,
+  });
+  return {
+    logoUrl: computed(() => query.data.value?.file_url ?? null),
+    isLoadingLogo: query.isLoading,
+    refetchLogo: query.refetch,
+  };
+}
+
+/**
+ * Fetch short-lived signed URL for tenant Zelle QR image (same pattern as Invoice PDF).
+ * Enabled only when settings indicate has_zelle_qr. Refetches before expiry.
+ */
+export function useTenantZelleQrUrl(
+  settingsData: Ref<SettingsData | undefined>
+) {
+  const query = useQuery({
+    queryKey: settingsKeys.zelleQrUrl(),
+    queryFn: () => settingsApi.getZelleQrUrl(),
+    enabled: computed(
+      () => settingsData.value?.tenant?.settings?.has_zelle_qr === true
+    ),
+    staleTime: TENANT_ASSET_URL_STALE_MS,
+  });
+  return {
+    zelleQrUrl: computed(() => query.data.value?.file_url ?? null),
+    isLoadingZelleQr: query.isLoading,
+    refetchZelleQr: query.refetch,
+  };
 }
