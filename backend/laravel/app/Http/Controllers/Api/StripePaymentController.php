@@ -78,25 +78,27 @@ class StripePaymentController extends Controller
             ], 422);
         }
 
-        // Calculate fees
+        // Reverse-calculate total charge so HOA receives full invoice amount (Stripe fees are on total, not invoice).
         $platformFeePercent = 0.01; // 1%
         $cardStripeFeePercent = 0.029; // 2.9%
         $cardStripeFeeFixed = 0.30; // $0.30
         $achStripeFeePercent = 0.008; // 0.8%
         $achStripeFeeMax = 5.00; // $5.00 cap
 
-        // Platform fee (same for both methods)
-        $platformFee = round($amount * $platformFeePercent, 2);
+        // Card: T - (0.029*T + 0.30) - 0.01*T = amount  =>  T = (amount + 0.30) / 0.961. Round up to next cent.
+        $cardTotal = ceil(($amount + $cardStripeFeeFixed) / (1 - $platformFeePercent - $cardStripeFeePercent) * 100) / 100;
+        $cardProcessingFee = round($cardTotal - $amount, 2);
+        $cardPlatformFee = round($cardTotal * $platformFeePercent, 2);
+        $cardStripeFee = round($cardTotal * $cardStripeFeePercent + $cardStripeFeeFixed, 2);
 
-        // Card: 1% (platform) + 2.9% + $0.30 (Stripe)
-        $cardStripeFee = round(($amount * $cardStripeFeePercent) + $cardStripeFeeFixed, 2);
-        $cardProcessingFee = round($platformFee + $cardStripeFee, 2);
-        $cardTotal = round($amount + $cardProcessingFee, 2);
-
-        // ACH: 1% (platform) + 0.8% capped at $5 (Stripe)
-        $achStripeFee = min(round($amount * $achStripeFeePercent, 2), $achStripeFeeMax);
-        $achProcessingFee = round($platformFee + $achStripeFee, 2);
-        $achTotal = round($amount + $achProcessingFee, 2);
+        // ACH: T - 0.01*T - min(0.008*T, 5) = amount. If T <= 625: 0.982*T = amount => T = amount/0.982; else T = (amount+5)/0.99.
+        $achTUncapped = $amount / (1 - $platformFeePercent - $achStripeFeePercent); // amount/0.982
+        $achTotal = $achTUncapped <= 625
+            ? ceil($achTUncapped * 100) / 100
+            : ceil(($amount + $achStripeFeeMax) / (1 - $platformFeePercent) * 100) / 100; // (amount+5)/0.99
+        $achProcessingFee = round($achTotal - $amount, 2);
+        $achPlatformFee = round($achTotal * $platformFeePercent, 2);
+        $achStripeFee = min(round($achTotal * $achStripeFeePercent, 2), $achStripeFeeMax);
 
         return response()->json([
             'data' => [
@@ -105,7 +107,7 @@ class StripePaymentController extends Controller
                     'processing_fee' => $cardProcessingFee,
                     'total' => $cardTotal,
                     'breakdown' => [
-                        'platform_fee' => $platformFee,
+                        'platform_fee' => $cardPlatformFee,
                         'stripe_fee' => $cardStripeFee,
                     ],
                 ],
@@ -113,7 +115,7 @@ class StripePaymentController extends Controller
                     'processing_fee' => $achProcessingFee,
                     'total' => $achTotal,
                     'breakdown' => [
-                        'platform_fee' => $platformFee,
+                        'platform_fee' => $achPlatformFee,
                         'stripe_fee' => $achStripeFee,
                     ],
                 ],
@@ -188,30 +190,29 @@ class StripePaymentController extends Controller
             // Get payment method (default to card)
             $paymentMethod = $validated['payment_method'] ?? 'card';
 
-            // Calculate fees based on payment method
+            // Reverse-calculate total charge so HOA receives full invoice amount (Stripe fees are on total).
             $platformFeePercent = 0.01; // 1%
-            $platformFee = round($amount * $platformFeePercent, 2);
+            $cardStripeFeePercent = 0.029;
+            $cardStripeFeeFixed = 0.30;
+            $achStripeFeePercent = 0.008;
+            $achStripeFeeMax = 5.00;
 
             if ($paymentMethod === 'ach') {
-                // ACH: 1% (platform) + 0.8% capped at $5 (Stripe)
-                $achStripeFeePercent = 0.008;
-                $achStripeFeeMax = 5.00;
-                $stripeFee = min(round($amount * $achStripeFeePercent, 2), $achStripeFeeMax);
+                $achTUncapped = $amount / (1 - $platformFeePercent - $achStripeFeePercent);
+                $totalChargeAmount = $achTUncapped <= 625
+                    ? ceil($achTUncapped * 100) / 100
+                    : ceil(($amount + $achStripeFeeMax) / (1 - $platformFeePercent) * 100) / 100;
             } else {
-                // Card (default): 1% (platform) + 2.9% + $0.30 (Stripe)
-                $cardStripeFeePercent = 0.029;
-                $cardStripeFeeFixed = 0.30;
-                $stripeFee = round(($amount * $cardStripeFeePercent) + $cardStripeFeeFixed, 2);
+                // Card: T = (amount + 0.30) / 0.961, round up to next cent
+                $totalChargeAmount = ceil(($amount + $cardStripeFeeFixed) / (1 - $platformFeePercent - $cardStripeFeePercent) * 100) / 100;
             }
 
-            $totalFee = round($platformFee + $stripeFee, 2);
-            $totalChargeAmount = round($amount + $totalFee, 2);
+            $totalFee = round($totalChargeAmount - $amount, 2);
+            $platformFeeInCents = (int)round($totalChargeAmount * $platformFeePercent * 100);
 
-            // Convert to cents for Stripe — use round() to avoid
-            // IEEE 754 truncation (e.g. (int)(19.99*100) = 1998)
+            // Convert to cents for Stripe
             $amountInCents = (int)round($amount * 100);
             $totalChargeInCents = (int)round($totalChargeAmount * 100);
-            $platformFeeInCents = (int)round($platformFee * 100);
 
             // Build checkout session params with fee structure
             $lineItems = [

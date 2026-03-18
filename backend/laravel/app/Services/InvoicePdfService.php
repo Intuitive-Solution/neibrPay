@@ -178,6 +178,19 @@ class InvoicePdfService
         // Build contact info divs (optional)
         $phoneHtml = $tenantPhone ? "<div class=\"address-phone\">Phone: " . htmlspecialchars($tenantPhone) . "</div>" : '';
         $emailHtml = $tenantEmail ? "<div class=\"address-email\">Email: " . htmlspecialchars($tenantEmail) . "</div>" : '';
+
+        // HOA logo (base64-embedded for DomPDF)
+        $logoHtml = '';
+        $settings = $tenant?->settings ?? [];
+        $logoPath = $settings['logo_path'] ?? null;
+        if ($logoPath && $this->fileStorage->exists($logoPath)) {
+            $contents = $this->fileStorage->get($logoPath);
+            if ($contents !== null) {
+                $ext = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
+                $mime = $ext === 'png' ? 'image/png' : ($ext === 'jpg' || $ext === 'jpeg' ? 'image/jpeg' : 'image/png');
+                $logoHtml = '<img src="data:' . $mime . ';base64,' . base64_encode($contents) . '" alt="Logo" class="company-logo" />';
+            }
+        }
         
         $unit = $invoiceUnit->unit;
         $unitTitle = $unit ? $unit->title : "Unit {$invoiceUnit->unit_id}";
@@ -347,6 +360,7 @@ class InvoicePdfService
                 .invoice-template { width: 180mm; max-width: 180mm; min-height: auto; padding: 10mm 8mm 20mm 10mm; font-family: Arial, sans-serif; background: white; color: #333; line-height: 1.3; }
                 .invoice-header { width: 100%; margin-bottom: 25px; border-bottom: 3px solid #2563eb; padding-bottom: 15px; overflow: hidden; position: relative; page-break-inside: avoid; }
                 .company-info { float: left; width: 55%; }
+                .company-logo { max-height: 50px; max-width: 120px; display: block; margin-bottom: 4px; }
                 .company-name { font-size: 18px; font-weight: bold; color: #2563eb; margin: 0 0 4px 0; }
                 .company-details { margin: 0; }
                 .address-line-1 { margin: 1px 0; font-size: 9px; color: #666; font-weight: 500; }
@@ -394,6 +408,7 @@ class InvoicePdfService
                 <div class=\"invoice-header clearfix\">
                     {$paidStampHtml}
                     <div class=\"company-info\">
+                        {$logoHtml}
                         <h1 class=\"company-name\">{$tenantName}</h1>
                         <div class=\"company-details\">
                             <div class=\"address-line-1\">{$streetAddress}</div>

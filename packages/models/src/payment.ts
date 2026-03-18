@@ -9,6 +9,7 @@ export const PaymentMethodSchema = z.enum([
   'bank_transfer',
   'stripe_card',
   'stripe_ach',
+  'zelle',
   'other',
 ]);
 

@@ -8,6 +8,12 @@
       </div>
 
       <div class="company-info">
+        <img
+          v-if="communityLogoUrl"
+          :src="communityLogoUrl"
+          alt="Logo"
+          class="company-logo"
+        />
         <h1 class="company-name">{{ communityName }}</h1>
         <div class="company-details">
           <p v-for="(line, index) in formattedAddress" :key="index">
@@ -211,6 +217,9 @@ const communityZipCode = computed(
 );
 const communityPhone = computed(() => settingsData.value?.tenant?.phone || '');
 const communityEmail = computed(() => settingsData.value?.tenant?.email || '');
+const communityLogoUrl = computed(
+  () => settingsData.value?.tenant?.settings?.logo_url ?? null
+);
 
 // Format full address - street address on first line, city/state/zip on second line
 const formattedAddress = computed(() => {
@@ -367,6 +376,13 @@ const getUnitResident = (unitId: number) => {
 
 .company-info {
   flex: 1.2;
+}
+
+.company-logo {
+  max-height: 50px;
+  max-width: 120px;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .company-name {

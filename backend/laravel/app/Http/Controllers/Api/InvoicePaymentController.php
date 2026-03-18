@@ -128,7 +128,7 @@ class InvoicePaymentController extends Controller
         
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,other',
+            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,zelle,other',
             'payment_reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',
@@ -173,8 +173,8 @@ class InvoicePaymentController extends Controller
                 'invoice_unit_id' => $invoiceId,
                 'amount' => $validated['amount'],
                 'payment_method' => $validated['payment_method'],
-                'payment_reference' => $validated['payment_reference'],
-                'notes' => $validated['notes'],
+                'payment_reference' => $validated['payment_reference'] ?? null,
+                'notes' => $validated['notes'] ?? null,
                 'payment_date' => $validated['payment_date'],
                 'recorded_by' => $user->id,
                 'status' => $paymentStatus,
@@ -321,7 +321,7 @@ class InvoicePaymentController extends Controller
         
         $validated = $request->validate([
             'amount' => 'sometimes|numeric|min:0.01',
-            'payment_method' => 'sometimes|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,other',
+            'payment_method' => 'sometimes|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,zelle,other',
             'payment_reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'sometimes|date',
@@ -639,7 +639,7 @@ class InvoicePaymentController extends Controller
         
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,other',
+            'payment_method' => 'required|in:cash,check,credit_card,bank_transfer,stripe_card,stripe_ach,zelle,other',
             'payment_reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',
@@ -663,8 +663,8 @@ class InvoicePaymentController extends Controller
             $payment->update([
                 'amount' => $validated['amount'],
                 'payment_method' => $validated['payment_method'],
-                'payment_reference' => $validated['payment_reference'],
-                'notes' => $validated['notes'],
+                'payment_reference' => $validated['payment_reference'] ?? null,
+                'notes' => $validated['notes'] ?? null,
                 'payment_date' => $validated['payment_date'],
                 'status' => 'in_review',
                 'admin_comment_public' => null,
@@ -932,6 +932,7 @@ class InvoicePaymentController extends Controller
             'bank_transfer' => 'Bank Transfer',
             'stripe_card' => 'Stripe (Card)',
             'stripe_ach' => 'Stripe (ACH)',
+            'zelle' => 'Zelle',
             'other' => 'Other',
         ];
         

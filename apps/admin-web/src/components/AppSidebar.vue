@@ -30,19 +30,43 @@
       <!-- Community Header -->
       <div :class="isExpanded || isMobileMenuOpen ? 'p-4' : 'p-4'">
         <div v-if="isExpanded || isMobileMenuOpen" class="flex flex-col">
-          <div class="flex items-center">
-            <NeibrPayLogo />
+          <div class="flex items-center gap-3">
+            <div
+              class="w-[55px] h-[55px] rounded-full flex items-center justify-center overflow-hidden bg-primary shrink-0"
+              :title="communityName"
+            >
+              <img
+                v-if="communityLogoUrl"
+                :src="communityLogoUrl"
+                alt=""
+                class="w-full h-full object-cover"
+              />
+              <span v-else class="text-white font-medium text-sm">
+                {{ communityInitials }}
+              </span>
+            </div>
+            <span class="font-bold text-xl leading-none">
+              <span class="text-gray-800">Neibr</span
+              ><span class="text-primary">Pay</span>
+            </span>
           </div>
-
-          <!-- Community Name -->
-          <!-- <div class="mt-3">
-            <p class="text-sm text-gray-600">{{ communityName }}</p>
-          </div> -->
         </div>
 
         <div v-else class="flex flex-col items-center">
-          <!-- Logo Icon Only -->
-          <NeibrPayLogo icon-only size="md" />
+          <div
+            class="w-[55px] h-[55px] rounded-full flex items-center justify-center overflow-hidden bg-primary shrink-0"
+            :title="communityName"
+          >
+            <img
+              v-if="communityLogoUrl"
+              :src="communityLogoUrl"
+              alt=""
+              class="w-full h-full object-cover"
+            />
+            <span v-else class="text-white font-medium text-sm">
+              {{ communityInitials }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -754,16 +778,6 @@
                 </div>
               </Transition>
             </div>
-
-            <!-- Community Initials Badge -->
-            <div
-              class="w-9 h-9 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
-              :title="communityName"
-            >
-              <span class="text-white font-medium text-sm">
-                {{ communityInitials }}
-              </span>
-            </div>
           </div>
         </div>
       </header>
@@ -780,11 +794,12 @@
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import NeibrPayLogo from './NeibrPayLogo.vue';
+import { useSettings } from '@neibrpay/api-client';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const { data: settingsData } = useSettings();
 
 // Hover state for sidebar expansion
 const isExpanded = ref(false);
@@ -824,6 +839,9 @@ const closeCreateDropdown = () => {
 
 // Computed properties
 const communityName = computed(() => authStore.tenantName || 'Community');
+const communityLogoUrl = computed(
+  () => settingsData.value?.tenant?.settings?.logo_url ?? null
+);
 const userDisplayName = computed(() => authStore.userDisplayName || 'User');
 const userEmail = computed(() => authStore.user?.email || '');
 const isResident = computed(() => authStore.isResident);

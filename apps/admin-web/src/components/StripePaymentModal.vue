@@ -66,7 +66,7 @@
             <StripeCheckoutButton
               :invoice="invoice"
               :show-amount-input="true"
-              button-text="Pay Now with Stripe"
+              button-text="Pay with Stripe"
               @success="handleSuccess"
               @error="handleError"
             />

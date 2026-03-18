@@ -51,19 +51,18 @@
                 class="text-lg leading-6 font-medium text-gray-900"
                 id="modal-title"
               >
-                Select Payment Method
+                {{ modalTitle }}
               </h3>
-              <div class="mt-2">
+              <div v-if="modalSubtitle" class="mt-2">
                 <p class="text-sm text-gray-500">
-                  Choose how you want to pay. You'll see the processing fees for
-                  each method.
+                  {{ modalSubtitle }}
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Payment Method Selection -->
-          <div class="mt-6 space-y-4">
+          <!-- Payment Method Selection (hidden in single-method mode) -->
+          <div v-if="showMethodSelector" class="mt-6 space-y-4">
             <!-- Card Option -->
             <label
               class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors"
@@ -126,10 +125,86 @@
                 </p>
               </div>
             </label>
+
+            <!-- Zelle Option (only when all methods shown; hidden in Stripe-only modal) -->
+            <label
+              v-if="showZelleOption && !singleMethod"
+              class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors"
+              :class="
+                selectedMethod === 'zelle'
+                  ? 'border-indigo-500 bg-indigo-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              "
+            >
+              <input
+                v-model="selectedMethod"
+                type="radio"
+                value="zelle"
+                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+              />
+              <div class="ml-4 flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-900">Zelle</span>
+                  <span class="text-sm font-semibold text-green-600"
+                    >No fee</span
+                  >
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  Send payment via Zelle; we'll confirm when received
+                </p>
+              </div>
+            </label>
           </div>
 
-          <!-- Fee Breakdown -->
-          <div v-if="fees" class="mt-6 pt-6 border-t border-gray-200">
+          <!-- Zelle payment info (when Zelle selected or singleMethod zelle) -->
+          <div
+            v-if="showZelleContent && invoice"
+            class="mt-6 pt-6 border-t border-gray-200 flex flex-col"
+          >
+            <!-- QR code: large for easy phone scanning -->
+            <div
+              v-if="zelleQrUrl"
+              class="flex flex-col items-center justify-center py-2"
+            >
+              <img
+                :src="zelleQrUrl"
+                alt="Zelle QR code"
+                class="w-[360px] h-[360px] min-w-[360px] min-h-[360px] object-contain border border-gray-200 rounded-lg bg-white"
+              />
+              <p
+                v-if="zelleInstructions"
+                class="text-xs text-gray-600 mt-4 text-center whitespace-pre-wrap max-w-sm"
+              >
+                {{ zelleInstructions }}
+              </p>
+            </div>
+            <!-- Minimal details: amount and recipient -->
+            <div class="mt-4 space-y-2 border-t border-gray-100 pt-4">
+              <p class="text-sm text-gray-900">
+                Send
+                <span class="font-semibold">{{
+                  formatCurrency(zellePaymentAmount)
+                }}</span>
+                to {{ hoaName }}
+              </p>
+              <div class="text-xs text-gray-600 space-y-0.5">
+                <p v-if="zelleEmail">Email: {{ zelleEmail }}</p>
+                <p v-if="zellePhone">Phone: {{ zellePhone }}</p>
+              </div>
+              <p
+                v-if="!zelleQrUrl && zelleInstructions"
+                class="text-xs text-gray-600 mt-2 whitespace-pre-wrap"
+              >
+                {{ zelleInstructions }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Fee Breakdown (Card/ACH only; hidden when singleMethod zelle) -->
+          <div
+            v-if="showStripeContent && fees && selectedMethod !== 'zelle'"
+            class="mt-6 pt-6 border-t border-gray-200"
+          >
             <h4 class="text-sm font-medium text-gray-900 mb-4">
               Payment Breakdown
             </h4>
@@ -155,8 +230,11 @@
             </div>
           </div>
 
-          <!-- Check Payment Information Note -->
-          <div class="mt-6 pt-6 border-t border-gray-200">
+          <!-- Check Payment Information Note (hidden in single-method mode) -->
+          <div
+            v-if="showCheckSection"
+            class="mt-6 pt-6 border-t border-gray-200"
+          >
             <h4 class="text-sm font-medium text-gray-900 mb-3">
               Alternative: Pay by Check
             </h4>
@@ -189,7 +267,7 @@
           class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3"
         >
           <button
-            :disabled="isLoading || !fees"
+            :disabled="isPayButtonDisabled"
             @click="handlePayment"
             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors sm:ml-3 sm:w-auto sm:text-sm"
           >
@@ -214,6 +292,9 @@
               ></path>
             </svg>
             <span v-if="isLoading">Processing...</span>
+            <span v-else-if="selectedMethod === 'zelle'"
+              >I've sent the payment</span
+            >
             <span v-else>Pay {{ formatCurrency(currentBreakdown.total) }}</span>
           </button>
           <button
@@ -232,14 +313,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, withDefaults } from 'vue';
-import { paymentsApi } from '@neibrpay/api-client';
-import type { InvoiceUnit, FeeCalculation } from '@neibrpay/models';
+import {
+  paymentsApi,
+  useSettings,
+  type FeeCalculation,
+} from '@neibrpay/api-client';
+import type { InvoiceUnit } from '@neibrpay/models';
 
 interface Props {
   isOpen: boolean;
   invoice: InvoiceUnit | null;
   hoaName: string;
   hoaAddress: string;
+  /** When set, modal shows only this method's content (no others, no check section). */
+  singleMethod?: 'card' | 'ach' | 'zelle';
 }
 
 interface Emits {
@@ -251,13 +338,75 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   hoaName: '',
   hoaAddress: '',
+  singleMethod: undefined,
 });
 const emit = defineEmits<Emits>();
 
-const selectedMethod = ref<'card' | 'ach'>('card');
+const { data: settingsData } = useSettings();
+const selectedMethod = ref<'card' | 'ach' | 'zelle'>('card');
+
+/** When singleMethod is set, only that method's content is shown. */
+const showMethodSelector = computed(
+  () =>
+    !props.singleMethod ||
+    props.singleMethod === 'card' ||
+    props.singleMethod === 'ach'
+);
+const showCheckSection = computed(() => !props.singleMethod);
+const showStripeContent = computed(
+  () =>
+    (props.singleMethod === 'card' ||
+      props.singleMethod === 'ach' ||
+      selectedMethod.value === 'card' ||
+      selectedMethod.value === 'ach') &&
+    props.singleMethod !== 'zelle'
+);
+const showZelleContent = computed(
+  () =>
+    (props.singleMethod === 'zelle' || selectedMethod.value === 'zelle') &&
+    props.singleMethod !== 'card' &&
+    props.singleMethod !== 'ach'
+);
+
+const modalTitle = computed(() => {
+  if (props.singleMethod === 'zelle') return 'Pay with Zelle';
+  if (props.singleMethod === 'card' || props.singleMethod === 'ach')
+    return 'Pay with Stripe (Card or ACH)';
+  return 'Select Payment Method';
+});
+const modalSubtitle = computed(() => {
+  if (props.singleMethod === 'zelle') return null;
+  if (props.singleMethod === 'card' || props.singleMethod === 'ach')
+    return 'Choose card or bank account and complete payment.';
+  return "Choose how you want to pay. You'll see the processing fees for each method.";
+});
 const fees = ref<FeeCalculation | null>(null);
 const isLoading = ref(false);
 const errorMessage = ref('');
+
+const zelleEnabled = computed(
+  () => settingsData.value?.tenant?.settings?.zelle_enabled === true
+);
+const zelleEmail = computed(
+  () => settingsData.value?.tenant?.settings?.zelle_email ?? null
+);
+const zellePhone = computed(
+  () => settingsData.value?.tenant?.settings?.zelle_phone ?? null
+);
+const zelleQrUrl = computed(
+  () => settingsData.value?.tenant?.settings?.zelle_qr_url ?? null
+);
+const zelleInstructions = computed(
+  () => settingsData.value?.tenant?.settings?.zelle_instructions ?? null
+);
+const showZelleOption = computed(
+  () => zelleEnabled.value && (!!zelleEmail.value || !!zellePhone.value)
+);
+
+/** For Zelle, payment amount = invoice balance only (no fees). */
+const zellePaymentAmount = computed(() =>
+  props.invoice ? props.invoice.balance_due : 0
+);
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
@@ -268,6 +417,14 @@ const formatCurrency = (amount: number): string => {
 };
 
 const currentBreakdown = computed(() => {
+  if (selectedMethod.value === 'zelle') {
+    const amount = zellePaymentAmount.value;
+    return {
+      invoice_amount: amount,
+      processing_fee: 0,
+      total: amount,
+    };
+  }
   if (!fees.value) {
     return {
       invoice_amount: 0,
@@ -276,7 +433,7 @@ const currentBreakdown = computed(() => {
     };
   }
 
-  const breakdown = fees.value[selectedMethod.value];
+  const breakdown = fees.value[selectedMethod.value as 'card' | 'ach'];
   return {
     invoice_amount: fees.value.invoice_amount,
     processing_fee: breakdown.processing_fee,
@@ -284,9 +441,16 @@ const currentBreakdown = computed(() => {
   };
 });
 
+const isPayButtonDisabled = computed(() => {
+  if (isLoading.value) return true;
+  if (selectedMethod.value === 'zelle') {
+    return !props.invoice || props.invoice.balance_due <= 0;
+  }
+  return !fees.value;
+});
+
 const fetchFees = async () => {
   if (!props.invoice) {
-    errorMessage.value = 'Invoice information is missing.';
     return;
   }
 
@@ -303,6 +467,11 @@ const fetchFees = async () => {
   }
 };
 
+const getTodayISO = (): string => {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+};
+
 const handlePayment = async () => {
   if (!props.invoice) {
     errorMessage.value = 'Invoice information is missing.';
@@ -311,6 +480,30 @@ const handlePayment = async () => {
 
   if (props.invoice.balance_due <= 0) {
     errorMessage.value = 'This invoice has no balance due.';
+    return;
+  }
+
+  if (selectedMethod.value === 'zelle') {
+    isLoading.value = true;
+    errorMessage.value = '';
+    try {
+      await paymentsApi.create(props.invoice.id, {
+        amount: zellePaymentAmount.value,
+        payment_method: 'zelle',
+        payment_date: getTodayISO(),
+      });
+      emit('success', 'zelle');
+      handleClose();
+    } catch (error: any) {
+      console.error('Zelle payment error:', error);
+      errorMessage.value =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to submit payment. Please try again.';
+      emit('error', errorMessage.value);
+    } finally {
+      isLoading.value = false;
+    }
     return;
   }
 
@@ -326,7 +519,7 @@ const handlePayment = async () => {
     // Create Stripe Checkout session with selected payment method
     const response = await paymentsApi.createStripeCheckout(
       props.invoice.id,
-      selectedMethod.value
+      selectedMethod.value as 'card' | 'ach'
     );
 
     // Redirect to Stripe Checkout
@@ -356,9 +549,11 @@ const handleClose = () => {
   }
 };
 
-// Fetch fees when modal opens and invoice changes
+// Fetch fees when modal is open and invoice is available (not on every mount)
 onMounted(() => {
-  fetchFees();
+  if (props.isOpen && props.invoice && props.singleMethod !== 'zelle') {
+    fetchFees();
+  }
 });
 
 watch(
@@ -374,7 +569,13 @@ watch(
   () => props.isOpen,
   newVal => {
     if (newVal) {
-      fetchFees();
+      errorMessage.value = '';
+      if (props.singleMethod) {
+        selectedMethod.value = props.singleMethod;
+      }
+      if (props.singleMethod !== 'zelle') {
+        fetchFees();
+      }
     }
   }
 );

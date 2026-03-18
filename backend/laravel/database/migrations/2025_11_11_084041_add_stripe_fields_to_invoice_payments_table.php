@@ -29,7 +29,7 @@ return new class extends Migration
         
         if ($driver === 'mysql') {
             // MySQL-specific enum modification
-            DB::statement("ALTER TABLE invoice_payments MODIFY COLUMN payment_method ENUM('cash', 'check', 'credit_card', 'bank_transfer', 'stripe_card', 'stripe_ach', 'other') DEFAULT 'other'");
+            DB::statement("ALTER TABLE invoice_payments MODIFY COLUMN payment_method ENUM('cash', 'check', 'credit_card', 'bank_transfer', 'stripe_card', 'stripe_ach', 'zelle', 'other') DEFAULT 'other'");
         } elseif ($driver === 'pgsql') {
             // PostgreSQL: Check if enum values exist, add if not
             try {
@@ -68,7 +68,7 @@ return new class extends Migration
         
         if ($driver === 'mysql') {
             try {
-                DB::statement("ALTER TABLE invoice_payments MODIFY COLUMN payment_method ENUM('cash', 'check', 'credit_card', 'bank_transfer', 'other') DEFAULT 'other'");
+                DB::statement("ALTER TABLE invoice_payments MODIFY COLUMN payment_method ENUM('cash', 'check', 'credit_card', 'bank_transfer', 'zelle', 'other') DEFAULT 'other'");
             } catch (\Exception $e) {
                 // Cannot revert if data exists with new enum values
             }
