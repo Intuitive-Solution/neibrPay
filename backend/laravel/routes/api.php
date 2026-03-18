@@ -205,6 +205,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tenant routes
     Route::put('tenant', [TenantController::class, 'update']);
     Route::put('tenant/localization', [TenantController::class, 'updateLocalization']);
+    Route::put('tenant/zelle', [TenantController::class, 'updateZelleSettings']);
+    Route::post('tenant/zelle-qr', [TenantController::class, 'uploadZelleQr']);
+    Route::delete('tenant/zelle-qr', [TenantController::class, 'removeZelleQr']);
     
     // Announcement routes
     Route::get('announcements/for-user', [AnnouncementController::class, 'forUser']);

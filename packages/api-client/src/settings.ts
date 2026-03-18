@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { apiClient } from './apiClient';
+import { apiClient, fileUploadClient } from './apiClient';
 import { settingsKeys } from './queryKeys';
 
 export interface SettingsData {
@@ -22,6 +22,11 @@ export interface SettingsData {
       stripe_connect_status: 'not_connected' | 'pending' | 'active';
       charges_enabled: boolean;
       details_submitted: boolean;
+      zelle_enabled?: boolean;
+      zelle_email?: string | null;
+      zelle_phone?: string | null;
+      zelle_qr_url?: string | null;
+      zelle_instructions?: string | null;
     };
   };
   user: {
@@ -56,6 +61,19 @@ export interface UpdateLocalizationRequest {
   timezone?: string;
   date_format?: string;
   first_month_of_year?: string;
+}
+
+export interface UpdateZelleSettingsRequest {
+  zelle_enabled?: boolean;
+  zelle_email?: string | null;
+  zelle_phone?: string | null;
+  zelle_instructions?: string | null;
+}
+
+export interface UploadZelleQrResponse {
+  message: string;
+  zelle_qr_path: string;
+  zelle_qr_url: string | null;
 }
 
 export interface SettingsResponse {
@@ -151,6 +169,42 @@ export const settingsApi = {
     );
     return response.data;
   },
+
+  /**
+   * Update Zelle payment settings
+   */
+  async updateZelleSettings(
+    data: UpdateZelleSettingsRequest
+  ): Promise<{ message: string; settings: Record<string, unknown> }> {
+    const response = await apiClient.put<{
+      message: string;
+      settings: Record<string, unknown>;
+    }>('/tenant/zelle', data);
+    return response.data;
+  },
+
+  /**
+   * Upload Zelle QR code image
+   */
+  async uploadZelleQr(file: File): Promise<UploadZelleQrResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fileUploadClient.post<UploadZelleQrResponse>(
+      '/tenant/zelle-qr',
+      formData
+    );
+    return response.data;
+  },
+
+  /**
+   * Remove Zelle QR code image
+   */
+  async removeZelleQr(): Promise<{ message: string }> {
+    const response = await apiClient.delete<{ message: string }>(
+      '/tenant/zelle-qr'
+    );
+    return response.data;
+  },
 };
 
 /**
@@ -212,6 +266,35 @@ export function useUpdateLocalization() {
   return useMutation({
     mutationFn: (data: UpdateLocalizationRequest) =>
       settingsApi.updateLocalization(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
+ * TanStack Query mutation to update Zelle settings
+ */
+export function useUpdateZelleSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateZelleSettingsRequest) =>
+      settingsApi.updateZelleSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
+ * TanStack Query mutation to remove Zelle QR code
+ */
+export function useRemoveZelleQr() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => settingsApi.removeZelleQr(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
     },

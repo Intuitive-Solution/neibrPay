@@ -15,6 +15,7 @@ export interface PaymentFilters {
     | 'bank_transfer'
     | 'stripe_card'
     | 'stripe_ach'
+    | 'zelle'
     | 'other';
   start_date?: string;
   end_date?: string;

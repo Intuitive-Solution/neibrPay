@@ -453,6 +453,146 @@
                 </div>
               </div>
             </div>
+
+            <!-- Zelle Section -->
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <h3 class="font-medium text-gray-900 mb-2">Zelle</h3>
+              <p class="text-sm text-gray-600 mb-4">
+                Allow residents to pay HOA dues via Zelle. They will send
+                payment to the email or phone below; you record and approve
+                payments when received.
+              </p>
+              <div class="space-y-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    v-model="zelleForm.zelle_enabled"
+                    type="checkbox"
+                    class="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                  />
+                  <span class="text-sm font-medium text-gray-700"
+                    >Enable Zelle payments</span
+                  >
+                </label>
+                <div v-if="zelleForm.zelle_enabled" class="space-y-4 pl-0">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >Zelle email</label
+                    >
+                    <input
+                      v-model="zelleForm.zelle_email"
+                      type="email"
+                      class="input-field"
+                      placeholder="e.g. payments@yourhoa.com"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >Zelle phone</label
+                    >
+                    <input
+                      v-model="zelleForm.zelle_phone"
+                      type="tel"
+                      class="input-field"
+                      placeholder="e.g. (555) 123-4567"
+                    />
+                  </div>
+                  <p class="text-xs text-gray-500">
+                    Provide at least one so residents know where to send
+                    payment.
+                  </p>
+
+                  <!-- QR code -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >QR code (optional)</label
+                    >
+                    <p class="text-xs text-gray-500 mb-2">
+                      Upload a QR code image residents can scan (e.g. from your
+                      bank’s Zelle page).
+                    </p>
+                    <div v-if="zelleQrUrl" class="flex flex-col gap-2">
+                      <img
+                        :src="zelleQrUrl"
+                        alt="Zelle QR code"
+                        class="w-32 h-32 object-contain border border-gray-200 rounded"
+                      />
+                      <div class="flex gap-2">
+                        <input
+                          ref="zelleQrInputRef"
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg"
+                          class="hidden"
+                          @change="onZelleQrFileChange"
+                        />
+                        <button
+                          type="button"
+                          @click="triggerZelleQrInput"
+                          :disabled="isUploadingZelleQr"
+                          class="btn-secondary text-sm"
+                        >
+                          <span v-if="isUploadingZelleQr">Uploading...</span>
+                          <span v-else>Replace QR</span>
+                        </button>
+                        <button
+                          type="button"
+                          @click="removeZelleQr"
+                          :disabled="isRemovingZelleQr"
+                          class="btn-secondary text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        >
+                          <span v-if="isRemovingZelleQr">Removing...</span>
+                          <span v-else>Remove QR code</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div v-else class="flex flex-col gap-2">
+                      <input
+                        ref="zelleQrInputRef"
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg"
+                        class="hidden"
+                        @change="onZelleQrFileChange"
+                      />
+                      <button
+                        type="button"
+                        @click="triggerZelleQrInput"
+                        :disabled="isUploadingZelleQr"
+                        class="btn-secondary text-sm w-fit"
+                      >
+                        <span v-if="isUploadingZelleQr">Uploading...</span>
+                        <span v-else>Upload QR code</span>
+                      </button>
+                    </div>
+                    <!-- Instructions under QR -->
+                    <div class="mt-3">
+                      <label
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Instructions for residents (when they scan the QR code)
+                      </label>
+                      <textarea
+                        v-model="zelleForm.zelle_instructions"
+                        rows="4"
+                        class="input-field"
+                        placeholder='e.g. Open Zelle, scan this code, enter the amount shown, and confirm. Then tap "I&apos;ve sent the payment" below.'
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  v-if="zelleForm.zelle_enabled"
+                  class="flex justify-end pt-4 border-t border-gray-200"
+                >
+                  <button
+                    @click="saveZelleSettings"
+                    :disabled="isSavingZelle"
+                    class="btn-primary"
+                  >
+                    <span v-if="isSavingZelle">Saving...</span>
+                    <span v-else>Save Zelle settings</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -789,11 +929,16 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
+import { useQueryClient } from '@tanstack/vue-query';
 import {
   useSettings,
   useUpdateTenantSettings,
   useUpdateUserProfile,
   useUpdateLocalization,
+  useUpdateZelleSettings,
+  useRemoveZelleQr,
+  settingsApi,
+  settingsKeys,
   stripeApi,
   useVerifyStripeStatus,
   useDisconnectStripe,
@@ -950,6 +1095,14 @@ const localizationForm = ref({
   first_month_of_year: 'January',
 });
 
+const zelleForm = ref({
+  zelle_enabled: false,
+  zelle_email: '' as string | null,
+  zelle_phone: '' as string | null,
+  zelle_instructions: '' as string | null,
+});
+const zelleQrInputRef = ref<HTMLInputElement | null>(null);
+
 // Months array
 const months = [
   'January',
@@ -967,10 +1120,13 @@ const months = [
 ];
 
 // Query and mutations
+const queryClient = useQueryClient();
 const { data: settingsData, isLoading } = useSettings();
 const updateTenantMutation = useUpdateTenantSettings();
 const updateUserMutation = useUpdateUserProfile();
 const updateLocalizationMutation = useUpdateLocalization();
+const updateZelleMutation = useUpdateZelleSettings();
+const removeZelleQrMutation = useRemoveZelleQr();
 
 // Loading states
 const isSavingHoa = computed(() => updateTenantMutation.isPending.value);
@@ -978,6 +1134,13 @@ const isSavingUser = computed(() => updateUserMutation.isPending.value);
 const isSavingLocalization = computed(
   () => updateLocalizationMutation.isPending.value
 );
+const isSavingZelle = computed(() => updateZelleMutation.isPending.value);
+const isRemovingZelleQr = computed(() => removeZelleQrMutation.isPending.value);
+
+const zelleQrUrl = computed(
+  () => settingsData.value?.tenant?.settings?.zelle_qr_url ?? null
+);
+const isUploadingZelleQr = ref(false);
 
 // Watch for settings data and populate forms
 watch(
@@ -1006,6 +1169,13 @@ watch(
         date_format: data.tenant.settings.date_format || 'MM/DD/YYYY',
         first_month_of_year:
           data.tenant.settings.first_month_of_year || 'January',
+      };
+
+      zelleForm.value = {
+        zelle_enabled: data.tenant.settings.zelle_enabled ?? false,
+        zelle_email: data.tenant.settings.zelle_email ?? null,
+        zelle_phone: data.tenant.settings.zelle_phone ?? null,
+        zelle_instructions: data.tenant.settings.zelle_instructions ?? null,
       };
     }
   },
@@ -1083,6 +1253,51 @@ const saveLocalizationSettings = async () => {
   } catch (error: any) {
     showError(error.message || 'Failed to update localization settings');
   }
+};
+
+const saveZelleSettings = async () => {
+  try {
+    await updateZelleMutation.mutateAsync({
+      zelle_enabled: zelleForm.value.zelle_enabled,
+      zelle_email: zelleForm.value.zelle_email || null,
+      zelle_phone: zelleForm.value.zelle_phone || null,
+      zelle_instructions: zelleForm.value.zelle_instructions || null,
+    });
+    showSuccess('Zelle settings saved');
+  } catch (error: any) {
+    showError(error.message || 'Failed to save Zelle settings');
+  }
+};
+
+const onZelleQrFileChange = async (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  isUploadingZelleQr.value = true;
+  try {
+    await settingsApi.uploadZelleQr(file);
+    showSuccess('QR code uploaded');
+    queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+  } catch (error: any) {
+    showError(error.message || 'Failed to upload QR code');
+  } finally {
+    isUploadingZelleQr.value = false;
+    input.value = '';
+  }
+};
+
+const removeZelleQr = async () => {
+  try {
+    await removeZelleQrMutation.mutateAsync();
+    showSuccess('QR code removed');
+  } catch (error: any) {
+    showError(error.message || 'Failed to remove QR code');
+  }
+};
+
+const triggerZelleQrInput = () => {
+  const el = zelleQrInputRef.value;
+  if (el && 'click' in el) (el as HTMLInputElement).click();
 };
 
 // ============ STRIPE PAYMENTS SECTION ============

@@ -4,7 +4,7 @@
 export * from './residents';
 export { unitsApi } from './units';
 export { invoicesApi } from './invoices';
-export { paymentsApi } from './payments';
+export { paymentsApi, type FeeCalculation } from './payments';
 export { chargesApi } from './charges';
 export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';
@@ -33,11 +33,15 @@ export {
   useUpdateUserProfile,
   useUpdatePassword,
   useUpdateLocalization,
+  useUpdateZelleSettings,
+  useRemoveZelleQr,
   type SettingsData,
   type UpdateTenantSettingsRequest,
   type UpdateUserProfileRequest,
   type UpdatePasswordRequest,
   type UpdateLocalizationRequest,
+  type UpdateZelleSettingsRequest,
+  type UploadZelleQrResponse,
 } from './settings';
 export {
   plaidApi,

@@ -2657,10 +2657,17 @@ const handlePaymentUpdateSuccess = () => {
   pdfRefreshKey.value = Date.now();
 };
 
-const handleStripePaymentSuccess = (sessionId: string) => {
-  // Payment redirect will happen, this is just for logging
-  console.log('Stripe checkout session created:', sessionId);
-  // Modal will close automatically when redirecting to Stripe
+const handleStripePaymentSuccess = async (sessionId: string) => {
+  if (sessionId === 'zelle') {
+    showStripePaymentModal.value = false;
+    await refetchInvoice();
+    showSuccess(
+      'Payment submitted. It will be marked paid once we receive your Zelle transfer.'
+    );
+  } else {
+    // Stripe: redirect will happen, modal closes on redirect
+    console.log('Stripe checkout session created:', sessionId);
+  }
 };
 
 const handleStripePaymentError = (error: string) => {
@@ -2676,6 +2683,7 @@ const formatPaymentMethod = (method: string) => {
     bank_transfer: 'Bank Transfer',
     stripe_card: 'Stripe (Card)',
     stripe_ach: 'Stripe (ACH)',
+    zelle: 'Zelle',
     other: 'Other',
   };
   return methodMap[method] || method;
@@ -2689,6 +2697,7 @@ const getPaymentMethodBadgeClass = (method: string) => {
     bank_transfer: 'bg-indigo-100 text-indigo-800',
     stripe_card: 'bg-indigo-100 text-indigo-800',
     stripe_ach: 'bg-indigo-100 text-indigo-800',
+    zelle: 'bg-teal-100 text-teal-800',
     other: 'bg-gray-100 text-gray-800',
   };
   return methodClasses[method] || 'bg-gray-100 text-gray-800';

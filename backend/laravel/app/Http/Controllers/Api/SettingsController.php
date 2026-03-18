@@ -3,12 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\FileStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 class SettingsController extends Controller
 {
+    public function __construct(
+        protected FileStorageService $fileStorage
+    ) {
+    }
+
     /**
      * Get all settings (tenant + user + localization)
      */
@@ -30,6 +36,16 @@ class SettingsController extends Controller
             $tenant = $user->tenant;
             $settings = $tenant->settings ?? [];
 
+            $zelleQrPath = $settings['zelle_qr_path'] ?? null;
+            $zelleQrUrl = null;
+            if ($zelleQrPath && $this->fileStorage->exists($zelleQrPath)) {
+                try {
+                    $zelleQrUrl = $this->fileStorage->getUrl($zelleQrPath);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to get Zelle QR URL', ['path' => $zelleQrPath, 'error' => $e->getMessage()]);
+                }
+            }
+
             return response()->json([
                 'tenant' => [
                     'id' => $tenant->id,
@@ -50,6 +66,11 @@ class SettingsController extends Controller
                         'stripe_connect_status' => $settings['stripe_connect_status'] ?? 'not_connected',
                         'charges_enabled' => $settings['charges_enabled'] ?? false,
                         'details_submitted' => $settings['details_submitted'] ?? false,
+                        'zelle_enabled' => (bool) ($settings['zelle_enabled'] ?? false),
+                        'zelle_email' => $settings['zelle_email'] ?? null,
+                        'zelle_phone' => $settings['zelle_phone'] ?? null,
+                        'zelle_qr_url' => $zelleQrUrl,
+                        'zelle_instructions' => $settings['zelle_instructions'] ?? null,
                     ],
                 ],
                 'user' => [
