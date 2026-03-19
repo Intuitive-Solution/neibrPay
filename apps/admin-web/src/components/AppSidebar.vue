@@ -30,43 +30,13 @@
       <!-- Community Header -->
       <div :class="isExpanded || isMobileMenuOpen ? 'p-4' : 'p-4'">
         <div v-if="isExpanded || isMobileMenuOpen" class="flex flex-col">
-          <div class="flex items-center gap-3">
-            <div
-              class="w-[55px] h-[55px] rounded-full flex items-center justify-center overflow-hidden bg-primary shrink-0"
-              :title="communityName"
-            >
-              <img
-                v-if="communityLogoUrl"
-                :src="communityLogoUrl"
-                alt=""
-                class="w-full h-full object-cover"
-              />
-              <span v-else class="text-white font-medium text-sm">
-                {{ communityInitials }}
-              </span>
-            </div>
-            <span class="font-bold text-xl leading-none">
-              <span class="text-gray-800">Neibr</span
-              ><span class="text-primary">Pay</span>
-            </span>
+          <div class="flex items-center min-w-0">
+            <NeibrPayLogo size="lg" />
           </div>
         </div>
 
         <div v-else class="flex flex-col items-center">
-          <div
-            class="w-[55px] h-[55px] rounded-full flex items-center justify-center overflow-hidden bg-primary shrink-0"
-            :title="communityName"
-          >
-            <img
-              v-if="communityLogoUrl"
-              :src="communityLogoUrl"
-              alt=""
-              class="w-full h-full object-cover"
-            />
-            <span v-else class="text-white font-medium text-sm">
-              {{ communityInitials }}
-            </span>
-          </div>
+          <NeibrPayLogo icon-only size="md" :title="communityName" />
         </div>
       </div>
 
@@ -611,6 +581,21 @@
               />
             </svg>
           </button>
+
+          <div
+            class="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden bg-primary shrink-0 ml-1"
+            :title="communityName"
+          >
+            <img
+              v-if="communityLogoUrl"
+              :src="communityLogoUrl"
+              alt=""
+              class="w-full h-full object-cover"
+            />
+            <span v-else class="text-white font-medium text-xs">
+              {{ communityInitials }}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -778,6 +763,21 @@
                 </div>
               </Transition>
             </div>
+
+            <div
+              class="w-11 h-11 rounded-full flex items-center justify-center overflow-hidden bg-primary shrink-0"
+              :title="communityName"
+            >
+              <img
+                v-if="communityLogoUrl"
+                :src="communityLogoUrl"
+                alt=""
+                class="w-full h-full object-cover"
+              />
+              <span v-else class="text-white font-medium text-sm">
+                {{ communityInitials }}
+              </span>
+            </div>
           </div>
         </div>
       </header>
@@ -795,6 +795,7 @@ import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useSettings, useTenantLogoUrl } from '@neibrpay/api-client';
+import NeibrPayLogo from './NeibrPayLogo.vue';
 
 const route = useRoute();
 const router = useRouter();
