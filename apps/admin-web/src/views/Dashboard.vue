@@ -97,7 +97,7 @@
       </div>
     </div>
 
-    <!-- Dashboard Stats (residents see Expenses, Budget, HOA Account Balance only) -->
+    <!-- Dashboard Stats (residents see Expenses and Budget only) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Units and Residents Container - Stacked at lg, separate at md -->
       <!-- Hidden at md (Units and Residents will be individual grid items) -->
@@ -576,8 +576,9 @@
         </div>
       </div>
 
-      <!-- Total Account Balance Card -->
+      <!-- HOA Account Balance Card (hidden for residents) -->
       <div
+        v-if="!isResident"
         class="card card-hover cursor-pointer"
         @click="navigateToTransactions"
       >
