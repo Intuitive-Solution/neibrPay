@@ -34,8 +34,11 @@
 
     <!-- Transactions Section -->
     <div v-else class="space-y-6">
-      <!-- Bank Balance Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Bank Balance Cards (hidden for residents) -->
+      <div
+        v-if="!isResident"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      >
         <!-- Total Account Balance Card -->
         <div
           class="card card-hover cursor-pointer transition-all"
@@ -532,6 +535,7 @@ import DateRangePicker from '../components/DateRangePicker.vue';
 const router = useRouter();
 const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.isAdmin);
+const isResident = computed(() => authStore.isResident);
 
 // Queries
 const { data: bankAccountsData } = useBankAccounts();
