@@ -111,11 +111,14 @@ class InvoiceReminderService
                     }
                 }
 
+                // Idempotency key must be stable for this overdue "slot" (multiples of interval), not
+                // calendar date — otherwise a second run the same day (n8n + manual test, retries,
+                // duplicate schedules) hits the unique index and looks like a false "every N days" bug.
                 $summary = $this->attemptReminder(
                     $summary,
                     $invoice,
                     'post_due',
-                    'post:' . $today->toDateString(),
+                    'post:' . $daysOverdue,
                     $daysOverdue,
                     fn () => $this->n8nPayloadService->buildReminderPayload($invoice, $owner, 'post_due', $daysOverdue)
                 );
@@ -154,10 +157,25 @@ class InvoiceReminderService
             });
         } catch (QueryException $e) {
             if ($this->isUniqueConstraintViolation($e)) {
-                $summary['skipped_duplicate_count']++;
-                return $summary;
+                $existing = InvoiceReminderLog::query()
+                    ->where('invoice_unit_id', $invoice->id)
+                    ->where('reminder_kind', $kind)
+                    ->where('reminder_key', $reminderKey)
+                    ->first();
+
+                if ($existing && $existing->status === 'failed') {
+                    $logRow = $existing;
+                } else {
+                    $summary['skipped_duplicate_count']++;
+                    return $summary;
+                }
+            } else {
+                throw $e;
             }
-            throw $e;
+        }
+
+        if ($logRow === null) {
+            return $summary;
         }
 
         try {
