@@ -90,9 +90,11 @@
       "parameters": {
         "fromEmail": "admin@geninvoices.com",
         "toEmail": "={{ $json.body?.recipient?.email || $json.recipient?.email }}",
-        "subject": "={{ 'Invoice ' + ($json.body?.invoice_summary?.invoice_number || '') + ' from ' + ($json.body?.tenant_name || 'NeibrPay') }}",
+        "subject": "={{ ($json.body?.type === 'invoice_due_reminder' || $json.type === 'invoice_due_reminder') ? (($json.body?.reminder_phase || $json.reminder_phase) === 'post_due' ? 'Overdue Reminder: Invoice ' : 'Payment Reminder: Invoice ') + ($json.body?.invoice_summary?.invoice_number || '') + ' from ' + ($json.body?.tenant_name || $json.tenant_name || 'NeibrPay') : 'Invoice ' + ($json.body?.invoice_summary?.invoice_number || '') + ' from ' + ($json.body?.tenant_name || $json.tenant_name || 'NeibrPay') }}",
         "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f4f4f4;\">\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n            <!-- Header -->\n            <tr>\n              <td style=\"padding: 40px 40px 20px; text-align: center; background-color: #2563eb; border-radius: 8px 8px 0 0;\">\n                <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\">\n                  Invoice {{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.invoice_number || '' }}\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding: 40px;\">\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Dear {{ $json.body && $json.body.recipient && $json.body.recipient.name || 'Valued Resident' }},\n                </p>\n\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Please find your invoice details below from <strong>{{ $json.body && $json.body.tenant_name || 'NeibrPay' }}</strong>.\n                </p>\n\n                <!-- Invoice Summary Box -->\n                <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 30px 0;\">\n                  <table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"font-size: 14px; color: #333333;\">\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Invoice Number:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.invoice_number || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Unit:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.unit_title || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Address:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.unit_address || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Total Amount:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right; font-size: 18px; font-weight: bold; color: #2563eb;\">${{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.total || '0.00' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Balance Due:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right; font-size: 16px; font-weight: bold; color: #dc2626;\">${{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.balance_due || '0.00' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Due Date:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.due_date || 'N/A' }}</td>\n                    </tr>\n                  </table>\n                </div>\n\n                <!-- CTA Button -->\n                <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n                  <tr>\n                    <td align=\"center\" style=\"padding: 20px 0 30px;\">\n                      <a href=\"{{ $json.body && $json.body.magic_link || $json.magic_link }}\" style=\"display: inline-block; padding: 16px 32px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);\">\n                        View & Pay Invoice\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <p style=\"margin: 30px 0 0; font-size: 14px; line-height: 1.6; color: #6b7280;\">\n                  If the button doesn't work, you can copy and paste this link into your browser:\n                </p>\n                <p style=\"margin: 10px 0 0; font-size: 12px; line-height: 1.6; color: #2563eb; word-break: break-all;\">\n                  {{ $json.body && $json.body.magic_link || $json.magic_link }}\n                </p>\n\n                <p style=\"margin: 30px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  This is an automated message from {{ $json.body && $json.body.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\">\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body && $json.body.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
-        "options": {}
+        "options": {
+          "ccEmail": "={{ Array.isArray($json.body?.cc || $json.cc) ? ($json.body?.cc || $json.cc).join(', ') : ($json.body?.cc || $json.cc || '') }}"
+        }
       },
       "id": "send-invoice-email",
       "name": "Send Invoice Email",
@@ -113,6 +115,31 @@
       "parameters": {
         "rules": {
           "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "route-invoice-reminder",
+                    "leftValue": "={{ $json.body && $json.body.type || $json.type }}",
+                    "rightValue": "invoice_due_reminder",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "send_invoice_reminder"
+            },
             {
               "conditions": {
                 "options": {
@@ -342,6 +369,13 @@
         [
           {
             "node": "Send Verification Code Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Invoice Email",
             "type": "main",
             "index": 0
           }

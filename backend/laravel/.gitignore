@@ -1,2 +1,5 @@
 firebase-credentials.json
 storage/app/firebase-credentials.json
+
+.phpunit.cache/
+phpunit.xml

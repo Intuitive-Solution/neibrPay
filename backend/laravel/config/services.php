@@ -22,6 +22,7 @@ return [
 
     'n8n' => [
         'webhook_url' => env('N8N_WEBHOOK_URL'),
+        'scheduler_api_key' => env('N8N_SCHEDULER_API_KEY'),
     ],
 
     'stripe' => [

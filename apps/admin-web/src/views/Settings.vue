@@ -150,6 +150,18 @@
           >
             Bank
           </button>
+          <button
+            v-if="!isResident"
+            @click="activeTab = 'reminders'"
+            :class="[
+              activeTab === 'reminders'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+              'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200',
+            ]"
+          >
+            Reminders
+          </button>
         </nav>
       </div>
 
@@ -787,6 +799,159 @@
             </button>
           </div>
         </div>
+
+        <!-- Reminders Tab -->
+        <div v-if="activeTab === 'reminders'" class="space-y-6">
+          <h2 class="text-base font-semibold text-gray-900">
+            Reminder Settings
+          </h2>
+          <p class="text-sm text-gray-600">
+            Configure invoice reminder timing. Reminder scheduling uses your
+            selected timezone from Localization settings.
+          </p>
+
+          <div
+            class="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-4"
+          >
+            <h3 class="font-medium text-blue-900">Invoice Due Reminders</h3>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                v-model="remindersForm.invoice_due.enabled"
+                type="checkbox"
+                class="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+              />
+              <span class="text-sm font-medium text-gray-700"
+                >Enable invoice due reminders</span
+              >
+            </label>
+
+            <div
+              :class="[
+                'space-y-4',
+                remindersForm.invoice_due.enabled ? '' : 'opacity-60',
+              ]"
+            >
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Pre-due offsets (days)
+                </label>
+                <p class="text-xs text-gray-500 mb-3">
+                  A reminder is sent when an invoice is exactly this many days
+                  before due date.
+                </p>
+                <div class="space-y-2">
+                  <div
+                    v-for="(offset, index) in remindersForm.invoice_due
+                      .pre_due_offsets_days"
+                    :key="`offset-${index}`"
+                    class="flex items-center gap-2"
+                  >
+                    <input
+                      v-model.number="
+                        remindersForm.invoice_due.pre_due_offsets_days[index]
+                      "
+                      type="number"
+                      min="1"
+                      class="input-field w-40"
+                    />
+                    <button
+                      type="button"
+                      class="btn-secondary text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                      @click="removePreDueOffset(index)"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                <div class="flex gap-2 mt-3">
+                  <button
+                    type="button"
+                    class="btn-secondary text-sm"
+                    @click="addPreDueOffset"
+                  >
+                    Add offset
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-secondary text-sm"
+                    @click="
+                      remindersForm.invoice_due.pre_due_offsets_days = [
+                        30, 15, 7, 3, 2, 1,
+                      ]
+                    "
+                  >
+                    Reset defaults
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Post-due interval (days)
+                </label>
+                <input
+                  v-model.number="
+                    remindersForm.invoice_due.post_due_interval_days
+                  "
+                  type="number"
+                  min="1"
+                  class="input-field w-40"
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                  Reminder sends every N overdue days (e.g., 3 = days 3, 6,
+                  9...).
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Max post-due reminders (optional)
+                  </label>
+                  <input
+                    v-model.number="
+                      remindersForm.invoice_due.post_due_max_reminders
+                    "
+                    type="number"
+                    min="1"
+                    class="input-field"
+                    placeholder="Unlimited if empty"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Stop post-due after days (optional)
+                  </label>
+                  <input
+                    v-model.number="
+                      remindersForm.invoice_due.post_due_stop_after_days
+                    "
+                    type="number"
+                    min="1"
+                    class="input-field"
+                    placeholder="Unlimited if empty"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <h3 class="font-medium text-gray-900 mb-2">Event Reminders</h3>
+            <p class="text-sm text-gray-600">Coming soon.</p>
+          </div>
+
+          <div class="flex justify-end pt-4 border-t border-gray-200">
+            <button
+              @click="saveReminderSettings"
+              :disabled="isSavingReminders"
+              class="btn-primary"
+            >
+              <span v-if="isSavingReminders">Saving...</span>
+              <span v-else>Save Changes</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1000,6 +1165,7 @@ import {
   useUpdateTenantSettings,
   useUpdateUserProfile,
   useUpdateLocalization,
+  useUpdateReminderSettings,
   useUpdateZelleSettings,
   useRemoveZelleQr,
   useUploadHoaLogo,
@@ -1061,7 +1227,7 @@ async function initHoaAddressAutocomplete() {
   try {
     await google.maps.importLibrary('places');
 
-    const input = document.getElementById('hoa-address') as HTMLTextAreaElement;
+    const input = document.getElementById('hoa-address') as HTMLInputElement;
     if (!input) return;
 
     const autocomplete = new google.maps.places.Autocomplete(input, {
@@ -1083,7 +1249,14 @@ async function initHoaAddressAutocomplete() {
 }
 
 // Tab state - initialize from hash if present
-const validTabs = ['hoa', 'user', 'localization', 'payments', 'bank'] as const;
+const validTabs = [
+  'hoa',
+  'user',
+  'localization',
+  'payments',
+  'reminders',
+  'bank',
+] as const;
 type TabType = (typeof validTabs)[number];
 
 const getInitialTab = (): TabType => {
@@ -1123,13 +1296,14 @@ watch(
   [isResident, activeTab],
   ([isResidentValue, currentTab]: [
     boolean,
-    'hoa' | 'user' | 'localization' | 'payments' | 'bank',
+    'hoa' | 'user' | 'localization' | 'payments' | 'reminders' | 'bank',
   ]) => {
     if (
       isResidentValue &&
       (currentTab === 'hoa' ||
         currentTab === 'localization' ||
         currentTab === 'payments' ||
+        currentTab === 'reminders' ||
         currentTab === 'bank')
     ) {
       activeTab.value = 'user';
@@ -1171,6 +1345,18 @@ const zelleForm = ref({
   zelle_phone: '' as string | null,
   zelle_instructions: '' as string | null,
 });
+const remindersForm = ref({
+  invoice_due: {
+    enabled: true,
+    pre_due_offsets_days: [30, 15, 7, 3, 2, 1] as number[],
+    post_due_interval_days: 3,
+    post_due_max_reminders: null as number | null,
+    post_due_stop_after_days: null as number | null,
+  },
+  events: {
+    enabled: false,
+  },
+});
 const zelleQrInputRef = ref<HTMLInputElement | null>(null);
 
 // Months array
@@ -1197,6 +1383,7 @@ const { zelleQrUrl: tenantZelleQrUrl } = useTenantZelleQrUrl(settingsData);
 const updateTenantMutation = useUpdateTenantSettings();
 const updateUserMutation = useUpdateUserProfile();
 const updateLocalizationMutation = useUpdateLocalization();
+const updateReminderMutation = useUpdateReminderSettings();
 const updateZelleMutation = useUpdateZelleSettings();
 const removeZelleQrMutation = useRemoveZelleQr();
 const uploadHoaLogoMutation = useUploadHoaLogo();
@@ -1207,6 +1394,9 @@ const isSavingHoa = computed(() => updateTenantMutation.isPending.value);
 const isSavingUser = computed(() => updateUserMutation.isPending.value);
 const isSavingLocalization = computed(
   () => updateLocalizationMutation.isPending.value
+);
+const isSavingReminders = computed(
+  () => updateReminderMutation.isPending.value
 );
 const isSavingZelle = computed(() => updateZelleMutation.isPending.value);
 const isRemovingZelleQr = computed(() => removeZelleQrMutation.isPending.value);
@@ -1258,6 +1448,23 @@ watch(
         zelle_phone: data.tenant.settings.zelle_phone ?? null,
         zelle_instructions: data.tenant.settings.zelle_instructions ?? null,
       };
+
+      const invoiceDue = data.tenant.settings.reminders?.invoice_due;
+      remindersForm.value = {
+        invoice_due: {
+          enabled: invoiceDue?.enabled ?? true,
+          pre_due_offsets_days: invoiceDue?.pre_due_offsets_days?.length
+            ? [...invoiceDue.pre_due_offsets_days]
+            : [30, 15, 7, 3, 2, 1],
+          post_due_interval_days: invoiceDue?.post_due_interval_days ?? 3,
+          post_due_max_reminders: invoiceDue?.post_due_max_reminders ?? null,
+          post_due_stop_after_days:
+            invoiceDue?.post_due_stop_after_days ?? null,
+        },
+        events: {
+          enabled: data.tenant.settings.reminders?.events?.enabled ?? false,
+        },
+      };
     }
   },
   { immediate: true }
@@ -1284,7 +1491,7 @@ onMounted(async () => {
   });
 });
 
-watch(activeTab, async tab => {
+watch(activeTab, async (tab: TabType) => {
   if (!isResident.value && tab === 'hoa') {
     await nextTick();
     initHoaAddressAutocomplete();
@@ -1334,6 +1541,49 @@ const saveLocalizationSettings = async () => {
   } catch (error: any) {
     showError(error.message || 'Failed to update localization settings');
   }
+};
+
+const saveReminderSettings = async () => {
+  try {
+    const uniqueOffsets: number[] = Array.from(
+      new Set<number>(
+        remindersForm.value.invoice_due.pre_due_offsets_days
+          .map((v: number) => Number(v))
+          .filter((v: number) => Number.isInteger(v) && v > 0)
+      )
+    ).sort((a: number, b: number) => b - a);
+
+    await updateReminderMutation.mutateAsync({
+      invoice_due: {
+        enabled: remindersForm.value.invoice_due.enabled,
+        pre_due_offsets_days: uniqueOffsets,
+        post_due_interval_days: Math.max(
+          1,
+          Number(remindersForm.value.invoice_due.post_due_interval_days || 1)
+        ),
+        post_due_max_reminders:
+          remindersForm.value.invoice_due.post_due_max_reminders || null,
+        post_due_stop_after_days:
+          remindersForm.value.invoice_due.post_due_stop_after_days || null,
+      },
+      events: {
+        enabled: remindersForm.value.events.enabled,
+      },
+    });
+
+    remindersForm.value.invoice_due.pre_due_offsets_days = uniqueOffsets;
+    showSuccess('Reminder settings updated successfully');
+  } catch (error: any) {
+    showError(error.message || 'Failed to update reminder settings');
+  }
+};
+
+const addPreDueOffset = () => {
+  remindersForm.value.invoice_due.pre_due_offsets_days.push(1);
+};
+
+const removePreDueOffset = (index: number) => {
+  remindersForm.value.invoice_due.pre_due_offsets_days.splice(index, 1);
 };
 
 const saveZelleSettings = async () => {

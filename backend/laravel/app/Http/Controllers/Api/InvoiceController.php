@@ -5,26 +5,31 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\InvoiceUnit;
 use App\Models\Unit;
+use App\Services\InvoiceN8nNotificationService;
 use App\Services\InvoicePdfService;
 use App\Services\AnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class InvoiceController extends Controller
 {
     protected $pdfService;
     protected $analytics;
+    protected $n8nNotificationService;
 
-    public function __construct(InvoicePdfService $pdfService, AnalyticsService $analytics)
+    public function __construct(
+        InvoicePdfService $pdfService,
+        AnalyticsService $analytics,
+        InvoiceN8nNotificationService $n8nNotificationService
+    )
     {
         $this->pdfService = $pdfService;
         $this->analytics = $analytics;
+        $this->n8nNotificationService = $n8nNotificationService;
     }
 
     /**
@@ -724,54 +729,11 @@ class InvoiceController extends Controller
         }
 
         try {
-            // Generate magic link token (expires in 30 days, similar to invitation link)
-            $magicLinkToken = Str::random(64);
-            Cache::put("magic_link:{$magicLinkToken}", [
-                'email' => $email,
-                'owner_id' => $owner->id,
-                'invoice_id' => $invoiceUnit->id,
-                'unit_id' => $invoiceUnit->unit_id,
-                'created_at' => now(),
-            ], now()->addDays(30));
-            
-            // Build magic link URL that will authenticate user and redirect to invoice
-            $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-            
-            // Create magic link that authenticates user and redirects to invoice
-            // Format: /magic-link?token=...&email=...&redirect=/invoices/{id}
-            $magicLink = rtrim($frontendUrl, '/') . '/magic-link?token=' . $magicLinkToken . '&email=' . urlencode($email) . '&redirect=' . urlencode('/invoices/' . $invoiceUnit->id);
-            // Calculate due date
-            $dueDate = $invoiceUnit->getActualDueDate();
-            $dueDateFormatted = $dueDate->format('Y-m-d');
-
-            // Build unit address string
-            $unit = $invoiceUnit->unit;
-            $unitAddress = trim(
-                ($unit->address ?? '') . ', ' . 
-                ($unit->city ?? '') . ', ' . 
-                ($unit->state ?? '') . ' ' . 
-                ($unit->zip_code ?? '')
+            $payload = $this->n8nNotificationService->buildInvoicePayload(
+                $invoiceUnit,
+                $owner,
+                $email
             );
-            $unitAddress = trim($unitAddress, ', ');
-
-            // Prepare n8n webhook payload
-            $payload = [
-                'type' => 'invoice',
-                'recipient' => [
-                    'email' => $email,
-                    'name' => $owner->name ?? $owner->email,
-                ],
-                'invoice_summary' => [
-                    'invoice_number' => $invoiceUnit->invoice_number,
-                    'total' => number_format((float) $invoiceUnit->total, 2, '.', ''),
-                    'balance_due' => number_format((float) $invoiceUnit->balance_due, 2, '.', ''),
-                    'due_date' => $dueDateFormatted,
-                    'unit_title' => $unit->title ?? '',
-                    'unit_address' => $unitAddress,
-                ],
-                'magic_link' => $magicLink,
-                'tenant_name' => $invoiceUnit->tenant->name ?? 'HOA',
-            ];
 
             Log::info('Sending n8n webhook request', [
                 'url' => $n8nWebhookUrl,
