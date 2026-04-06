@@ -59,12 +59,14 @@ class InvoiceReminderService
         foreach ($invoices as $invoice) {
             Log::info('Processing invoice', ['invoice_id' => $invoice->id]);
             if ((float) $invoice->balance_due <= 0) {
+                Log::info('Invoice balance is zero', ['invoice_id' => $invoice->id]);
                 $summary['skipped_ineligible_count']++;
                 continue;
             }
 
             $owner = $invoice->unit?->owners?->first();
             if (!$owner || empty($owner->email)) {
+                Log::info('Invoice owner is empty', ['invoice_id' => $invoice->id]);
                 $summary['skipped_ineligible_count']++;
                 continue;
             }
@@ -90,11 +92,13 @@ class InvoiceReminderService
             if ($daysUntilDue < 0) {
                 $daysOverdue = abs($daysUntilDue);
                 if ($daysOverdue % $config['post_due_interval_days'] !== 0) {
+                    Log::info('Days overdue is not a multiple of post due interval days', ['invoice_id' => $invoice->id, 'days_overdue' => $daysOverdue, 'post_due_interval_days' => $config['post_due_interval_days']]);
                     $summary['skipped_ineligible_count']++;
                     continue;
                 }
 
                 if ($config['post_due_stop_after_days'] !== null && $daysOverdue > $config['post_due_stop_after_days']) {
+                    Log::info('Days overdue is greater than post due stop after days', ['invoice_id' => $invoice->id, 'days_overdue' => $daysOverdue, 'post_due_stop_after_days' => $config['post_due_stop_after_days']]);
                     $summary['skipped_ineligible_count']++;
                     continue;
                 }
@@ -106,6 +110,7 @@ class InvoiceReminderService
                         ->where('status', 'sent')
                         ->count();
                     if ($postCount >= $config['post_due_max_reminders']) {
+                        Log::info('Post count is greater than post due max reminders', ['invoice_id' => $invoice->id, 'post_count' => $postCount, 'post_due_max_reminders' => $config['post_due_max_reminders']]);
                         $summary['skipped_ineligible_count']++;
                         continue;
                     }
