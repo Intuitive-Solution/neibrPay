@@ -18,6 +18,12 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "prepare": "node -e \"if (process.env.NETLIFY || process.env.CI) process.exit(0); require('child_process').execSync('husky install',{stdio:'inherit'})\""
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.53.2",
+    "@oxc-parser/binding-linux-x64-gnu": "0.96.0",
+    "@oxc-transform/binding-linux-x64-gnu": "0.96.0",
+    "@oxc-minify/binding-linux-x64-gnu": "0.96.0"
+  },
   "devDependencies": {
     "@turbo/gen": "^1.10.12",
     "turbo": "^1.10.12",

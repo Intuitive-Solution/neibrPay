@@ -1,12 +1,11 @@
-# Netlify: Base directory = apps/marketing-site (this folder).
-# Clear UI "Build command" / "Publish directory" so only this file controls them.
+# Netlify: Base directory = apps/marketing-site. Clear duplicate build/publish in the UI.
 #
-# npm has a known bug with optional native bindings in workspaces (npm/cli#4828).
-# Netlify's automatic install creates a broken node_modules. The fix is to wipe it
-# and do a fresh install inside the build command so platform bindings resolve correctly.
+# Netlify runs npm install before this script; that tree can miss workspace optional natives
+# (npm/cli#4828). We remove node_modules then npm ci so install matches the lockfile.
+# Root package.json optionalDependencies pull @rollup/* and @oxc/* Linux bindings in explicitly.
 
 [build]
-  command = "cd \"$(git rev-parse --show-toplevel)\" && rm -rf node_modules && npm install && npm run generate:marketing"
+  command = "cd \"$(git rev-parse --show-toplevel)\" && rm -rf node_modules && npm ci && npm run generate:marketing"
   publish = ".output/public"
 
 [build.environment]
