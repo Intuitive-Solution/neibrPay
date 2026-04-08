@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\PlaidController;
 use App\Http\Controllers\Api\StripePaymentController;
 use App\Http\Controllers\Api\StripeConnectController;
 use App\Http\Controllers\Api\ResidentController;
+use App\Http\Controllers\Api\ReminderController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UnitsController;
@@ -213,6 +214,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tenant routes
     Route::put('tenant', [TenantController::class, 'update']);
     Route::put('tenant/localization', [TenantController::class, 'updateLocalization']);
+    Route::put('tenant/reminders', [TenantController::class, 'updateReminderSettings']);
     Route::put('tenant/zelle', [TenantController::class, 'updateZelleSettings']);
     Route::post('tenant/zelle-qr', [TenantController::class, 'uploadZelleQr']);
     Route::delete('tenant/zelle-qr', [TenantController::class, 'removeZelleQr']);
@@ -258,6 +260,7 @@ Route::post('/plaid/sync-all', [PlaidController::class, 'syncAll']);
 
 // Document backup route (public, secured with API key for n8n)
 Route::post('/backup/documents', [BackupController::class, 'backupDocuments']);
+Route::post('/reminders/invoices/run', [ReminderController::class, 'runInvoiceReminders']);
 
 // Plaid webhook route (public, no auth - optional signature verification)
 Route::post('/plaid/webhook', [PlaidController::class, 'handleWebhook']);

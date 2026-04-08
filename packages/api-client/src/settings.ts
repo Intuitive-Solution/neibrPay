@@ -14,6 +14,18 @@ export interface SettingsData {
     phone: string;
     email: string;
     settings: {
+      reminders?: {
+        invoice_due?: {
+          enabled?: boolean;
+          pre_due_offsets_days?: number[];
+          post_due_interval_days?: number;
+          post_due_max_reminders?: number | null;
+          post_due_stop_after_days?: number | null;
+        };
+        events?: {
+          enabled?: boolean;
+        };
+      };
       currency: string;
       currency_format: string;
       timezone: string;
@@ -70,6 +82,19 @@ export interface UpdateZelleSettingsRequest {
   zelle_email?: string | null;
   zelle_phone?: string | null;
   zelle_instructions?: string | null;
+}
+
+export interface UpdateReminderSettingsRequest {
+  invoice_due?: {
+    enabled?: boolean;
+    pre_due_offsets_days?: number[];
+    post_due_interval_days?: number;
+    post_due_max_reminders?: number | null;
+    post_due_stop_after_days?: number | null;
+  };
+  events?: {
+    enabled?: boolean;
+  };
 }
 
 export interface UploadZelleQrResponse {
@@ -188,6 +213,19 @@ export const settingsApi = {
       message: string;
       settings: Record<string, unknown>;
     }>('/tenant/zelle', data);
+    return response.data;
+  },
+
+  /**
+   * Update reminder settings
+   */
+  async updateReminderSettings(
+    data: UpdateReminderSettingsRequest
+  ): Promise<{ message: string; settings: Record<string, unknown> }> {
+    const response = await apiClient.put<{
+      message: string;
+      settings: Record<string, unknown>;
+    }>('/tenant/reminders', data);
     return response.data;
   },
 
@@ -332,6 +370,21 @@ export function useUpdateZelleSettings() {
   return useMutation({
     mutationFn: (data: UpdateZelleSettingsRequest) =>
       settingsApi.updateZelleSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
+    },
+  });
+}
+
+/**
+ * TanStack Query mutation to update reminder settings
+ */
+export function useUpdateReminderSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateReminderSettingsRequest) =>
+      settingsApi.updateReminderSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.detail() });
     },

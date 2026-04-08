@@ -42,6 +42,20 @@ class SettingsController extends Controller
             $logoPath = $settings['logo_path'] ?? null;
             $hasLogo = $logoPath && $this->fileStorage->exists($logoPath);
 
+            $reminderDefaults = [
+                'invoice_due' => [
+                    'enabled' => true,
+                    'pre_due_offsets_days' => [30, 15, 7, 3, 2, 1],
+                    'post_due_interval_days' => 3,
+                    'post_due_max_reminders' => null,
+                    'post_due_stop_after_days' => null,
+                ],
+                'events' => [
+                    'enabled' => false,
+                ],
+            ];
+            $reminders = array_replace_recursive($reminderDefaults, (array) ($settings['reminders'] ?? []));
+
             // Logo and Zelle QR are fetched via signed-URL endpoints (tenant/hoa-logo/url, tenant/zelle-qr/url)
             // like Invoice PDFs; no long-lived URLs in settings response.
 
@@ -71,6 +85,7 @@ class SettingsController extends Controller
                         'has_zelle_qr' => $hasZelleQr,
                         'zelle_instructions' => $settings['zelle_instructions'] ?? null,
                         'has_logo' => $hasLogo,
+                        'reminders' => $reminders,
                     ],
                 ],
                 'user' => [

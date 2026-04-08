@@ -124,6 +124,71 @@ class TenantController extends Controller
     }
 
     /**
+     * Update reminder settings.
+     */
+    public function updateReminderSettings(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'invoice_due.enabled' => 'sometimes|boolean',
+                'invoice_due.pre_due_offsets_days' => 'sometimes|array',
+                'invoice_due.pre_due_offsets_days.*' => 'integer|min:1|max:365',
+                'invoice_due.post_due_interval_days' => 'sometimes|integer|min:1|max:365',
+                'invoice_due.post_due_max_reminders' => 'sometimes|nullable|integer|min:1|max:365',
+                'invoice_due.post_due_stop_after_days' => 'sometimes|nullable|integer|min:1|max:3650',
+                'events.enabled' => 'sometimes|boolean',
+            ]);
+
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            $user->load('tenant');
+            if (!$user->tenant) {
+                return response()->json(['error' => 'Tenant not found'], 404);
+            }
+
+            $tenant = $user->tenant;
+            $settings = $tenant->settings ?? [];
+            $reminders = (array) ($settings['reminders'] ?? []);
+
+            if (array_key_exists('invoice_due', $validated)) {
+                $invoiceDue = (array) ($reminders['invoice_due'] ?? []);
+                $incoming = (array) $validated['invoice_due'];
+                $invoiceDue = array_replace($invoiceDue, $incoming);
+
+                if (array_key_exists('pre_due_offsets_days', $invoiceDue)) {
+                    $offsets = array_values(array_unique(array_map('intval', (array) $invoiceDue['pre_due_offsets_days'])));
+                    sort($offsets);
+                    $invoiceDue['pre_due_offsets_days'] = $offsets;
+                }
+
+                $reminders['invoice_due'] = $invoiceDue;
+            }
+
+            if (array_key_exists('events', $validated)) {
+                $events = (array) ($reminders['events'] ?? []);
+                $events = array_replace($events, (array) $validated['events']);
+                $reminders['events'] = $events;
+            }
+
+            $settings['reminders'] = $reminders;
+            $tenant->settings = $settings;
+            $tenant->save();
+
+            return response()->json([
+                'message' => 'Reminder settings updated successfully',
+                'settings' => $reminders,
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Update reminder settings failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update reminder settings'], 500);
+        }
+    }
+
+    /**
      * Update Zelle payment settings
      */
     public function updateZelleSettings(Request $request): JsonResponse

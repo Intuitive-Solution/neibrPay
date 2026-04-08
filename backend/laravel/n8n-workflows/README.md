@@ -145,3 +145,39 @@ To modify the schedule frequency:
 - [Plaid API Docs](https://plaid.com/docs/)
 - [n8n Docs](https://docs.n8n.io/)
 - [Laravel API Documentation](../../API.md)
+
+## Invoice Reminder Clock Workflow
+
+Use n8n as the reminder scheduler (clock-only) and let Laravel handle reminder rules and dedupe.
+
+### Endpoint
+
+```http
+POST /api/reminders/invoices/run
+Header: X-N8N-API-Key: <N8N_SCHEDULER_API_KEY>
+```
+
+### n8n setup
+
+1. Create a **Schedule Trigger** (daily at your preferred UTC time).
+2. Add an **HTTP Request** node:
+   - Method: `POST`
+   - URL: `{{$env.LARAVEL_API_URL}}/api/reminders/invoices/run`
+   - Header: `X-N8N-API-Key: {{$env.N8N_SCHEDULER_API_KEY}}`
+3. Add optional error notification branch when `failed_count > 0`.
+4. You can import the starter file: `invoice-reminder-clock.json`.
+
+### Expected response
+
+```json
+{
+  "message": "Invoice reminders processed",
+  "results": {
+    "sent_count": 5,
+    "skipped_duplicate_count": 1,
+    "skipped_ineligible_count": 18,
+    "failed_count": 0
+  },
+  "timestamp": "2026-03-20T12:00:00Z"
+}
+```
