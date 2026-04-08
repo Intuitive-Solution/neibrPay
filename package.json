@@ -26,7 +26,9 @@
     "lint-staged": "^15.0.0"
   },
   "optionalDependencies": {
-    "@oxc-parser/binding-linux-x64-gnu": "0.96.0"
+    "@oxc-parser/binding-linux-x64-gnu": "0.96.0",
+    "@oxc-transform/binding-linux-x64-gnu": "0.96.0",
+    "@oxc-minify/binding-linux-x64-gnu": "0.96.0"
   },
   "engines": {
     "node": ">=18.0.0",
