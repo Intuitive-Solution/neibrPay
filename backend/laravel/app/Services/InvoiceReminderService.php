@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\InvoiceReminderLog;
+use App\Support\TenantTimezone;
 use App\Models\InvoiceUnit;
 use App\Models\Tenant;
 use Illuminate\Database\QueryException;
@@ -71,7 +72,7 @@ class InvoiceReminderService
                 continue;
             }
 
-            $dueDate = $invoice->getActualDueDate()->setTimezone($timezone)->startOfDay();
+            $dueDate = $invoice->getActualDueDate($timezone)->copy()->startOfDay();
             Log::info('Due date', ['due_date' => $dueDate]);
             Log::info('Invoice Number', ['invoice_number' => $invoice->invoice_number]);
             Log::info('Invoice owner', ['owner' => $owner->email]);
@@ -252,7 +253,9 @@ class InvoiceReminderService
             'post_due_interval_days' => max(1, (int) ($reminders['post_due_interval_days'] ?? 3)),
             'post_due_max_reminders' => isset($reminders['post_due_max_reminders']) ? (int) $reminders['post_due_max_reminders'] : null,
             'post_due_stop_after_days' => isset($reminders['post_due_stop_after_days']) ? (int) $reminders['post_due_stop_after_days'] : null,
-            'timezone' => (string) ($tenantSettings['timezone'] ?? 'UTC'),
+            'timezone' => TenantTimezone::normalize(
+                isset($tenantSettings['timezone']) ? (string) $tenantSettings['timezone'] : null
+            ),
         ];
     }
 

@@ -873,9 +873,23 @@ const formatDate = (dateString: string): string => {
   });
 };
 
+const formatCalendarDate = (ymd: string): string => {
+  const parts = ymd.split('-').map(p => parseInt(p, 10));
+  if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return ymd;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 // Get due date display string for an invoice (mirrors InvoiceDetail getDueDate logic)
 const getInvoiceDueDateDisplay = (invoice: InvoiceUnit): string => {
   if (!invoice?.start_date) return 'N/A';
+  if (invoice.due_calendar_date) {
+    return formatCalendarDate(invoice.due_calendar_date);
+  }
   const startDate = new Date(invoice.start_date);
   let dueDate = new Date(startDate);
   const dueDateEnum = invoice.due_date || 'use_payment_terms';
@@ -910,6 +924,9 @@ const isInvoiceOverdue = (invoice: InvoiceUnit): boolean => {
     invoice.status === 'cancelled'
   ) {
     return false;
+  }
+  if (invoice.days_until_due !== null && invoice.days_until_due !== undefined) {
+    return invoice.days_until_due < 0;
   }
   const dueDateEnum = invoice.due_date || 'use_payment_terms';
   if (dueDateEnum === 'due_on_receipt' || dueDateEnum === 'use_payment_terms') {

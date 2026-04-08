@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\TenantTimezone;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -307,51 +309,70 @@ class InvoiceUnit extends Model
             return false;
         }
 
-        $dueDate = $this->start_date;
-        
-        // Calculate actual due date based on due_date setting
-        switch ($this->due_date) {
-            case 'net_15':
-                $dueDate = $this->start_date->copy()->addDays(15);
-                break;
-            case 'net_30':
-                $dueDate = $this->start_date->copy()->addDays(30);
-                break;
-            case 'net_45':
-                $dueDate = $this->start_date->copy()->addDays(45);
-                break;
-            case 'net_60':
-                $dueDate = $this->start_date->copy()->addDays(60);
-                break;
-            case 'due_on_receipt':
-                $dueDate = $this->start_date;
-                break;
-        }
+        $this->loadMissing('tenant');
+        $dueDate = $this->getActualDueDate();
 
         return $dueDate->isPast() && $this->getBalanceDueAttribute() > 0;
     }
 
     /**
-     * Get the actual due date based on the due_date setting.
+     * Timezone used for calendar due-date math when none is passed explicitly.
      */
-    public function getActualDueDate()
+    private function resolveDueDateTimezone(?string $timezone = null): string
     {
-        $dueDate = $this->start_date;
-        
-        switch ($this->due_date) {
-            case 'net_15':
-                return $dueDate->copy()->addDays(15);
-            case 'net_30':
-                return $dueDate->copy()->addDays(30);
-            case 'net_45':
-                return $dueDate->copy()->addDays(45);
-            case 'net_60':
-                return $dueDate->copy()->addDays(60);
-            case 'due_on_receipt':
-                return $dueDate;
-            default:
-                return $dueDate->copy()->addDays(30); // Default to net 30
+        if ($timezone !== null) {
+            return TenantTimezone::normalize($timezone);
         }
+
+        return TenantTimezone::normalize(data_get($this->tenant?->settings, 'timezone'));
+    }
+
+    /**
+     * Get the actual due date based on the due_date setting.
+     * Uses the invoice start_date as a calendar Y-m-d in the given timezone (tenant settings when omitted).
+     */
+    public function getActualDueDate(?string $timezone = null): Carbon
+    {
+        $tz = $this->resolveDueDateTimezone($timezone);
+        $ymd = $this->start_date->format('Y-m-d');
+        $start = Carbon::parse($ymd, $tz)->startOfDay();
+
+        return match ($this->due_date) {
+            'net_15' => $start->copy()->addDays(15),
+            'net_30' => $start->copy()->addDays(30),
+            'net_45' => $start->copy()->addDays(45),
+            'net_60' => $start->copy()->addDays(60),
+            'due_on_receipt' => $start->copy(),
+            default => $start->copy()->addDays(30),
+        };
+    }
+
+    /**
+     * API-facing due calendar fields (matches admin UI for net_* / due_on_receipt).
+     *
+     * @return array{due_calendar_date: ?string, days_until_due: ?int, due_date_timezone: string}
+     */
+    public function dueDateApiMeta(?string $timezone = null): array
+    {
+        $tz = $timezone ?? $this->resolveDueDateTimezone(null);
+
+        if ($this->due_date === 'use_payment_terms') {
+            return [
+                'due_calendar_date' => null,
+                'days_until_due' => null,
+                'due_date_timezone' => $tz,
+            ];
+        }
+
+        $due = $this->getActualDueDate($tz);
+        $today = now()->timezone($tz)->startOfDay();
+        $dueDay = $due->copy()->timezone($tz)->startOfDay();
+
+        return [
+            'due_calendar_date' => $dueDay->format('Y-m-d'),
+            'days_until_due' => (int) $today->diffInDays($dueDay, false),
+            'due_date_timezone' => $tz,
+        ];
     }
 
     /**

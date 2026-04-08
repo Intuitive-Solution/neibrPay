@@ -766,7 +766,7 @@
                   invoice.deleted_at ? 'text-red-400' : 'text-gray-900',
                 ]"
               >
-                {{ formatDate(invoice.start_date) }}
+                {{ getInvoiceDueDateCell(invoice) }}
               </td>
 
               <!-- Status Column -->
@@ -1190,9 +1190,34 @@ const isInvoiceOverdue = (invoice: any): boolean => {
   ) {
     return false;
   }
-  const dueDate = new Date(invoice.start_date);
+  if (invoice.days_until_due !== null && invoice.days_until_due !== undefined) {
+    return invoice.days_until_due < 0;
+  }
+  const dueDateEnum = invoice.due_date || 'use_payment_terms';
+  if (dueDateEnum === 'due_on_receipt' || dueDateEnum === 'use_payment_terms') {
+    return false;
+  }
+  const startDate = new Date(invoice.start_date);
+  const dueDate = new Date(startDate);
+  switch (dueDateEnum) {
+    case 'net_15':
+      dueDate.setDate(startDate.getDate() + 15);
+      break;
+    case 'net_30':
+      dueDate.setDate(startDate.getDate() + 30);
+      break;
+    case 'net_45':
+      dueDate.setDate(startDate.getDate() + 45);
+      break;
+    case 'net_60':
+      dueDate.setDate(startDate.getDate() + 60);
+      break;
+    default:
+      return false;
+  }
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
   return dueDate < today;
 };
 
@@ -1388,8 +1413,8 @@ const filteredInvoices = computed(() => {
           bValue = b.total || 0;
           break;
         case 'dueDate':
-          aValue = a.start_date ? new Date(a.start_date).getTime() : 0;
-          bValue = b.start_date ? new Date(b.start_date).getTime() : 0;
+          aValue = a.due_calendar_date || a.start_date || '';
+          bValue = b.due_calendar_date || b.start_date || '';
           break;
         case 'status':
           aValue = a.status || '';
@@ -1444,6 +1469,30 @@ const formatDate = (dateString: string) => {
     month: 'short',
     day: 'numeric',
   });
+};
+
+const formatCalendarDate = (ymd: string) => {
+  const parts = ymd.split('-').map(p => parseInt(p, 10));
+  if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return ymd;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+const getInvoiceDueDateCell = (invoice: any) => {
+  if (invoice.due_calendar_date) {
+    return formatCalendarDate(invoice.due_calendar_date);
+  }
+  if (invoice.due_date === 'due_on_receipt') {
+    return 'On receipt';
+  }
+  if (invoice.due_date === 'use_payment_terms') {
+    return '—';
+  }
+  return formatDate(invoice.start_date);
 };
 
 const formatCurrency = (amount: number | string) => {
