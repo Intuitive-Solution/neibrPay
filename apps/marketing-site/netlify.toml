@@ -1,12 +1,12 @@
-# Netlify: set Base directory to apps/marketing-site (this folder).
-# Clear the UI "Build command" / "Publish directory" so this file controls them (avoid duplicates).
+# Netlify: Base directory = apps/marketing-site (this folder).
+# Clear UI "Build command" / "Publish directory" so only this file controls them.
 #
-# Lockfile lives at the monorepo root; cwd may be this app folder, so we cd via git first.
-# npm 11.3+ fixes oxc-parser optional deps on Linux (npm/cli#4828).
+# npm has a known bug with optional native bindings in workspaces (npm/cli#4828).
+# Netlify's automatic install creates a broken node_modules. The fix is to wipe it
+# and do a fresh install inside the build command so platform bindings resolve correctly.
 
 [build]
-  command = "cd \"$(git rev-parse --show-toplevel)\" && npm ci && npm run generate:marketing"
-  # Relative to Base directory (apps/marketing-site), not repo root
+  command = "cd \"$(git rev-parse --show-toplevel)\" && rm -rf node_modules && npm install && npm run generate:marketing"
   publish = ".output/public"
 
 [build.environment]
