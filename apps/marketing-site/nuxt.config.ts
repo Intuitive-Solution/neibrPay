@@ -28,8 +28,15 @@ export default defineNuxtConfig({
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     },
   },
+  nitro: {
+    prerender: {
+      routes: ['/sitemap.xml'],
+    },
+  },
   runtimeConfig: {
     public: {
+      /** Canonical site origin for sitemap URLs (e.g. https://neibrpay.com). */
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://neibrpay.com',
       adminWebUrl: process.env.ADMIN_WEB_URL || 'http://localhost:3000',
       calendlyUrl:
         process.env.CALENDLY_URL ||
