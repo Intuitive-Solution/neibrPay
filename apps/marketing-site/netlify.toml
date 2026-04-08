@@ -1,0 +1,18 @@
+# Netlify: set this site’s base directory to apps/marketing-site so this file is used.
+# Fixes oxc-parser optional native bindings on Linux (npm < 11.3) and publishes Nuxt static output.
+#
+# If the site base directory must stay at the repo root instead, clear the UI build/publish
+# fields that conflict, then set:
+#   command:  npm ci && npm run generate:marketing
+#   publish:  apps/marketing-site/.output/public
+#   env:      NODE_VERSION=20, NPM_VERSION=11
+
+[build]
+  # Install from monorepo root so package-lock.json and optional platform packages resolve.
+  command = "cd ../.. && npm ci && cd apps/marketing-site && npm run generate"
+  publish = ".output/public"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # npm 11.3+ fixes optionalDependencies / oxc-parser bindings in workspaces (see npm/cli#4828)
+  NPM_VERSION = "11"
