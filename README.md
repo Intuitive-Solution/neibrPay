@@ -779,3 +779,6 @@ user_transactions_dynamic
 
 #n8n mcp
 npx n8n-mcp
+
+** send due reminders **
+php artisan invoices:send-due-reminders
