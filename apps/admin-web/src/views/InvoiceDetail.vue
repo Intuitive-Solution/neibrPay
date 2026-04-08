@@ -2476,6 +2476,18 @@ const formatDate = (dateString: string) => {
   });
 };
 
+/** Format Y-m-d without UTC/local shifting (calendar date from API). */
+const formatCalendarDate = (ymd: string) => {
+  const parts = ymd.split('-').map(p => parseInt(p, 10));
+  if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return ymd;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 const formatCurrency = (amount: number | string) => {
   if (amount === null || amount === undefined) return '0.00';
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -2530,7 +2542,12 @@ const formatFrequency = (frequency: string) => {
 const getDueDate = () => {
   if (!invoice.value) return 'N/A';
 
-  // Calculate due date based on due_date setting
+  const cal = invoice.value.due_calendar_date;
+  if (cal) {
+    return formatCalendarDate(cal);
+  }
+
+  // Fallback: legacy client-side net terms (avoid if API provides due_calendar_date)
   const startDate = new Date(invoice.value.start_date);
   let dueDate = new Date(startDate);
 
@@ -2559,6 +2576,18 @@ const getDueDate = () => {
 
 const getDueDateDisplay = () => {
   if (!invoice.value) return '';
+
+  const apiDays = invoice.value.days_until_due;
+  if (apiDays !== null && apiDays !== undefined) {
+    if (apiDays < 0) {
+      const daysOverdue = Math.abs(apiDays);
+      return `${daysOverdue} ${daysOverdue === 1 ? 'day' : 'days'} overdue`;
+    }
+    if (apiDays === 0) {
+      return 'Due today';
+    }
+    return `Due in ${apiDays} ${apiDays === 1 ? 'day' : 'days'}`;
+  }
 
   const startDate = new Date(invoice.value.start_date);
   let dueDate = new Date(startDate);

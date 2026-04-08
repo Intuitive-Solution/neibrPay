@@ -160,6 +160,12 @@ export const InvoiceUnitSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   deleted_at: z.string().nullable(),
+  /** Y-m-d in tenant due_date_timezone (from API; net_* / due_on_receipt only). */
+  due_calendar_date: z.string().nullable().optional(),
+  /** Signed day diff from today in tenant TZ; negative = overdue (API-computed). */
+  days_until_due: z.number().int().nullable().optional(),
+  /** IANA timezone used for due_calendar_date / days_until_due. */
+  due_date_timezone: z.string().optional(),
   // Relationships
   unit: z
     .object({

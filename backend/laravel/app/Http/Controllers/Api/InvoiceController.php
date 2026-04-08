@@ -43,7 +43,7 @@ class InvoiceController extends Controller
         $status = $request->get('status');
         
         $query = InvoiceUnit::forTenant($user->tenant_id)
-            ->with(['unit', 'creator', 'notes', 'payments', 'schedule']);
+            ->with(['unit', 'creator', 'notes', 'payments', 'schedule', 'tenant']);
             
         // If user is a resident, filter invoices to only show those for user's owned units
         if ($user->isResident()) {
@@ -80,7 +80,7 @@ class InvoiceController extends Controller
         $invoices = $query->orderBy('created_at', 'desc')->get();
         
         return response()->json([
-            'data' => $invoices,
+            'data' => $this->serializedInvoicesWithDueMeta($invoices),
             'meta' => [
                 'total' => $invoices->count(),
                 'include_deleted' => $includeDeleted,
@@ -197,7 +197,7 @@ class InvoiceController extends Controller
             }
             
             return response()->json([
-                'data' => $createdInvoices,
+                'data' => $this->serializedInvoicesWithDueMeta(collect($createdInvoices)),
                 'message' => 'Invoice(s) created successfully',
             ], 201);
             
@@ -235,6 +235,7 @@ class InvoiceController extends Controller
         }
 
         $invoiceUnit->load([
+            'tenant',
             'unit.owners',
             'creator',
             'notes',
@@ -246,7 +247,7 @@ class InvoiceController extends Controller
         ]);
 
         return response()->json([
-            'data' => $invoiceUnit,
+            'data' => $this->serializedInvoiceWithDueMeta($invoiceUnit),
         ]);
     }
 
@@ -354,7 +355,7 @@ class InvoiceController extends Controller
             $invoiceUnit->load(['unit', 'creator', 'notes', 'payments', 'schedule']);
             
             return response()->json([
-                'data' => $invoiceUnit,
+                'data' => $this->serializedInvoiceWithDueMeta($invoiceUnit),
                 'message' => 'Invoice updated successfully',
             ]);
             
@@ -414,7 +415,7 @@ class InvoiceController extends Controller
         $invoiceUnit->load(['unit', 'creator', 'notes', 'payments', 'schedule']);
 
         return response()->json([
-            'data' => $invoiceUnit,
+            'data' => $this->serializedInvoiceWithDueMeta($invoiceUnit),
             'message' => 'Invoice restored successfully',
         ]);
     }
@@ -462,7 +463,7 @@ class InvoiceController extends Controller
         $invoiceUnit->load(['unit', 'creator', 'notes', 'payments', 'schedule']);
 
         return response()->json([
-            'data' => $invoiceUnit,
+            'data' => $this->serializedInvoiceWithDueMeta($invoiceUnit),
             'message' => 'Invoice marked as sent',
         ]);
     }
@@ -532,7 +533,7 @@ class InvoiceController extends Controller
         $invoiceUnit->load(['unit', 'creator', 'notes', 'payments', 'schedule']);
 
         return response()->json([
-            'data' => $invoiceUnit,
+            'data' => $this->serializedInvoiceWithDueMeta($invoiceUnit),
             'message' => 'Invoice marked as paid',
         ]);
     }
@@ -604,7 +605,7 @@ class InvoiceController extends Controller
             $clonedInvoice->load(['unit', 'creator', 'notes', 'payments', 'schedule']);
 
             return response()->json([
-                'data' => [$clonedInvoice],
+                'data' => $this->serializedInvoicesWithDueMeta(collect([$clonedInvoice])),
                 'message' => 'Invoice cloned successfully',
             ], 201);
             
@@ -854,12 +855,12 @@ class InvoiceController extends Controller
         }
 
         $invoices = InvoiceUnit::forUnit($unit->id)
-            ->with(['creator', 'notes', 'payments', 'schedule'])
+            ->with(['creator', 'notes', 'payments', 'schedule', 'tenant'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
-            'data' => $invoices,
+            'data' => $this->serializedInvoicesWithDueMeta($invoices),
             'meta' => [
                 'unit_id' => $unit->id,
                 'total' => $invoices->count(),
@@ -971,5 +972,32 @@ class InvoiceController extends Controller
 
         $schedule->calculateNextDueDate();
         $schedule->save();
+    }
+
+    /**
+     * Serialize invoice for JSON with tenant-local due calendar fields (does not embed full tenant).
+     *
+     * @return array<string, mixed>
+     */
+    private function serializedInvoiceWithDueMeta(InvoiceUnit $invoice): array
+    {
+        $invoice->loadMissing(['tenant', 'childInvoices.tenant']);
+        $data = $invoice->toArray();
+        unset($data['tenant']);
+
+        if ($invoice->relationLoaded('childInvoices') && $invoice->childInvoices->isNotEmpty()) {
+            $data['child_invoices'] = $this->serializedInvoicesWithDueMeta($invoice->childInvoices);
+        }
+
+        return array_merge($data, $invoice->dueDateApiMeta());
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection<int, InvoiceUnit>|\Illuminate\Database\Eloquent\Collection<int, InvoiceUnit> $invoices
+     * @return list<array<string, mixed>>
+     */
+    private function serializedInvoicesWithDueMeta($invoices): array
+    {
+        return $invoices->map(fn (InvoiceUnit $inv) => $this->serializedInvoiceWithDueMeta($inv))->values()->all();
     }
 }
