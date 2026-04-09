@@ -1,13 +1,13 @@
-# Netlify “package path” / monorepo: build runs with cwd = repo root (/opt/build/repo), not this folder.
-# Do not `cd ../..` — that leaves the repo and breaks npm ci (no package-lock.json).
+# Netlify: Base directory = apps/marketing-site. Clear duplicate build/publish in the UI.
 #
-# Fixes oxc-parser optional native bindings on Linux (npm < 11.3). Publish path is from repo root.
+# Netlify runs npm install before this script; that tree can miss workspace optional natives
+# (npm/cli#4828). We remove node_modules then npm ci so install matches the lockfile.
+# Root package.json optionalDependencies pull @rollup/* and @oxc/* Linux bindings in explicitly.
 
 [build]
-  command = "npm ci && npm run generate:marketing"
-  publish = "apps/marketing-site/.output/public"
+  command = "cd \"$(git rev-parse --show-toplevel)\" && rm -rf node_modules && npm ci && npm run generate:marketing"
+  publish = ".output/public"
 
 [build.environment]
   NODE_VERSION = "20"
-  # npm 11.3+ fixes optionalDependencies / oxc-parser bindings in workspaces (see npm/cli#4828)
   NPM_VERSION = "11"

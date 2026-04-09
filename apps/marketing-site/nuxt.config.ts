@@ -29,6 +29,9 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    // Netlify sets NETLIFY=true on CI; without this Nitro picks `netlify-legacy` and tries to
+    // write `.netlify/functions-internal/...`, which breaks static `nuxt generate` (ENOENT).
+    preset: 'static',
     prerender: {
       routes: ['/sitemap.xml'],
     },
