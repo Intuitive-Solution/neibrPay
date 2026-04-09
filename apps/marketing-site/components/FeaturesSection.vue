@@ -1,7 +1,6 @@
 <template>
   <section id="features" class="bg-neutral-50 py-16 md:py-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Section Headline -->
       <h2 class="section-headline text-center mb-4">
         Everything You Need to Manage Your HOA
       </h2>
@@ -9,25 +8,45 @@
         Comprehensive tools designed for modern community management
       </p>
 
-      <!-- Features Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <div
+        <NuxtLink
           v-for="feature in features"
-          :key="feature.title"
-          class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+          :key="feature.slug"
+          :to="`/features/${feature.slug}`"
+          class="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200 block"
         >
           <div
             class="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center mb-4"
           >
-            <component :is="feature.icon" />
+            <component :is="featureIcons[feature.slug]" />
           </div>
-          <h3 class="text-xl font-semibold text-primary-800 mb-2">
+          <h3
+            class="text-xl font-semibold text-primary-800 mb-2 group-hover:text-primary-600 transition-colors"
+          >
             {{ feature.title }}
           </h3>
-          <p class="text-gray-600">
-            {{ feature.description }}
+          <p class="text-gray-600 mb-4">
+            {{ feature.shortDescription }}
           </p>
-        </div>
+          <span
+            class="inline-flex items-center text-sm font-medium text-primary-700 group-hover:text-primary-500 transition-colors"
+          >
+            Learn more
+            <svg
+              class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </span>
+        </NuxtLink>
       </div>
     </div>
   </section>
@@ -35,8 +54,10 @@
 
 <script setup lang="ts">
 import { h } from 'vue';
+import { useFeatureData } from '~/composables/useFeatureData';
 
-// Icon components as render functions
+const { features } = useFeatureData();
+
 const InvoiceIcon = () =>
   h(
     'svg',
@@ -44,7 +65,7 @@ const InvoiceIcon = () =>
       fill: 'none',
       stroke: 'currentColor',
       viewBox: '0 0 24 24',
-      class: 'w-6 h-6',
+      class: 'w-6 h-6 text-primary-600',
     },
     [
       h('path', {
@@ -63,7 +84,7 @@ const VendorIcon = () =>
       fill: 'none',
       stroke: 'currentColor',
       viewBox: '0 0 24 24',
-      class: 'w-6 h-6',
+      class: 'w-6 h-6 text-primary-600',
     },
     [
       h('path', {
@@ -82,14 +103,14 @@ const DocumentIcon = () =>
       fill: 'none',
       stroke: 'currentColor',
       viewBox: '0 0 24 24',
-      class: 'w-6 h-6',
+      class: 'w-6 h-6 text-primary-600',
     },
     [
       h('path', {
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round',
         'stroke-width': '2',
-        d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+        d: 'M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z',
       }),
     ]
   );
@@ -101,7 +122,7 @@ const PortalIcon = () =>
       fill: 'none',
       stroke: 'currentColor',
       viewBox: '0 0 24 24',
-      class: 'w-6 h-6',
+      class: 'w-6 h-6 text-primary-600',
     },
     [
       h('path', {
@@ -120,7 +141,7 @@ const SecurityIcon = () =>
       fill: 'none',
       stroke: 'currentColor',
       viewBox: '0 0 24 24',
-      class: 'w-6 h-6',
+      class: 'w-6 h-6 text-primary-600',
     },
     [
       h('path', {
@@ -139,7 +160,7 @@ const ReportIcon = () =>
       fill: 'none',
       stroke: 'currentColor',
       viewBox: '0 0 24 24',
-      class: 'w-6 h-6',
+      class: 'w-6 h-6 text-primary-600',
     },
     [
       h('path', {
@@ -158,7 +179,7 @@ const AnnouncementIcon = () =>
       fill: 'none',
       stroke: 'currentColor',
       viewBox: '0 0 24 24',
-      class: 'w-6 h-6',
+      class: 'w-6 h-6 text-primary-600',
     },
     [
       h('path', {
@@ -170,48 +191,13 @@ const AnnouncementIcon = () =>
     ]
   );
 
-const features = [
-  {
-    title: 'Invoice & Payment Management',
-    description:
-      'Create, send, and track invoices with automated payment reminders. Support for partial payments and late fees.',
-    icon: InvoiceIcon,
-  },
-  {
-    title: 'Vendor & Expense Tracking',
-    description:
-      "Manage vendor relationships and track expenses with receipt attachments. Streamline your HOA's financial operations.",
-    icon: VendorIcon,
-  },
-  {
-    title: 'Document Storage',
-    description:
-      'Centralized document management for unit-level and community-wide files. Easy access for board members and residents.',
-    icon: DocumentIcon,
-  },
-  {
-    title: 'Owner Portal',
-    description:
-      'Self-service portal for residents to view invoices, make payments, and access community documents.',
-    icon: PortalIcon,
-  },
-  {
-    title: 'Multi-tenant Architecture',
-    description:
-      'Secure, isolated data for each HOA. Built for scale with enterprise-grade security and reliability.',
-    icon: SecurityIcon,
-  },
-  {
-    title: 'Financial Reporting',
-    description:
-      'Comprehensive financial reports and analytics. Track income, expenses, and budget performance.',
-    icon: ReportIcon,
-  },
-  {
-    title: 'Announcements & Communication',
-    description:
-      'Send announcements to residents via email and push notifications. Keep your community informed.',
-    icon: AnnouncementIcon,
-  },
-];
+const featureIcons: Record<string, any> = {
+  'invoice-payment-management': InvoiceIcon,
+  'vendor-expense-tracking': VendorIcon,
+  'document-storage': DocumentIcon,
+  'owner-portal': PortalIcon,
+  'multi-tenant-architecture': SecurityIcon,
+  'financial-reporting': ReportIcon,
+  'announcements-communication': AnnouncementIcon,
+};
 </script>

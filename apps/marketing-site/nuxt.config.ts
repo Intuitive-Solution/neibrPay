@@ -15,14 +15,14 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   app: {
     head: {
-      title: 'NeibrPay - HOA Management Made Simple',
+      title: 'NeibrPay — HOA Dues Collection & Community Management Platform',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
           name: 'description',
           content:
-            'Comprehensive HOA management platform for invoicing, payments, vendor management, and community communication.',
+            'Collect HOA dues online via Zelle, ACH, or card. Manage vendors, store documents, and communicate with residents. Built for self-managed HOAs.',
         },
       ],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
@@ -33,7 +33,17 @@ export default defineNuxtConfig({
     // write `.netlify/functions-internal/...`, which breaks static `nuxt generate` (ENOENT).
     preset: 'static',
     prerender: {
-      routes: ['/sitemap.xml'],
+      routes: [
+        '/sitemap.xml',
+        '/get-started',
+        '/features/invoice-payment-management',
+        '/features/vendor-expense-tracking',
+        '/features/document-storage',
+        '/features/owner-portal',
+        '/features/multi-tenant-architecture',
+        '/features/financial-reporting',
+        '/features/announcements-communication',
+      ],
     },
   },
   runtimeConfig: {

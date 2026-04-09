@@ -11,54 +11,46 @@
           </h3>
           <ul class="space-y-2">
             <li>
-              <a href="#about" class="text-gray-600 hover:text-primary-600">
+              <NuxtLink
+                to="/about"
+                class="text-gray-600 hover:text-primary-600"
+              >
                 About
-              </a>
+              </NuxtLink>
             </li>
             <li>
               <NuxtLink
                 to="/contact"
                 class="text-gray-600 hover:text-primary-600"
+                >Contact</NuxtLink
               >
-                Contact
-              </NuxtLink>
             </li>
           </ul>
         </div>
 
-        <!-- Product -->
+        <!-- Features -->
         <div>
           <h3
             class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4"
           >
-            Product
+            Features
           </h3>
           <ul class="space-y-2">
-            <li>
+            <li v-for="feature in topFeatures" :key="feature.slug">
               <NuxtLink
-                to="#features"
+                :to="`/features/${feature.slug}`"
                 class="text-gray-600 hover:text-primary-600"
               >
-                Features
+                {{ feature.title }}
               </NuxtLink>
             </li>
             <li>
               <NuxtLink
-                to="#pricing"
-                class="text-gray-600 hover:text-primary-600"
+                to="/#features"
+                class="text-primary-600 hover:text-primary-700 font-medium"
               >
-                Pricing
+                All Features &rarr;
               </NuxtLink>
-            </li>
-            <li>
-              <a
-                :href="calendlyUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-gray-600 hover:text-primary-600"
-              >
-                Book a Demo
-              </a>
             </li>
           </ul>
         </div>
@@ -72,17 +64,53 @@
           </h3>
           <ul class="space-y-2">
             <li>
-              <a href="#docs" class="text-gray-600 hover:text-primary-600">
-                Documentation
-              </a>
+              <NuxtLink
+                to="/#pricing"
+                class="text-gray-600 hover:text-primary-600"
+                >Pricing</NuxtLink
+              >
+            </li>
+            <li>
+              <NuxtLink to="/#faq" class="text-gray-600 hover:text-primary-600"
+                >FAQ</NuxtLink
+              >
             </li>
             <li>
               <NuxtLink
                 to="/support"
                 class="text-gray-600 hover:text-primary-600"
+                >Support</NuxtLink
               >
-                Support
-              </NuxtLink>
+            </li>
+            <li>
+              <a
+                :href="calendlyUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-600 hover:text-primary-600"
+              >
+                Book a Demo
+              </a>
+            </li>
+            <li>
+              <a
+                :href="appAuthUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-600 hover:text-primary-600"
+              >
+                Login
+              </a>
+            </li>
+            <li>
+              <a
+                :href="appAuthUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-600 hover:text-primary-600"
+              >
+                Make Payment
+              </a>
             </li>
           </ul>
         </div>
@@ -99,17 +127,13 @@
               <NuxtLink
                 to="/privacy"
                 class="text-gray-600 hover:text-primary-600"
+                >Privacy Policy</NuxtLink
               >
-                Privacy Policy
-              </NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                to="/terms"
-                class="text-gray-600 hover:text-primary-600"
+              <NuxtLink to="/terms" class="text-gray-600 hover:text-primary-600"
+                >Terms of Service</NuxtLink
               >
-                Terms of Service
-              </NuxtLink>
             </li>
           </ul>
         </div>
@@ -120,11 +144,10 @@
           <div class="flex items-center mb-4 md:mb-0">
             <NeibrPayLogo size="sm" />
             <span class="ml-4 text-gray-600 text-sm">
-              © {{ currentYear }} NeibrPay. All rights reserved.
+              &copy; {{ currentYear }} NeibrPay. All rights reserved.
             </span>
           </div>
-          <div class="flex space-x-6">
-            <!-- Social Media Icons - Placeholder -->
+          <!-- <div class="flex space-x-6">
             <a href="#" class="text-gray-400 hover:text-primary-600">
               <span class="sr-only">Facebook</span>
               <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -149,7 +172,7 @@
                 />
               </svg>
             </a>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -157,8 +180,13 @@
 </template>
 
 <script setup lang="ts">
+import { useFeatureData } from '~/composables/useFeatureData';
+import { useRuntimeConfig } from '#imports';
 const config = useRuntimeConfig();
 const calendlyUrl = config.public.calendlyUrl;
+const { features } = useFeatureData();
 
+const topFeatures = features.slice(0, 4);
 const currentYear = new Date().getFullYear();
+const appAuthUrl = 'https://app.neibrpay.com/auth';
 </script>
