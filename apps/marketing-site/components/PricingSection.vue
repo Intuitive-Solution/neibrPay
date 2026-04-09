@@ -137,13 +137,13 @@
             </li>
           </ul>
 
-          <a
-            :href="adminWebUrl + '/auth'"
+          <NuxtLink
+            to="/get-started"
             class="btn-primary w-full text-center block"
             @click="trackPricingCTA('starter', 'pricing_card')"
           >
             Get Started
-          </a>
+          </NuxtLink>
         </div>
 
         <!-- Enterprise Plan -->
@@ -270,7 +270,6 @@
 import { ref, computed } from 'vue';
 
 const config = useRuntimeConfig();
-const adminWebUrl = config.public.adminWebUrl;
 const calendlyUrl = config.public.calendlyUrl;
 const { $posthog } = useNuxtApp();
 

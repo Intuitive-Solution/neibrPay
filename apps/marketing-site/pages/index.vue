@@ -4,7 +4,11 @@
     <main>
       <HeroSection />
       <FeaturesSection />
+      <HowItWorksSection />
+      <TrustSection />
       <PricingSection />
+      <FaqSection />
+      <ContactFormSection />
     </main>
     <AppFooter />
   </div>
@@ -12,12 +16,12 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'NeibrPay - HOA Management Made Simple',
+  title: 'NeibrPay — HOA Dues Collection & Community Management Platform',
   meta: [
     {
       name: 'description',
       content:
-        'Comprehensive HOA management platform for invoicing, payments, vendor management, and community communication. Built for modern HOAs.',
+        'Collect HOA dues online via Zelle, ACH, or card. Manage vendors, store documents, and communicate with residents. Built for self-managed HOAs and small community associations.',
     },
   ],
 });

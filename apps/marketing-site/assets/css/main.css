@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Wise-inspired Custom Utilities */
-
 @layer components {
   /* Button Styles */
   .btn-primary {
@@ -18,6 +16,10 @@
     @apply inline-flex items-center justify-center px-6 py-3 border-2 border-primary-800 text-primary-800 font-semibold rounded-lg hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200;
   }
 
+  .btn-text {
+    @apply inline-flex items-center text-primary-700 hover:text-primary-800 font-medium underline-offset-4 hover:underline transition-colors duration-200;
+  }
+
   .btn-sm {
     @apply px-4 py-2 text-sm;
   }
@@ -26,7 +28,7 @@
     @apply px-8 py-4 text-lg;
   }
 
-  /* Section Headlines - Wise Style */
+  /* Section Headlines */
   .section-headline {
     @apply text-4xl md:text-5xl lg:text-6xl font-bold text-primary-800 mb-6;
   }
@@ -34,5 +36,26 @@
   .section-subheadline {
     @apply text-xl md:text-2xl text-text-secondary mb-8;
   }
-}
 
+  /* Form Inputs */
+  .form-input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors bg-white text-gray-900 placeholder-gray-400;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+  }
+
+  /* FAQ Accordion */
+  .accordion-item {
+    @apply border-b border-gray-200;
+  }
+
+  .accordion-trigger {
+    @apply flex items-center justify-between w-full py-5 text-left text-lg font-semibold text-gray-900 hover:text-primary-700 transition-colors;
+  }
+
+  .accordion-content {
+    @apply pb-5 text-gray-600 leading-relaxed;
+  }
+}
