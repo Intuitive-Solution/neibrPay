@@ -69,13 +69,23 @@
           </NuxtLink>
 
           <a
-            :href="calendlyUrl"
+            :href="appAuthUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-            @click="trackHeaderCTA('book_demo')"
+            @click="trackHeaderCTA('login')"
           >
-            Book a Demo
+            Login
+          </a>
+
+          <a
+            :href="appAuthUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-outline btn-sm"
+            @click="trackHeaderCTA('make_payment')"
+          >
+            Make Payment
           </a>
 
           <NuxtLink
@@ -144,16 +154,28 @@
           Pricing
         </NuxtLink>
         <a
-          :href="calendlyUrl"
+          :href="appAuthUrl"
           target="_blank"
           rel="noopener noreferrer"
           @click="
             mobileMenuOpen = false;
-            trackHeaderCTA('book_demo');
+            trackHeaderCTA('login');
           "
           class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md font-medium"
         >
-          Book a Demo
+          Login
+        </a>
+        <a
+          :href="appAuthUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          @click="
+            mobileMenuOpen = false;
+            trackHeaderCTA('make_payment');
+          "
+          class="block btn-outline btn-sm text-center mt-2"
+        >
+          Make Payment
         </a>
         <NuxtLink
           to="/get-started"
@@ -174,8 +196,7 @@
 import { ref } from 'vue';
 import { useFeatureData } from '~/composables/useFeatureData';
 
-const config = useRuntimeConfig();
-const calendlyUrl = config.public.calendlyUrl;
+const appAuthUrl = 'https://app.neibrpay.com/auth';
 const { $posthog } = useNuxtApp();
 const { features } = useFeatureData();
 
