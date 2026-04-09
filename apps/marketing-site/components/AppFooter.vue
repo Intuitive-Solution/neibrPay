@@ -11,9 +11,12 @@
           </h3>
           <ul class="space-y-2">
             <li>
-              <a href="#about" class="text-gray-600 hover:text-primary-600"
-                >About</a
+              <NuxtLink
+                to="/about"
+                class="text-gray-600 hover:text-primary-600"
               >
+                About
+              </NuxtLink>
             </li>
             <li>
               <NuxtLink
@@ -87,6 +90,26 @@
                 class="text-gray-600 hover:text-primary-600"
               >
                 Book a Demo
+              </a>
+            </li>
+            <li>
+              <a
+                :href="appAuthUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-600 hover:text-primary-600"
+              >
+                Login
+              </a>
+            </li>
+            <li>
+              <a
+                :href="appAuthUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-600 hover:text-primary-600"
+              >
+                Make Payment
               </a>
             </li>
           </ul>
@@ -165,4 +188,5 @@ const { features } = useFeatureData();
 
 const topFeatures = features.slice(0, 4);
 const currentYear = new Date().getFullYear();
+const appAuthUrl = 'https://app.neibrpay.com/auth';
 </script>
