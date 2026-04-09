@@ -147,7 +147,7 @@
               &copy; {{ currentYear }} NeibrPay. All rights reserved.
             </span>
           </div>
-          <div class="flex space-x-6">
+          <!-- <div class="flex space-x-6">
             <a href="#" class="text-gray-400 hover:text-primary-600">
               <span class="sr-only">Facebook</span>
               <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -172,7 +172,7 @@
                 />
               </svg>
             </a>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -181,7 +181,7 @@
 
 <script setup lang="ts">
 import { useFeatureData } from '~/composables/useFeatureData';
-
+import { useRuntimeConfig } from '#imports';
 const config = useRuntimeConfig();
 const calendlyUrl = config.public.calendlyUrl;
 const { features } = useFeatureData();
