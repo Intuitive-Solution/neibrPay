@@ -29,9 +29,10 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    // Netlify sets NETLIFY=true on CI; without this Nitro picks `netlify-legacy` and tries to
-    // write `.netlify/functions-internal/...`, which breaks static `nuxt generate` (ENOENT).
-    preset: 'static',
+    // Static export (`nuxt generate`) cannot deploy server routes — `/api/contact` would 404.
+    // On Netlify, use the netlify preset + `nuxt build` so API handlers become serverless functions.
+    // Local `nuxt generate` / non-Netlify builds keep `static` (avoids netlify output dirs during generate).
+    preset: process.env.NETLIFY ? 'netlify' : 'static',
     prerender: {
       routes: [
         '/sitemap.xml',
