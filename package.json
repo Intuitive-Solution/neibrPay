@@ -14,6 +14,7 @@
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "generate:marketing": "npm run generate --workspace=@neibrpay/marketing-site",
+    "build:marketing": "npm run build --workspace=@neibrpay/marketing-site",
     "clean": "turbo run clean",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "prepare": "node -e \"if (process.env.NETLIFY || process.env.CI) process.exit(0); require('child_process').execSync('husky install',{stdio:'inherit'})\""

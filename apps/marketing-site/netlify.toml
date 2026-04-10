@@ -5,8 +5,9 @@
 # Root package.json optionalDependencies pull @rollup/* and @oxc/* Linux bindings in explicitly.
 
 [build]
-  command = "cd \"$(git rev-parse --show-toplevel)\" && rm -rf node_modules && npm ci && npm run generate:marketing"
-  publish = ".output/public"
+  command = "cd \"$(git rev-parse --show-toplevel)\" && rm -rf node_modules && npm ci && npm run build:marketing"
+  # `nuxt build` + Nitro `netlify` preset emits static assets to `dist` and serverless handlers under `.netlify/`.
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"

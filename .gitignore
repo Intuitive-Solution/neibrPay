@@ -207,3 +207,4 @@ vite.config.ts.timestamp-*
 /backend/laravel/storage/app/public
 /backend/laravel/storage/app/documents
 /.agent
+/apps/marketing-site/.netlify
