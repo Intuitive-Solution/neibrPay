@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\InvoiceUnit;
 use App\Models\Unit;
+use App\Services\InvoiceN8nInvoiceEmailService;
 use App\Services\InvoiceN8nNotificationService;
 use App\Services\InvoicePdfService;
 use App\Services\AnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
@@ -21,15 +21,18 @@ class InvoiceController extends Controller
     protected $analytics;
     protected $n8nNotificationService;
 
+    protected InvoiceN8nInvoiceEmailService $invoiceN8nInvoiceEmailService;
+
     public function __construct(
         InvoicePdfService $pdfService,
         AnalyticsService $analytics,
-        InvoiceN8nNotificationService $n8nNotificationService
-    )
-    {
+        InvoiceN8nNotificationService $n8nNotificationService,
+        InvoiceN8nInvoiceEmailService $invoiceN8nInvoiceEmailService
+    ) {
         $this->pdfService = $pdfService;
         $this->analytics = $analytics;
         $this->n8nNotificationService = $n8nNotificationService;
+        $this->invoiceN8nInvoiceEmailService = $invoiceN8nInvoiceEmailService;
     }
 
     /**
@@ -714,113 +717,31 @@ class InvoiceController extends Controller
             ], 400);
         }
 
-        // Check if n8n webhook URL is configured
-        $n8nWebhookUrl = config('n8n.webhook_url');
-        if (!$n8nWebhookUrl) {
+        if (!config('n8n.webhook_url')) {
             Log::warning('N8N_WEBHOOK_URL not configured. Email invoice webhook not sent.');
             return response()->json([
                 'message' => 'Email service not configured. Invoice email not sent.',
             ], 500);
         }
 
-        // Get webhook secret token for authentication
-        $webhookSecret = config('n8n.webhook_secret');
-        if (!$webhookSecret) {
+        if (!config('n8n.webhook_secret')) {
             Log::warning('N8N_WEBHOOK_SECRET not configured. Webhook may be unsecured.');
         }
 
         try {
-            $payload = $this->n8nNotificationService->buildInvoicePayload(
-                $invoiceUnit,
-                $owner,
-                $email
-            );
+            $result = $this->invoiceN8nInvoiceEmailService->postInvoiceWebhook($invoiceUnit, $owner, $email);
 
-            Log::info('Sending n8n webhook request', [
-                'url' => $n8nWebhookUrl,
-                'has_secret' => !empty($webhookSecret),
-                'payload_keys' => array_keys($payload),
-            ]);
-            // Prepare headers for webhook request
-            $headers = [
-                'Content-Type' => 'application/json',
-            ];
-
-            // Add authentication token if configured
-            if ($webhookSecret) {
-                $headers['X-Webhook-Token'] = $webhookSecret;
+            if (!$result['attempted']) {
+                return response()->json([
+                    'message' => 'Email service not configured. Invoice email not sent.',
+                ], 500);
             }
 
-            // Send HTTP POST request to n8n webhook
-            // Note: Using synchronous call to catch errors, but it's fast enough
-            try {
-                $response = Http::timeout(10)
-                    ->retry(2, 100) // Retry twice with 100ms delay
-                    ->withHeaders($headers)
-                    ->post($n8nWebhookUrl, $payload);
-                
-                if ($response->successful()) {
-                    Log::info('n8n webhook sent successfully', [
-                        'status' => $response->status(),
-                        'response_body' => substr($response->body(), 0, 200), // First 200 chars
-                    ]);
-                    
-                    // Update invoice status to 'sent' when email is successfully sent
-                    if ($invoiceUnit->status === 'draft') {
-                        $invoiceUnit->update(['status' => 'sent']);
-                        Log::info('Invoice status updated to sent', [
-                            'invoice_id' => $invoiceUnit->id,
-                            'invoice_number' => $invoiceUnit->invoice_number,
-                        ]);
-                    }
-                } else {
-                    $errorMessage = 'n8n webhook returned non-success status';
-                    $responseBody = $response->body();
-                    
-                    // Provide helpful error messages for common issues
-                    if ($response->status() === 404) {
-                        $errorMessage = 'n8n webhook not found - workflow may not be activated';
-                        if (strpos($responseBody, 'not registered') !== false) {
-                            Log::warning($errorMessage . '. Make sure the n8n workflow is ACTIVE (not in test mode).', [
-                                'status' => $response->status(),
-                                'url' => $n8nWebhookUrl,
-                                'hint' => 'Activate the workflow in n8n and use production webhook URL (remove /webhook-test/)',
-                            ]);
-                        } else {
-                            Log::warning($errorMessage, [
-                                'status' => $response->status(),
-                                'response_body' => $responseBody,
-                                'url' => $n8nWebhookUrl,
-                            ]);
-                        }
-                    } else {
-                        Log::warning('n8n webhook returned non-success status', [
-                            'status' => $response->status(),
-                            'response_body' => substr($responseBody, 0, 500),
-                            'url' => $n8nWebhookUrl,
-                        ]);
-                    }
-                }
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                Log::error('n8n webhook connection failed - network error', [
-                    'error' => $e->getMessage(),
-                    'url' => $n8nWebhookUrl,
-                    'timeout' => 10,
-                ]);
-            } catch (\Illuminate\Http\Client\RequestException $e) {
-                Log::error('n8n webhook request exception', [
-                    'error' => $e->getMessage(),
-                    'response' => $e->response ? [
-                        'status' => $e->response->status(),
-                        'body' => substr($e->response->body(), 0, 500),
-                    ] : null,
-                    'url' => $n8nWebhookUrl,
-                ]);
-            } catch (\Exception $e) {
-                Log::error('n8n webhook request failed - unexpected error', [
-                    'error' => $e->getMessage(),
-                    'class' => get_class($e),
-                    'url' => $n8nWebhookUrl,
+            if ($result['http_success'] && $invoiceUnit->status === 'draft') {
+                $invoiceUnit->update(['status' => 'sent']);
+                Log::info('Invoice status updated to sent', [
+                    'invoice_id' => $invoiceUnit->id,
+                    'invoice_number' => $invoiceUnit->invoice_number,
                 ]);
             }
 

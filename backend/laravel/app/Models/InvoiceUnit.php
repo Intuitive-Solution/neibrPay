@@ -180,22 +180,58 @@ class InvoiceUnit extends Model
             ->where('due_date', '<', now()->toDateString());
     }
 
+    public const INVOICE_LINE_KIND_LATE_FEE = 'late_fee';
+
+    public const INVOICE_LINE_KIND_EARLY_PAYMENT_DISCOUNT = 'early_payment_discount';
+
     /**
      * Calculate totals based on items.
+     * System lines use invoice_line_kind: late_fee adds to subtotal; early_payment_discount subtracts.
      */
     public function calculateTotals(): void
     {
-        $subtotal = 0;
-        
+        $regular = 0.0;
+        $lateFeeSum = 0.0;
+        $earlyDiscountSum = 0.0;
+
         if (is_array($this->items)) {
             foreach ($this->items as $item) {
-                $subtotal += $item['line_total'] ?? 0;
+                $kind = $item['invoice_line_kind'] ?? null;
+                $line = (float) ($item['line_total'] ?? 0);
+                if ($kind === self::INVOICE_LINE_KIND_EARLY_PAYMENT_DISCOUNT) {
+                    $earlyDiscountSum += $line;
+                } elseif ($kind === self::INVOICE_LINE_KIND_LATE_FEE) {
+                    $lateFeeSum += $line;
+                } else {
+                    $regular += $line;
+                }
             }
         }
-        
+
+        $subtotal = $regular + $lateFeeSum - $earlyDiscountSum;
         $this->subtotal = (float) $subtotal;
         $this->tax_amount = (float) (($subtotal * $this->tax_rate) / 100);
         $this->total = (float) ($subtotal + $this->tax_amount);
+    }
+
+    /**
+     * Sum of line_total for items excluding automated late fee / early discount lines (base for % fee/discount).
+     */
+    public static function baseSubtotalForAdjustments(?array $items): float
+    {
+        if (!is_array($items)) {
+            return 0.0;
+        }
+        $sum = 0.0;
+        foreach ($items as $item) {
+            $kind = $item['invoice_line_kind'] ?? null;
+            if ($kind === self::INVOICE_LINE_KIND_LATE_FEE || $kind === self::INVOICE_LINE_KIND_EARLY_PAYMENT_DISCOUNT) {
+                continue;
+            }
+            $sum += (float) ($item['line_total'] ?? 0);
+        }
+
+        return $sum;
     }
 
     /**

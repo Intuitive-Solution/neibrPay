@@ -24,6 +24,8 @@ return new class extends Migration
             $table->decimal('current_balance', 12, 2)->nullable();
             $table->decimal('available_balance', 12, 2)->nullable();
             $table->date('sync_start_date')->nullable();
+            $table->text('transactions_cursor')->nullable();
+            $table->boolean('initial_sync_complete')->default(false);
             $table->timestamp('last_synced_at')->nullable();
             $table->enum('status', ['active', 'error', 'disconnected'])->default('active');
             $table->string('error_message')->nullable();

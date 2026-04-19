@@ -22,6 +22,10 @@ class Kernel extends ConsoleKernel
             ->onSuccess(function () {
                 \Illuminate\Support\Facades\Log::info('Plaid sync job completed successfully');
             });
+
+        $schedule->command('invoices:sync-fee-line-items')
+            ->daily()
+            ->withoutOverlapping();
     }
 
     /**
