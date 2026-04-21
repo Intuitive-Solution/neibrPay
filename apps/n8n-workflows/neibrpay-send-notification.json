@@ -26,7 +26,7 @@
       "name": "Success Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [976, 352]
+      "position": [1296, 208]
     },
     {
       "parameters": {
@@ -38,11 +38,11 @@
       "name": "Error Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [976, 624]
+      "position": [1296, 928]
     },
     {
       "parameters": {
-        "fromEmail": "admin@geninvoices.com",
+        "fromEmail": "no-reply@neibrpay.com",
         "toEmail": "={{ $json.body?.recipient?.email || $json.recipient?.email || $json.body?.to || $json.to }}",
         "subject": "={{ 'Welcome to ' + ($json.body?.tenant_name || $json.tenant_name || 'NeibrPay') + ' - Access Your Account' }}",
         "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body\n    style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\"\n  >\n    <table\n      role=\"presentation\"\n      cellspacing=\"0\"\n      cellpadding=\"0\"\n      border=\"0\"\n      width=\"100%\"\n      style=\"background-color: #f4f4f4;\"\n    >\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table\n            role=\"presentation\"\n            cellspacing=\"0\"\n            cellpadding=\"0\"\n            border=\"0\"\n            width=\"600\"\n            style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\"\n          >\n            <!-- Header -->\n            <tr>\n              <td\n                style=\"padding: 40px 40px 20px; text-align: center; background-color: #2563eb; border-radius: 8px 8px 0 0;\"\n              >\n                <h1\n                  style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\"\n                >\n                  Welcome to {{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }}\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding: 40px;\">\n                <p\n                  style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\"\n                >\n                  Dear {{ $json.body?.recipient?.name || $json.recipient?.name || $json.body?.resident_name || $json.resident_name || 'Valued Resident' }},\n                </p>\n\n                <p\n                  style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\"\n                >\n                  Welcome to <strong>{{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }}</strong>!\n                  We're excited to have you join our community management platform.\n                </p>\n\n                <p\n                  style=\"margin: 0 0 30px; font-size: 16px; line-height: 1.6; color: #333333;\"\n                >\n                  Click the button below to access your account. This magic link will automatically log you in - no password required!\n                </p>\n\n                <!-- CTA Button -->\n                <table\n                  role=\"presentation\"\n                  cellspacing=\"0\"\n                  cellpadding=\"0\"\n                  border=\"0\"\n                  width=\"100%\"\n                >\n                  <tr>\n                    <td align=\"center\" style=\"padding: 20px 0 30px;\">\n                      <a\n                        href=\"{{ $json.body?.magic_link || $json.magic_link || $json.body?.login_link || $json.login_link }}\"\n                        style=\"display: inline-block; padding: 16px 32px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);\"\n                      >\n                        Access Your Account\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <!-- Additional Info -->\n                <div\n                  style=\"background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 30px 0;\"\n                >\n                  <p\n                    style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280; font-weight: 600;\"\n                  >\n                    What you can do:\n                  </p>\n                  <ul\n                    style=\"margin: 10px 0 0; padding-left: 20px; font-size: 14px; color: #6b7280; line-height: 1.8;\"\n                  >\n                    <li>View and pay your invoices online</li>\n                    <li>Access community documents and announcements</li>\n                    <li>Update your contact information</li>\n                    <li>Stay informed about community events</li>\n                  </ul>\n                </div>\n\n                <p\n                  style=\"margin: 30px 0 0; font-size: 14px; line-height: 1.6; color: #6b7280;\"\n                >\n                  If the button doesn't work, you can copy and paste this magic link\n                  into your browser:\n                </p>\n                <p\n                  style=\"margin: 10px 0 0; font-size: 12px; line-height: 1.6; color: #2563eb; word-break: break-all;\"\n                >\n                  {{ $json.body?.magic_link || $json.magic_link || $json.body?.login_link || $json.login_link }}\n                </p>\n\n                <p\n                  style=\"margin: 20px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\"\n                >\n                  <strong>Note:</strong> This magic link will expire in 7 days and can only be used once for security.\n                </p>\n\n                <p\n                  style=\"margin: 30px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\"\n                >\n                  This is an automated message from {{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td\n                style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\"\n              >\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
@@ -52,12 +52,12 @@
       "name": "Send Invite Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [416, 352],
+      "position": [496, -304],
       "webhookId": "8a0356a1-6af4-4fa0-b64e-6997a6c343e8",
       "credentials": {
         "smtp": {
-          "id": "RghCNSDKFQ5Oth4i",
-          "name": "SMTP account"
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
         }
       },
       "continueOnFail": true,
@@ -65,7 +65,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "admin@geninvoices.com",
+        "fromEmail": "no-reply@neibrpay.com",
         "toEmail": "={{  $json.body.to }}",
         "subject": "={{ 'Your NeibrPay Verification Code from: ' + ($json.body.tenant_name || 'NeibrPay') }}",
         "html": "={{ '<html><body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\"><div style=\"max-width: 600px; margin: 0 auto; padding: 20px;\"><h2 style=\"color: #2563eb;\">Verification Code</h2><p>' + ($json.body.user_name ? 'Hello ' + $json.body.user_name + ',' : 'Hello,') + '</p><p>Your verification code is:</p><div style=\"background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center;\"><h1 style=\"color: #2563eb; font-size: 32px; margin: 0;\">' + ($json.body.code || $json.code) + '</h1></div><p>This code expires in ' + ($json.body.expires_in_minutes || $json.expires_in_minutes || 15) + ' minutes.</p><p style=\"margin-top: 20px; font-size: 12px; color: #6b7280;\">This is an automated message from ' + ($json.body.tenant_name || 'NeibrPay') + '. Please do not reply to this email.</p><p style=\"margin-top: 20px;\">Best regards,<br>' + ($json.body.tenant_name || 'NeibrPay') + ' Management</p></div></body></html>' }}",
@@ -75,12 +75,12 @@
       "name": "Send Verification Code Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [432, 608],
+      "position": [480, -80],
       "webhookId": "881a64e8-5021-43c8-bd27-b39d53d52b1b",
       "credentials": {
         "smtp": {
-          "id": "RghCNSDKFQ5Oth4i",
-          "name": "SMTP account"
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
         }
       },
       "continueOnFail": true,
@@ -88,24 +88,22 @@
     },
     {
       "parameters": {
-        "fromEmail": "admin@geninvoices.com",
+        "fromEmail": "no-reply@neibrpay.com",
         "toEmail": "={{ $json.body?.recipient?.email || $json.recipient?.email }}",
-        "subject": "={{ ($json.body?.type === 'invoice_due_reminder' || $json.type === 'invoice_due_reminder') ? (($json.body?.reminder_phase || $json.reminder_phase) === 'post_due' ? 'Overdue Reminder: Invoice ' : 'Payment Reminder: Invoice ') + ($json.body?.invoice_summary?.invoice_number || '') + ' from ' + ($json.body?.tenant_name || $json.tenant_name || 'NeibrPay') : 'Invoice ' + ($json.body?.invoice_summary?.invoice_number || '') + ' from ' + ($json.body?.tenant_name || $json.tenant_name || 'NeibrPay') }}",
+        "subject": "={{ 'Invoice ' + ($json.body?.invoice_summary?.invoice_number || '') + ' from ' + ($json.body?.tenant_name || 'NeibrPay') }}",
         "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f4f4f4;\">\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n            <!-- Header -->\n            <tr>\n              <td style=\"padding: 40px 40px 20px; text-align: center; background-color: #2563eb; border-radius: 8px 8px 0 0;\">\n                <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\">\n                  Invoice {{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.invoice_number || '' }}\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding: 40px;\">\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Dear {{ $json.body && $json.body.recipient && $json.body.recipient.name || 'Valued Resident' }},\n                </p>\n\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Please find your invoice details below from <strong>{{ $json.body && $json.body.tenant_name || 'NeibrPay' }}</strong>.\n                </p>\n\n                <!-- Invoice Summary Box -->\n                <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 30px 0;\">\n                  <table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"font-size: 14px; color: #333333;\">\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Invoice Number:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.invoice_number || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Unit:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.unit_title || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Address:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.unit_address || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Total Amount:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right; font-size: 18px; font-weight: bold; color: #2563eb;\">${{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.total || '0.00' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Balance Due:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right; font-size: 16px; font-weight: bold; color: #dc2626;\">${{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.balance_due || '0.00' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Due Date:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body && $json.body.invoice_summary && $json.body.invoice_summary.due_date || 'N/A' }}</td>\n                    </tr>\n                  </table>\n                </div>\n\n                <!-- CTA Button -->\n                <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n                  <tr>\n                    <td align=\"center\" style=\"padding: 20px 0 30px;\">\n                      <a href=\"{{ $json.body && $json.body.magic_link || $json.magic_link }}\" style=\"display: inline-block; padding: 16px 32px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);\">\n                        View & Pay Invoice\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <p style=\"margin: 30px 0 0; font-size: 14px; line-height: 1.6; color: #6b7280;\">\n                  If the button doesn't work, you can copy and paste this link into your browser:\n                </p>\n                <p style=\"margin: 10px 0 0; font-size: 12px; line-height: 1.6; color: #2563eb; word-break: break-all;\">\n                  {{ $json.body && $json.body.magic_link || $json.magic_link }}\n                </p>\n\n                <p style=\"margin: 30px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  This is an automated message from {{ $json.body && $json.body.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\">\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body && $json.body.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
-        "options": {
-          "ccEmail": "={{ Array.isArray($json.body?.cc || $json.cc) ? ($json.body?.cc || $json.cc).join(', ') : ($json.body?.cc || $json.cc || '') }}"
-        }
+        "options": {}
       },
       "id": "send-invoice-email",
       "name": "Send Invoice Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [432, 144],
+      "position": [496, -576],
       "webhookId": "4bfd76da-a4bb-4312-a969-bd042cd94b5d",
       "credentials": {
         "smtp": {
-          "id": "RghCNSDKFQ5Oth4i",
-          "name": "SMTP account"
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
         }
       },
       "continueOnFail": true,
@@ -115,31 +113,6 @@
       "parameters": {
         "rules": {
           "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 1
-                },
-                "conditions": [
-                  {
-                    "id": "route-invoice-reminder",
-                    "leftValue": "={{ $json.body && $json.body.type || $json.type }}",
-                    "rightValue": "invoice_due_reminder",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "send_invoice_reminder"
-            },
             {
               "conditions": {
                 "options": {
@@ -244,12 +217,160 @@
               },
               "renameOutput": true,
               "outputKey": "send_announcement"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "2a18a4fc-a424-44cd-a6b3-083324dce14a",
+                    "leftValue": "={{ $json.body && $json.body.type || $json.type }}",
+                    "rightValue": "payment_approval",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "send_payment_approval"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "payment-submission-check",
+                    "leftValue": "={{ $json.body && $json.body.type || $json.type }}",
+                    "rightValue": "payment_submission",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "send_payment_submission"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "payment-rejection-check",
+                    "leftValue": "={{ $json.body && $json.body.type || $json.type }}",
+                    "rightValue": "payment_rejection",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "send_payment_rejection"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "invoice-paid-check",
+                    "leftValue": "={{ $json.body && $json.body.type || $json.type }}",
+                    "rightValue": "invoice_paid",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "send_invoice_paid"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "70738930-b256-499b-9fc4-90a6ed1630e0",
+                    "leftValue": "={{ $json.body && $json.body.type || $json.type }}",
+                    "rightValue": "invoice_due_reminder",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "send_invoice_reminder"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "1e3ece6c-b461-408c-8a7d-4c72526d15a4",
+                    "leftValue": "={{ $json.body && $json.body.type || $json.type }}",
+                    "rightValue": "invoice_late_fee_applied",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "invoice_late_fee_applied"
             }
           ]
         },
-        "options": {
-          "fallbackOutput": "none"
-        }
+        "options": {}
       },
       "id": "switch-route-type",
       "name": "Route by Type",
@@ -259,8 +380,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "admin@geninvoices.com",
-        "toEmail": "={ $json.body?.to || $json.to || 'admin@geninvoices.com' }}",
+        "fromEmail": "no-reply@neibrpay.com",
+        "toEmail": "=",
         "subject": "={{ ($json.body?.announcement?.subject || $json.announcement?.subject || 'Community Announcement') + ' - ' + ($json.body?.tenant_name || $json.tenant_name || 'NeibrPay') }}",
         "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f4f4f4;\">\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n            <!-- Header -->\n            <tr>\n              <td style=\"padding: 40px 40px 20px; text-align: center; background-color: #00C27A; border-radius: 8px 8px 0 0;\">\n                <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\">\n                  {{ $json.body?.announcement?.subject || $json.announcement?.subject || 'Community Announcement' }}\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding: 40px;\">\n                <div style=\"font-size: 16px; line-height: 1.8; color: #333333;\">\n                  {{ $json.body?.announcement?.message || $json.announcement?.message || 'No message content available.' }}\n                </div>\n                <!-- CTA Button -->\n<table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n  <tr>\n    <td align=\"center\" style=\"padding: 20px 0 30px;\">\n      <a href=\"{{ $json.body?.frontend_url || $json.frontend_url }}\" style=\"display: inline-block; padding: 16px 32px; background-color: #00C27A; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 194, 122, 0.3);\">\n        View Dashboard\n      </a>\n    </td>\n  </tr>\n</table>\n\n<p style=\"margin: 30px 0 0; font-size: 14px; line-height: 1.6; color: #6b7280;\">\n  If the button doesn't work, you can copy and paste this link into your browser:\n</p>\n<p style=\"margin: 10px 0 0; font-size: 12px; line-height: 1.6; color: #00C27A; word-break: break-all;\">\n  {{ $json.body?.frontend_url || $json.frontend_url }}\n</p>\n                <p style=\"margin: 30px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  This is an automated message from {{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\">\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
         "options": {
@@ -271,12 +392,156 @@
       "name": "Send Accouncement Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [448, 848],
+      "position": [496, 176],
       "webhookId": "881a64e8-5021-43c8-bd27-b39d53d52b1b",
       "credentials": {
         "smtp": {
-          "id": "RghCNSDKFQ5Oth4i",
-          "name": "SMTP account"
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@neibrpay.com",
+        "toEmail": "={{ $json.body?.recipient?.email || $json.body?.resident_email || $json.recipient?.email }}",
+        "subject": "={{ '✅ Payment Approved - Invoice #' + ($json.body?.invoice_number || 'N/A') + ' from ' + ($json.body?.tenant_name || 'NeibrPay') }}",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f4f4f4;\">\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n            <!-- Header -->\n            <tr>\n              <td style=\"padding: 40px 40px 20px; text-align: center; background-color: #10b981; border-radius: 8px 8px 0 0;\">\n                <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\">\n                  ✅ Payment Approved!\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding: 40px;\">\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Dear {{ $json.body?.recipient?.name || $json.body?.resident_name || 'Valued Resident' }},\n                </p>\n\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  We're pleased to inform you that your payment has been <strong>successfully approved</strong> and processed!\n                </p>\n\n                <!-- Payment Summary Box -->\n                <div style=\"background-color: #f0fdf4; padding: 25px; border-radius: 6px; margin: 30px 0; border-left: 4px solid #10b981;\">\n                  <table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"font-size: 14px; color: #333333;\">\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Invoice Number:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.invoice_number || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Amount:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right; font-size: 18px; font-weight: bold; color: #10b981;\">{{ $json.body?.currency || '$' }}{{ ($json.body?.amount || 0) }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Method:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.payment_method || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Date:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.payment_date || 'N/A' }}</td>\n                    </tr>\n                    <tr style=\"border-top: 2px solid #10b981;\">\n                      <td style=\"padding: 12px 0; font-size: 16px; font-weight: bold;\"><strong>Invoice Status:</strong></td>\n                      <td style=\"padding: 12px 0; text-align: right; font-size: 16px; font-weight: bold; color: #10b981;\">PAID ✓</td>\n                    </tr>\n                  </table>\n                </div>\n\n                <!-- Admin Comment (if provided) -->\n                {{ ($json.body?.public_comment ? '<div style=\"background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #6366f1;\"><p style=\"margin: 0 0 10px; font-size: 14px; color: #4b5563; font-weight: 600;\">📝 Admin Note:</p><p style=\"margin: 0; font-size: 14px; color: #333333; line-height: 1.6;\">' + $json.body.public_comment + '</p></div>' : '') }}\n\n                <!-- CTA Button -->\n                <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n                  <tr>\n                    <td align=\"center\" style=\"padding: 30px 0;\">\n                      <a href=\"{{ $json.body?.frontend_url || 'https://app.neibrpay.com/dashboard' }}\" style=\"display: inline-block; padding: 16px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);\">\n                        View Dashboard\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <!-- Thank You Message -->\n                <div style=\"background-color: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;\">\n                  <p style=\"margin: 0; font-size: 14px; color: #92400e; line-height: 1.6;\">\n                    <strong>Thank you!</strong> We appreciate your prompt payment. Your account is now up to date.\n                  </p>\n                </div>\n\n                <p style=\"margin: 30px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  This is an automated message from {{ $json.body?.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\">\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body?.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+        "options": {}
+      },
+      "id": "send-payment-approval-email",
+      "name": "Send Payment Approval Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [512, 464],
+      "webhookId": "994761fa-1b20-4d43-94f3-a113fbc26dd1",
+      "credentials": {
+        "smtp": {
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@neibrpay.com",
+        "toEmail": "={{ Array.isArray($json.body?.to || $json.to) ? ($json.body?.to || $json.to).join(', ') : ($json.body?.to || $json.to || $json.body?.admin_emails?.join(', ') || 'admin@geninvoices.com') }}",
+        "subject": "={{ '📋 Payment Submitted for Review - Invoice #' + ($json.body?.invoice_number || 'N/A') + ' from ' + ($json.body?.tenant_name || 'NeibrPay') }}",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f4f4f4;\">\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n            <!-- Header -->\n            <tr>\n              <td style=\"padding: 40px 40px 20px; text-align: center; background-color: #3b82f6; border-radius: 8px 8px 0 0;\">\n                <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\">\n                  📋 Payment Submitted for Review\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding: 40px;\">\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Hello Admin Team,\n                </p>\n\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  A resident has submitted a payment for review. Please review the payment details below and take appropriate action.\n                </p>\n\n                <!-- Payment Summary Box -->\n                <div style=\"background-color: #eff6ff; padding: 25px; border-radius: 6px; margin: 30px 0; border-left: 4px solid #3b82f6;\">\n                  <table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"font-size: 14px; color: #333333;\">\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Invoice Number:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.invoice_number || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Submitted By:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.resident_name || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Resident Email:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.resident_email || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Amount:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right; font-size: 18px; font-weight: bold; color: #3b82f6;\">{{ $json.body?.currency || '$' }}{{ ($json.body?.amount || 0) }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Method:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.payment_method || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Date:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.payment_date || 'N/A' }}</td>\n                    </tr>\n                    <tr style=\"border-top: 2px solid #3b82f6;\">\n                      <td style=\"padding: 12px 0; font-size: 16px; font-weight: bold;\"><strong>Status:</strong></td>\n                      <td style=\"padding: 12px 0; text-align: right; font-size: 16px; font-weight: bold; color: #3b82f6;\">⏳ PENDING REVIEW</td>\n                    </tr>\n                  </table>\n                </div>\n\n                <!-- Action Required -->\n                <div style=\"background-color: #fef3c7; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;\">\n                  <p style=\"margin: 0 0 10px; font-size: 14px; color: #92400e; font-weight: 600;\">⚠️ Action Required:</p>\n                  <p style=\"margin: 0; font-size: 14px; color: #92400e; line-height: 1.6;\">\n                    Please review this payment submission and approve or reject it. The resident is waiting for your response.\n                  </p>\n                </div>\n\n                <!-- CTA Button -->\n                <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n                  <tr>\n                    <td align=\"center\" style=\"padding: 30px 0;\">\n                      <a href=\"{{ $json.body?.invoice_link || ($json.body?.frontend_url || 'https://app.neibrpay.com') + '/invoices/' + ($json.body?.invoice_id || '') }}\" style=\"display: inline-block; padding: 16px 32px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);\">\n                        Review Payment & Invoice\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <p style=\"margin: 20px 0 0; font-size: 12px; line-height: 1.6; color: #6b7280;\">\n                  If the button doesn't work, you can copy and paste this link into your browser:\n                </p>\n                <p style=\"margin: 10px 0 0; font-size: 12px; line-height: 1.6; color: #3b82f6; word-break: break-all;\">\n                  {{ $json.body?.invoice_link || ($json.body?.frontend_url || 'https://app.neibrpay.com') + '/invoices/' + ($json.body?.invoice_id || '') }}\n                </p>\n\n                <p style=\"margin: 30px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  This is an automated notification from {{ $json.body?.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\">\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body?.tenant_name || 'NeibrPay' }} System</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+        "options": {
+          "bccEmail": "={{ Array.isArray($json.body?.bcc || $json.bcc) ? ($json.body?.bcc || $json.bcc).join(', ') : ($json.body?.bcc || $json.bcc || '') }}"
+        }
+      },
+      "id": "send-payment-submission-email",
+      "name": "Send Payment Submission Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [544, 864],
+      "webhookId": "26c773b1-0eb0-46e7-be9e-d16cbd74f773",
+      "credentials": {
+        "smtp": {
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@neibrpay.com",
+        "toEmail": "={{ $json.body?.recipient?.email || $json.body?.resident_email || $json.recipient?.email }}",
+        "subject": "={{ '❌ Payment Review: Changes Needed - Invoice #' + ($json.body?.invoice_number || 'N/A') + ' from ' + ($json.body?.tenant_name || 'NeibrPay') }}",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f4f4f4;\">\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n            <!-- Header -->\n            <tr>\n              <td style=\"padding: 40px 40px 20px; text-align: center; background-color: #ef4444; border-radius: 8px 8px 0 0;\">\n                <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\">\n                  ❌ Payment Changes Needed\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding: 40px;\">\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Dear {{ $json.body?.recipient?.name || $json.body?.resident_name || 'Valued Resident' }},\n                </p>\n\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Your payment submission for Invoice #{{ $json.body?.invoice_number || 'N/A' }} has been <strong>reviewed</strong>, and we need you to make some changes before it can be approved.\n                </p>\n\n                <!-- Rejection Reason Box -->\n                <div style=\"background-color: #fef2f2; padding: 20px; border-radius: 6px; margin: 30px 0; border-left: 4px solid #ef4444;\">\n                  <p style=\"margin: 0 0 10px; font-size: 14px; color: #7f1d1d; font-weight: 600;\">📝 Reason for Changes:</p>\n                  <p style=\"margin: 0; font-size: 14px; color: #333333; line-height: 1.6;\">\n                    {{ $json.body?.rejection_reason || $json.body?.public_comment || 'No reason provided' }}\n                  </p>\n                </div>\n\n                <!-- Payment Summary Box -->\n                <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 20px 0;\">\n                  <p style=\"margin: 0 0 10px; font-size: 14px; color: #4b5563; font-weight: 600;\">Original Payment Details:</p>\n                  <table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"font-size: 13px; color: #333333;\">\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Amount:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body?.currency || '$' }}{{ ($json.body?.amount || 0) }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Payment Method:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body?.payment_method || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Payment Date:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body?.payment_date || 'N/A' }}</td>\n                    </tr>\n                  </table>\n                </div>\n\n                <!-- Next Steps -->\n                <div style=\"background-color: #fef3c7; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;\">\n                  <p style=\"margin: 0 0 10px; font-size: 14px; color: #92400e; font-weight: 600;\">📌 What You Need to Do:</p>\n                  <ol style=\"margin: 10px 0 0; padding-left: 20px; font-size: 14px; color: #92400e; line-height: 1.8;\">\n                    <li>Review the reason for changes above</li>\n                    <li>Make the necessary corrections to your payment information</li>\n                    <li>Resubmit your payment for review</li>\n                  </ol>\n                </div>\n\n                <!-- CTA Button -->\n                <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n                  <tr>\n                    <td align=\"center\" style=\"padding: 30px 0;\">\n                      <a href=\"{{ $json.body?.frontend_url || 'https://app.neibrpay.com/dashboard' }}\" style=\"display: inline-block; padding: 16px 32px; background-color: #ef4444; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);\">\n                        Resubmit Payment\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <p style=\"margin: 30px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  Questions? Please contact the {{ $json.body?.tenant_name || 'NeibrPay' }} administrator for assistance.\n                </p>\n\n                <p style=\"margin: 10px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  This is an automated message from {{ $json.body?.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\">\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body?.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+        "options": {}
+      },
+      "id": "send-payment-rejection-email",
+      "name": "Send Payment Rejection Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [560, 1136],
+      "webhookId": "844a7dde-4e54-4d46-9ad3-bbc0e7c841a2",
+      "credentials": {
+        "smtp": {
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@neibrpay.com",
+        "toEmail": "={{ $json.body?.recipient?.email || $json.body?.resident_email || $json.recipient?.email }}",
+        "subject": "={{ '✅ Invoice Paid - Thank You! Invoice #' + ($json.body?.invoice_number || 'N/A') + ' from ' + ($json.body?.tenant_name || 'NeibrPay') }}",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f4f4f4;\">\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n            <!-- Header -->\n            <tr>\n              <td style=\"padding: 40px 40px 20px; text-align: center; background-color: #10b981; border-radius: 8px 8px 0 0;\">\n                <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\">\n                  ✅ Invoice Paid - Thank You!\n                </h1>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding: 40px;\">\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Dear {{ $json.body?.recipient?.name || $json.body?.resident_name || 'Valued Resident' }},\n                </p>\n\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  We're pleased to inform you that <strong>Invoice #{{ $json.body?.invoice_number || 'N/A' }}</strong> has been <strong>paid in full</strong>!\n                </p>\n\n                <!-- Thank You Message -->\n                <div style=\"background-color: #f0fdf4; padding: 25px; border-radius: 6px; margin: 30px 0; border-left: 4px solid #10b981;\">\n                  <p style=\"margin: 0 0 15px; font-size: 18px; color: #10b981; font-weight: bold; text-align: center;\">\n                    🙏 Thank You for Your Payment!\n                  </p>\n                  <p style=\"margin: 0; font-size: 16px; color: #333333; line-height: 1.6; text-align: center;\">\n                    We sincerely appreciate your prompt payment. Your account is now up to date.\n                  </p>\n                </div>\n\n                <!-- Invoice Summary Box -->\n                <div style=\"background-color: #f3f4f6; padding: 25px; border-radius: 6px; margin: 30px 0;\">\n                  <table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"font-size: 14px; color: #333333;\">\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Invoice Number:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.invoice_number || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Invoice Total:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right; font-size: 18px; font-weight: bold; color: #2563eb;\">{{ $json.body?.currency || '$' }}{{ ($json.body?.invoice_total || $json.body?.amount || 0) }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Amount:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right; font-size: 16px; font-weight: bold; color: #10b981;\">{{ $json.body?.currency || '$' }}{{ ($json.body?.amount || 0) }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Method:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.payment_method || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 8px 0;\"><strong>Payment Date:</strong></td>\n                      <td style=\"padding: 8px 0; text-align: right;\">{{ $json.body?.payment_date || 'N/A' }}</td>\n                    </tr>\n                    <tr style=\"border-top: 2px solid #10b981; margin-top: 10px;\">\n                      <td style=\"padding: 12px 0; font-size: 16px; font-weight: bold;\"><strong>Status:</strong></td>\n                      <td style=\"padding: 12px 0; text-align: right; font-size: 16px; font-weight: bold; color: #10b981;\">PAID ✓</td>\n                    </tr>\n                  </table>\n                </div>\n\n                <!-- Appreciation Message -->\n                <div style=\"background-color: #fef3c7; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;\">\n                  <p style=\"margin: 0; font-size: 15px; color: #92400e; line-height: 1.6; text-align: center;\">\n                    <strong>Your timely payment helps us maintain our community services and facilities.</strong><br />\n                    We truly value your commitment to our community!\n                  </p>\n                </div>\n\n                <!-- CTA Button -->\n                <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n                  <tr>\n                    <td align=\"center\" style=\"padding: 30px 0;\">\n                      <a href=\"{{ $json.body?.frontend_url || 'https://app.neibrpay.com/dashboard' }}\" style=\"display: inline-block; padding: 16px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);\">\n                        View Your Account\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <p style=\"margin: 30px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  This is an automated message from {{ $json.body?.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\">\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body?.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+        "options": {}
+      },
+      "id": "send-invoice-paid-email",
+      "name": "Send Invoice Paid Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [544, 1376],
+      "webhookId": "a5a587a7-4a0a-4c68-889e-0510a9254a5c",
+      "credentials": {
+        "smtp": {
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@neibrpay.com",
+        "toEmail": "={{ $json.body?.recipient?.email || $json.recipient?.email }}",
+        "subject": "=  {{ (($json.body?.reminder_phase || $json.reminder_phase) === 'post_due'\n    ? 'Overdue Reminder (' + ($json.body?.days_overdue || $json.days_overdue || 0) + ' day' + ((($json.body?.days_overdue || $json.days_overdue || 0) == 1) ? '' : 's') + '): Invoice '\n    : 'Payment Reminder (' + ($json.body?.days_until_due || $json.days_until_due || 0) + ' day' + ((($json.body?.days_until_due || $json.days_until_due || 0) == 1) ? '' : 's') + ' left): Invoice ')\n+ ($json.body?.invoice_summary?.invoice_number || $json.invoice_summary?.invoice_number || '')\n+ ' from '\n+ ($json.body?.tenant_name || $json.tenant_name || 'NeibrPay') }}",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color: #f4f4f4;\">\n      <tr>\n        <td align=\"center\" style=\"padding: 40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n            <tr>\n              <td style=\"padding: 40px 40px 20px; text-align: center; background-color: #2563eb; border-radius: 8px 8px 0 0;\">\n                <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;\">\n                  {{ ($json.body?.reminder_phase || $json.reminder_phase) === 'post_due' ? 'Overdue Reminder' : 'Payment Reminder' }}\n                </h1>\n                <p style=\"margin: 10px 0 0; color: #dbeafe; font-size: 14px;\">\n                  Invoice {{ $json.body?.invoice_summary?.invoice_number || $json.invoice_summary?.invoice_number || '' }}\n                </p>\n              </td>\n            </tr>\n\n            <tr>\n              <td style=\"padding: 40px;\">\n                <p style=\"margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  Dear {{ $json.body?.recipient?.name || $json.recipient?.name || 'Valued Resident' }},\n                </p>\n\n                <p style=\"margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: #333333;\">\n                  {{ ($json.body?.reminder_phase || $json.reminder_phase) === 'post_due'\n                    ? 'This is a reminder that your invoice is now overdue.'\n                    : 'This is a friendly reminder that your invoice is coming due soon.' }}\n                </p>\n\n                <p style=\"margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: #1f2937; background: #eff6ff; padding: 14px 16px; border-radius: 6px;\">\n                  {{ ($json.body?.reminder_phase || $json.reminder_phase) === 'post_due'\n                    ? 'Days overdue: ' + ($json.body?.days_overdue || $json.days_overdue || 0)\n                    : 'Days until due: ' + ($json.body?.days_until_due || $json.days_until_due || 0) }}\n                </p>\n\n                <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 0 0 24px;\">\n                  <table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"font-size: 14px; color: #333333;\">\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Invoice Number:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body?.invoice_summary?.invoice_number || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Unit:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body?.invoice_summary?.unit_title || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Address:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body?.invoice_summary?.unit_address || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Total Amount:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right; font-size: 18px; font-weight: bold; color: #2563eb;\">${{ $json.body?.invoice_summary?.total || '0.00' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Balance Due:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right; font-size: 16px; font-weight: bold; color: #dc2626;\">${{ $json.body?.invoice_summary?.balance_due || '0.00' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding: 5px 0;\"><strong>Due Date:</strong></td>\n                      <td style=\"padding: 5px 0; text-align: right;\">{{ $json.body?.invoice_summary?.due_date || 'N/A' }}</td>\n                    </tr>\n                  </table>\n                </div>\n\n                {{ ($json.body?.late_fee_notice || $json.late_fee_notice) ? `\n                <div style=\"margin: 0 0 24px; padding: 14px 16px; border: 1px solid #f59e0b; background-color: #fffbeb; border-radius: 6px;\">\n                  <p style=\"margin: 0; font-size: 14px; line-height: 1.6; color: #92400e;\">\n                    <strong>Late fee notice:</strong> ${($json.body?.late_fee_notice || $json.late_fee_notice)?.text || 'A late fee may apply based on your HOA policy.'}\n                  </p>\n                </div>\n                ` : '' }}\n\n                <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n                  <tr>\n                    <td align=\"center\" style=\"padding: 10px 0 24px;\">\n                      <a href=\"{{ $json.body?.magic_link || $json.magic_link }}\" style=\"display: inline-block; padding: 16px 32px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);\">\n                        View & Pay Invoice\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <p style=\"margin: 0; font-size: 14px; line-height: 1.6; color: #6b7280;\">\n                  If the button doesn’t work, copy and paste this link into your browser:\n                </p>\n                <p style=\"margin: 10px 0 0; font-size: 12px; line-height: 1.6; color: #2563eb; word-break: break-all;\">\n                  {{ $json.body?.magic_link || $json.magic_link }}\n                </p>\n\n                <p style=\"margin: 24px 0 0; font-size: 12px; line-height: 1.6; color: #9ca3af;\">\n                  This is an automated message from {{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }}. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n\n            <tr>\n              <td style=\"padding: 30px 40px; text-align: center; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;\">\n                <p style=\"margin: 0 0 10px; font-size: 14px; color: #6b7280;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin: 20px 0 0; font-size: 12px; color: #9ca3af;\">\n                  This is an automated message. Please do not reply to this email.\n                </p>\n              </td>\n            </tr>\n<div style=\"margin: 24px 0 0; padding: 14px 16px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;\">\n  <p style=\"margin: 0; font-size: 13px; line-height: 1.6; color: #4b5563;\">\n    <strong>Already paid?</strong> If you have already submitted payment, please contact your HOA manager\n    {{ ($json.body?.cc && $json.body.cc[0]) ? 'at <a href=\\\"mailto:' + $json.body.cc[0] + '\\\" style=\\\"color: #2563eb;\\\">' + $json.body.cc[0] + '</a>' : 'using the contact information provided by your community' }}.\n  </p>\n</div>\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+        "options": {
+          "ccEmail": "={{ Array.isArray($json.body?.cc || $json.cc) ? ($json.body?.cc || $json.cc).join(', ') : ($json.body?.cc || $json.cc || '') }}"
+        }
+      },
+      "id": "b6fd31c1-ae6e-4c96-90a6-e97c519e404f",
+      "name": "Send Reminder Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [560, 1616],
+      "webhookId": "4bfd76da-a4bb-4312-a969-bd042cd94b5d",
+      "credentials": {
+        "smtp": {
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@neibrpay.com",
+        "toEmail": "={{ $json.body?.recipient?.email || $json.recipient?.email }}",
+        "subject": "={{ 'Important Update: Late Fee Applied - Invoice ' + ($json.body?.invoice_summary?.invoice_number || $json.invoice_summary?.invoice_number || '') + ' | ' + ($json.body?.tenant_name || $json.tenant_name || 'NeibrPay') }}",
+        "html": "==<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  </head>\n  <body style=\"margin:0;padding:0;font-family:Inter,Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#F9FAFB;\">\n    <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\" style=\"background-color:#F9FAFB;\">\n      <tr>\n        <td align=\"center\" style=\"padding:40px 20px;\">\n          <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"600\" style=\"background-color:#FFFFFF;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,0.08);overflow:hidden;\">\n            \n            <!-- Header -->\n            <tr>\n              <td style=\"padding:36px 32px 22px;text-align:center;background-color:#00C27A;\">\n                <h1 style=\"margin:0;color:#FFFFFF;font-size:28px;line-height:1.3;font-weight:600;\">\n                  Invoice Updated\n                </h1>\n                <p style=\"margin:10px 0 0;color:#E6FAF2;font-size:14px;line-height:1.4;\">\n                  Late Fee Applied\n                </p>\n              </td>\n            </tr>\n\n            <!-- Content -->\n            <tr>\n              <td style=\"padding:34px 32px;\">\n                <p style=\"margin:0 0 18px;font-size:16px;line-height:1.6;color:#1F2937;\">\n                  Dear {{ $json.body?.recipient?.name || $json.recipient?.name || 'Valued Resident' }},\n                </p>\n\n                <p style=\"margin:0 0 18px;font-size:16px;line-height:1.6;color:#1F2937;\">\n                  Your invoice has been updated and a late fee has been applied according to your HOA billing policy.\n                </p>\n\n                <!-- Invoice summary -->\n                <div style=\"background-color:#F3F4F6;padding:18px;border-radius:8px;margin:0 0 18px;\">\n                  <table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"font-size:14px;color:#1F2937;\">\n                    <tr>\n                      <td style=\"padding:6px 0;\"><strong>Invoice Number:</strong></td>\n                      <td style=\"padding:6px 0;text-align:right;\">{{ $json.body?.invoice_summary?.invoice_number || $json.invoice_summary?.invoice_number || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding:6px 0;\"><strong>Unit:</strong></td>\n                      <td style=\"padding:6px 0;text-align:right;\">{{ $json.body?.invoice_summary?.unit_title || $json.invoice_summary?.unit_title || 'N/A' }}</td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding:6px 0;\"><strong>Total Amount:</strong></td>\n                      <td style=\"padding:6px 0;text-align:right;font-size:18px;font-weight:600;color:#00C27A;\">\n                        ${{ $json.body?.invoice_summary?.total || $json.invoice_summary?.total || '0.00' }}\n                      </td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding:6px 0;\"><strong>Balance Due:</strong></td>\n                      <td style=\"padding:6px 0;text-align:right;font-size:16px;font-weight:600;color:#DC2626;\">\n                        ${{ $json.body?.invoice_summary?.balance_due || $json.invoice_summary?.balance_due || '0.00' }}\n                      </td>\n                    </tr>\n                    <tr>\n                      <td style=\"padding:6px 0;\"><strong>Due Date:</strong></td>\n                      <td style=\"padding:6px 0;text-align:right;\">{{ $json.body?.invoice_summary?.due_date || $json.invoice_summary?.due_date || 'N/A' }}</td>\n                    </tr>\n                  </table>\n                </div>\n\n                <!-- Late fee notice -->\n                <div style=\"margin:0 0 22px;padding:14px 16px;border:1px solid #FDE68A;background-color:#FFFBEB;border-radius:8px;\">\n                  <p style=\"margin:0 0 8px;font-size:14px;line-height:1.6;color:#92400E;font-weight:600;\">\n                    Late fee details\n                  </p>\n                  <p style=\"margin:0;font-size:14px;line-height:1.7;color:#4B5563;\">\n                    Applied Amount: <strong>${{ $json.body?.late_fee_notice?.applied_amount || $json.late_fee_notice?.applied_amount || '0.00' }}</strong><br/>\n                    Type: <strong>{{ $json.body?.late_fee_notice?.late_fee_type || $json.late_fee_notice?.late_fee_type || 'N/A' }}</strong><br/>\n                    Applied On: <strong>{{ $json.body?.late_fee_notice?.late_fee_applies_on_date || $json.late_fee_notice?.late_fee_applies_on_date || 'N/A' }}</strong>\n                  </p>\n                </div>\n\n                <!-- CTA -->\n                <table role=\"presentation\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n                  <tr>\n                    <td align=\"center\" style=\"padding:6px 0 22px;\">\n                      <a href=\"{{ $json.body?.magic_link || $json.magic_link }}\" style=\"display:inline-block;padding:14px 28px;background-color:#00C27A;color:#FFFFFF;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;box-shadow:0 2px 4px rgba(0,194,122,0.25);\">\n                        View Updated Invoice\n                      </a>\n                    </td>\n                  </tr>\n                </table>\n\n                <p style=\"margin:0;font-size:13px;line-height:1.6;color:#6B7280;\">\n                  If the button doesn't work, copy and paste this link into your browser:\n                </p>\n                <p style=\"margin:8px 0 0;font-size:12px;line-height:1.6;color:#009B61;word-break:break-all;\">\n                  {{ $json.body?.magic_link || $json.magic_link }}\n                </p>\n\n                <p style=\"margin:22px 0 0;font-size:12px;line-height:1.6;color:#9CA3AF;\">\n                  This is an automated message from {{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }}. Please do not reply.\n                </p>\n              </td>\n            </tr>\n\n            <!-- Footer -->\n            <tr>\n              <td style=\"padding:24px 32px;text-align:center;background-color:#F3F4F6;border-top:1px solid #E5E7EB;\">\n                <p style=\"margin:0 0 8px;font-size:14px;color:#4B5563;line-height:1.5;\">\n                  Best regards,<br />\n                  <strong>{{ $json.body?.tenant_name || $json.tenant_name || 'NeibrPay' }} Management Team</strong>\n                </p>\n                <p style=\"margin:0;font-size:12px;color:#9CA3AF;\">\n                  Automated email • No reply needed\n                </p>\n              </td>\n            </tr>\n\n          </table>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>",
+        "options": {
+          "ccEmail": "={{ Array.isArray($json.body?.cc || $json.cc) ? ($json.body?.cc || $json.cc).join(', ') : ($json.body?.cc || $json.cc || '') }}"
+        }
+      },
+      "id": "ebeac0b2-6551-4a3c-94c2-4a75c22f0d23",
+      "name": "Send Late Fee Notice Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [592, 1904],
+      "webhookId": "4bfd76da-a4bb-4312-a969-bd042cd94b5d",
+      "credentials": {
+        "smtp": {
+          "id": "d2q1mkHACg1twB9I",
+          "name": "PROD SMTP account"
         }
       },
       "continueOnFail": true,
@@ -375,14 +640,49 @@
         ],
         [
           {
-            "node": "Send Invoice Email",
+            "node": "Send Accouncement Email",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Send Accouncement Email",
+            "node": "Send Payment Approval Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Payment Submission Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Payment Rejection Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Invoice Paid Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Late Fee Notice Email",
             "type": "main",
             "index": 0
           }
@@ -406,11 +706,119 @@
           }
         ]
       ]
+    },
+    "Send Payment Approval Email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Payment Submission Email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Payment Rejection Email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Invoice Paid Email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reminder Email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Late Fee Notice Email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {},
-  "versionId": "7d1005cf-4d5c-48e5-9bf8-799f344d0fcb",
+  "versionId": "4c0e8ed9-254c-4226-be5c-6fb5f6229e2d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "7049e8f52f4a8b5eddcfbc7601c36c0a32779966c03f9b643c8db461d2762391"
