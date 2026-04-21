@@ -6,6 +6,7 @@
       <FeaturesSection />
       <HowItWorksSection />
       <TrustSection />
+      <TestimonialsSection />
       <PricingSection />
       <FaqSection />
       <ContactFormSection />
@@ -16,12 +17,13 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'NeibrPay — HOA Dues Collection & Community Management Platform',
+  title:
+    'NeibrPay — The Modern HOA Platform for Self-Managed Boards Under 50 Units',
   meta: [
     {
       name: 'description',
       content:
-        'Collect HOA dues online via Zelle, ACH, or card. Manage vendors, store documents, and communicate with residents. Built for self-managed HOAs and small community associations.',
+        'NeibrPay is the modern HOA platform for volunteer treasurers and board members running self-managed communities under 50 units. Collect dues online, track every dollar, and migrate from spreadsheets or PayHOA in an afternoon.',
     },
   ],
 });
