@@ -540,7 +540,7 @@ const features: Feature[] = [
   {
     title: 'Events Calendar',
     slug: 'events-calendar',
-    category: 'management',
+    category: 'communications',
     shortDescription:
       'Schedule, publish, and remind residents of community events — from pool parties to annual meetings.',
     heroDescription:
