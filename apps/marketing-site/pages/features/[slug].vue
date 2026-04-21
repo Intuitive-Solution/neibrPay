@@ -119,6 +119,88 @@
         </div>
       </section>
 
+      <!-- Testimonial -->
+      <section v-if="feature.testimonial" class="bg-white py-16 md:py-24">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <figure
+            class="bg-primary-50 border border-primary-100 rounded-2xl p-8 md:p-12 shadow-sm"
+          >
+            <div class="mb-6 flex gap-0.5 text-yellow-400" aria-hidden="true">
+              <svg
+                v-for="n in 5"
+                :key="n"
+                class="w-6 h-6"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.956a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.45a1 1 0 00-.364 1.118l1.287 3.956c.3.921-.755 1.688-1.539 1.118l-3.37-2.45a1 1 0 00-1.175 0l-3.37 2.45c-.783.57-1.838-.197-1.539-1.118l1.287-3.956a1 1 0 00-.364-1.118L2.05 9.383c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.956z"
+                />
+              </svg>
+            </div>
+            <blockquote
+              class="text-xl md:text-2xl text-primary-900 leading-relaxed mb-6 font-medium"
+            >
+              &ldquo;{{ feature.testimonial.quote }}&rdquo;
+            </blockquote>
+            <figcaption class="text-sm text-gray-600 font-medium">
+              &mdash; {{ feature.testimonial.attribution }}
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- Feature FAQ -->
+      <section
+        v-if="feature.faqs && feature.faqs.length"
+        class="bg-neutral-50 py-16 md:py-24"
+      >
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2
+            class="text-2xl md:text-3xl font-bold text-primary-800 text-center mb-4"
+          >
+            {{ feature.title }} FAQ
+          </h2>
+          <p class="text-gray-600 text-center mb-12">
+            Answers to the most common questions about
+            {{ feature.title.toLowerCase() }}.
+          </p>
+
+          <div class="divide-y divide-gray-200 bg-white rounded-xl shadow-sm">
+            <div
+              v-for="(item, index) in feature.faqs"
+              :key="index"
+              class="accordion-item"
+            >
+              <button
+                :aria-expanded="openFaqIndex === index"
+                class="accordion-trigger"
+                @click="toggleFaq(index)"
+              >
+                <span>{{ item.question }}</span>
+                <svg
+                  class="w-5 h-5 text-gray-500 transition-transform duration-200 flex-shrink-0 ml-4"
+                  :class="{ 'rotate-180': openFaqIndex === index }"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <div v-show="openFaqIndex === index" class="accordion-content">
+                <p>{{ item.answer }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Related Features -->
       <section v-if="relatedFeatures.length" class="bg-white py-16 md:py-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -174,13 +256,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
 import { useFeatureData } from '~/composables/useFeatureData';
 
 const route = useRoute();
 const { getFeatureBySlug, getRelatedFeatures } = useFeatureData();
 
 const feature = computed(() => getFeatureBySlug(route.params.slug as string));
+
+const openFaqIndex = ref<number | null>(null);
+const toggleFaq = (index: number) => {
+  openFaqIndex.value = openFaqIndex.value === index ? null : index;
+};
 
 const relatedFeatures = computed(() => {
   if (!feature.value) return [];

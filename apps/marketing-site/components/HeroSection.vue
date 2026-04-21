@@ -9,13 +9,14 @@
           <h1
             class="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-800 mb-6 leading-tight"
           >
-            The <em class="not-italic text-primary">easiest</em> way to manage
-            your HOA
+            The modern HOA platform your board
+            <em class="not-italic text-primary">finally</em> wants to use
           </h1>
 
           <p class="text-xl md:text-2xl text-text-secondary mb-10 max-w-xl">
-            Collect dues, manage vendors, and communicate with residents &mdash;
-            all in one place.
+            For volunteer treasurers and board members running self-managed
+            communities under 50 units. Collect dues online, track every dollar,
+            and ditch the spreadsheets &mdash; without paying enterprise prices.
           </p>
 
           <div class="flex flex-col sm:flex-row items-start gap-4 mb-6">
@@ -51,7 +52,8 @@
           </div>
 
           <p class="text-sm text-gray-400">
-            Perfect for self-managed HOAs and small community associations.
+            Built for self-managed HOAs under 50 units. Migrate from
+            spreadsheets or PayHOA in an afternoon.
           </p>
         </div>
 

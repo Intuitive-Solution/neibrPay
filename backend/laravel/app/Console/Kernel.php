@@ -22,6 +22,17 @@ class Kernel extends ConsoleKernel
             ->onSuccess(function () {
                 \Illuminate\Support\Facades\Log::info('Plaid sync job completed successfully');
             });
+
+        // Sync invoice late-fee adjustment line items every hour
+        $schedule->command('invoices:sync-fee-adjustments')
+            ->hourly()
+            ->withoutOverlapping()
+            ->onFailure(function () {
+                \Illuminate\Support\Facades\Log::error('Invoice fee adjustment sync job failed');
+            })
+            ->onSuccess(function () {
+                \Illuminate\Support\Facades\Log::info('Invoice fee adjustment sync job completed successfully');
+            });
     }
 
     /**

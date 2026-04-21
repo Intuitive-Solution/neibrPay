@@ -129,6 +129,19 @@ class InvoiceController extends Controller
             'late_fee_applies_on_date' => 'nullable|date|required_if:late_fee_enabled,true',
         ]);
 
+        if (
+            ($validated['late_fee_type'] ?? null) === 'percentage' &&
+            isset($validated['late_fee_amount']) &&
+            (float) $validated['late_fee_amount'] > 100
+        ) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'late_fee_amount' => ['Late fee percentage cannot exceed 100%.'],
+                ],
+            ], 422);
+        }
+
         // Ensure all units belong to the same tenant
         $unitIds = $validated['unit_ids'];
         $validUnits = Unit::whereIn('id', $unitIds)
@@ -297,6 +310,19 @@ class InvoiceController extends Controller
             'late_fee_type' => 'nullable|in:amount,percentage|required_if:late_fee_enabled,true',
             'late_fee_applies_on_date' => 'nullable|date|required_if:late_fee_enabled,true',
         ]);
+
+        if (
+            ($validated['late_fee_type'] ?? null) === 'percentage' &&
+            isset($validated['late_fee_amount']) &&
+            (float) $validated['late_fee_amount'] > 100
+        ) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'late_fee_amount' => ['Late fee percentage cannot exceed 100%.'],
+                ],
+            ], 422);
+        }
 
         // Ensure the new unit belongs to the user's tenant
         if (isset($validated['unit_id'])) {

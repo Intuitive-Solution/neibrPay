@@ -85,14 +85,14 @@ const faqItems = [
       "Absolutely. NeibrPay uses enterprise-grade security with complete data isolation between communities. Payment processing is PCI-compliant through Stripe, bank verification uses Plaid's secure infrastructure, and all data is encrypted at rest and in transit. Your community's financial data is never shared or accessible by other organizations.",
   },
   {
-    question: 'What does NeibrPay cost?',
+    question: 'What does NeibrPay cost — and how does it compare to PayHOA?',
     answer:
-      'NeibrPay starts at $19.99/month for communities with up to 20 units, or $16.67/month when billed annually ($200/year). For larger communities, we offer custom Enterprise pricing. All plans include every core feature — invoicing, payments, vendor tracking, document storage, and the owner portal.',
+      'NeibrPay starts at $19.99/month for communities with up to 20 units, or $16.67/month when billed annually ($200/year). For larger communities, we offer custom Enterprise pricing. All plans include every core feature — invoicing, payments, vendor tracking, document storage, online voting, meetings, and the owner portal. We built NeibrPay specifically for small self-managed HOAs (under 50 units) that want modern software without paying enterprise per-unit pricing.',
   },
   {
-    question: 'Can I migrate from spreadsheets or another tool?',
+    question: 'How do I migrate from spreadsheets or PayHOA?',
     answer:
-      "Yes! Our onboarding process is designed to make migration painless. You can import your unit and resident data, and our team will help you get everything set up. We'll work with you to ensure a smooth transition with zero downtime for your community.",
+      'Most small HOAs migrate in an afternoon. You can import your unit, resident, and balance data from CSV (works directly with a spreadsheet export or a PayHOA owner export). Our self-serve onboarding walks you through adding units, inviting residents, and configuring dues. If you want a hand, our team will do a white-glove migration with you on a call — no extra charge. Zero downtime for your community.',
   },
   {
     question: 'Do you offer a free trial?',

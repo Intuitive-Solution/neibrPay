@@ -1,12 +1,30 @@
 import { getRequestURL } from 'h3';
+import { useFeatureData } from '../../composables/useFeatureData';
 
-const PATHS: { path: string; changefreq: string; priority: string }[] = [
+interface SitemapEntry {
+  path: string;
+  changefreq: string;
+  priority: string;
+}
+
+const STATIC_PATHS: SitemapEntry[] = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
+  { path: '/about', changefreq: 'monthly', priority: '0.7' },
+  { path: '/get-started', changefreq: 'monthly', priority: '0.9' },
   { path: '/contact', changefreq: 'monthly', priority: '0.8' },
   { path: '/support', changefreq: 'monthly', priority: '0.8' },
   { path: '/privacy', changefreq: 'yearly', priority: '0.4' },
   { path: '/terms', changefreq: 'yearly', priority: '0.4' },
 ];
+
+function buildFeaturePaths(): SitemapEntry[] {
+  const { features } = useFeatureData();
+  return features.map(f => ({
+    path: `/features/${f.slug}`,
+    changefreq: 'monthly',
+    priority: '0.8',
+  }));
+}
 
 function escapeXml(s: string): string {
   return s
@@ -27,15 +45,19 @@ export default defineEventHandler(event => {
 
   const lastmod = new Date().toISOString().split('T')[0];
 
-  const urls = PATHS.map(
-    ({ path, changefreq, priority }) => `
+  const paths: SitemapEntry[] = [...STATIC_PATHS, ...buildFeaturePaths()];
+
+  const urls = paths
+    .map(
+      ({ path, changefreq, priority }) => `
   <url>
     <loc>${escapeXml(`${origin}${path === '/' ? '/' : path}`)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
   </url>`
-  ).join('');
+    )
+    .join('');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
