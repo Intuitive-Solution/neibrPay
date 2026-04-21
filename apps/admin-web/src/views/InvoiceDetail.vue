@@ -685,14 +685,13 @@
                     ]"
                   >
                     Late fee of
-                    <span class="font-semibold"
-                      >${{ formatCurrency(invoice.late_fee_amount || 0) }}</span
-                    >
-                    <span
-                      v-if="invoice.late_fee_type === 'percentage'"
-                      class="ml-1"
-                    >
-                      ({{ invoice.late_fee_amount }}%)
+                    <span class="font-semibold">
+                      <template v-if="invoice.late_fee_type === 'percentage'">
+                        {{ invoice.late_fee_amount }}%
+                      </template>
+                      <template v-else>
+                        ${{ formatCurrency(invoice.late_fee_amount || 0) }}
+                      </template>
                     </span>
                     will be applied after
                     <span class="font-semibold">
@@ -1069,16 +1068,21 @@
                     >
                       <div class="grid grid-cols-2 gap-2">
                         <div>
-                          <span class="text-xs text-gray-500">Amount:</span>
+                          <span class="text-xs text-gray-500">Fee:</span>
                           <p class="text-sm font-medium text-gray-900">
-                            ${{ formatCurrency(invoice.late_fee_amount || 0) }}
-                            <span class="text-xs text-gray-500 ml-1"
-                              >({{
-                                invoice.late_fee_type === 'percentage'
-                                  ? '%'
-                                  : 'Fixed'
-                              }})</span
+                            <template
+                              v-if="invoice.late_fee_type === 'percentage'"
                             >
+                              {{ invoice.late_fee_amount }}%
+                            </template>
+                            <template v-else>
+                              ${{
+                                formatCurrency(invoice.late_fee_amount || 0)
+                              }}
+                              <span class="text-xs text-gray-500 ml-1"
+                                >(fixed)</span
+                              >
+                            </template>
                           </p>
                         </div>
                         <div>

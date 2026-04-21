@@ -750,6 +750,11 @@ For support, questions, or contributions, please refer to the documentation in t
 
 stripe listen --forward-to localhost:8000/api/stripe/webhook
 
+stripe listen \
+ --forward-to localhost:8000/api/stripe/webhook \
+ --forward-connect-to localhost:8000/api/stripe/webhook \
+ --events checkout.session.completed,payment_intent.succeeded,charge.succeeded
+
 Start listener with correct path.
 In another terminal:
 stripe trigger checkout.session.completed

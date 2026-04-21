@@ -366,10 +366,10 @@
                     }"
                   >
                     <option value="one-time">One Time</option>
-                    <option value="monthly">Monthly</option>
+                    <!-- <option value="monthly">Monthly</option>
                     <option value="weekly">Weekly</option>
                     <option value="quarterly">Quarterly</option>
-                    <option value="yearly">Yearly</option>
+                    <option value="yearly">Yearly</option> -->
                   </select>
                   <div
                     class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
@@ -1877,6 +1877,22 @@ const isOneTimeFrequency = computed(() => {
 });
 
 // Financial calculations
+/** YYYY-MM-DD in the user's local calendar (matches <input type="date">, avoids UTC-only skew). */
+function localCalendarYmd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function isPercentageLateFeeType(type: unknown): boolean {
+  return (
+    String(type ?? '')
+      .trim()
+      .toLowerCase() === 'percentage'
+  );
+}
+
 const hasLateFeeLineItem = computed(() => {
   return invoiceItems.value.some((item: any) => {
     const itemName = String(item?.name || '')
@@ -1891,8 +1907,15 @@ const isLateFeeApplicableToday = computed(() => {
     return false;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = localCalendarYmd(new Date());
   return today >= form.value.late_fee_applies_on_date;
+});
+
+const baseSubtotal = computed(() => {
+  return invoiceItems.value.reduce((sum: number, item: any) => {
+    const line = Number(item.lineTotal);
+    return sum + (Number.isFinite(line) ? line : 0);
+  }, 0);
 });
 
 const lateFeeApplied = computed(() => {
@@ -1900,23 +1923,16 @@ const lateFeeApplied = computed(() => {
     return 0;
   }
 
-  const amount = parseFloat(form.value.late_fee_amount || '0');
+  const amount = parseFloat(String(form.value.late_fee_amount || '').trim());
   if (!Number.isFinite(amount) || amount <= 0) {
     return 0;
   }
 
-  if (form.value.late_fee_type === 'percentage') {
+  if (isPercentageLateFeeType(form.value.late_fee_type)) {
     return (baseSubtotal.value * amount) / 100;
   }
 
   return amount;
-});
-
-const baseSubtotal = computed(() => {
-  return invoiceItems.value.reduce(
-    (sum: number, item: any) => sum + item.lineTotal,
-    0
-  );
 });
 
 const subtotal = computed(() => {
