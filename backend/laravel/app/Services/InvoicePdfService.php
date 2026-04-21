@@ -243,17 +243,17 @@ class InvoicePdfService
 
         $itemsHtml = '';
         foreach ($invoiceUnit->items as $item) {
+            $lineTotal = (float) ($item['line_total'] ?? 0);
+
             $itemsHtml .= "
             <tr>
                 <td class=\"item-name\">{$item['name']}</td>
                 <td class=\"item-description\">" . ($item['description'] ?? '') . "</td>
                 <td class=\"item-cost\">$" . number_format((float)$item['unit_cost'], 2) . "</td>
                 <td class=\"item-quantity\">{$item['quantity']}</td>
-                <td class=\"item-total\">$" . number_format((float)$item['line_total'], 2) . "</td>
+                <td class=\"item-total\">$" . number_format($lineTotal, 2) . "</td>
             </tr>";
         }
-
-        $discountHtml = '';
 
         $taxHtml = '';
         if ($invoiceUnit->tax_rate > 0) {
@@ -461,7 +461,6 @@ class InvoicePdfService
                             <span class=\"total-label\">Subtotal:</span>
                             <span class=\"total-value\">$" . number_format((float)$invoiceUnit->subtotal, 2) . "</span>
                         </div>
-                        {$discountHtml}
                         {$taxHtml}
                         <div class=\"total-row final-total\">
                             <span class=\"total-label\">Total:</span>

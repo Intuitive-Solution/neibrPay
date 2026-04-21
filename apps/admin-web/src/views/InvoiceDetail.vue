@@ -628,89 +628,6 @@
               </span>
             </p>
 
-            <!-- Early Payment Discount Details -->
-            <div
-              v-if="invoice.early_payment_discount_enabled"
-              :class="[
-                'mt-3 pt-3 border-t',
-                invoice.status === 'overdue'
-                  ? 'border-red-200'
-                  : invoice.status === 'partial'
-                    ? 'border-yellow-200'
-                    : 'border-blue-200',
-              ]"
-            >
-              <div class="flex items-start">
-                <svg
-                  class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"
-                  :class="[
-                    invoice.status === 'overdue'
-                      ? 'text-green-600'
-                      : invoice.status === 'partial'
-                        ? 'text-green-600'
-                        : 'text-green-600',
-                  ]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div class="flex-1">
-                  <p
-                    :class="[
-                      'text-sm font-medium',
-                      invoice.status === 'overdue'
-                        ? 'text-green-800'
-                        : invoice.status === 'partial'
-                          ? 'text-green-800'
-                          : 'text-green-800',
-                    ]"
-                  >
-                    Early Payment Discount Available
-                  </p>
-                  <p
-                    :class="[
-                      'text-xs mt-1',
-                      invoice.status === 'overdue'
-                        ? 'text-green-700'
-                        : invoice.status === 'partial'
-                          ? 'text-green-700'
-                          : 'text-green-700',
-                    ]"
-                  >
-                    Save
-                    <span class="font-semibold"
-                      >${{
-                        formatCurrency(
-                          invoice.early_payment_discount_amount || 0
-                        )
-                      }}</span
-                    >
-                    <span
-                      v-if="
-                        invoice.early_payment_discount_type === 'percentage'
-                      "
-                      class="ml-1"
-                    >
-                      ({{ invoice.early_payment_discount_amount }}%)
-                    </span>
-                    if paid by
-                    <span class="font-semibold">
-                      {{
-                        formatDate(invoice.early_payment_discount_by_date || '')
-                      }}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <!-- Late Fee Details -->
             <div
               v-if="invoice.late_fee_enabled"
@@ -1129,64 +1046,6 @@
                   Payment Terms
                 </h4>
                 <div class="space-y-4">
-                  <!-- Early Payment Discount -->
-                  <div>
-                    <div class="flex items-center justify-between mb-2">
-                      <label class="text-xs font-medium text-gray-700">
-                        Early Payment Discount
-                      </label>
-                      <span
-                        :class="[
-                          'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                          invoice.early_payment_discount_enabled
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600',
-                        ]"
-                      >
-                        {{
-                          invoice.early_payment_discount_enabled
-                            ? 'Enabled'
-                            : 'Disabled'
-                        }}
-                      </span>
-                    </div>
-                    <div
-                      v-if="invoice.early_payment_discount_enabled"
-                      class="mt-2 pl-3 border-l-2 border-green-200 space-y-2"
-                    >
-                      <div class="grid grid-cols-2 gap-2">
-                        <div>
-                          <span class="text-xs text-gray-500">Amount:</span>
-                          <p class="text-sm font-medium text-gray-900">
-                            ${{
-                              formatCurrency(
-                                invoice.early_payment_discount_amount || 0
-                              )
-                            }}
-                            <span class="text-xs text-gray-500 ml-1"
-                              >({{
-                                invoice.early_payment_discount_type ===
-                                'percentage'
-                                  ? '%'
-                                  : 'Fixed'
-                              }})</span
-                            >
-                          </p>
-                        </div>
-                        <div>
-                          <span class="text-xs text-gray-500">By Date:</span>
-                          <p class="text-sm text-gray-900">
-                            {{
-                              formatDate(
-                                invoice.early_payment_discount_by_date || ''
-                              )
-                            }}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   <!-- Late Fee -->
                   <div>
                     <div class="flex items-center justify-between mb-2">
@@ -2696,12 +2555,6 @@ const cloneInvoice = () => {
     due_date: invoice.value.due_date,
     items: invoice.value.items,
     tax_rate: invoice.value.tax_rate,
-    early_payment_discount_enabled:
-      invoice.value.early_payment_discount_enabled,
-    early_payment_discount_amount: invoice.value.early_payment_discount_amount,
-    early_payment_discount_type: invoice.value.early_payment_discount_type,
-    early_payment_discount_by_date:
-      invoice.value.early_payment_discount_by_date,
     late_fee_enabled: invoice.value.late_fee_enabled,
     late_fee_amount: invoice.value.late_fee_amount,
     late_fee_type: invoice.value.late_fee_type,

@@ -750,6 +750,11 @@ For support, questions, or contributions, please refer to the documentation in t
 
 stripe listen --forward-to localhost:8000/api/stripe/webhook
 
+Start listener with correct path.
+In another terminal:
+stripe trigger checkout.session.completed
+stripe trigger payment_intent.succeeded
+
 CARDS
 4000 0000 0000 0002 - Card declined
 4000 0000 0000 9995 - Insufficient funds

@@ -590,122 +590,6 @@
                 </p>
               </div>
 
-              <!-- Early Payment Discount -->
-              <div>
-                <label class="flex items-center justify-between mb-2">
-                  <span class="form-label-modern mb-0"
-                    >Add Early Payment Discount</span
-                  >
-                  <label
-                    class="relative inline-flex items-center cursor-pointer"
-                  >
-                    <input
-                      v-model="form.early_payment_discount_enabled"
-                      type="checkbox"
-                      class="sr-only peer"
-                    />
-                    <div
-                      class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-primary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 relative transition-colors duration-200 ease-in-out"
-                    >
-                      <span
-                        :class="[
-                          'absolute top-0.5 left-0.5 bg-white border border-gray-300 rounded-full h-5 w-5 transition-all duration-200 ease-in-out',
-                          form.early_payment_discount_enabled
-                            ? 'translate-x-5'
-                            : 'translate-x-0',
-                        ]"
-                      ></span>
-                    </div>
-                  </label>
-                </label>
-                <div
-                  v-if="form.early_payment_discount_enabled"
-                  class="space-y-4 mt-4"
-                >
-                  <div>
-                    <label class="form-label-modern">Discount Amount</label>
-                    <div class="flex gap-2">
-                      <div class="flex-1 input-group">
-                        <input
-                          v-model="form.early_payment_discount_amount"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          class="input-modern"
-                          :class="{
-                            'input-error': errors.early_payment_discount_amount,
-                          }"
-                          placeholder="0.00"
-                        />
-                      </div>
-                      <div class="w-28 input-group">
-                        <select
-                          v-model="form.early_payment_discount_type"
-                          class="select-modern"
-                          :class="{
-                            'input-error': errors.early_payment_discount_type,
-                          }"
-                        >
-                          <option value="amount">Amount</option>
-                          <option value="percentage">%</option>
-                        </select>
-                      </div>
-                    </div>
-                    <p
-                      v-if="
-                        errors.early_payment_discount_amount ||
-                        errors.early_payment_discount_type
-                      "
-                      class="form-error"
-                    >
-                      <svg
-                        class="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                      {{
-                        errors.early_payment_discount_amount ||
-                        errors.early_payment_discount_type
-                      }}
-                    </p>
-                  </div>
-                  <div>
-                    <label class="form-label-modern">If paid in full by</label>
-                    <input
-                      v-model="form.early_payment_discount_by_date"
-                      type="date"
-                      class="input-modern"
-                      :class="{
-                        'input-error': errors.early_payment_discount_by_date,
-                      }"
-                    />
-                    <p
-                      v-if="errors.early_payment_discount_by_date"
-                      class="form-error"
-                    >
-                      <svg
-                        class="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                      {{ errors.early_payment_discount_by_date }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <!-- Late Fee -->
               <div>
                 <label class="flex items-center justify-between mb-2">
@@ -1702,10 +1586,6 @@ const form = ref({
   due_date: 'use_payment_terms',
   invoice_number: '',
   po_number: '',
-  early_payment_discount_enabled: false,
-  early_payment_discount_amount: '',
-  early_payment_discount_type: 'amount',
-  early_payment_discount_by_date: '',
   late_fee_enabled: false,
   late_fee_amount: '',
   late_fee_type: 'amount',
@@ -1721,10 +1601,6 @@ const errors = ref({
   remaining_cycles: '',
   due_date: '',
   invoice_number: '',
-  early_payment_discount_enabled: '',
-  early_payment_discount_amount: '',
-  early_payment_discount_type: '',
-  early_payment_discount_by_date: '',
   late_fee_enabled: '',
   late_fee_amount: '',
   late_fee_type: '',
@@ -1882,21 +1758,6 @@ watch(
       form.value.remaining_cycles = invoice.remaining_cycles || 'endless';
       form.value.due_date = invoice.due_date;
       form.value.po_number = invoice.po_number || '';
-      form.value.early_payment_discount_enabled =
-        invoice.early_payment_discount_enabled || false;
-      form.value.early_payment_discount_amount =
-        invoice.early_payment_discount_amount?.toString() || '';
-      form.value.early_payment_discount_type =
-        invoice.early_payment_discount_type || 'amount';
-      // Format date for HTML5 date input (YYYY-MM-DD)
-      if (invoice.early_payment_discount_by_date) {
-        const date = new Date(invoice.early_payment_discount_by_date);
-        form.value.early_payment_discount_by_date = date
-          .toISOString()
-          .split('T')[0];
-      } else {
-        form.value.early_payment_discount_by_date = '';
-      }
       form.value.late_fee_enabled = invoice.late_fee_enabled || false;
       form.value.late_fee_amount = invoice.late_fee_amount?.toString() || '';
       form.value.late_fee_type = invoice.late_fee_type || 'amount';
@@ -2016,11 +1877,50 @@ const isOneTimeFrequency = computed(() => {
 });
 
 // Financial calculations
-const subtotal = computed(() => {
+const hasLateFeeLineItem = computed(() => {
+  return invoiceItems.value.some((item: any) => {
+    const itemName = String(item?.name || '')
+      .trim()
+      .toLowerCase();
+    return itemName === 'late fee';
+  });
+});
+
+const isLateFeeApplicableToday = computed(() => {
+  if (!form.value.late_fee_enabled || !form.value.late_fee_applies_on_date) {
+    return false;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  return today >= form.value.late_fee_applies_on_date;
+});
+
+const lateFeeApplied = computed(() => {
+  if (!isLateFeeApplicableToday.value || hasLateFeeLineItem.value) {
+    return 0;
+  }
+
+  const amount = parseFloat(form.value.late_fee_amount || '0');
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 0;
+  }
+
+  if (form.value.late_fee_type === 'percentage') {
+    return (baseSubtotal.value * amount) / 100;
+  }
+
+  return amount;
+});
+
+const baseSubtotal = computed(() => {
   return invoiceItems.value.reduce(
     (sum: number, item: any) => sum + item.lineTotal,
     0
   );
+});
+
+const subtotal = computed(() => {
+  return baseSubtotal.value + lateFeeApplied.value;
 });
 
 const taxAmount = computed(() => {
@@ -2711,10 +2611,6 @@ const handleSubmit = async () => {
     remaining_cycles: '',
     due_date: '',
     invoice_number: '',
-    early_payment_discount_enabled: '',
-    early_payment_discount_amount: '',
-    early_payment_discount_type: '',
-    early_payment_discount_by_date: '',
     late_fee_enabled: '',
     late_fee_amount: '',
     late_fee_type: '',
@@ -2755,20 +2651,6 @@ const handleSubmit = async () => {
             : form.value.remaining_cycles,
         due_date: form.value.due_date as any,
         po_number: form.value.po_number,
-        early_payment_discount_enabled:
-          form.value.early_payment_discount_enabled ?? false,
-        early_payment_discount_amount:
-          form.value.early_payment_discount_enabled &&
-          form.value.early_payment_discount_amount
-            ? parseFloat(form.value.early_payment_discount_amount)
-            : undefined,
-        early_payment_discount_type: form.value.early_payment_discount_enabled
-          ? (form.value.early_payment_discount_type as any)
-          : undefined,
-        early_payment_discount_by_date: form.value
-          .early_payment_discount_enabled
-          ? form.value.early_payment_discount_by_date
-          : undefined,
         late_fee_enabled: form.value.late_fee_enabled ?? false,
         late_fee_amount:
           form.value.late_fee_enabled && form.value.late_fee_amount
@@ -2837,20 +2719,6 @@ const handleSubmit = async () => {
             ? undefined
             : form.value.remaining_cycles,
         due_date: form.value.due_date as any,
-        early_payment_discount_enabled:
-          form.value.early_payment_discount_enabled || undefined,
-        early_payment_discount_amount:
-          form.value.early_payment_discount_enabled &&
-          form.value.early_payment_discount_amount
-            ? parseFloat(form.value.early_payment_discount_amount)
-            : undefined,
-        early_payment_discount_type: form.value.early_payment_discount_enabled
-          ? (form.value.early_payment_discount_type as any)
-          : undefined,
-        early_payment_discount_by_date: form.value
-          .early_payment_discount_enabled
-          ? form.value.early_payment_discount_by_date
-          : undefined,
         late_fee_enabled: form.value.late_fee_enabled || undefined,
         late_fee_amount:
           form.value.late_fee_enabled && form.value.late_fee_amount
@@ -2996,29 +2864,6 @@ onMounted(() => {
     // Populate tax rate
     if (clonedData.tax_rate !== undefined && clonedData.tax_rate !== null) {
       taxRate.value = parseFloat(clonedData.tax_rate) || 0;
-    }
-
-    // Populate early payment discount fields
-    form.value.early_payment_discount_enabled =
-      clonedData.early_payment_discount_enabled || false;
-    if (clonedData.early_payment_discount_amount !== undefined) {
-      form.value.early_payment_discount_amount =
-        clonedData.early_payment_discount_amount?.toString() || '';
-    }
-    form.value.early_payment_discount_type =
-      clonedData.early_payment_discount_type || 'amount';
-    // Format date for HTML5 date input (YYYY-MM-DD)
-    if (clonedData.early_payment_discount_by_date) {
-      const date = new Date(clonedData.early_payment_discount_by_date);
-      if (!isNaN(date.getTime())) {
-        form.value.early_payment_discount_by_date = date
-          .toISOString()
-          .split('T')[0];
-      } else {
-        form.value.early_payment_discount_by_date = '';
-      }
-    } else {
-      form.value.early_payment_discount_by_date = '';
     }
 
     // Populate late fee fields
