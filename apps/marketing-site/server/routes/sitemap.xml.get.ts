@@ -48,15 +48,17 @@ export default defineEventHandler(event => {
   const paths: SitemapEntry[] = [...STATIC_PATHS, ...buildFeaturePaths()];
 
   const urls = paths
-    .map(
-      ({ path, changefreq, priority }) => `
+    .map(({ path, changefreq, priority }) => {
+      // Netlify serves directory-style URLs with a trailing slash; match <loc> to avoid 301 from sitemap.
+      const locPath = path === '/' ? '/' : `${path.replace(/\/$/, '')}/`;
+      return `
   <url>
-    <loc>${escapeXml(`${origin}${path === '/' ? '/' : path}`)}</loc>
+    <loc>${escapeXml(`${origin}${locPath === '/' ? '/' : locPath}`)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
-  </url>`
-    )
+  </url>`;
+    })
     .join('');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
