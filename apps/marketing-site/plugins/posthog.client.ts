@@ -4,7 +4,7 @@ export default defineNuxtPlugin(nuxtApp => {
   const config = useRuntimeConfig();
 
   const posthogKey = config.public.posthogKey || '';
-  const posthogHost = config.public.posthogHost || 'https://us.i.posthog.com';
+  const posthogHost = config.public.posthogHost || 'https://j.neibrpay.com';
 
   if (!posthogKey) {
     console.warn('PostHog key not found. Analytics tracking disabled.');
@@ -15,6 +15,7 @@ export default defineNuxtPlugin(nuxtApp => {
   if (process.client && !(posthog as any).__loaded) {
     posthog.init(posthogKey, {
       api_host: posthogHost,
+      defaults: '2025-11-30',
       capture_pageview: true,
       capture_pageleave: true,
       loaded: posthogInstance => {
