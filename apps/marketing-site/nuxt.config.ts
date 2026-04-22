@@ -68,7 +68,8 @@ export default defineNuxtConfig({
         process.env.CALENDLY_URL ||
         'https://calendly.com/imailtahir/neibrpay-demo',
       posthogKey: process.env.POSTHOG_KEY || '',
-      posthogHost: process.env.POSTHOG_HOST || 'https://us.i.posthog.com',
+      /** Reverse proxy / custom ingest domain (see PostHog project settings). */
+      posthogHost: process.env.POSTHOG_HOST || 'https://j.neibrpay.com',
     },
     // Server-side only (not exposed to client)
     smtpHost: process.env.SMTP_HOST || 'smtp.hostinger.com',
