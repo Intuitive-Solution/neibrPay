@@ -12,3 +12,15 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_VERSION = "11"
+
+[[redirects]]
+  from = "/features/financial-reporting"
+  to = "/features/budgets-and-reports/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/features/financial-reporting/"
+  to = "/features/budgets-and-reports/"
+  status = 301
+  force = true
