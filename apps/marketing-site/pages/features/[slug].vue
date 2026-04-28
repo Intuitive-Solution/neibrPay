@@ -260,9 +260,15 @@ import { computed, defineAsyncComponent, ref } from 'vue';
 import { useFeatureData } from '~/composables/useFeatureData';
 
 const route = useRoute();
+const config = useRuntimeConfig();
 const { getFeatureBySlug, getRelatedFeatures } = useFeatureData();
 
-const feature = computed(() => getFeatureBySlug(route.params.slug as string));
+const slug = computed(() => String(route.params.slug));
+const feature = computed(() => getFeatureBySlug(slug.value));
+const canonicalUrl = computed(() => {
+  const siteUrl = config.public.siteUrl.replace(/\/$/, '');
+  return `${siteUrl}/features/${slug.value}/`;
+});
 
 const openFaqIndex = ref<number | null>(null);
 const toggleFaq = (index: number) => {
@@ -298,6 +304,9 @@ if (feature.value) {
   useHead({
     title: `${feature.value.title} - NeibrPay`,
     meta: [{ name: 'description', content: feature.value.metaDescription }],
+    link: [{ rel: 'canonical', href: canonicalUrl.value }],
   });
+} else {
+  setResponseStatus(404);
 }
 </script>
