@@ -68,7 +68,11 @@
                   :src="feature.illustrationSrc"
                   :alt="`${feature.title} - NeibrPay`"
                   class="w-full h-auto"
-                  loading="lazy"
+                  :width="feature.illustrationWidth"
+                  :height="feature.illustrationHeight"
+                  loading="eager"
+                  fetchpriority="high"
+                  decoding="async"
                 />
               </div>
 
@@ -260,15 +264,13 @@ import { computed, defineAsyncComponent, ref } from 'vue';
 import { useFeatureData } from '~/composables/useFeatureData';
 
 const route = useRoute();
-const config = useRuntimeConfig();
 const { getFeatureBySlug, getRelatedFeatures } = useFeatureData();
 
 const slug = computed(() => String(route.params.slug));
 const feature = computed(() => getFeatureBySlug(slug.value));
-const canonicalUrl = computed(() => {
-  const siteUrl = config.public.siteUrl.replace(/\/$/, '');
-  return `${siteUrl}/features/${slug.value}/`;
-});
+const canonicalHref = useCanonicalHref(
+  computed(() => `/features/${slug.value}`)
+);
 
 const openFaqIndex = ref<number | null>(null);
 const toggleFaq = (index: number) => {
@@ -300,13 +302,25 @@ const illustrationComponent = computed(() => {
   return illustrationComponents[feature.value.illustrationSrc] || null;
 });
 
-if (feature.value) {
-  useHead({
-    title: `${feature.value.title} - NeibrPay`,
-    meta: [{ name: 'description', content: feature.value.metaDescription }],
-    link: [{ rel: 'canonical', href: canonicalUrl.value }],
-  });
-} else {
+useHead(() => {
+  const feat = feature.value;
+  if (!feat) {
+    return { title: 'Feature not found - NeibrPay' };
+  }
+  const link: Array<{ rel: string; href: string; as?: string }> = [
+    { rel: 'canonical', href: canonicalHref.value },
+  ];
+  if (feat.illustrationType === 'screenshot') {
+    link.push({ rel: 'preload', as: 'image', href: feat.illustrationSrc });
+  }
+  return {
+    title: `${feat.title} - NeibrPay`,
+    meta: [{ name: 'description', content: feat.metaDescription }],
+    link,
+  };
+});
+
+if (!feature.value) {
   setResponseStatus(404);
 }
 </script>

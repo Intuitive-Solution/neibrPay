@@ -922,6 +922,8 @@ const lastUpdatedDate = new Date().toLocaleDateString('en-US', {
   day: 'numeric',
 });
 
+const canonicalHref = useCanonicalHref();
+
 useHead({
   title: 'Terms & Conditions - NeibrPay',
   meta: [
@@ -931,6 +933,7 @@ useHead({
         'Terms and Conditions for NeibrPay HOA management platform. Read our terms of service, user agreements, and legal policies.',
     },
   ],
+  link: [{ rel: 'canonical', href: canonicalHref }],
 });
 </script>
 

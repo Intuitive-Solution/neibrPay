@@ -203,6 +203,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+const canonicalHref = useCanonicalHref();
+
 useHead({
   title: 'Contact Us - NeibrPay',
   meta: [
@@ -212,6 +214,7 @@ useHead({
         "Contact NeibrPay. Have a question or want to learn more? We'd love to hear from you.",
     },
   ],
+  link: [{ rel: 'canonical', href: canonicalHref }],
 });
 
 const form = ref({

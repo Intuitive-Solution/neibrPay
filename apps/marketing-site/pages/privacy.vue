@@ -563,6 +563,8 @@ const lastUpdatedDate = new Date().toLocaleDateString('en-US', {
   day: 'numeric',
 });
 
+const canonicalHref = useCanonicalHref();
+
 useHead({
   title: 'Privacy Policy - NeibrPay',
   meta: [
@@ -572,6 +574,7 @@ useHead({
         'NeibrPay Privacy Policy. Learn how we collect, use, and protect your personal information when you use our HOA management platform.',
     },
   ],
+  link: [{ rel: 'canonical', href: canonicalHref }],
 });
 </script>
 

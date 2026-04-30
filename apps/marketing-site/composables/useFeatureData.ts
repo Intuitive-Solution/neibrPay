@@ -23,6 +23,9 @@ export interface Feature {
   benefits: string[];
   illustrationType: 'screenshot' | 'svg';
   illustrationSrc: string;
+  /** Natural pixel size for hero LCP/CLS when `illustrationType` is `screenshot`. */
+  illustrationWidth?: number;
+  illustrationHeight?: number;
   relatedFeatures: string[];
   metaDescription: string;
   testimonial: FeatureTestimonial;
@@ -47,6 +50,8 @@ const features: Feature[] = [
     ],
     illustrationType: 'screenshot',
     illustrationSrc: '/images/features/invoice-management.png',
+    illustrationWidth: 1024,
+    illustrationHeight: 573,
     relatedFeatures: [
       'vendor-expense-tracking',
       'budgets-and-reports',
@@ -104,6 +109,8 @@ const features: Feature[] = [
     ],
     illustrationType: 'screenshot',
     illustrationSrc: '/images/features/vendor-expenses.png',
+    illustrationWidth: 1024,
+    illustrationHeight: 336,
     relatedFeatures: [
       'invoice-payment-management',
       'budgets-and-reports',
@@ -157,6 +164,8 @@ const features: Feature[] = [
     ],
     illustrationType: 'screenshot',
     illustrationSrc: '/images/features/financial-reporting.png',
+    illustrationWidth: 1024,
+    illustrationHeight: 887,
     relatedFeatures: [
       'invoice-payment-management',
       'vendor-expense-tracking',

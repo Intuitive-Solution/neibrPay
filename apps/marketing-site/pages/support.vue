@@ -193,6 +193,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+const canonicalHref = useCanonicalHref();
+
 useHead({
   title: 'Support - NeibrPay',
   meta: [
@@ -202,6 +204,7 @@ useHead({
         'Get support for NeibrPay. Request a callback from our team or contact us via email at support@neibrpay.com.',
     },
   ],
+  link: [{ rel: 'canonical', href: canonicalHref }],
 });
 
 const form = ref({
