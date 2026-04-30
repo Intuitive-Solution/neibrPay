@@ -5,6 +5,10 @@ export default defineNuxtConfig({
     port: 3002,
   },
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/google-fonts'],
+  /** Single entry: default `assets/css/tailwind.css` is missing, so the module would inject Tailwind’s built-in CSS *and* this file was listed in `css[]`, duplicating layers. */
+  tailwindcss: {
+    cssPath: '~/assets/css/main.css',
+  },
   googleFonts: {
     families: {
       Inter: [400, 500, 600, 700],
@@ -12,7 +16,6 @@ export default defineNuxtConfig({
     display: 'swap',
     preload: true,
   },
-  css: ['~/assets/css/main.css'],
   app: {
     head: {
       title: 'NeibrPay — HOA Dues Collection & Community Management Platform',

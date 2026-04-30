@@ -124,6 +124,8 @@
 </template>
 
 <script setup lang="ts">
+const canonicalHref = useCanonicalHref();
+
 useHead({
   title: 'Thank You - NeibrPay Support',
   meta: [
@@ -132,6 +134,8 @@ useHead({
       content:
         'Thank you for contacting NeibrPay support. We will call you back soon.',
     },
+    { name: 'robots', content: 'noindex, follow' },
   ],
+  link: [{ rel: 'canonical', href: canonicalHref }],
 });
 </script>

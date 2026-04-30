@@ -75,6 +75,8 @@
 </template>
 
 <script setup lang="ts">
+const canonicalHref = useCanonicalHref();
+
 useHead({
   title: 'About NeibrPay - HOA Management Platform',
   meta: [
@@ -84,5 +86,6 @@ useHead({
         'Learn about NeibrPay, a platform built for self-managed HOAs and small community associations to handle dues, vendors, expenses, and resident communication.',
     },
   ],
+  link: [{ rel: 'canonical', href: canonicalHref }],
 });
 </script>

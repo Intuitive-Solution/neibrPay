@@ -311,6 +311,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+const canonicalHref = useCanonicalHref();
+
 useHead({
   title: 'Get Started - NeibrPay',
   meta: [
@@ -320,6 +322,7 @@ useHead({
         'Get started with NeibrPay HOA management. Tell us about your community and our team will contact you within 24 hours.',
     },
   ],
+  link: [{ rel: 'canonical', href: canonicalHref }],
 });
 
 const form = ref({
