@@ -197,15 +197,12 @@ import { ref } from 'vue';
 import { useFeatureData } from '~/composables/useFeatureData';
 
 const appAuthUrl = 'https://app.neibrpay.com/auth';
-const { $posthog } = useNuxtApp();
 const { features } = useFeatureData();
 
 const mobileMenuOpen = ref(false);
 const featuresOpen = ref(false);
 
 const trackHeaderCTA = (type: string) => {
-  if (process.client && $posthog) {
-    $posthog.capture('header_cta_clicked', { cta_type: type });
-  }
+  trackGtagEvent('header_cta_clicked', { cta_type: type });
 };
 </script>

@@ -17,8 +17,6 @@ SUPPORT_EMAIL=support@neibrpay.com
 # Other Configuration (if needed)
 ADMIN_WEB_URL=http://localhost:3000
 CALENDLY_URL=https://calendly.com/imailtahir/neibrpay-demo
-POSTHOG_KEY=
-POSTHOG_HOST=https://us.i.posthog.com
 ```
 
 ## SMTP Configuration Details

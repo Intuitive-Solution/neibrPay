@@ -174,14 +174,10 @@
 <script setup lang="ts">
 const config = useRuntimeConfig();
 const calendlyUrl = config.public.calendlyUrl;
-const { $posthog } = useNuxtApp();
-
 const trackCTA = (type: string, location: string) => {
-  if (process.client && $posthog) {
-    $posthog.capture('marketing_cta_clicked', {
-      cta_type: type,
-      cta_location: location,
-    });
-  }
+  trackGtagEvent('marketing_cta_clicked', {
+    cta_type: type,
+    cta_location: location,
+  });
 };
 </script>

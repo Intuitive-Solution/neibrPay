@@ -206,8 +206,6 @@ const props = defineProps<{
   featureContext?: string;
 }>();
 
-const { $posthog } = useNuxtApp();
-
 const form = ref({
   name: '',
   email: '',
@@ -254,11 +252,9 @@ const submitForm = async () => {
     if (response.success) {
       isSubmitted.value = true;
 
-      if (process.client && $posthog) {
-        $posthog.capture('homepage_contact_form_submitted', {
-          feature_context: props.featureContext || 'none',
-        });
-      }
+      trackGtagEvent('homepage_contact_form_submitted', {
+        feature_context: props.featureContext || 'none',
+      });
     }
   } catch (error: any) {
     errorMessage.value =

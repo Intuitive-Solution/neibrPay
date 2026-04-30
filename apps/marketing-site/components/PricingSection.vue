@@ -271,8 +271,6 @@ import { ref, computed } from 'vue';
 
 const config = useRuntimeConfig();
 const calendlyUrl = config.public.calendlyUrl;
-const { $posthog } = useNuxtApp();
-
 const isAnnual = ref(false);
 
 const monthlyPrice = computed(() => {
@@ -281,19 +279,15 @@ const monthlyPrice = computed(() => {
 
 // Track pricing interactions
 const trackPricingToggle = (isAnnualValue: boolean) => {
-  if (process.client && $posthog) {
-    $posthog.capture('pricing_toggle', {
-      billing_period: isAnnualValue ? 'annual' : 'monthly',
-    });
-  }
+  trackGtagEvent('pricing_toggle', {
+    billing_period: isAnnualValue ? 'annual' : 'monthly',
+  });
 };
 
 const trackPricingCTA = (plan: string, location: string) => {
-  if (process.client && $posthog) {
-    $posthog.capture('pricing_cta_clicked', {
-      plan,
-      location,
-    });
-  }
+  trackGtagEvent('pricing_cta_clicked', {
+    plan,
+    location,
+  });
 };
 </script>
