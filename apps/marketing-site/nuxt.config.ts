@@ -47,6 +47,7 @@ gtag('config', 'G-DB646XGZ88');`,
     preset: process.env.NETLIFY ? 'netlify' : 'static',
     prerender: {
       routes: [
+        '/',
         '/sitemap.xml',
         '/about',
         '/contact',
