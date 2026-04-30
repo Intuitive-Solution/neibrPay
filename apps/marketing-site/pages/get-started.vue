@@ -322,8 +322,6 @@ useHead({
   ],
 });
 
-const { $posthog } = useNuxtApp();
-
 const form = ref({
   name: '',
   phone: '',
@@ -355,12 +353,10 @@ const submitForm = async () => {
     if (response.success) {
       isSubmitted.value = true;
 
-      if (process.client && $posthog) {
-        $posthog.capture('get_started_form_submitted', {
-          units: form.value.numberOfUnits,
-          community: form.value.communityName,
-        });
-      }
+      trackGtagEvent('get_started_form_submitted', {
+        units: form.value.numberOfUnits,
+        community: form.value.communityName,
+      });
     }
   } catch (error: any) {
     errorMessage.value =

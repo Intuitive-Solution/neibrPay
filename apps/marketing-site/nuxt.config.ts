@@ -26,6 +26,18 @@ export default defineNuxtConfig({
         },
       ],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      script: [
+        {
+          src: 'https://www.googletagmanager.com/gtag/js?id=G-DB646XGZ88',
+          async: true,
+        },
+        {
+          innerHTML: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-DB646XGZ88');`,
+        },
+      ],
     },
   },
   nitro: {
@@ -35,6 +47,7 @@ export default defineNuxtConfig({
     preset: process.env.NETLIFY ? 'netlify' : 'static',
     prerender: {
       routes: [
+        '/',
         '/sitemap.xml',
         '/about',
         '/contact',
@@ -67,9 +80,6 @@ export default defineNuxtConfig({
       calendlyUrl:
         process.env.CALENDLY_URL ||
         'https://calendly.com/imailtahir/neibrpay-demo',
-      posthogKey: process.env.POSTHOG_KEY || '',
-      /** Reverse proxy / custom ingest domain (see PostHog project settings). */
-      posthogHost: process.env.POSTHOG_HOST || 'https://j.neibrpay.com',
     },
     // Server-side only (not exposed to client)
     smtpHost: process.env.SMTP_HOST || 'smtp.hostinger.com',
