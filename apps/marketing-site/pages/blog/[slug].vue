@@ -10,6 +10,8 @@
         <component :is="articleComponent" />
       </BlogArticleLayout>
     </main>
+    <RecentBlogsSection v-if="!relatedPosts.length" :exclude-slug="slug" />
+    <ContactFormSection />
     <AppFooter />
   </div>
 

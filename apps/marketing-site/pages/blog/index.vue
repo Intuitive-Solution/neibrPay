@@ -177,26 +177,8 @@
         </div>
       </section>
 
-      <!-- CTA -->
-      <section class="bg-primary-50 border-t border-primary-100 py-16">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4">
-            Ready to run your HOA on NeibrPay?
-          </h2>
-          <p class="text-gray-700 max-w-2xl mx-auto mb-8">
-            Online dues, vendor payments, document storage, and an AI assistant
-            — built for self-managed boards under 150 units.
-          </p>
-          <div class="flex flex-wrap justify-center gap-3">
-            <NuxtLink to="/get-started" class="btn-primary btn-lg">
-              Get Started Free
-            </NuxtLink>
-            <NuxtLink to="/contact" class="btn-outline btn-lg">
-              Talk to Our Team
-            </NuxtLink>
-          </div>
-        </div>
-      </section>
+      <RecentBlogsSection />
+      <ContactFormSection />
     </main>
     <AppFooter />
   </div>

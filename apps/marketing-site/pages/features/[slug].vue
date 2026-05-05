@@ -233,6 +233,7 @@
         </div>
       </section>
 
+      <RecentBlogsSection />
       <!-- Contact Form -->
       <ContactFormSection :feature-context="feature.title" />
     </main>

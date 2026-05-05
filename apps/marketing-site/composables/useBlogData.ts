@@ -119,10 +119,14 @@ export function useBlogData() {
   const featuredPost = allPosts[0];
   const recentPosts = allPosts.slice(0, 6);
 
+  const latestPosts = (limit = 3, excludeSlug?: string): BlogPost[] =>
+    allPosts.filter(p => p.slug !== excludeSlug).slice(0, limit);
+
   return {
     posts: allPosts,
     featuredPost,
     recentPosts,
+    latestPosts,
     getPostBySlug,
     getRelatedPosts,
   };
