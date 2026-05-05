@@ -18,7 +18,8 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'NeibrPay — HOA Dues Collection & Community Management Platform',
+      title:
+        'NeibrPay HOA Dues Collection & Community Management Platform for Self Managed Boards',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

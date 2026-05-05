@@ -3,22 +3,22 @@
     <p class="lead">
       California HOA boards work under one of the country's strictest legal
       regimes: the Davis-Stirling Common Interest Development Act (Civil Code
-      §4000 6150), SB 326 / SB 721 exterior elevated element inspections, a
+      §4000-6150), SB 326 / SB 721 exterior elevated element inspections, a
       triennial reserve study mandate, the annual disclosure packet, and an
       owner base that knows its rights down to the section number. By 2026, the
       right California HOA management software is less about "going digital" and
-      more about not getting sued and the difference between a clean annual
+      more about not getting sued: the difference between a clean annual
       disclosure and a $50,000 IDR.
     </p>
 
     <p>
       This guide is written for the volunteer California boards we serve every
-      day at <NuxtLink to="/">NeibrPay</NuxtLink> communities under 150 doors
-      from San Diego to Sacramento, treasurers who don't have time to learn
-      Yardi, and budgets that can't absorb FirstService at $25 a door. We'll
-      walk through what California HOA software actually needs to do in 2026,
-      the Davis Stirling obligations it has to support, fair pricing in a Bay
-      Area priced state, how AI is rewriting the day to day, and a 30 day
+      day at <NuxtLink to="/">NeibrPay</NuxtLink> for communities under 150
+      doors from San Diego to Sacramento, treasurers who don't have time to
+      learn Yardi, and budgets that can't absorb FirstService at $25 a door.
+      We'll walk through what California HOA software actually needs to do in
+      2026, the Davis-Stirling obligations it has to support, fair pricing in a
+      Bay Area-priced state, how AI is rewriting the day-to-day, and a 30-day
       rollout plan that fits between IDR meetings and quarterly finance reviews.
     </p>
 
@@ -30,7 +30,7 @@
 
     <BlogCta
       eyebrow="Skip the reading"
-      heading="See NeibrPay in action built for California self managed HOAs"
+      heading="See NeibrPay in action: built for California self-managed HOAs"
       description="From Berkeley townhomes to Pasadena condos, NeibrPay handles dues, vendor payments, reserve studies, and Davis-Stirling disclosures without enterprise complexity."
       primary-label="Start Free"
       primary-href="/get-started"
@@ -39,7 +39,7 @@
     />
 
     <h2 id="why-self-managed-needs-software">
-      Why self managed California HOAs need software in 2026
+      Why self-managed California HOAs need software in 2026
     </h2>
 
     <p>
@@ -51,7 +51,7 @@
       <li>
         <strong>Davis-Stirling disclosure load.</strong> The annual policy
         statement, annual budget report, pro forma operating budget, reserve
-        funding plan, insurance summary, assessment schedule, IDR / ADR notice —
+        funding plan, insurance summary, assessment schedule, IDR / ADR notice,
         Civil Code §5300 alone runs to a small phone book each year. Excel
         doesn't survive this.
       </li>
@@ -62,7 +62,7 @@
         Exterior elevated elements need inspection on a 9 year cycle (SB 326)
         with reports retained for two cycles. The paper trail inspection,
         repair, owner notice, reserve allocation has to live inspection, repair,
-        owner notice, reserve allocation — has to live in one searchable place.
+        owner notice, reserve allocation has to live in one searchable place.
       </li>
       <li>
         <strong>Reserve study every three years.</strong> §5550 requires a
@@ -191,13 +191,13 @@
     <p>
       Email and SMS announcements with delivery timestamps that satisfy §5320
       individual notice requirements. The annual policy statement and budget
-      report (§5300) need to go to every owner in writing every year — and you
+      report (§5300) need to go to every owner in writing every year and you
       need proof you sent it.
     </p>
 
     <BlogCta
       eyebrow="Built into NeibrPay"
-      heading="All eight features built for California's compliance reality"
+      heading="All eight features: built for California's compliance reality"
       description="ACH and card dues, reserve study integration, §5200 ready document storage, IDR grade audit trails, and a homeowner portal. No per feature upsells."
       primary-label="See Features"
       primary-href="/#features"
@@ -375,7 +375,7 @@
         late-payment demands, ARC approvals).
       </li>
       <li>
-        <strong>Summarizing meeting minutes</strong> from an audio recording —
+        <strong>Summarizing meeting minutes</strong> from an audio recording,
         the secretary will thank you.
       </li>
       <li>
@@ -399,7 +399,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-2.webp"
-        alt="Illustration: AI in California HOA software — a tablet dashboard showing reserve forecasting, automated dues, IDR-ready notices, resident chatbot, and reconciliation"
+        alt="Illustration: AI in California HOA software a tablet dashboard showing reserve forecasting, automated dues, IDR ready notices, resident chatbot, and reconciliation"
         width="1024"
         height="571"
         loading="lazy"
@@ -408,7 +408,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         How practical AI shows up in California HOA software: dashboards,
-        automation, and resident support not sci-fi.
+        automation, and resident support not sci fi.
       </figcaption>
     </figure>
 
@@ -490,7 +490,7 @@
     </table>
 
     <p>
-      <strong>The simple rule:</strong> if your California HOA is self-managed
+      <strong>The simple rule:</strong> if your California HOA is self managed
       and under 150 units, lean toward tools designed for that exact shape. If
       you're a property manager with 500+ doors across multiple associations,
       Vantaca or AppFolio are sized for you.
@@ -507,12 +507,12 @@
         vendor list, and YTD income/expense.
       </li>
       <li>
-        <strong>Pick a "go-live" date</strong> at the start of a fiscal period —
+        <strong>Pick a "go-live" date</strong> at the start of a fiscal period,
         January 1 or July 1 are most common in California.
       </li>
       <li>
         <strong>Import the roster, balances, and reserve study</strong>
-        into the new platform and have a board member spot-check 5–10 random
+        into the new platform and have a board member spot check 5 to 10 random
         units.
       </li>
       <li>
@@ -529,9 +529,9 @@
       </li>
     </ol>
 
-    <h2 id="rollout">Your 30-day California rollout plan</h2>
+    <h2 id="rollout">Your 30 day California rollout plan</h2>
 
-    <h3>Week 1 — Set up</h3>
+    <h3>Week 1 set up</h3>
     <ul>
       <li>Create the community, units, and board roles.</li>
       <li>Connect the operating and reserve accounts.</li>
@@ -545,7 +545,7 @@
       </li>
     </ul>
 
-    <h3>Week 2 — Test</h3>
+    <h3>Week 2 test</h3>
     <ul>
       <li>
         Have one board member pay their own assessment through the portal.
@@ -558,22 +558,22 @@
       </li>
     </ul>
 
-    <h3>Week 3 — Announce</h3>
+    <h3>Week 3 announce</h3>
     <ul>
       <li>Send the launch email with §5320 individual notice formatting.</li>
-      <li>Hold one optional 30-minute Zoom Q&amp;A — record it.</li>
+      <li>Hold one optional 30-minute Zoom Q&amp;A record it.</li>
       <li>Activate the homeowner portal.</li>
     </ul>
 
-    <h3>Week 4 — Operate</h3>
+    <h3>Week 4 operate</h3>
     <ul>
       <li>Run your first billing cycle.</li>
       <li>Reconcile the operating and reserve accounts.</li>
-      <li>Send the first automated late-payment reminder.</li>
+      <li>Send the first automated late payment reminder.</li>
       <li>Save 6 hours and call it a win.</li>
     </ul>
 
-    <h2 id="mistakes">Common mistakes California self-managed boards make</h2>
+    <h2 id="mistakes">Common mistakes California self managed boards make</h2>
 
     <ul>
       <li>
@@ -588,7 +588,7 @@
       <li>
         <strong>Treating reserves like a savings account.</strong> §5550 isn't
         optional. A reserve study and forecasted plan inside your software is
-        the difference between a $200 special assessment and a $25,000 one — and
+        the difference between a $200 special assessment and a $25,000 one, and
         a §5605 vote nobody wants to hold.
       </li>
       <li>
@@ -606,12 +606,12 @@
     </h2>
 
     <p>
-      We didn't start NeibrPay to chase 1,500-unit master-planned communities.
+      We didn't start NeibrPay to chase 1,500 unit master planned communities.
       We built it because we kept seeing the same pattern across hundreds of
-      small California self-managed HOAs: spreadsheets duct-taped to a payment
+      small California self managed HOAs: spreadsheets duct taped to a payment
       portal, a treasurer doing 15 hours of unpaid work a week, and software
       that felt designed for property managers, not volunteer boards trying to
-      comply with Davis-Stirling.
+      comply with Davis Stirling.
     </p>
 
     <p>NeibrPay is opinionated about three things:</p>
@@ -628,21 +628,21 @@
 
     <BlogCta
       eyebrow="Ready when you are"
-      heading="Run your California self-managed HOA on NeibrPay"
-      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon — including reserve study and §5300 disclosures."
+      heading="Run your California self managed HOA on NeibrPay"
+      description="No setup fees. No per unit pricing. Migrate from spreadsheets or PayHOA in an afternoon including reserve study and §5300 disclosures."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Talk to Our Team"
       secondary-href="/contact"
     />
 
-    <h2 id="faq">Frequently asked questions — California boards</h2>
+    <h2 id="faq">Frequently asked questions, California boards</h2>
 
     <h3>
       Is HOA software worth it for a small California community under 30 units?
     </h3>
     <p>
-      Yes — usually more than for larger communities. Small CA HOAs typically
+      Yes, usually more than for larger communities. Small CA HOAs typically
       have one volunteer doing everything, and the §5200 records-request rules
       apply just the same. The software pays for itself the first time you avoid
       a missed §5300 disclosure.
@@ -652,17 +652,17 @@
     <p>
       Look for a reserve module that lets you import your study's components,
       fund them, and forecast against actual contributions. The software doesn't
-      perform the visual on-site inspection — your reserve study professional
-      does — but it should reflect the study's funding plan.
+      perform the visual on-site inspection, your reserve study professional
+      does, but it should reflect the study's funding plan.
     </p>
 
     <h3>
-      Can a self-managed HOA in California really avoid hiring a management
+      Can a self managed HOA in California really avoid hiring a management
       company?
     </h3>
     <p>
       In most cases for communities under 150 units, yes provided you have 2–3
-      engaged board members and a modern platform. Most self-managed California
+      engaged board members and a modern platform. Most self managed California
       communities under 150 units run cleaner books than the property managers
       we audit.
     </p>
@@ -707,7 +707,7 @@
     <p>
       Pick a platform built for self managed California HOAs. Insist on online
       dues, a real owner portal, reserve study integration, transparent pricing,
-      and AI that does work instead of demos. Set a 30-day rollout plan. Stop
+      and AI that does work instead of demos. Set a 30 day rollout plan. Stop
       being the integration between five tools.
     </p>
 
@@ -719,7 +719,7 @@
 
     <BlogCta
       eyebrow="Try it this week"
-      heading="See why California self-managed boards switch to NeibrPay"
+      heading="See why California self managed boards switch to NeibrPay"
       description="Online dues, vendor payments, AI assistant, reserve study integration, and a homeowner portal built for boards under 150 units."
       primary-label="Get Started Free"
       primary-href="/get-started"

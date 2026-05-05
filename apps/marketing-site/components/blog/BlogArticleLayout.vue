@@ -137,8 +137,8 @@
                   Run your HOA on NeibrPay
                 </p>
                 <p class="text-xs text-gray-700 mb-4">
-                  Online dues, vendor payments, and a homeowner portal — built
-                  for self-managed boards.
+                  Online dues, vendor payments, and a homeowner portal built for
+                  self managed boards.
                 </p>
                 <NuxtLink
                   to="/get-started"

@@ -43,7 +43,7 @@
 
       <div class="text-center mt-12">
         <NuxtLink to="/get-started" class="btn-primary btn-lg">
-          Get Started — It's Free
+          Get Started it's Free
         </NuxtLink>
       </div>
     </div>

@@ -43,7 +43,7 @@ withDefaults(
   }>(),
   {
     eyebrow: 'Try NeibrPay',
-    heading: 'Run your self-managed HOA on autopilot',
+    heading: 'Run your self managed HOA on autopilot',
     description:
       'Collect dues online, automate reminders, and ditch spreadsheets. Built for boards under 150 units.',
     primaryLabel: 'Get Started Free',

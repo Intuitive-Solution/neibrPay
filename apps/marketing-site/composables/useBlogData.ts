@@ -23,7 +23,7 @@ export interface BlogImage {
 export interface BlogPost {
   /** Article title used in cards, hero, and <title>. */
   title: string;
-  /** URL slug — used in `/blog/<slug>`. */
+  /** URL slug, used in `/blog/<slug>`. */
   slug: string;
   /** Short summary for cards, OpenGraph, and meta description fallback. */
   excerpt: string;
@@ -41,7 +41,7 @@ export interface BlogPost {
   author: BlogAuthor;
   /**
    * Card thumbnail used on `/blog` listing AND as og:image / twitter:image.
-   * Recommended: 1200 × 630 (1.91:1) — matches Facebook OG and renders well
+   * Recommended: 1200 × 630 (1.91:1); matches Facebook OG and renders well
    * inside our card grid. Keep file size < 250 KB (WebP/JPG preferred).
    */
   thumbnail: BlogImage;
@@ -71,7 +71,7 @@ const posts: BlogPost[] = [
       'The Ultimate Guide to HOA Management Software for Self-Managed Boards in 2026',
     slug: 'ultimate-guide-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A complete, no-fluff guide to choosing HOA management software for self-managed boards in 2026 features, pricing, must have integrations, and how to roll it out without overwhelming your volunteers.',
+      'A complete, no-fluff guide to choosing HOA management software for self-managed boards in 2026: features, pricing, must-have integrations, and how to roll it out without overwhelming your volunteers.',
     metaDescription:
       'The 2026 guide to HOA management software for self-managed boards. Compare features, pricing, AI tools, and rollout steps for small HOAs (under 150 units).',
     primaryKeyword: 'HOA management software for self-managed boards',
@@ -82,13 +82,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'The Ultimate Guide to HOA Management Software for Self-Managed Boards in 2026 NeibrPay HOA dashboard preview',
+      alt: 'The Ultimate Guide to HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'The Ultimate Guide to HOA Management Software for Self-Managed Boards in 2026 NeibrPay HOA dashboard preview',
+      alt: 'The Ultimate Guide to HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -106,7 +106,7 @@ const posts: BlogPost[] = [
       'The Ultimate Guide to Florida HOA Management Software for Self-Managed Boards in 2026',
     slug: 'florida-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no-fluff guide to Florida HOA management software for self-managed boards in 2026  Chapter 720 / 718 compliance, SIRS aware reserves, hurricane grade communications, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to Florida HOA management software for self-managed boards in 2026: Chapter 720 / 718 compliance, SIRS-aware reserves, hurricane-grade communications, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'Florida HOA management software guide for 2026: Chapter 720 / 718 compliance, SIRS reserves, ACH/Zelle dues, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'Florida HOA management software',
@@ -117,13 +117,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Florida HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Florida HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Florida HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Florida HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -140,10 +140,10 @@ const posts: BlogPost[] = [
   },
   {
     title:
-      'The Ultimate Guide to California HOA Management Software for Self Managed Boards in 2026',
+      'The Ultimate Guide to California HOA Management Software for Self-Managed Boards in 2026',
     slug: 'california-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to California HOA management software for self-managed boards in 2026  Davis Stirling compliance, reserve studies, SB 326 inspections, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to California HOA management software for self-managed boards in 2026: Davis-Stirling compliance, reserve studies, SB 326 inspections, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'California HOA management software guide for 2026: Davis-Stirling compliance, reserve studies, SB 326, ACH dues, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'California HOA management software',
@@ -154,13 +154,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'California HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'California HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'California HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'California HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -177,10 +177,10 @@ const posts: BlogPost[] = [
   },
   {
     title:
-      'The Ultimate Guide to Texas HOA Management Software for Self Managed Boards in 2026',
+      'The Ultimate Guide to Texas HOA Management Software for Self-Managed Boards in 2026',
     slug: 'texas-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to Texas HOA management software for self-managed boards in 2026  Chapter 209 compliance, §209.0062 payment plans, management certificates, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to Texas HOA management software for self-managed boards in 2026: Chapter 209 compliance, §209.0062 payment plans, management certificates, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'Texas HOA management software guide for 2026: Chapter 209 compliance, payment plans, management certificates, ACH dues, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'Texas HOA management software',
@@ -191,13 +191,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Texas HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Texas HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Texas HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Texas HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -213,10 +213,10 @@ const posts: BlogPost[] = [
   },
   {
     title:
-      'The Ultimate Guide to Arizona HOA Management Software for Self Managed Boards in 2026',
+      'The Ultimate Guide to Arizona HOA Management Software for Self-Managed Boards in 2026',
     slug: 'arizona-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to Arizona HOA management software for self-managed boards in 2026  Title 33 compliance, ADRE ready records, snowbird friendly portals, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to Arizona HOA management software for self-managed boards in 2026: Title 33 compliance, ADRE-ready records, snowbird-friendly portals, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'Arizona HOA management software guide for 2026: ARS Title 33 compliance, ADRE petitions, ACH dues, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'Arizona HOA management software',
@@ -227,13 +227,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Arizona HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Arizona HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Arizona HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Arizona HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -250,10 +250,10 @@ const posts: BlogPost[] = [
   },
   {
     title:
-      'The Ultimate Guide to Colorado HOA Management Software for Self Managed Boards in 2026',
+      'The Ultimate Guide to Colorado HOA Management Software for Self-Managed Boards in 2026',
     slug: 'colorado-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to Colorado HOA management software for self-managed boards in 2026  CCIOA compliance, HB 22 1137 collections workflow, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to Colorado HOA management software for self-managed boards in 2026: CCIOA compliance, HB 22-1137 collections workflow, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'Colorado HOA management software guide for 2026: CCIOA compliance, HB 22-1137 collections, ACH dues, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'Colorado HOA management software',
@@ -264,13 +264,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Colorado HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Colorado HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Colorado HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Colorado HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -287,10 +287,10 @@ const posts: BlogPost[] = [
   },
   {
     title:
-      'The Ultimate Guide to Nevada HOA Management Software for Self Managed Boards in 2026',
+      'The Ultimate Guide to Nevada HOA Management Software for Self-Managed Boards in 2026',
     slug: 'nevada-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to Nevada HOA management software for self-managed boards in 2026  NRS 116 compliance, NRED ready records, reserve studies, resale packages, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to Nevada HOA management software for self-managed boards in 2026: NRS 116 compliance, NRED-ready records, reserve studies, resale packages, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'Nevada HOA management software guide for 2026: NRS 116 compliance, NRED, reserve studies, resale packages, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'Nevada HOA management software',
@@ -301,13 +301,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Nevada HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Nevada HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Nevada HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Nevada HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -327,7 +327,7 @@ const posts: BlogPost[] = [
       'The Ultimate Guide to Georgia HOA Management Software for Self-Managed Boards in 2026',
     slug: 'georgia-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to Georgia HOA management software for self managed boards in 2026  POA Act / Condominium Act compliance, lien aging, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to Georgia HOA management software for self-managed boards in 2026: POA Act / Condominium Act compliance, lien aging, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'Georgia HOA management software guide for 2026: POA Act compliance, lien aging, ACH dues, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'Georgia HOA management software',
@@ -338,13 +338,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Georgia HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Georgia HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Georgia HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Georgia HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -360,10 +360,10 @@ const posts: BlogPost[] = [
   },
   {
     title:
-      'The Ultimate Guide to North Carolina HOA Management Software for Self Managed Boards in 2026',
+      'The Ultimate Guide to North Carolina HOA Management Software for Self-Managed Boards in 2026',
     slug: 'north-carolina-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to North Carolina HOA management software for self-managed boards in 2026  Chapter 47F / 47C compliance, budget ratification, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to North Carolina HOA management software for self-managed boards in 2026: Chapter 47F / 47C compliance, budget ratification, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'North Carolina HOA management software guide for 2026: Chapter 47F / 47C compliance, budget ratification, ACH dues, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'North Carolina HOA management software',
@@ -374,13 +374,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'North Carolina HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'North Carolina HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'North Carolina HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'North Carolina HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -396,10 +396,10 @@ const posts: BlogPost[] = [
   },
   {
     title:
-      'The Ultimate Guide to Washington HOA Management Software for Self Managed Boards in 2026',
+      'The Ultimate Guide to Washington HOA Management Software for Self-Managed Boards in 2026',
     slug: 'washington-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to Washington HOA management software for self-managed boards in 2026  WUCIOA compliance, reserve studies, resale certificates, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to Washington HOA management software for self-managed boards in 2026: WUCIOA compliance, reserve studies, resale certificates, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'Washington HOA management software guide for 2026: WUCIOA compliance, reserve studies, resale certificates, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'Washington HOA management software',
@@ -410,13 +410,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Washington HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Washington HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Washington HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Washington HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
@@ -433,10 +433,10 @@ const posts: BlogPost[] = [
   },
   {
     title:
-      'The Ultimate Guide to Illinois HOA Management Software for Self Managed Boards in 2026',
+      'The Ultimate Guide to Illinois HOA Management Software for Self-Managed Boards in 2026',
     slug: 'illinois-hoa-management-software-self-managed-boards-2026',
     excerpt:
-      'A no fluff guide to Illinois HOA management software for self-managed boards in 2026  CICAA / Condominium Property Act compliance, Section 22.1 disclosures, fair pricing, and a 30 day rollout plan.',
+      'A no-fluff guide to Illinois HOA management software for self-managed boards in 2026: CICAA / Condominium Property Act compliance, Section 22.1 disclosures, fair pricing, and a 30-day rollout plan.',
     metaDescription:
       'Illinois HOA management software guide for 2026: CICAA / CPA compliance, Section 22.1 disclosures, ACH dues, fair pricing, and rollout for boards under 150 units.',
     primaryKeyword: 'Illinois HOA management software',
@@ -447,13 +447,13 @@ const posts: BlogPost[] = [
     isPillar: true,
     thumbnail: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Illinois HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Illinois HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },
     heroImage: {
       src: '/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/cover.webp',
-      alt: 'Illinois HOA Management Software for Self-Managed Boards in 2026 — NeibrPay HOA dashboard preview',
+      alt: 'Illinois HOA Management Software for Self-Managed Boards in 2026 - NeibrPay HOA dashboard preview',
       width: 1024,
       height: 571,
     },

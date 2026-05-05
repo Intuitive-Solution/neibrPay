@@ -2,23 +2,23 @@
   <div>
     <p class="lead">
       Colorado HOA boards work under the Colorado Common Interest Ownership Act
-      (CCIOA, C.R.S. §38-33.3) and the recent reforms — HB 22-1137 (collections)
-      and HB 22-1139 (covenant enforcement) — that meaningfully constrained what
+      (CCIOA, C.R.S. §38-33.3) and the recent reforms, HB 22-1137 (collections)
+      and HB 22-1139 (covenant enforcement), that meaningfully constrained what
       boards can do without notice. By 2026, the right Colorado HOA management
-      software is less about going digital and more about staying compliant —
-      the difference between a clean enforcement record and a complaint at the
-      HOA Information Office.
+      software is less about going digital and more about staying compliant: the
+      difference between a clean enforcement record and a complaint at the HOA
+      Information Office.
     </p>
 
     <p>
       This guide is written for the volunteer Colorado boards we serve every day
-      at <NuxtLink to="/">NeibrPay</NuxtLink> — communities under 150 doors from
-      Fort Collins to Durango, treasurers who don't have time to learn AppFolio,
-      and budgets that can't absorb $20-a-door management firms. We'll walk
-      through what Colorado HOA software actually needs to do in 2026, the CCIOA
-      obligations it has to support, fair pricing in a high-altitude,
+      at <NuxtLink to="/">NeibrPay</NuxtLink> for communities under 150 doors
+      from Fort Collins to Durango, treasurers who don't have time to learn
+      AppFolio, and budgets that can't absorb $20-a-door management firms. We'll
+      walk through what Colorado HOA software actually needs to do in 2026, the
+      CCIOA obligations it has to support, fair pricing in a high-altitude,
       mountain-resort-flavored market, how AI is rewriting the day-to-day, and a
-      30-day rollout plan that fits between mud season and ski season.
+      30 day rollout plan that fits between mud season and ski season.
     </p>
 
     <p>
@@ -29,7 +29,7 @@
 
     <BlogCta
       eyebrow="Skip the reading"
-      heading="See NeibrPay in action — built for Colorado self-managed HOAs"
+      heading="See NeibrPay in action: built for Colorado self-managed HOAs"
       description="From Denver townhomes to mountain condos, NeibrPay handles dues, vendor payments, HB 22-1137-aware collections, and homeowner portals without enterprise complexity."
       primary-label="Start Free"
       primary-href="/get-started"
@@ -50,7 +50,7 @@
       </li>
       <li>
         <strong>HB 22-1139 covenant enforcement.</strong> Notices, opportunity
-        to cure, written hearings, and limits on fines and towing — all of it
+        to cure, written hearings, and limits on fines and towing, all of it
         requires audit trails.
       </li>
       <li>
@@ -67,7 +67,7 @@
     <ol>
       <li>
         <strong>Money in:</strong> regular and special assessments, late fees,
-        one-off charges — online.
+        one-off charges, online.
       </li>
       <li>
         <strong>Money out:</strong> vendor invoices, bills, reimbursements, bank
@@ -75,7 +75,7 @@
       </li>
       <li>
         <strong>Records:</strong> recorded declaration, bylaws, rules, reserve
-        study, insurance, minutes — what §38-33.3-317 obligates you to make
+        study, insurance, minutes, what §38-33.3-317 obligates you to make
         available.
       </li>
       <li>
@@ -83,8 +83,8 @@
         collection notices, ARC requests, weather alerts, owner portal.
       </li>
       <li>
-        <strong>Compliance:</strong> the audit trail Colorado boards need —
-        collection notices, payment plan offers, hearings — to meet HB 22-1137 /
+        <strong>Compliance:</strong> the audit trail Colorado boards need,
+        collection notices, payment plan offers, hearings, to meet HB 22-1137 /
         HB 22-1139.
       </li>
     </ol>
@@ -103,12 +103,12 @@
     <p>
       The platform must support 18-month payment plans, restrict late fees to
       allowed amounts, and produce the required pre-collection notices with
-      delivery proof — automatically.
+      delivery proof, automatically.
     </p>
 
     <h3>3. Vendor and expense tracking with 1099 support</h3>
     <p>
-      Snow removal, landscaping, roofing, pool service — every dollar tied to a
+      Snow removal, landscaping, roofing, pool service, every dollar tied to a
       vendor and a category, with receipts attached and 1099-NEC reporting.
     </p>
 
@@ -116,7 +116,7 @@
     <p>
       Each owner gets a login showing balance, payment history, recorded
       governing documents, the latest financial, and a way to submit ARC
-      requests — accessible from the owner's primary residence anywhere.
+      requests, accessible from the owner's primary residence anywhere.
     </p>
 
     <h3>5. Document storage with §38-33.3-317 records-request tagging</h3>
@@ -135,18 +135,18 @@
     <h3>7. Violations, hearings, and ARC tracking with HB 22-1139 awareness</h3>
     <p>
       Notice, opportunity to cure (at least 7 days for some violations), written
-      response option, and a hearing — all timestamped and document-linked.
+      response option, and a hearing, all timestamped and document-linked.
     </p>
 
     <h3>8. Mass communication and severe-weather alerts</h3>
     <p>
       Email and SMS announcements with delivery timestamps. Wildfire smoke,
-      heavy snow, road closures — Colorado boards have to communicate fast.
+      heavy snow, road closures, Colorado boards have to communicate fast.
     </p>
 
     <BlogCta
       eyebrow="Built into NeibrPay"
-      heading="All eight features — built for Colorado's compliance reality"
+      heading="All eight features: built for Colorado's compliance reality"
       description="ACH and card dues, HB 22-1137 collections workflow, 1099 vendor tracking, weather-grade alerts, and a homeowner portal. No per-feature upsells."
       primary-label="See Features"
       primary-href="/#features"
@@ -155,7 +155,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-1.webp"
-        alt="Infographic: eight must-have features for Colorado self-managed HOAs — online dues, HB 22-1137 collections, vendor tracking with 1099, homeowner portal, document storage, financial reporting, violations and hearings, and weather alerts"
+        alt="Infographic: eight must-have features for Colorado self-managed HOAs, online dues, HB 22-1137 collections, vendor tracking with 1099, homeowner portal, document storage, financial reporting, violations and hearings, and weather alerts"
         width="1024"
         height="571"
         loading="lazy"
@@ -164,7 +164,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         The eight capabilities Colorado boards should expect from HOA software
-        in 2026 — sized for CCIOA and 2022 reforms.
+        in 2026, sized for CCIOA and 2022 reforms.
       </figcaption>
     </figure>
 
@@ -204,7 +204,7 @@
           <td>"Free" with payment fees</td>
           <td>$0 base + 2.9–3.5% on payments</td>
           <td>~$2,500+ in pass-through fees</td>
-          <td>Almost no one — owners or HOA pays it</td>
+          <td>Almost no one, owners or HOA pays it</td>
         </tr>
       </tbody>
     </table>
@@ -225,7 +225,7 @@
     <h3>Colorado-specific hidden costs to watch for</h3>
     <ul>
       <li>
-        Setup fees billed as "CCIOA configuration" — fair if 200+ units, a red
+        Setup fees billed as "CCIOA configuration", fair if 200+ units, a red
         flag if you're under 100.
       </li>
       <li>Per-user pricing for board seats.</li>
@@ -245,7 +245,7 @@
       </li>
       <li>
         <strong>HB 22-1139 covenant enforcement.</strong> Written notice,
-        opportunity to cure, written hearing, and limits on fines and towing —
+        opportunity to cure, written hearing, and limits on fines and towing,
         with documented response.
       </li>
       <li>
@@ -280,7 +280,7 @@
 
     <ul>
       <li>
-        <strong>Auto-categorizing bank transactions</strong> — five minutes
+        <strong>Auto-categorizing bank transactions</strong>, five minutes
         instead of a Saturday.
       </li>
       <li>
@@ -292,7 +292,7 @@
         <strong>Summarizing meeting minutes</strong> from an audio recording.
       </li>
       <li>
-        <strong>Answering homeowner questions</strong> via the resident portal —
+        <strong>Answering homeowner questions</strong> via the resident portal,
         using only your community's documents.
       </li>
       <li><strong>Forecasting reserves</strong> against your reserve plan.</li>
@@ -308,7 +308,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-2.webp"
-        alt="Illustration: AI in Colorado HOA software — a tablet dashboard showing reserve forecasting, automated dues, HB 22-1137-aware notices, resident chatbot, and reconciliation"
+        alt="Illustration: AI in Colorado HOA software, a tablet dashboard showing reserve forecasting, automated dues, HB 22-1137-aware notices, resident chatbot, and reconciliation"
         width="1024"
         height="571"
         loading="lazy"
@@ -317,7 +317,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         How practical AI shows up in Colorado HOA software: dashboards,
-        automation, and resident support — not sci-fi.
+        automation, and resident support not sci-fi.
       </figcaption>
     </figure>
 
@@ -439,9 +439,9 @@
       </li>
     </ol>
 
-    <h2 id="rollout">Your 30-day Colorado rollout plan</h2>
+    <h2 id="rollout">Your 30 day Colorado rollout plan</h2>
 
-    <h3>Week 1 — Set up</h3>
+    <h3>Week 1, Set up</h3>
     <ul>
       <li>Create the community, units, and board roles.</li>
       <li>Connect the operating bank account.</li>
@@ -452,21 +452,21 @@
       </li>
     </ul>
 
-    <h3>Week 2 — Test</h3>
+    <h3>Week 2, Test</h3>
     <ul>
       <li>Have one board member pay their own dues through the portal.</li>
       <li>Import vendors and last quarter's invoices.</li>
       <li>Run a trial financial report and compare to your last close.</li>
     </ul>
 
-    <h3>Week 3 — Announce</h3>
+    <h3>Week 3, Announce</h3>
     <ul>
       <li>Send the launch email with a 90-second video.</li>
       <li>Hold one optional 30-minute Zoom Q&amp;A.</li>
       <li>Activate the homeowner portal.</li>
     </ul>
 
-    <h3>Week 4 — Operate</h3>
+    <h3>Week 4, Operate</h3>
     <ul>
       <li>Run your first billing cycle.</li>
       <li>Reconcile the bank inside the platform.</li>
@@ -518,14 +518,14 @@
     <BlogCta
       eyebrow="Ready when you are"
       heading="Run your Colorado self-managed HOA on NeibrPay"
-      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon — including HB 22-1137 collections workflow."
+      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon, including HB 22-1137 collections workflow."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Talk to Our Team"
       secondary-href="/contact"
     />
 
-    <h2 id="faq">Frequently asked questions — Colorado boards</h2>
+    <h2 id="faq">Frequently asked questions, Colorado boards</h2>
 
     <h3>
       Is HOA software worth it for a small Colorado community under 30 units?
@@ -547,13 +547,13 @@
       company?
     </h3>
     <p>
-      In most cases for communities under 150 units, yes — provided you have 2–3
+      In most cases for communities under 150 units, yes, provided you have 2–3
       engaged board members and modern software.
     </p>
 
     <h3>Do owners need to download an app?</h3>
     <p>
-      No. The good platforms — including NeibrPay — work in any mobile browser.
+      No. The good platforms, including NeibrPay, work in any mobile browser.
     </p>
 
     <h3>What about the HOA Information Office?</h3>
@@ -574,14 +574,14 @@
     <p>
       The best HOA management software for a Colorado self-managed board in 2026
       isn't the one with the most features. It's the one that fits the size,
-      budget, and CCIOA / HB 22-1137 reality of a volunteer board — and then
-      gets out of the way.
+      budget, and CCIOA / HB 22-1137 reality of a volunteer board, and then gets
+      out of the way.
     </p>
 
     <BlogCta
       eyebrow="Try it this week"
       heading="See why Colorado self-managed boards switch to NeibrPay"
-      description="Online dues, vendor payments, AI assistant, HB 22-1137 collections workflow, and a homeowner portal — built for boards under 150 units."
+      description="Online dues, vendor payments, AI assistant, HB 22-1137 collections workflow, and a homeowner portal, built for boards under 150 units."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Compare Plans"

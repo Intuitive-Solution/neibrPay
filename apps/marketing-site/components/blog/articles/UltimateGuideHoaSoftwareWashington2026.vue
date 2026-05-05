@@ -13,13 +13,13 @@
 
     <p>
       This guide is written for the volunteer Washington boards we serve every
-      day at <NuxtLink to="/">NeibrPay</NuxtLink> — communities under 150 doors
-      from Seattle to Spokane, treasurers who don't have time to learn AppFolio,
-      and budgets that can't carry $20-a-door management firms. We'll walk
-      through what Washington HOA software actually needs to do in 2026, the
-      WUCIOA obligations it has to support, fair pricing in the Puget Sound and
-      inland markets, how AI is rewriting the day-to-day, and a 30-day rollout
-      plan that fits between the rainy season and budget season.
+      day at <NuxtLink to="/">NeibrPay</NuxtLink> for communities under 150
+      doors from Seattle to Spokane, treasurers who don't have time to learn
+      AppFolio, and budgets that can't carry $20-a-door management firms. We'll
+      walk through what Washington HOA software actually needs to do in 2026,
+      the WUCIOA obligations it has to support, fair pricing in the Puget Sound
+      and inland markets, how AI is rewriting the day-to-day, and a 30-day
+      rollout plan that fits between the rainy season and budget season.
     </p>
 
     <p>
@@ -30,7 +30,7 @@
 
     <BlogCta
       eyebrow="Skip the reading"
-      heading="See NeibrPay in action — built for Washington self-managed HOAs"
+      heading="See NeibrPay in action: built for Washington self-managed HOAs"
       description="From Tacoma townhomes to Spokane condos, NeibrPay handles dues, vendor payments, RCW 64.90-aware reserves, and homeowner portals without enterprise complexity."
       primary-label="Start Free"
       primary-href="/get-started"
@@ -55,7 +55,7 @@
       </li>
       <li>
         <strong>Tech-savvy owners.</strong> Seattle / Bellevue / Redmond
-        residents — many in tech — expect a portal day one. They will not write
+        residents, many in tech, expect a portal day one. They will not write
         your treasurer a check.
       </li>
     </ul>
@@ -67,7 +67,7 @@
     <ol>
       <li>
         <strong>Money in:</strong> regular and special assessments, late fees,
-        one-off charges — online.
+        one-off charges, online.
       </li>
       <li>
         <strong>Money out:</strong> vendor invoices, bills, reimbursements, and
@@ -75,7 +75,7 @@
       </li>
       <li>
         <strong>Records:</strong> recorded declaration, bylaws, rules, reserve
-        study, insurance, minutes — what RCW 64.90.495 obligates you to make
+        study, insurance, minutes, what RCW 64.90.495 obligates you to make
         available.
       </li>
       <li>
@@ -83,8 +83,8 @@
         requests, weather alerts, owner portal.
       </li>
       <li>
-        <strong>Compliance:</strong> the audit trail Washington boards need —
-        notices, hearings, reserve disclosures, resale certificates — to satisfy
+        <strong>Compliance:</strong> the audit trail Washington boards need,
+        notices, hearings, reserve disclosures, resale certificates, to satisfy
         WUCIOA.
       </li>
     </ol>
@@ -103,13 +103,13 @@
     <p>
       RCW 64.90.550 requires a reserve study with periodic updates. The platform
       should let you import components, fund them, and forecast against actual
-      contributions — and produce the resale-certificate reserve summary.
+      contributions, and produce the resale-certificate reserve summary.
     </p>
 
     <h3>3. Vendor and expense tracking with 1099 support</h3>
     <p>
       Landscapers, gutter cleaning, moss treatment, pressure washing, roof
-      maintenance — Pacific Northwest reality. Every dollar tied to a vendor and
+      maintenance, Pacific Northwest reality. Every dollar tied to a vendor and
       category, with receipts attached and 1099-NEC reporting.
     </p>
 
@@ -128,27 +128,27 @@
 
     <h3>6. Resale certificate generation (RCW 64.90.640)</h3>
     <p>
-      The platform should generate the certificate — including reserve summary,
-      current ledger, governing documents, and insurance — within minutes of a
+      The platform should generate the certificate, including reserve summary,
+      current ledger, governing documents, and insurance, within minutes of a
       seller request.
     </p>
 
     <h3>7. Violations, hearings, and ARC tracking</h3>
     <p>
       RCW 64.90.510 / 64.90.515 require notice and an opportunity to be heard
-      before fines — timestamped and document-linked.
+      before fines, timestamped and document-linked.
     </p>
 
     <h3>8. Mass communication and severe-weather alerts</h3>
     <p>
       Email and SMS announcements with delivery timestamps. Wildfire smoke,
-      atmospheric rivers, snowstorms east of the Cascades — WA boards have to
+      atmospheric rivers, snowstorms east of the Cascades, WA boards have to
       communicate fast.
     </p>
 
     <BlogCta
       eyebrow="Built into NeibrPay"
-      heading="All eight features — built for Washington's compliance reality"
+      heading="All eight features: built for Washington's compliance reality"
       description="ACH and card dues, WUCIOA-aware reserves, 1099 vendor tracking, weather-grade alerts, resale certificate generation, and a homeowner portal. No per-feature upsells."
       primary-label="See Features"
       primary-href="/#features"
@@ -157,7 +157,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-1.webp"
-        alt="Infographic: eight must-have features for Washington self-managed HOAs — online dues, reserve study integration, vendor tracking with 1099, homeowner portal, document storage, resale certificates, violations and hearings, and weather alerts"
+        alt="Infographic: eight must-have features for Washington self-managed HOAs, online dues, reserve study integration, vendor tracking with 1099, homeowner portal, document storage, resale certificates, violations and hearings, and weather alerts"
         width="1024"
         height="571"
         loading="lazy"
@@ -166,7 +166,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         The eight capabilities Washington boards should expect from HOA software
-        in 2026 — sized for WUCIOA.
+        in 2026, sized for WUCIOA.
       </figcaption>
     </figure>
 
@@ -206,7 +206,7 @@
           <td>"Free" with payment fees</td>
           <td>$0 base + 2.9–3.5% on payments</td>
           <td>~$2,500+ in pass-through fees</td>
-          <td>Almost no one — owners or HOA pays it</td>
+          <td>Almost no one, owners or HOA pays it</td>
         </tr>
       </tbody>
     </table>
@@ -220,14 +220,14 @@
     <p>
       Compared to hiring a Washington property management company, this is
       roughly <strong>2–4% of what full management would cost</strong>. WA
-      management firms typically run $14–$26 per door per month in Puget Sound —
+      management firms typically run $14–$26 per door per month in Puget Sound,
       $8,400–$15,600 per year for a 50-unit HOA.
     </p>
 
     <h3>Washington-specific hidden costs to watch for</h3>
     <ul>
       <li>
-        Setup fees billed as "WUCIOA configuration" — fair if 200+ units, a red
+        Setup fees billed as "WUCIOA configuration", fair if 200+ units, a red
         flag if you're under 100.
       </li>
       <li>Per-user pricing for board seats.</li>
@@ -276,7 +276,7 @@
 
     <ul>
       <li>
-        <strong>Auto-categorizing bank transactions</strong> — five minutes
+        <strong>Auto-categorizing bank transactions</strong>, five minutes
         instead of a Saturday.
       </li>
       <li>
@@ -287,7 +287,7 @@
         <strong>Summarizing meeting minutes</strong> from an audio recording.
       </li>
       <li>
-        <strong>Answering homeowner questions</strong> via the resident portal —
+        <strong>Answering homeowner questions</strong> via the resident portal,
         using only your community's documents.
       </li>
       <li><strong>Forecasting reserves</strong> against your study.</li>
@@ -303,7 +303,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-2.webp"
-        alt="Illustration: AI in Washington HOA software — a tablet dashboard showing reserve forecasting, automated dues, WUCIOA-ready notices, resident chatbot, and reconciliation"
+        alt="Illustration: AI in Washington HOA software, a tablet dashboard showing reserve forecasting, automated dues, WUCIOA-ready notices, resident chatbot, and reconciliation"
         width="1024"
         height="571"
         loading="lazy"
@@ -312,7 +312,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         How practical AI shows up in Washington HOA software: dashboards,
-        automation, and resident support — not sci-fi.
+        automation, and resident support, not sci-fi.
       </figcaption>
     </figure>
 
@@ -429,7 +429,7 @@
 
     <h2 id="rollout">Your 30-day Washington rollout plan</h2>
 
-    <h3>Week 1 — Set up</h3>
+    <h3>Week 1, Set up</h3>
     <ul>
       <li>Create the community, units, and board roles.</li>
       <li>Connect the operating bank account.</li>
@@ -438,7 +438,7 @@
       <li>Import reserve study components.</li>
     </ul>
 
-    <h3>Week 2 — Test</h3>
+    <h3>Week 2, Test</h3>
     <ul>
       <li>Have one board member pay their own dues through the portal.</li>
       <li>Import vendors and last quarter's invoices.</li>
@@ -446,14 +446,14 @@
       <li>Generate a sample RCW 64.90.640 resale certificate.</li>
     </ul>
 
-    <h3>Week 3 — Announce</h3>
+    <h3>Week 3, Announce</h3>
     <ul>
       <li>Send the launch email with a 90-second video.</li>
       <li>Hold one optional 30-minute Zoom Q&amp;A.</li>
       <li>Activate the homeowner portal.</li>
     </ul>
 
-    <h3>Week 4 — Operate</h3>
+    <h3>Week 4, Operate</h3>
     <ul>
       <li>Run your first billing cycle.</li>
       <li>Reconcile the bank inside the platform.</li>
@@ -503,14 +503,14 @@
     <BlogCta
       eyebrow="Ready when you are"
       heading="Run your Washington self-managed HOA on NeibrPay"
-      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon — including reserve study integration and resale certificates."
+      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon, including reserve study integration and resale certificates."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Talk to Our Team"
       secondary-href="/contact"
     />
 
-    <h2 id="faq">Frequently asked questions — Washington boards</h2>
+    <h2 id="faq">Frequently asked questions, Washington boards</h2>
 
     <h3>
       Is HOA software worth it for a small Washington community under 30 units?
@@ -524,26 +524,26 @@
     <p>
       Look for a platform that lets you import your study, fund components, and
       forecast against actual contributions. The platform doesn't perform the
-      study — your reserve study professional does.
+      study, your reserve study professional does.
     </p>
 
     <h3>
       Can a self-managed HOA in WA really avoid hiring a management company?
     </h3>
     <p>
-      In most cases for communities under 150 units, yes — provided you have 2–3
+      In most cases for communities under 150 units, yes, provided you have 2–3
       engaged board members and modern software.
     </p>
 
     <h3>Do owners need to download an app?</h3>
     <p>
-      No. The good platforms — including NeibrPay — work in any mobile browser.
+      No. The good platforms, including NeibrPay, work in any mobile browser.
     </p>
 
     <h3>How does the software help with resale certificates?</h3>
     <p>
-      It generates the certificate — including reserve summary, current ledger,
-      governing documents, and insurance — within minutes of a seller request,
+      It generates the certificate, including reserve summary, current ledger,
+      governing documents, and insurance, within minutes of a seller request,
       satisfying the 10-day window.
     </p>
 
@@ -558,14 +558,14 @@
     <p>
       The best HOA management software for a Washington self-managed board in
       2026 isn't the one with the most features. It's the one that fits the
-      size, budget, and WUCIOA reality of a volunteer board — and then gets out
+      size, budget, and WUCIOA reality of a volunteer board, and then gets out
       of the way.
     </p>
 
     <BlogCta
       eyebrow="Try it this week"
       heading="See why Washington self-managed boards switch to NeibrPay"
-      description="Online dues, vendor payments, AI assistant, reserve study integration, and a homeowner portal — built for boards under 150 units."
+      description="Online dues, vendor payments, AI assistant, reserve study integration, and a homeowner portal, built for boards under 150 units."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Compare Plans"

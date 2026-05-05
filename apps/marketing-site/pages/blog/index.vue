@@ -205,7 +205,7 @@ const formatDate = (iso: string) =>
 const canonicalHref = useCanonicalHref();
 
 useHead({
-  title: 'NeibrPay Blog — HOA Management Guides for Self-Managed Boards',
+  title: 'NeibrPay Blog - HOA Management Guides for Self-Managed Boards',
   meta: [
     {
       name: 'description',

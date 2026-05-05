@@ -85,7 +85,7 @@ const categoryGroups = computed(() => [
     id: 'management',
     label: 'Management',
     subtitle:
-      'Run the community day-to-day — violations, ARC requests, voting, meetings, events, and the owner portal.',
+      'Run the community day-to-day violations, ARC requests, voting, meetings, events, and the owner portal.',
     features: getFeaturesByCategory('management'),
   },
   {

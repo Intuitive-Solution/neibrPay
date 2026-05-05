@@ -2,20 +2,20 @@
   <div>
     <p class="lead">
       Nevada HOA boards work under the Nevada Common-Interest Community Act (NRS
-      Chapter 116) and a regulator most other states don't have — the Real
-      Estate Division's Ombudsman for Common-Interest Communities. Boards
-      register, file an annual report, and answer complaints. By 2026, the right
-      Nevada HOA management software is less about going digital and more about
-      staying out of NRED's inbox — the difference between a clean Form CCC-2
-      filing and a $2,500 fine.
+      Chapter 116) and a regulator most other states don't have: the Real Estate
+      Division's Ombudsman for Common-Interest Communities. Boards register,
+      file an annual report, and answer complaints. By 2026, the right Nevada
+      HOA management software is less about going digital and more about staying
+      out of NRED's inbox: the difference between a clean Form CCC-2 filing and
+      a $2,500 fine.
     </p>
 
     <p>
       This guide is written for the volunteer Nevada boards we serve every day
-      at <NuxtLink to="/">NeibrPay</NuxtLink> — communities under 150 doors from
-      Las Vegas to Reno, treasurers who don't have time to learn AppFolio, and
-      budgets that can't carry FirstService at $20 a door. We'll walk through
-      what Nevada HOA software actually needs to do in 2026, the NRS 116
+      at <NuxtLink to="/">NeibrPay</NuxtLink> for communities under 150 doors
+      from Las Vegas to Reno, treasurers who don't have time to learn AppFolio,
+      and budgets that can't carry FirstService at $20 a door. We'll walk
+      through what Nevada HOA software actually needs to do in 2026, the NRS 116
       obligations it has to support, fair pricing in a desert-and-Tahoe market,
       how AI is rewriting day-to-day work, and a 30-day rollout plan that fits
       between summer heat and ski-season HOAs.
@@ -29,7 +29,7 @@
 
     <BlogCta
       eyebrow="Skip the reading"
-      heading="See NeibrPay in action — built for Nevada self-managed HOAs"
+      heading="See NeibrPay in action: built for Nevada self-managed HOAs"
       description="From Henderson townhomes to Tahoe condos, NeibrPay handles dues, vendor payments, NRED-ready records, and homeowner portals without enterprise complexity."
       primary-label="Start Free"
       primary-href="/get-started"
@@ -50,7 +50,7 @@
       </li>
       <li>
         <strong>NRS 116.31152 reserve study every 5 years.</strong> A reserve
-        study is statutory in Nevada — annual review, refresh at least every 5
+        study is statutory in Nevada, annual review, refresh at least every 5
         years, with funding plan disclosure.
       </li>
       <li>
@@ -67,7 +67,7 @@
     <ol>
       <li>
         <strong>Money in:</strong> regular and special assessments, late fees,
-        one-off charges — online.
+        one-off charges, online.
       </li>
       <li>
         <strong>Money out:</strong> vendor invoices, bills, reimbursements, and
@@ -75,7 +75,7 @@
       </li>
       <li>
         <strong>Records:</strong> recorded declaration, bylaws, rules, reserve
-        study, insurance, minutes — what NRS 116.31175 obligates you to make
+        study, insurance, minutes, what NRS 116.31175 obligates you to make
         available.
       </li>
       <li>
@@ -83,8 +83,8 @@
         requests, weather alerts, owner portal.
       </li>
       <li>
-        <strong>Compliance:</strong> the audit trail Nevada boards need —
-        notices, hearings, payment plans — to satisfy NRED Ombudsman scrutiny.
+        <strong>Compliance:</strong> the audit trail Nevada boards need,
+        notices, hearings, payment plans, to satisfy NRED Ombudsman scrutiny.
       </li>
     </ol>
 
@@ -94,7 +94,7 @@
 
     <h3>1. Online dues collection (ACH and card)</h3>
     <p>
-      Nevada owners — especially in Las Vegas and seasonal Tahoe — pay from a
+      Nevada owners, especially in Las Vegas and seasonal Tahoe, pay from a
       phone. ACH for monthly dues, card for late payers and one-off charges.
     </p>
 
@@ -106,9 +106,9 @@
 
     <h3>3. Vendor and expense tracking with 1099 support</h3>
     <p>
-      Landscapers, pool service, pest control, irrigation, snow removal in Tahoe
-      — every dollar tied to a vendor and category, with receipts and 1099-NEC
-      reporting.
+      Landscapers, pool service, pest control, irrigation, snow removal in
+      Tahoe, every dollar tied to a vendor and category, with receipts and
+      1099-NEC reporting.
     </p>
 
     <h3>4. Nevada-friendly homeowner portal</h3>
@@ -126,26 +126,26 @@
 
     <h3>6. Resale package generation (NRS 116.4109)</h3>
     <p>
-      The platform should let you generate the required disclosures — including
+      The platform should let you generate the required disclosures, including
       reserve study summary, current ledger status, governing documents, and
-      current insurance — within minutes.
+      current insurance, within minutes.
     </p>
 
     <h3>7. Violations, hearings, and ARC tracking (NRS 116.31031)</h3>
     <p>
-      Notice, opportunity to be heard, hearing — all timestamped and
+      Notice, opportunity to be heard, hearing, all timestamped and
       document-linked. Nevada hearings are formal; the audit trail matters.
     </p>
 
     <h3>8. Mass communication and severe-weather alerts</h3>
     <p>
       Email and SMS announcements with delivery timestamps. Heat alerts in
-      Vegas, snow alerts in Tahoe — Nevada boards have to communicate fast.
+      Vegas, snow alerts in Tahoe, Nevada boards have to communicate fast.
     </p>
 
     <BlogCta
       eyebrow="Built into NeibrPay"
-      heading="All eight features — built for Nevada's compliance reality"
+      heading="All eight features: built for Nevada's compliance reality"
       description="ACH and card dues, NRED-ready records, reserve study integration, resale package generation, and a homeowner portal. No per-feature upsells."
       primary-label="See Features"
       primary-href="/#features"
@@ -154,7 +154,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-1.webp"
-        alt="Infographic: eight must-have features for Nevada self-managed HOAs — online dues, reserve study integration, vendor tracking with 1099, homeowner portal, document storage, resale packages, violations and hearings, and weather alerts"
+        alt="Infographic: eight must-have features for Nevada self-managed HOAs, online dues, reserve study integration, vendor tracking with 1099, homeowner portal, document storage, resale packages, violations and hearings, and weather alerts"
         width="1024"
         height="571"
         loading="lazy"
@@ -163,7 +163,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         The eight capabilities Nevada boards should expect from HOA software in
-        2026 — sized for NRS 116.
+        2026, sized for NRS 116.
       </figcaption>
     </figure>
 
@@ -203,7 +203,7 @@
           <td>"Free" with payment fees</td>
           <td>$0 base + 2.9–3.5% on payments</td>
           <td>~$2,500+ in pass-through fees</td>
-          <td>Almost no one — owners or HOA pays it</td>
+          <td>Almost no one, owners or HOA pays it</td>
         </tr>
       </tbody>
     </table>
@@ -216,7 +216,7 @@
 
     <p>
       Compared to hiring a Nevada management company (often a licensed community
-      manager — NRS 116A is its own chapter), this is roughly
+      manager, NRS 116A is its own chapter), this is roughly
       <strong>2–4% of what full management would cost</strong>. NV firms
       typically run $14–$24 per door per month plus per-letter and per-meeting
       charges.
@@ -225,7 +225,7 @@
     <h3>Nevada-specific hidden costs to watch for</h3>
     <ul>
       <li>
-        Setup fees billed as "NRS 116 configuration" — fair if 200+ units, a red
+        Setup fees billed as "NRS 116 configuration", fair if 200+ units, a red
         flag if you're under 100.
       </li>
       <li>Per-user pricing for board seats.</li>
@@ -248,7 +248,7 @@
       </li>
       <li>
         <strong>NRS 116.31031 violation hearings.</strong> Notice, opportunity
-        to be heard, hearing — all documented.
+        to be heard, hearing, all documented.
       </li>
       <li>
         <strong>NRS 116.4109 resale package.</strong> Within 10 days of seller's
@@ -275,7 +275,7 @@
 
     <ul>
       <li>
-        <strong>Auto-categorizing bank transactions</strong> — five minutes
+        <strong>Auto-categorizing bank transactions</strong>, five minutes
         instead of a Saturday.
       </li>
       <li>
@@ -286,7 +286,7 @@
         <strong>Summarizing meeting minutes</strong> from an audio recording.
       </li>
       <li>
-        <strong>Answering homeowner questions</strong> via the resident portal —
+        <strong>Answering homeowner questions</strong> via the resident portal,
         using only your community's documents.
       </li>
       <li><strong>Forecasting reserves</strong> against your reserve study.</li>
@@ -302,7 +302,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-2.webp"
-        alt="Illustration: AI in Nevada HOA software — a tablet dashboard showing reserve forecasting, automated dues, NRED-ready notices, resident chatbot, and reconciliation"
+        alt="Illustration: AI in Nevada HOA software, a tablet dashboard showing reserve forecasting, automated dues, NRED-ready notices, resident chatbot, and reconciliation"
         width="1024"
         height="571"
         loading="lazy"
@@ -311,7 +311,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         How practical AI shows up in Nevada HOA software: dashboards,
-        automation, and resident support — not sci-fi.
+        automation, and resident support, not sci-fi.
       </figcaption>
     </figure>
 
@@ -426,7 +426,7 @@
 
     <h2 id="rollout">Your 30-day Nevada rollout plan</h2>
 
-    <h3>Week 1 — Set up</h3>
+    <h3>Week 1, Set up</h3>
     <ul>
       <li>Create the community, units, and board roles.</li>
       <li>Connect the operating bank account.</li>
@@ -435,7 +435,7 @@
       <li>Import reserve study components.</li>
     </ul>
 
-    <h3>Week 2 — Test</h3>
+    <h3>Week 2, Test</h3>
     <ul>
       <li>Have one board member pay their own dues through the portal.</li>
       <li>Import vendors and last quarter's invoices.</li>
@@ -443,14 +443,14 @@
       <li>Generate a sample NRS 116.4109 resale package.</li>
     </ul>
 
-    <h3>Week 3 — Announce</h3>
+    <h3>Week 3, Announce</h3>
     <ul>
       <li>Send the launch email with a 90-second video.</li>
       <li>Hold one optional 30-minute Zoom Q&amp;A.</li>
       <li>Activate the homeowner portal.</li>
     </ul>
 
-    <h3>Week 4 — Operate</h3>
+    <h3>Week 4, Operate</h3>
     <ul>
       <li>Run your first billing cycle.</li>
       <li>Reconcile the bank inside the platform.</li>
@@ -500,14 +500,14 @@
     <BlogCta
       eyebrow="Ready when you are"
       heading="Run your Nevada self-managed HOA on NeibrPay"
-      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon — including reserve study and resale package generation."
+      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon, including reserve study and resale package generation."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Talk to Our Team"
       secondary-href="/contact"
     />
 
-    <h2 id="faq">Frequently asked questions — Nevada boards</h2>
+    <h2 id="faq">Frequently asked questions, Nevada boards</h2>
 
     <h3>
       Is HOA software worth it for a small Nevada community under 30 units?
@@ -521,7 +521,7 @@
     <p>
       Look for a platform that lets you import your study, fund components, and
       forecast against actual contributions. The platform doesn't perform the
-      study — your reserve study professional does — but it should reflect the
+      study, your reserve study professional does, but it should reflect the
       funding plan.
     </p>
 
@@ -529,7 +529,7 @@
       Can a self-managed HOA in Nevada really avoid hiring a community manager?
     </h3>
     <p>
-      In most cases for communities under 150 units, yes — provided you have 2–3
+      In most cases for communities under 150 units, yes, provided you have 2–3
       engaged board members and modern software. Be aware that Nevada has
       specific community-manager licensing requirements (NRS 116A); self-managed
       boards typically don't need one as long as no one is being paid to manage
@@ -538,7 +538,7 @@
 
     <h3>Do owners need to download an app?</h3>
     <p>
-      No. The good platforms — including NeibrPay — work in any mobile browser.
+      No. The good platforms, including NeibrPay, work in any mobile browser.
     </p>
 
     <h3>How does the software handle NRED Ombudsman complaints?</h3>
@@ -559,14 +559,14 @@
     <p>
       The best HOA management software for a Nevada self-managed board in 2026
       isn't the one with the most features. It's the one that fits the size,
-      budget, and NRS 116 reality of a volunteer board — and then gets out of
-      the way.
+      budget, and NRS 116 reality of a volunteer board, and then gets out of the
+      way.
     </p>
 
     <BlogCta
       eyebrow="Try it this week"
       heading="See why Nevada self-managed boards switch to NeibrPay"
-      description="Online dues, vendor payments, AI assistant, reserve study integration, and a homeowner portal — built for boards under 150 units."
+      description="Online dues, vendor payments, AI assistant, reserve study integration, and a homeowner portal, built for boards under 150 units."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Compare Plans"

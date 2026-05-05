@@ -6,13 +6,13 @@
       (Chapter 82), and homeowner-friendly reforms that have steadily tightened
       what boards can do without notice. By 2026, the right Texas HOA management
       software is less about going digital and more about keeping a board out of
-      trouble — the difference between a clean Section 209.0062 payment plan and
+      trouble: the difference between a clean Section 209.0062 payment plan and
       a foreclosure attorney on the phone.
     </p>
 
     <p>
       This guide is written for the volunteer Texas boards we serve every day at
-      <NuxtLink to="/">NeibrPay</NuxtLink> — communities under 150 doors from
+      <NuxtLink to="/">NeibrPay</NuxtLink> for communities under 150 doors from
       Austin to El Paso, treasurers who don't have time to learn AppFolio, and
       budgets that can't carry RealManage at $20 a door. We'll walk through what
       Texas HOA software actually needs to do in 2026, the Chapter 209
@@ -29,7 +29,7 @@
 
     <BlogCta
       eyebrow="Skip the reading"
-      heading="See NeibrPay in action — built for Texas self-managed HOAs"
+      heading="See NeibrPay in action: built for Texas self-managed HOAs"
       description="From Plano townhomes to Round Rock condos, NeibrPay handles dues, vendor payments, payment plans, and homeowner portals without enterprise complexity."
       primary-label="Start Free"
       primary-href="/get-started"
@@ -56,13 +56,13 @@
         <strong>Foreclosure notice and judicial process.</strong>
         Non-judicial foreclosure for HOA assessment liens has been narrowed;
         expedited judicial foreclosure (Rule 736) is the path for most. Every
-        notice, every certified-mail receipt, every owner response — has to be
-        in one place.
+        notice, every certified-mail receipt, every owner response, has to be in
+        one place.
       </li>
       <li>
         <strong>Fast-growing communities, fast-arriving residents.</strong>
-        Texas is the #1 state for inbound moves. New owners — many from
-        California or the Northeast — expect a digital portal from day one. They
+        Texas is the #1 state for inbound moves. New owners, many from
+        California or the Northeast, expect a digital portal from day one. They
         will not write your treasurer a check.
       </li>
     </ul>
@@ -90,7 +90,7 @@
       <li>
         <strong>Records:</strong> storing the recorded declaration, bylaws,
         dedicatory instruments (which Texas requires you to file in county
-        records), reserve studies, insurance, and minutes — the documents
+        records), reserve studies, insurance, and minutes, the documents
         §209.005 obligates you to make available.
       </li>
       <li>
@@ -99,10 +99,9 @@
         never received the certified letter."
       </li>
       <li>
-        <strong>Compliance:</strong> the audit trail Texas boards need — notice
+        <strong>Compliance:</strong> the audit trail Texas boards need, notice
         timestamps, payment plan records, hearing transcripts, annual budget
-        delivery — so a Chapter 209 dispute doesn't turn into a Rule 736
-        hearing.
+        delivery, so a Chapter 209 dispute doesn't turn into a Rule 736 hearing.
       </li>
     </ol>
 
@@ -112,7 +111,7 @@
 
     <h3>1. Online dues collection (ACH and card)</h3>
     <p>
-      Texas owners — especially in DFW, Austin, and Houston metros — pay from a
+      Texas owners, especially in DFW, Austin, and Houston metros, pay from a
       phone. ACH is non-negotiable for monthly assessments. Card handles the
       late-paying owner who finally pays in November. Look for the ability to
       apply a single payment across multiple line items.
@@ -128,7 +127,7 @@
 
     <h3>3. Vendor and expense tracking with 1099 support</h3>
     <p>
-      Texas boards write a lot of vendor checks — landscapers, pool contractors,
+      Texas boards write a lot of vendor checks, landscapers, pool contractors,
       pest control, irrigation. Every dollar tied to a vendor and a category,
       with receipts attached and year-end 1099-NEC reporting included. Bonus
       points for paying vendors via ACH from the platform.
@@ -144,8 +143,8 @@
     <h3>5. Document storage with §209.005 records-request tagging</h3>
     <p>
       §209.005 obligates you to make books and records available with 10
-      business days' notice. Tagged document storage — declaration, bylaws,
-      dedicatory instruments, financials, minutes — turns the request into a
+      business days' notice. Tagged document storage, declaration, bylaws,
+      dedicatory instruments, financials, minutes, turns the request into a
       one-click response.
     </p>
 
@@ -160,7 +159,7 @@
     <p>
       §209.006 and §209.007 require notice of violation and an opportunity to be
       heard before assessing certain fines. Photo upload, status workflow, audit
-      log, and templated letters — defensible enforcement that holds up in front
+      log, and templated letters, defensible enforcement that holds up in front
       of a justice of the peace.
     </p>
 
@@ -168,12 +167,12 @@
     <p>
       Email and SMS announcements with delivery timestamps. For Texas,
       severe-weather alerts (winter storms, derechos, hail) are a real board
-      responsibility — and they have to go fast.
+      responsibility, and they have to go fast.
     </p>
 
     <BlogCta
       eyebrow="Built into NeibrPay"
-      heading="All eight features — built for Texas's compliance reality"
+      heading="All eight features: built for Texas's compliance reality"
       description="ACH and card dues, §209.0062 payment plans, 1099 vendor tracking, severe-weather alerts, and a homeowner portal. No per-feature upsells."
       primary-label="See Features"
       primary-href="/#features"
@@ -182,7 +181,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-1.webp"
-        alt="Infographic: eight must-have features for Texas self-managed HOAs — online dues, payment plans, vendor tracking with 1099, homeowner portal, document storage, financial reporting, violations and hearings, and weather alerts"
+        alt="Infographic: eight must-have features for Texas self-managed HOAs, online dues, payment plans, vendor tracking with 1099, homeowner portal, document storage, financial reporting, violations and hearings, and weather alerts"
         width="1024"
         height="571"
         loading="lazy"
@@ -191,7 +190,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         The eight capabilities Texas boards should expect from HOA software in
-        2026 — sized for Chapter 209.
+        2026, sized for Chapter 209.
       </figcaption>
     </figure>
 
@@ -231,7 +230,7 @@
           <td>"Free" with payment fees</td>
           <td>$0 base + 2.9–3.5% on payments</td>
           <td>~$2,500+ in pass-through fees</td>
-          <td>Almost no one — owners or HOA pays it</td>
+          <td>Almost no one, owners or HOA pays it</td>
         </tr>
       </tbody>
     </table>
@@ -245,7 +244,7 @@
     <p>
       Compared to hiring a Texas property management company, this is roughly
       <strong>2–4% of what full management would cost</strong>. Texas management
-      firms typically run $12–$22 per door per month — that's $7,200–$13,200 per
+      firms typically run $12–$22 per door per month, that's $7,200–$13,200 per
       year for a 50-unit HOA, plus per-letter certified mail charges and Rule
       736 attorney coordination.
     </p>
@@ -253,11 +252,11 @@
     <h3>Texas-specific hidden costs to watch for</h3>
     <ul>
       <li>
-        Setup fees billed as "Texas configuration" — fair if you have 200+
-        units, a red flag if you're under 100.
+        Setup fees billed as "Texas configuration", fair if you have 200+ units,
+        a red flag if you're under 100.
       </li>
       <li>
-        Per-user pricing for board seats — never pay extra for a five-person
+        Per-user pricing for board seats, never pay extra for a five-person
         board.
       </li>
       <li>Charges for ACH transactions over a tiny monthly cap.</li>
@@ -281,7 +280,7 @@
       </li>
       <li>
         <strong>§209.006 / §209.007 notice and hearing.</strong> Written notice,
-        opportunity to cure, and (for some fines) a hearing — timestamped and
+        opportunity to cure, and (for some fines) a hearing, timestamped and
         document-linked.
       </li>
       <li>
@@ -292,12 +291,12 @@
       </li>
       <li>
         <strong>§209.009 foreclosure prerequisites.</strong> Notice of
-        delinquency, opportunity to cure, payment plan offer — all documented
+        delinquency, opportunity to cure, payment plan offer, all documented
         before a Rule 736 expedited foreclosure can proceed.
       </li>
       <li>
         <strong>§82.114 condo records (Ch. 82).</strong> If you're a
-        condominium, additional record-keeping rules apply — the software should
+        condominium, additional record-keeping rules apply, the software should
         treat condo and HOA structures distinctly.
       </li>
       <li>
@@ -313,7 +312,7 @@
 
     <ul>
       <li>
-        <strong>Auto-categorizing bank transactions</strong> — five minutes
+        <strong>Auto-categorizing bank transactions</strong>, five minutes
         instead of a Saturday.
       </li>
       <li>
@@ -324,7 +323,7 @@
         <strong>Summarizing meeting minutes</strong> from an audio recording.
       </li>
       <li>
-        <strong>Answering homeowner questions</strong> via the resident portal —
+        <strong>Answering homeowner questions</strong> via the resident portal,
         using only your community's documents.
       </li>
       <li>
@@ -343,7 +342,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-2.webp"
-        alt="Illustration: AI in Texas HOA software — a tablet dashboard showing reserve forecasting, automated dues, payment plan tracking, resident chatbot, and reconciliation"
+        alt="Illustration: AI in Texas HOA software, a tablet dashboard showing reserve forecasting, automated dues, payment plan tracking, resident chatbot, and reconciliation"
         width="1024"
         height="571"
         loading="lazy"
@@ -352,7 +351,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         How practical AI shows up in Texas HOA software: dashboards, automation,
-        and resident support — not sci-fi.
+        and resident support, not sci-fi.
       </figcaption>
     </figure>
 
@@ -450,7 +449,7 @@
         any active payment plans.
       </li>
       <li>
-        <strong>Pick a "go-live" date</strong> at the start of a fiscal period —
+        <strong>Pick a "go-live" date</strong> at the start of a fiscal period,
         January 1 or the start of your fiscal year is easiest.
       </li>
       <li>
@@ -473,7 +472,7 @@
 
     <h2 id="rollout">Your 30-day Texas rollout plan</h2>
 
-    <h3>Week 1 — Set up</h3>
+    <h3>Week 1, Set up</h3>
     <ul>
       <li>Create the community, units, and board roles.</li>
       <li>Connect the operating bank account.</li>
@@ -482,7 +481,7 @@
       <li>Import any active §209.0062 payment plans.</li>
     </ul>
 
-    <h3>Week 2 — Test</h3>
+    <h3>Week 2, Test</h3>
     <ul>
       <li>
         Have one board member pay their own assessment through the portal.
@@ -495,14 +494,14 @@
       </li>
     </ul>
 
-    <h3>Week 3 — Announce</h3>
+    <h3>Week 3, Announce</h3>
     <ul>
       <li>Send the launch email to owners with a 90-second video.</li>
-      <li>Hold one optional 30-minute Zoom Q&amp;A — record it.</li>
+      <li>Hold one optional 30-minute Zoom Q&amp;A, record it.</li>
       <li>Activate the homeowner portal.</li>
     </ul>
 
-    <h3>Week 4 — Operate</h3>
+    <h3>Week 4, Operate</h3>
     <ul>
       <li>Run your first billing cycle.</li>
       <li>Reconcile the bank inside the platform.</li>
@@ -524,7 +523,7 @@
       </li>
       <li>
         <strong>Skipping payment plans.</strong> §209.0062 payment plan rights
-        are mandatory — don't try to foreclose around them.
+        are mandatory, don't try to foreclose around them.
       </li>
       <li>
         <strong>Letting one person hold all the logins.</strong> Every board
@@ -532,7 +531,7 @@
       </li>
       <li>
         <strong>Skipping the homeowner portal rollout.</strong> Texas's growing
-        population of new residents expects digital — it's table stakes.
+        population of new residents expects digital, it's table stakes.
       </li>
     </ul>
 
@@ -557,20 +556,20 @@
     <BlogCta
       eyebrow="Ready when you are"
       heading="Run your Texas self-managed HOA on NeibrPay"
-      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon — including §209.0062 payment plans."
+      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon, including §209.0062 payment plans."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Talk to Our Team"
       secondary-href="/contact"
     />
 
-    <h2 id="faq">Frequently asked questions — Texas boards</h2>
+    <h2 id="faq">Frequently asked questions, Texas boards</h2>
 
     <h3>
       Is HOA software worth it for a small Texas community under 30 units?
     </h3>
     <p>
-      Yes — usually more than for larger communities. The §209.005
+      Yes, usually more than for larger communities. The §209.005
       records-request rules apply to small associations the same as to large
       ones. The software pays for itself the first time you avoid a missed late
       fee or a §209.006 notice that wasn't sent properly.
@@ -587,7 +586,7 @@
       Can a self-managed HOA in Texas really avoid hiring a management company?
     </h3>
     <p>
-      In most cases for communities under 150 units, yes — provided you have 2–3
+      In most cases for communities under 150 units, yes, provided you have 2–3
       engaged board members and modern software. Most self-managed Texas
       communities under 150 units run cleaner books than the property managers
       we audit.
@@ -595,7 +594,7 @@
 
     <h3>Do owners need to download an app?</h3>
     <p>
-      No. The good platforms — including NeibrPay — work in any mobile browser.
+      No. The good platforms, including NeibrPay, work in any mobile browser.
       Forcing residents to install an app is a great way to make sure they never
       log in.
     </p>
@@ -619,8 +618,8 @@
     <p>
       The best HOA management software for a Texas self-managed board in 2026
       isn't the one with the most features. It's the one that fits the size,
-      budget, and Chapter 209 reality of a volunteer board — and then gets out
-      of the way.
+      budget, and Chapter 209 reality of a volunteer board, and then gets out of
+      the way.
     </p>
 
     <p>
@@ -633,7 +632,7 @@
     <BlogCta
       eyebrow="Try it this week"
       heading="See why Texas self-managed boards switch to NeibrPay"
-      description="Online dues, vendor payments, AI assistant, payment plans, and a homeowner portal — built for boards under 150 units."
+      description="Online dues, vendor payments, AI assistant, payment plans, and a homeowner portal, built for boards under 150 units."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Compare Plans"

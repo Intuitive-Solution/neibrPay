@@ -4,34 +4,34 @@
       Arizona HOA boards work under ARS Title 33, Chapter 16 (Planned
       Communities Act, §33-1801 et seq.) for HOAs and Chapter 9 (Condominiums,
       §33-1201 et seq.) for condo associations, plus the Department of Real
-      Estate's HOA dispute process and an owner base that — between Phoenix's
-      growth and Tucson's retirees — knows the statute by heart. By 2026, the
+      Estate's HOA dispute process and an owner base that between Phoenix's
+      growth and Tucson's retirees knows the statute by heart. By 2026, the
       right Arizona HOA management software is less about going digital and more
-      about running clean — the difference between a one-page response to an
-      ADRE petition and a $5,000 attorney bill.
+      about running clean: the difference between a one-page response to an ADRE
+      petition and a $5,000 attorney bill.
     </p>
 
     <p>
       This guide is written for the volunteer Arizona boards we serve every day
-      at <NuxtLink to="/">NeibrPay</NuxtLink> — communities under 150 doors from
-      Scottsdale to Flagstaff, treasurers without time to learn Vantaca, and
-      budgets that can't carry FirstService at $20 a door. We'll walk through
-      what Arizona HOA software actually needs to do in 2026, the Title 33
-      obligations it has to support, fair pricing in a desert-and-monsoon
-      market, how AI is rewriting the day-to-day, and a 30-day rollout plan that
+      at <NuxtLink to="/">NeibrPay</NuxtLink> for communities under 150 doors
+      from Scottsdale to Flagstaff, treasurers without time to learn Vantaca,
+      and budgets that can't carry FirstService at $20 a door. We'll walk
+      through what Arizona HOA software actually needs to do in 2026, the Title
+      33 obligations it has to support, fair pricing in a desert and monsoon
+      market, how AI is rewriting the day to day, and a 30 day rollout plan that
       fits between summer heat and snowbird season.
     </p>
 
     <p>
       No fluff, no enterprise jargon, and no pretending your Sun City board has
-      the same problems as a 5,000-unit Anthem master association. Let's get
+      the same problems as a 5,000 unit Anthem master association. Let's get
       into it.
     </p>
 
     <BlogCta
       eyebrow="Skip the reading"
-      heading="See NeibrPay in action — built for Arizona self-managed HOAs"
-      description="From Tempe townhomes to Sedona condos, NeibrPay handles dues, vendor payments, ADRE-ready records, and homeowner portals without enterprise complexity."
+      heading="See NeibrPay in action: built for Arizona self-managed HOAs"
+      description="From Tempe townhomes to Sedona condos, NeibrPay handles dues, vendor payments, ADRE ready records, and homeowner portals without enterprise complexity."
       primary-label="Start Free"
       primary-href="/get-started"
       secondary-label="Book a Demo"
@@ -39,13 +39,13 @@
     />
 
     <h2 id="why-self-managed-needs-software">
-      Why self-managed Arizona HOAs need software in 2026
+      Why self managed Arizona HOAs need software in 2026
     </h2>
 
     <ul>
       <li>
         <strong>ADRE petition process.</strong> Arizona's Department of Real
-        Estate hears HOA-vs-owner disputes for a $500 filing fee. Boards that
+        Estate hears HOA vs owner disputes for a $500 filing fee. Boards that
         show up without a clean audit trail lose. Software is the difference
         between an evidence packet and a shoebox.
       </li>
@@ -56,7 +56,7 @@
       </li>
       <li>
         <strong>Fast-growing metros, demanding owners.</strong> Phoenix and
-        Tucson keep adding new residents from CA, IL, and the Midwest — they
+        Tucson keep adding new residents from CA, IL, and the Midwest they
         expect a digital portal day one.
       </li>
     </ul>
@@ -68,7 +68,7 @@
     <ol>
       <li>
         <strong>Money in:</strong> regular and special assessments, late fees,
-        one-off charges — online.
+        one-off charges online.
       </li>
       <li>
         <strong>Money out:</strong> vendor invoices, bills, reimbursements, and
@@ -76,27 +76,27 @@
       </li>
       <li>
         <strong>Records:</strong> recorded declaration, bylaws, rules, reserve
-        study, insurance, minutes — what §33-1805 / §33-1258 requires you to
-        make available.
+        study, insurance, minutes what §33 1805 / §33 1258 requires you to make
+        available.
       </li>
       <li>
         <strong>Communication:</strong> assessment notices, hearing notices, ARC
         requests, severe-weather alerts, owner portal.
       </li>
       <li>
-        <strong>Compliance:</strong> the audit trail Arizona boards need —
-        notices, hearings, payment records — to handle an ADRE petition cleanly.
+        <strong>Compliance:</strong> the audit trail Arizona boards need,
+        notices, hearings, payment records to handle an ADRE petition cleanly.
       </li>
     </ol>
 
     <h2 id="must-have-features">
-      8 must-have features for Arizona self-managed HOAs
+      8 must-have features for Arizona self managed HOAs
     </h2>
 
     <h3>1. Online dues collection (ACH and card)</h3>
     <p>
-      Arizona owners pay from a phone — and the half who are seasonal can't drop
-      a check off in person. ACH for monthly dues, card for late payers and
+      Arizona owners pay from a phone and the half who are seasonal can't drop a
+      check off in person. ACH for monthly dues, card for late payers and
       one-off charges.
     </p>
 
@@ -110,20 +110,20 @@
 
     <h3>3. Vendor and expense tracking with 1099 support</h3>
     <p>
-      Landscapers, pool service, pest control, irrigation — every dollar tied to
-      a vendor and category, with receipts and 1099-NEC reporting.
+      Landscapers, pool service, pest control, irrigation every dollar tied to a
+      vendor and category, with receipts and 1099 NEC reporting.
     </p>
 
     <h3>4. Arizona-friendly homeowner portal</h3>
     <p>
       Each owner gets a login showing balance, payment history, recorded
       governing documents, the latest financial, and a way to submit ARC
-      requests — accessible from anywhere, including the owner's summer address.
+      requests accessible from anywhere, including the owner's summer address.
     </p>
 
-    <h3>5. Document storage with §33-1805 records-request tagging</h3>
+    <h3>5. Document storage with §33 1805 records request tagging</h3>
     <p>
-      §33-1805 (planned communities) and §33-1258 (condos) obligate you to make
+      §33 1805 (planned communities) and §33 1258 (condos) obligate you to make
       records available. Tagged document storage turns a request into a
       one-click response.
     </p>
@@ -131,18 +131,18 @@
     <h3>6. Arizona-grade financial reporting</h3>
     <p>
       Income statements, balance sheets, accounts receivable aging, and budget
-      vs. actual. Hand-off cleanly to an Arizona CPA for any
-      governing-document-required audit or review.
+      vs. actual. Hand off cleanly to an Arizona CPA for any governing document
+      required audit or review.
     </p>
 
     <h3>7. Violations, hearings, and ARC tracking</h3>
     <p>
-      §33-1803 / §33-1242 require notice and an opportunity to be heard before
-      fines. Photo upload, status workflow, audit log, and templated letters —
-      defensible enforcement that holds up at ADRE.
+      §33 1803 / §33 1242 require notice and an opportunity to be heard before
+      fines. Photo upload, status workflow, audit log, and templated letters
+      that defensible enforcement that holds up at ADRE.
     </p>
 
-    <h3>8. Mass communication and severe-weather alerts</h3>
+    <h3>8. Mass communication and severe weather alerts</h3>
     <p>
       Email and SMS announcements with delivery timestamps. Monsoons, flash
       floods, and wildfire smoke aren't optional alerts in Arizona.
@@ -150,8 +150,8 @@
 
     <BlogCta
       eyebrow="Built into NeibrPay"
-      heading="All eight features — built for Arizona's compliance reality"
-      description="ACH and card dues, ADRE-ready records, 1099 vendor tracking, monsoon-grade alerts, and a homeowner portal. No per-feature upsells."
+      heading="All eight features: built for Arizona's compliance reality"
+      description="ACH and card dues, ADRE-ready records, 1099 vendor tracking, monsoon grade alerts, and a homeowner portal. No per-feature upsells."
       primary-label="See Features"
       primary-href="/#features"
     />
@@ -159,7 +159,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-1.webp"
-        alt="Infographic: eight must-have features for Arizona self-managed HOAs — online dues, special assessments and reserves, vendor tracking with 1099, homeowner portal, document storage, financial reporting, violations and hearings, and weather alerts"
+        alt="Infographic: eight must-have features for Arizona self managed HOAs online dues, special assessments and reserves, vendor tracking with 1099, homeowner portal, document storage, financial reporting, violations and hearings, and weather alerts"
         width="1024"
         height="571"
         loading="lazy"
@@ -168,7 +168,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         The eight capabilities Arizona boards should expect from HOA software in
-        2026 — sized for Title 33.
+        2026 sized for Title 33.
       </figcaption>
     </figure>
 
@@ -181,64 +181,64 @@
         <tr>
           <th>Pricing model</th>
           <th>Typical range</th>
-          <th>Annual cost (50-unit AZ HOA)</th>
+          <th>Annual cost (50 unit AZ HOA)</th>
           <th>Best for</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>Per-unit per-month</td>
-          <td>$1.00 – $3.00 / unit / mo</td>
-          <td>$600 – $1,800</td>
-          <td>Mid-sized AZ communities</td>
+          <td>Per unit per month</td>
+          <td>$1.00 to $3.00 / unit / mo</td>
+          <td>$600 to $1,800</td>
+          <td>Mid sized AZ communities</td>
         </tr>
         <tr>
           <td>Flat monthly fee</td>
-          <td>$30 – $80 / mo</td>
-          <td>$360 – $960</td>
+          <td>$30 to $80 / mo</td>
+          <td>$360 to $960</td>
           <td>Small AZ HOAs, predictable budgets</td>
         </tr>
         <tr>
           <td>Annual subscription</td>
-          <td>$300 – $1,500 / yr</td>
-          <td>$300 – $1,500</td>
+          <td>$300 to $1,500 / yr</td>
+          <td>$300 to $1,500</td>
           <td>Boards that pay once and forget</td>
         </tr>
         <tr>
           <td>"Free" with payment fees</td>
-          <td>$0 base + 2.9–3.5% on payments</td>
+          <td>$0 base + 2.9 to 3.5% on payments</td>
           <td>~$2,500+ in pass-through fees</td>
-          <td>Almost no one — owners or HOA pays it</td>
+          <td>Almost no one owners or HOA pays it</td>
         </tr>
       </tbody>
     </table>
 
     <p>
       What you should actually budget for in Arizona:
-      <strong>$500–$1,800 per year in software</strong> for a 30–100 unit
+      <strong>$500 to $1,800 per year in software</strong> for a 30 to 100 unit
       community, plus transaction fees on payments.
     </p>
 
     <p>
       Compared to hiring an Arizona property management company, this is roughly
-      <strong>2–4% of what full management would cost</strong>. Arizona
-      management firms typically run $14–$22 per door per month — $8,400–$13,200
-      per year for a 50-unit HOA, plus per-letter charges and ADRE petition
-      handling.
+      <strong>2 to 4% of what full management would cost</strong>. Arizona
+      management firms typically run $14 to $22 per door per month $8,400 to
+      $13,200 per year for a 50 unit HOA, plus per letter charges and ADRE
+      petition handling.
     </p>
 
     <h3>Arizona-specific hidden costs to watch for</h3>
     <ul>
       <li>
-        Setup fees billed as "Title 33 configuration" — fair if you have 200+
+        Setup fees billed as "Title 33 configuration" fair if you have 200+
         units, a red flag if you're under 100.
       </li>
       <li>
-        Per-user pricing for board seats — never pay extra for a five-person
+        Per user pricing for board seats never pay extra for a five person
         board.
       </li>
       <li>Charges for ACH transactions over a tiny monthly cap.</li>
-      <li>Annual contracts that auto-renew at the start of the fiscal year.</li>
+      <li>Annual contracts that auto renew at the start of the fiscal year.</li>
     </ul>
 
     <h2 id="state-compliance">
@@ -247,17 +247,17 @@
 
     <ul>
       <li>
-        <strong>§33-1805 / §33-1258 records inspection.</strong> Owners can
+        <strong>§33 1805 / §33 1258 records inspection.</strong> Owners can
         request and inspect records during regular business hours. Tagged
-        document storage is non-negotiable.
+        document storage is non negotiable.
       </li>
       <li>
-        <strong>§33-1803 / §33-1242 violation procedures.</strong> Written
-        notice, opportunity to cure, and a hearing for certain fines —
-        timestamped and document-linked.
+        <strong>§33 1803 / §33 1242 violation procedures.</strong> Written
+        notice, opportunity to cure, and a hearing for certain fines timestamped
+        and document linked.
       </li>
       <li>
-        <strong>§33-1804 / §33-1248 open meetings.</strong> Boards must meet
+        <strong>§33 1804 / §33 1248 open meetings.</strong> Boards must meet
         openly with limited exceptions. The platform should help you post
         notices and minutes.
       </li>
@@ -268,8 +268,8 @@
       </li>
       <li>
         <strong>§33-1807 lien and foreclosure.</strong> Assessment liens and the
-        prerequisites for foreclosure — notice, opportunity to pay, governance
-        vote — must be documented.
+        prerequisites for foreclosure notice, opportunity to pay, governance
+        vote must be documented.
       </li>
       <li>
         <strong>Annual budget and disclosures.</strong> Many Arizona governing
@@ -284,7 +284,7 @@
 
     <ul>
       <li>
-        <strong>Auto-categorizing bank transactions</strong> — five minutes
+        <strong>Auto categorizing bank transactions</strong> five minutes
         instead of a Saturday.
       </li>
       <li>
@@ -295,7 +295,7 @@
         <strong>Summarizing meeting minutes</strong> from an audio recording.
       </li>
       <li>
-        <strong>Answering homeowner questions</strong> via the resident portal —
+        <strong>Answering homeowner questions</strong> via the resident portal,
         using only your community's documents.
       </li>
       <li><strong>Forecasting reserves</strong> against your reserve plan.</li>
@@ -311,7 +311,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-2.webp"
-        alt="Illustration: AI in Arizona HOA software — a tablet dashboard showing reserve forecasting, automated dues, ADRE-ready notices, resident chatbot, and reconciliation"
+        alt="Illustration: AI in Arizona HOA software a tablet dashboard showing reserve forecasting, automated dues, ADRE-ready notices, resident chatbot, and reconciliation"
         width="1024"
         height="571"
         loading="lazy"
@@ -320,7 +320,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         How practical AI shows up in Arizona HOA software: dashboards,
-        automation, and resident support — not sci-fi.
+        automation, and resident support not sci-fi.
       </figcaption>
     </figure>
 
@@ -334,18 +334,18 @@
       </li>
       <li>Does it support ACH and card natively?</li>
       <li>Can it produce a clean ADRE evidence packet from owner records?</li>
-      <li>Can a non-accountant board member run a usable financial report?</li>
+      <li>Can a non accountant board member run a usable financial report?</li>
       <li>
-        Does the document library tag governing docs for §33-1805 / §33-1258
+        Does the document library tag governing docs for §33 1805 / §33 1258
         requests?
       </li>
-      <li>Is the owner portal mobile-responsive without an app download?</li>
+      <li>Is the owner portal mobile responsive without an app download?</li>
       <li>Is pricing transparent and on the website (no "contact us")?</li>
       <li>Is there an AI assistant that does real work, not marketing AI?</li>
     </ul>
 
     <h2 id="comparison">
-      Top HOA software options for Arizona self-managed boards in 2026
+      Top HOA software options for Arizona self managed boards in 2026
     </h2>
 
     <table>
@@ -354,21 +354,21 @@
           <th>Platform</th>
           <th>Best for</th>
           <th>Strengths</th>
-          <th>Watch-outs</th>
+          <th>Watch outs</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>NeibrPay</strong></td>
-          <td>AZ self-managed HOAs under 150 units</td>
-          <td>All-in-one, AI assistant, ACH/card, transparent flat pricing</td>
+          <td>AZ self managed HOAs under 150 units</td>
+          <td>All in one, AI assistant, ACH/card, transparent flat pricing</td>
           <td>Newer brand than legacy AZ vendors</td>
         </tr>
         <tr>
           <td>PayHOA</td>
           <td>Small AZ boards focused on dues</td>
           <td>Payments, document storage, decent UX</td>
-          <td>Limited reserve and reporting; per-unit pricing adds up</td>
+          <td>Limited reserve and reporting; per unit pricing adds up</td>
         </tr>
         <tr>
           <td>Vantaca / VMS</td>
@@ -398,7 +398,7 @@
     </table>
 
     <p>
-      <strong>The simple rule:</strong> if your Arizona HOA is self-managed and
+      <strong>The simple rule:</strong> if your Arizona HOA is self managed and
       under 150 units, lean toward tools designed for that exact shape.
     </p>
 
@@ -433,9 +433,9 @@
       </li>
     </ol>
 
-    <h2 id="rollout">Your 30-day Arizona rollout plan</h2>
+    <h2 id="rollout">Your 30 day Arizona rollout plan</h2>
 
-    <h3>Week 1 — Set up</h3>
+    <h3>Week 1 set up</h3>
     <ul>
       <li>Create the community, units, and board roles.</li>
       <li>Connect the operating bank account.</li>
@@ -446,21 +446,21 @@
       <li>Configure assessment schedule, late fees, and grace period.</li>
     </ul>
 
-    <h3>Week 2 — Test</h3>
+    <h3>Week 2 test</h3>
     <ul>
       <li>Have one board member pay their own dues through the portal.</li>
       <li>Import vendors and last quarter's invoices.</li>
       <li>Run a trial financial report and compare to your last close.</li>
     </ul>
 
-    <h3>Week 3 — Announce</h3>
+    <h3>Week 3 announce</h3>
     <ul>
       <li>Send the launch email with a 90-second video.</li>
       <li>Hold one optional 30-minute Zoom Q&amp;A.</li>
       <li>Activate the homeowner portal.</li>
     </ul>
 
-    <h3>Week 4 — Operate</h3>
+    <h3>Week 4 operate</h3>
     <ul>
       <li>Run your first billing cycle.</li>
       <li>Reconcile the bank inside the platform.</li>
@@ -468,7 +468,7 @@
       <li>Save 5 hours and call it a win.</li>
     </ul>
 
-    <h2 id="mistakes">Common mistakes Arizona self-managed boards make</h2>
+    <h2 id="mistakes">Common mistakes Arizona self managed boards make</h2>
 
     <ul>
       <li>
@@ -501,7 +501,7 @@
     <p>
       We didn't start NeibrPay to chase 5,000-unit master-planned communities.
       We built it because we kept seeing the same pattern across hundreds of
-      small Arizona self-managed HOAs: spreadsheets duct-taped to Zelle, a
+      small Arizona self managed HOAs: spreadsheets duct-taped to Zelle, a
       treasurer doing 15 hours of unpaid work a week, and software that felt
       designed for property managers, not volunteer boards trying to comply with
       Title 33.
@@ -515,8 +515,8 @@
 
     <BlogCta
       eyebrow="Ready when you are"
-      heading="Run your Arizona self-managed HOA on NeibrPay"
-      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon."
+      heading="Run your Arizona self managed HOA on NeibrPay"
+      description="No setup fees. No per unit pricing. Migrate from spreadsheets or PayHOA in an afternoon."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Talk to Our Team"
@@ -530,7 +530,7 @@
     </h3>
     <p>
       Yes. Small Arizona HOAs typically have one volunteer doing everything, and
-      §33-1805 / §33-1258 records-request rules apply just the same.
+      §33 1805 / §33 1258 records request rules apply just the same.
     </p>
 
     <h3>How does the software help with ADRE petitions?</h3>
@@ -541,7 +541,7 @@
     </p>
 
     <h3>
-      Can a self-managed HOA in Arizona really avoid hiring a management
+      Can a self managed HOA in Arizona really avoid hiring a management
       company?
     </h3>
     <p>
@@ -581,7 +581,7 @@
 
     <BlogCta
       eyebrow="Try it this week"
-      heading="See why Arizona self-managed boards switch to NeibrPay"
+      heading="See why Arizona self managed boards switch to NeibrPay"
       description="Online dues, vendor payments, AI assistant, and a homeowner portal built for boards under 150 units."
       primary-label="Get Started Free"
       primary-href="/get-started"

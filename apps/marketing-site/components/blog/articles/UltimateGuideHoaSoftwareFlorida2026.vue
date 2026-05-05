@@ -7,19 +7,19 @@
       homeowner base that's increasingly retired, increasingly digital, and
       increasingly tired of being mailed paper coupons. By 2026, the right
       Florida HOA management software has moved from a convenience to a
-      compliance tool — the difference between a clean Sunbiz filing and a
+      compliance tool: the difference between a clean Sunbiz filing and a
       lawsuit you didn't see coming.
     </p>
 
     <p>
       This guide is written for the volunteer Florida boards we serve every day
-      at <NuxtLink to="/">NeibrPay</NuxtLink> — communities under 150 doors from
-      Pensacola to the Keys, with treasurers who don't have time to learn Yardi
-      and budgets that can't carry First Service Residential. We'll walk through
-      what Florida HOA software actually needs to do in 2026, the Chapter 720
-      and SB 4-D obligations it has to support, fair pricing for a Florida
-      community, how AI is rewriting day-to-day work, and a 30-day rollout plan
-      that fits between hurricane prep and snowbird season.
+      at <NuxtLink to="/">NeibrPay</NuxtLink> for communities under 150 doors
+      from Pensacola to the Keys, with treasurers who don't have time to learn
+      Yardi and budgets that can't carry First Service Residential. We'll walk
+      through what Florida HOA software actually needs to do in 2026, the
+      Chapter 720 and SB 4-D obligations it has to support, fair pricing for a
+      Florida community, how AI is rewriting day-to-day work, and a 30 day
+      rollout plan that fits between hurricane prep and snowbird season.
     </p>
 
     <p>
@@ -30,7 +30,7 @@
 
     <BlogCta
       eyebrow="Skip the reading"
-      heading="See NeibrPay in action — built for Florida self-managed HOAs"
+      heading="See NeibrPay in action: built for Florida self-managed HOAs"
       description="From Tampa townhomes to Sarasota condos, NeibrPay handles dues, vendor payments, SIRS-aware reserves, and homeowner portals without enterprise complexity."
       primary-label="Start Free"
       primary-href="/get-started"
@@ -51,21 +51,21 @@
       <li>
         <strong>SB 4-D and milestone inspections.</strong> Buildings 3+ stories
         and 30+ years old now require milestone inspections and a structural
-        integrity reserve study. The paper trail — inspections, reserve funding,
-        owner notices — is enormous, and Excel won't survive an attorney's
+        integrity reserve study. The paper trail (inspections, reserve funding,
+        owner notices) is enormous, and Excel won't survive an attorney's
         discovery request.
       </li>
       <li>
         <strong>Hurricane reserves and special assessments.</strong> Boards in
         coastal Florida budget around named storms, not abstract risk. Software
         has to handle special assessments, owner-by-owner payment plans, and
-        insurance-deductible recoveries — fast.
+        insurance-deductible recoveries quickly.
       </li>
       <li>
         <strong>Residents expect digital, not the country club.</strong>
         Younger Florida owners (and increasing numbers of remote workers in
         Orlando, Tampa, Jacksonville) don't write checks. They expect ACH,
-        Zelle, card, and a portal that works on a phone — not a 1990s vendor
+        Zelle, card, and a portal that works on a phone, not a 1990s vendor
         portal that requires Internet Explorer.
       </li>
     </ul>
@@ -94,13 +94,13 @@
       </li>
       <li>
         <strong>Money out:</strong> tracking vendor invoices, paying bills,
-        recording reimbursements, and reconciling against the bank — including
+        recording reimbursements, and reconciling against the bank, including
         Florida's standard escrow / reserve accounts.
       </li>
       <li>
         <strong>Records:</strong> storing the recorded declaration, bylaws,
         rules and regulations, milestone inspection reports, SIRS, insurance
-        policies, and meeting minutes — the documents Chapter 720.303 says you
+        policies, and meeting minutes, the documents Chapter 720.303 says you
         must produce on owner request within 10 business days.
       </li>
       <li>
@@ -109,18 +109,18 @@
         "I never got the email."
       </li>
       <li>
-        <strong>Compliance:</strong> the audit trail Florida boards need —
-        notice timestamps, vote records, reserve disclosures, annual budget
-        delivery — so a skeptical owner or a Sunbiz inquiry doesn't turn into a
-        $30,000 attorney's fee.
+        <strong>Compliance:</strong> the audit trail Florida boards need, notice
+        timestamps, vote records, reserve disclosures, annual budget delivery,
+        so a skeptical owner or a Sunbiz inquiry doesn't turn into a $30,000
+        attorney's fee.
       </li>
     </ol>
 
     <p>
       A good Florida platform stitches all five together so a payment flows into
       your ledger, the bank reconciliation, the homeowner's portal balance, and
-      the board's financial report — automatically. You stop being the
-      integration between systems.
+      the board's financial report automatically. You stop being the integration
+      between systems.
     </p>
 
     <h2 id="must-have-features">
@@ -129,23 +129,22 @@
 
     <p>
       Most vendors list 50+ features. For a Florida self-managed board under 150
-      units, these are the eight that actually matter — sized for Chapter 720 /
+      units, these are the eight that actually matter sized for Chapter 720 /
       718 realities. If a tool is missing one of these, keep shopping.
     </p>
 
     <h3>1. Online dues collection (ACH, card, and Zelle)</h3>
     <p>
-      Florida owners — especially seasonal residents — want to pay from a phone
-      in any time zone. ACH is non-negotiable for monthly maintenance fees
-      because it's the cheapest. Card and Zelle handle the snowbirds and one-off
-      special assessment payments. Look for the ability to apply a single
-      payment across multiple line items (regular dues, special assessment, late
-      fee).
+      Florida owners especially seasonal residents want to pay from a phone in
+      any time zone. ACH is non-negotiable for monthly maintenance fees because
+      it's the cheapest. Card and Zelle handle the snowbirds and one-off special
+      assessment payments. Look for the ability to apply a single payment across
+      multiple line items (regular dues, special assessment, late fee).
     </p>
 
     <h3>2. Special assessments and SIRS-aware reserves</h3>
     <p>
-      Special assessments are routine in Florida — for roof replacements,
+      Special assessments are routine in Florida for roof replacements,
       seawalls, or post-storm repairs. The platform must handle a one-time levy
       with its own payment plan, late-fee schedule, and reporting, separate from
       regular dues. For SIRS-applicable buildings, the reserve module should let
@@ -155,11 +154,11 @@
 
     <h3>3. Vendor and expense tracking with 1099 support</h3>
     <p>
-      Florida boards write a lot of vendor checks — landscapers, pool
-      contractors, roofers, pest control, generator service. Every dollar should
-      be tied to a vendor and a category, with receipts attached and year-end
-      1099-NEC reporting included. Bonus points for paying vendors from the
-      platform via ACH.
+      Florida boards write a lot of vendor checks landscapers, pool contractors,
+      roofers, pest control, generator service. Every dollar should be tied to a
+      vendor and a category, with receipts attached and year-end 1099-NEC
+      reporting included. Bonus points for paying vendors from the platform via
+      ACH.
     </p>
 
     <h3>4. Florida-friendly homeowner portal</h3>
@@ -184,7 +183,7 @@
     <p>
       Income statements, balance sheets, accounts receivable aging, budget vs.
       actual, and reserve fund detail. Boards collecting $400k+/yr need
-      financials that won't embarrass them at the annual meeting — and that hand
+      financials that won't embarrass them at the annual meeting, and that hand
       off cleanly to a Florida CPA for an annual financial report or audit
       (required at certain revenue thresholds).
     </p>
@@ -194,21 +193,20 @@
       Florida fining requires notice, an opportunity to be heard before a
       committee, and a paper trail. Photo upload, status workflow, audit log,
       and templated letters that match your governing documents. The goal is
-      defensible enforcement — not a parking-lot debate that ends up in
-      mediation.
+      defensible enforcementnot a parking-lot debate that ends up in mediation.
     </p>
 
     <h3>8. Mass communication and emergency alerts</h3>
     <p>
       Email and SMS announcements that go to all owners, specific buildings, or
       specific units. For Florida, hurricane prep, evacuation reminders,
-      generator-test notices, and post-storm updates aren't optional — and they
+      generator-test notices, and post-storm updates aren't optional and they
       have to go out fast.
     </p>
 
     <BlogCta
       eyebrow="Built into NeibrPay"
-      heading="All eight features — built for Florida's compliance reality"
+      heading="All eight features: built for Florida's compliance reality"
       description="ACH and Zelle dues, SIRS-aware reserves, 1099 vendor tracking, hurricane-grade alerts, and a homeowner portal. No per-feature upsells."
       primary-label="See Features"
       primary-href="/#features"
@@ -217,7 +215,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-1.webp"
-        alt="Infographic: eight must-have features for Florida self-managed HOAs — online dues, special assessments and SIRS reserves, vendor tracking with 1099, homeowner portal, document storage, financial reporting, violations and ARC, and emergency alerts"
+        alt="Infographic: eight must-have features for Florida self-managed HOAs, online dues, special assessments and SIRS reserves, vendor tracking with 1099, homeowner portal, document storage, financial reporting, violations and ARC, and emergency alerts"
         width="1024"
         height="571"
         loading="lazy"
@@ -226,7 +224,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         The eight capabilities Florida boards should expect from HOA software in
-        2026 — sized for Ch. 720 / 718 obligations.
+        2026, sized for Ch. 720 / 718 obligations.
       </figcaption>
     </figure>
 
@@ -235,7 +233,7 @@
     </h2>
 
     <p>
-      Pricing in this industry is famously confusing — and Florida vendors love
+      Pricing in this industry is famously confusing, and Florida vendors love
       to pad it with "compliance modules" and "SIRS add-ons." Here's how the
       four common models compare for a typical 50-unit Florida community, before
       payment processing fees.
@@ -273,7 +271,7 @@
           <td>"Free" with payment fees</td>
           <td>$0 base + 2.9–3.5% on payments</td>
           <td>~$3,000+ in pass-through fees</td>
-          <td>Almost no one — owners or HOA pays it</td>
+          <td>Almost no one, owners or HOA pays it</td>
         </tr>
       </tbody>
     </table>
@@ -289,7 +287,7 @@
     <p>
       Compared to hiring a Florida property management company, this is roughly
       <strong>2–4% of what full management would cost</strong>. Florida
-      management firms typically run $14–$28 per door per month — that's
+      management firms typically run $14–$28 per door per month, that's
       $8,400–$16,800 per year for a 50-unit HOA, plus hourly attorney charges,
       transfer-of-ownership fees, and "extra meeting" billing. You give up a
       chunk of decision-making power along with the money.
@@ -298,15 +296,15 @@
     <h3>Florida-specific hidden costs to watch for</h3>
     <ul>
       <li>
-        Setup fees billed as "Florida compliance configuration" — fair if you
+        Setup fees billed as "Florida compliance configuration", fair if you
         have 200+ units, a red flag if you're under 100.
       </li>
       <li>
-        Per-user pricing for board seats — never pay extra for a five-person
+        Per-user pricing for board seats, never pay extra for a five-person
         board plus a CAM advisor.
       </li>
       <li>
-        Charges for ACH transactions over a tiny monthly cap — Florida HOAs with
+        Charges for ACH transactions over a tiny monthly cap, Florida HOAs with
         quarterly billing get hit hard here.
       </li>
       <li>
@@ -328,8 +326,8 @@
     <ul>
       <li>
         <strong>Chapter 720.303 official records.</strong> Owner records
-        requests must be answered in 10 business days. Tagged document storage —
-        recorded declaration, bylaws, rules, financials, minutes, contracts — is
+        requests must be answered in 10 business days. Tagged document storage,
+        recorded declaration, bylaws, rules, financials, minutes, contracts, is
         the difference between a one-click response and a fine.
       </li>
       <li>
@@ -351,7 +349,7 @@
       </li>
       <li>
         <strong>Fining process audit trail.</strong> Notice, hearing opportunity
-        before the fining committee, and the committee's vote — all timestamped
+        before the fining committee, and the committee's vote, all timestamped
         and document-linked.
       </li>
       <li>
@@ -372,7 +370,7 @@
     </h2>
 
     <p>
-      The big shift in 2025–2026 has been practical AI inside HOA software — not
+      The big shift in 2025–2026 has been practical AI inside HOA software, not
       chatbots that hallucinate, but assistants that do specific board tasks.
       For Florida boards, the ones that actually save time:
     </p>
@@ -381,7 +379,7 @@
       <li>
         <strong>Auto-categorizing bank transactions</strong> against vendors and
         budget lines, so reconciliation goes from a Sunday afternoon to five
-        minutes — and your monthly financial doesn't slip past the 30th.
+        minutes, and your monthly financial doesn't slip past the 30th.
       </li>
       <li>
         <strong>Drafting Chapter 720-style letters</strong> from templates and
@@ -389,17 +387,17 @@
         ARC approvals).
       </li>
       <li>
-        <strong>Summarizing meeting minutes</strong> from an audio recording —
+        <strong>Summarizing meeting minutes</strong> from an audio recording,
         useful when your secretary is a snowbird north for the summer.
       </li>
       <li>
         <strong>Answering homeowner questions</strong> ("What's my balance?",
         "When is the next meeting?", "Do I need ARC approval for shutters?") via
-        the resident portal — using only your community's documents.
+        the resident portal, using only your community's documents.
       </li>
       <li>
         <strong>Forecasting reserves against your SIRS,</strong> based on funded
-        components and actual spending — so the next 10-year plan doesn't get
+        components and actual spending, so the next 10-year plan doesn't get
         written on a legal pad.
       </li>
     </ul>
@@ -414,7 +412,7 @@
     <figure class="not-prose my-10">
       <img
         src="/images/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026/inline-2.webp"
-        alt="Illustration: AI in Florida HOA software — a tablet dashboard showing reserve forecasting, automated dues, hurricane-prep notices, resident chatbot, and reconciliation"
+        alt="Illustration: AI in Florida HOA software, a tablet dashboard showing reserve forecasting, automated dues, hurricane-prep notices, resident chatbot, and reconciliation"
         width="1024"
         height="571"
         loading="lazy"
@@ -423,7 +421,7 @@
       />
       <figcaption class="mt-3 text-center text-sm text-gray-500 italic">
         How practical AI shows up in Florida HOA software: dashboards,
-        automation, and resident support — not sci-fi.
+        automation, and resident support, not sci-fi.
       </figcaption>
     </figure>
 
@@ -545,9 +543,9 @@
         expense.
       </li>
       <li>
-        <strong>Pick a "go-live" date</strong> at the start of a billing period
-        — January 1 or April 1 are easiest in Florida (avoid hurricane season
-        for the cutover itself).
+        <strong>Pick a "go-live" date</strong> at the start of a billing period,
+        January 1 or April 1 are easiest in Florida (avoid hurricane season for
+        the cutover itself).
       </li>
       <li>
         <strong>Import the roster, balances, and reserve schedule</strong>
@@ -560,8 +558,8 @@
       </li>
       <li>
         <strong>Send the announcement</strong> to owners with a one-page "here's
-        how to pay starting Month X" guide — and remember to mail seasonal
-        owners at their summer address.
+        how to pay starting Month X" guide, and remember to mail seasonal owners
+        at their summer address.
       </li>
       <li>
         <strong>Cut the old system loose</strong> after 60 days and archive a
@@ -576,7 +574,7 @@
       Here's the plan we walk new Florida NeibrPay communities through:
     </p>
 
-    <h3>Week 1 — Set up</h3>
+    <h3>Week 1, Set up</h3>
     <ul>
       <li>Create the community, units, and board roles.</li>
       <li>Connect the operating bank account.</li>
@@ -590,7 +588,7 @@
       </li>
     </ul>
 
-    <h3>Week 2 — Test</h3>
+    <h3>Week 2, Test</h3>
     <ul>
       <li>Have one board member pay their own dues through the portal.</li>
       <li>Import vendors and last quarter's invoices.</li>
@@ -601,16 +599,16 @@
       </li>
     </ul>
 
-    <h3>Week 3 — Announce</h3>
+    <h3>Week 3, Announce</h3>
     <ul>
       <li>
         Send the launch email to owners with a 90-second video or one-pager.
       </li>
-      <li>Hold one optional 30-minute Zoom Q&amp;A — record it.</li>
+      <li>Hold one optional 30-minute Zoom Q&amp;A, record it.</li>
       <li>Activate the homeowner portal.</li>
     </ul>
 
-    <h3>Week 4 — Operate</h3>
+    <h3>Week 4, Operate</h3>
     <ul>
       <li>Run your first billing cycle.</li>
       <li>Reconcile the operating and reserve accounts inside the platform.</li>
@@ -643,8 +641,8 @@
       </li>
       <li>
         <strong>Skipping the homeowner portal rollout.</strong> Seasonal Florida
-        owners especially need it — once they're back in Vermont, you can't
-        reach them with a flyer on the door.
+        owners especially need it, once they're back in Vermont, you can't reach
+        them with a flyer on the door.
       </li>
     </ul>
 
@@ -672,7 +670,7 @@
         you for growing, no upsells for "premium" Florida support.
       </li>
       <li>
-        <strong>An AI assistant that actually does work</strong> — drafting
+        <strong>An AI assistant that actually does work</strong>, drafting
         notices, categorizing transactions, answering homeowner FAQs from your
         own documents.
       </li>
@@ -686,20 +684,20 @@
     <BlogCta
       eyebrow="Ready when you are"
       heading="Run your Florida self-managed HOA on NeibrPay"
-      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon — including SIRS-aware reserves."
+      description="No setup fees. No per-unit pricing. Migrate from spreadsheets or PayHOA in an afternoon, including SIRS-aware reserves."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Talk to Our Team"
       secondary-href="/contact"
     />
 
-    <h2 id="faq">Frequently asked questions — Florida boards</h2>
+    <h2 id="faq">Frequently asked questions, Florida boards</h2>
 
     <h3>
       Is HOA software worth it for a small Florida community under 30 units?
     </h3>
     <p>
-      Yes — usually more than for larger communities. Small Florida HOAs
+      Yes, usually more than for larger communities. Small Florida HOAs
       typically have one volunteer doing everything, and the Ch. 720.303 records
       request rules apply just the same. The software pays for itself the first
       time you avoid a missed late fee, a misfiled estoppel, or a botched annual
@@ -711,7 +709,7 @@
       For applicable Ch. 718 buildings, look for a reserve module that lets you
       track funded components (roof, structural, plumbing, electrical,
       waterproofing) and store the SIRS report alongside. The software doesn't
-      perform the inspection — your licensed engineer or architect does — but it
+      perform the inspection, your licensed engineer or architect does, but it
       should reflect the inspection's funding schedule.
     </p>
 
@@ -726,7 +724,7 @@
 
     <h3>Do owners need to download an app?</h3>
     <p>
-      No. The good platforms — including NeibrPay — work in any mobile browser.
+      No. The good platforms, including NeibrPay, work in any mobile browser.
       Forcing residents to install an app is a great way to make sure your
       seasonal owners never log in.
     </p>
@@ -735,8 +733,8 @@
     <p>
       For a self-managed HOA under 100 units with reasonably clean records: one
       Saturday for setup, one week of testing, and one billing cycle to go live.
-      Avoid going live in August or September — wait for hurricane season to
-      wind down before any cutover.
+      Avoid going live in August or September, wait for hurricane season to wind
+      down before any cutover.
     </p>
 
     <h3>What about Florida sales tax on HOA software?</h3>
@@ -750,7 +748,7 @@
     <p>
       Yes. NeibrPay and most modern platforms connect to your existing operating
       and reserve accounts through Plaid and route ACH payments through
-      compliant rails like Stripe. You don't switch banks — you finally use the
+      compliant rails like Stripe. You don't switch banks, you finally use the
       one you have.
     </p>
 
@@ -759,14 +757,14 @@
     <p>
       The best HOA management software for a Florida self-managed board in 2026
       isn't the one with the most features. It's the one that fits the size,
-      budget, and Chapter 720 / 718 compliance reality of a volunteer board —
-      and then gets out of the way.
+      budget, and Chapter 720 / 718 compliance reality of a volunteer board, and
+      then gets out of the way.
     </p>
 
     <p>
       Pick a platform built for self-managed Florida HOAs. Insist on online
       dues, a real owner portal, SIRS-aware reserves, transparent pricing, and
-      AI that does work instead of demos. Set a 30-day rollout plan. Stop being
+      AI that does work instead of demos. Set a 30 day rollout plan. Stop being
       the integration between five tools.
     </p>
 
@@ -779,7 +777,7 @@
     <BlogCta
       eyebrow="Try it this week"
       heading="See why Florida self-managed boards switch to NeibrPay"
-      description="Online dues, vendor payments, AI assistant, SIRS-aware reserves, and a homeowner portal — built for boards under 150 units."
+      description="Online dues, vendor payments, AI assistant, SIRS-aware reserves, and a homeowner portal, built for boards under 150 units."
       primary-label="Get Started Free"
       primary-href="/get-started"
       secondary-label="Compare Plans"
