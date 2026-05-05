@@ -29,18 +29,7 @@ export default defineNuxtConfig({
         },
       ],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-      script: [
-        {
-          src: 'https://www.googletagmanager.com/gtag/js?id=G-DB646XGZ88',
-          async: true,
-        },
-        {
-          innerHTML: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-DB646XGZ88');`,
-        },
-      ],
+      // Google Analytics is injected at runtime in `plugins/gtag.client.ts` so localhost / 127.0.0.1 are excluded.
     },
   },
   nitro: {
@@ -58,6 +47,8 @@ gtag('config', 'G-DB646XGZ88');`,
         '/privacy',
         '/terms',
         '/get-started',
+        '/blog',
+        '/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026',
         '/features/invoice-payment-management',
         '/features/vendor-expense-tracking',
         '/features/budgets-and-reports',

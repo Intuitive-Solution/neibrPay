@@ -68,6 +68,13 @@
             Pricing
           </NuxtLink>
 
+          <NuxtLink
+            to="/blog"
+            class="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+          >
+            Blog
+          </NuxtLink>
+
           <a
             :href="appAuthUrl"
             target="_blank"
@@ -152,6 +159,13 @@
           class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md font-medium"
         >
           Pricing
+        </NuxtLink>
+        <NuxtLink
+          to="/blog"
+          @click="mobileMenuOpen = false"
+          class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md font-medium"
+        >
+          Blog
         </NuxtLink>
         <a
           :href="appAuthUrl"

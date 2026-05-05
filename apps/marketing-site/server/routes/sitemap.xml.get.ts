@@ -1,10 +1,12 @@
 import { getRequestURL } from 'h3';
 import { useFeatureData } from '../../composables/useFeatureData';
+import { useBlogData } from '../../composables/useBlogData';
 
 interface SitemapEntry {
   path: string;
   changefreq: string;
   priority: string;
+  lastmod?: string;
 }
 
 const STATIC_PATHS: SitemapEntry[] = [
@@ -13,6 +15,7 @@ const STATIC_PATHS: SitemapEntry[] = [
   { path: '/get-started', changefreq: 'monthly', priority: '0.9' },
   { path: '/contact', changefreq: 'monthly', priority: '0.8' },
   { path: '/support', changefreq: 'monthly', priority: '0.8' },
+  { path: '/blog', changefreq: 'weekly', priority: '0.8' },
   { path: '/privacy', changefreq: 'yearly', priority: '0.4' },
   { path: '/terms', changefreq: 'yearly', priority: '0.4' },
 ];
@@ -23,6 +26,16 @@ function buildFeaturePaths(): SitemapEntry[] {
     path: `/features/${f.slug}`,
     changefreq: 'monthly',
     priority: '0.8',
+  }));
+}
+
+function buildBlogPaths(): SitemapEntry[] {
+  const { posts } = useBlogData();
+  return posts.map(p => ({
+    path: `/blog/${p.slug}`,
+    changefreq: 'monthly',
+    priority: p.isPillar ? '0.9' : '0.7',
+    lastmod: p.updatedAt || p.publishedAt,
   }));
 }
 
@@ -43,18 +56,22 @@ export default defineEventHandler(event => {
     publicSiteUrl ||
     `${getRequestURL(event).protocol}//${getRequestURL(event).host}`;
 
-  const lastmod = new Date().toISOString().split('T')[0];
+  const defaultLastmod = new Date().toISOString().split('T')[0];
 
-  const paths: SitemapEntry[] = [...STATIC_PATHS, ...buildFeaturePaths()];
+  const paths: SitemapEntry[] = [
+    ...STATIC_PATHS,
+    ...buildFeaturePaths(),
+    ...buildBlogPaths(),
+  ];
 
   const urls = paths
-    .map(({ path, changefreq, priority }) => {
+    .map(({ path, changefreq, priority, lastmod }) => {
       // Netlify serves directory-style URLs with a trailing slash; match <loc> to avoid 301 from sitemap.
       const locPath = path === '/' ? '/' : `${path.replace(/\/$/, '')}/`;
       return `
   <url>
     <loc>${escapeXml(`${origin}${locPath === '/' ? '/' : locPath}`)}</loc>
-    <lastmod>${lastmod}</lastmod>
+    <lastmod>${lastmod || defaultLastmod}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
   </url>`;
