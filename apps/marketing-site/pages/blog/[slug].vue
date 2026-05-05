@@ -68,6 +68,76 @@ const articleComponents: Record<
       () =>
         import('~/components/blog/articles/UltimateGuideHoaSoftware2026.vue')
     ),
+  'florida-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareFlorida2026.vue'
+        )
+    ),
+  'california-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareCalifornia2026.vue'
+        )
+    ),
+  'texas-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareTexas2026.vue'
+        )
+    ),
+  'arizona-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareArizona2026.vue'
+        )
+    ),
+  'colorado-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareColorado2026.vue'
+        )
+    ),
+  'nevada-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareNevada2026.vue'
+        )
+    ),
+  'georgia-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareGeorgia2026.vue'
+        )
+    ),
+  'north-carolina-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareNorthCarolina2026.vue'
+        )
+    ),
+  'washington-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareWashington2026.vue'
+        )
+    ),
+  'illinois-hoa-management-software-self-managed-boards-2026':
+    defineAsyncComponent(
+      () =>
+        import(
+          '~/components/blog/articles/UltimateGuideHoaSoftwareIllinois2026.vue'
+        )
+    ),
 };
 
 const articleComponent = computed(() =>
@@ -77,26 +147,59 @@ const articleComponent = computed(() =>
 /**
  * Per-article table of contents. Keeping this here (vs. parsing the
  * component) lets us prerender deterministically without runtime DOM access.
+ *
+ * The pillar 2026 guide and the 10 state variations share the same anchor
+ * IDs in the article body. State variations include an extra
+ * `state-compliance` section, so they get their own slightly longer TOC.
  */
+const pillarToc: Array<{ id: string; label: string }> = [
+  { id: 'why-self-managed-needs-software', label: 'Why HOAs need software' },
+  { id: 'what-is-hoa-software', label: 'What HOA software does' },
+  { id: 'must-have-features', label: '8 must-have features' },
+  { id: 'cost-breakdown', label: 'Realistic 2026 pricing' },
+  { id: 'ai-and-automation', label: 'AI and automation' },
+  { id: 'choose', label: 'Buyer’s checklist' },
+  { id: 'comparison', label: 'Top platforms compared' },
+  { id: 'switch', label: 'How to switch tools' },
+  { id: 'rollout', label: '30-day rollout plan' },
+  { id: 'mistakes', label: 'Mistakes to avoid' },
+  { id: 'why-neibrpay', label: 'Why NeibrPay' },
+  { id: 'faq', label: 'FAQ' },
+  { id: 'final-cta', label: 'The bottom line' },
+];
+
+const stateToc: Array<{ id: string; label: string }> = [
+  { id: 'why-self-managed-needs-software', label: 'Why HOAs need software' },
+  { id: 'what-is-hoa-software', label: 'What HOA software does' },
+  { id: 'must-have-features', label: '8 must-have features' },
+  { id: 'cost-breakdown', label: 'Realistic 2026 pricing' },
+  { id: 'state-compliance', label: 'State compliance' },
+  { id: 'ai-and-automation', label: 'AI and automation' },
+  { id: 'choose', label: 'Buyer’s checklist' },
+  { id: 'comparison', label: 'Top platforms compared' },
+  { id: 'switch', label: 'How to switch tools' },
+  { id: 'rollout', label: '30-day rollout plan' },
+  { id: 'mistakes', label: 'Mistakes to avoid' },
+  { id: 'why-neibrpay', label: 'Why NeibrPay' },
+  { id: 'faq', label: 'FAQ' },
+  { id: 'final-cta', label: 'The bottom line' },
+];
+
 const tableOfContentsBySlug: Record<
   string,
   Array<{ id: string; label: string }>
 > = {
-  'ultimate-guide-hoa-management-software-self-managed-boards-2026': [
-    { id: 'why-self-managed-needs-software', label: 'Why HOAs need software' },
-    { id: 'what-is-hoa-software', label: 'What HOA software does' },
-    { id: 'must-have-features', label: '8 must-have features' },
-    { id: 'cost-breakdown', label: 'Realistic 2026 pricing' },
-    { id: 'ai-and-automation', label: 'AI and automation' },
-    { id: 'choose', label: 'Buyer’s checklist' },
-    { id: 'comparison', label: 'Top platforms compared' },
-    { id: 'switch', label: 'How to switch tools' },
-    { id: 'rollout', label: '30-day rollout plan' },
-    { id: 'mistakes', label: 'Mistakes to avoid' },
-    { id: 'why-neibrpay', label: 'Why NeibrPay' },
-    { id: 'faq', label: 'FAQ' },
-    { id: 'final-cta', label: 'The bottom line' },
-  ],
+  'ultimate-guide-hoa-management-software-self-managed-boards-2026': pillarToc,
+  'florida-hoa-management-software-self-managed-boards-2026': stateToc,
+  'california-hoa-management-software-self-managed-boards-2026': stateToc,
+  'texas-hoa-management-software-self-managed-boards-2026': stateToc,
+  'arizona-hoa-management-software-self-managed-boards-2026': stateToc,
+  'colorado-hoa-management-software-self-managed-boards-2026': stateToc,
+  'nevada-hoa-management-software-self-managed-boards-2026': stateToc,
+  'georgia-hoa-management-software-self-managed-boards-2026': stateToc,
+  'north-carolina-hoa-management-software-self-managed-boards-2026': stateToc,
+  'washington-hoa-management-software-self-managed-boards-2026': stateToc,
+  'illinois-hoa-management-software-self-managed-boards-2026': stateToc,
 };
 
 const tableOfContents = computed(() =>

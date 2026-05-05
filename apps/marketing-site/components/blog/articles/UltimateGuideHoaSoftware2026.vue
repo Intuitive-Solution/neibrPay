@@ -6,12 +6,12 @@
       trying to remember whether the landscaper got paid. By 2026, the right HOA
       management software has gone from a "nice to have" to the single biggest
       lever volunteer boards have to save time, keep finances clean, and avoid
-      the $250–$400/unit/month price tag of a property management company.
+      the $250 to $400/unit/month price tag of a property management company.
     </p>
 
     <p>
       This guide is written for the boards we serve every day at
-      <NuxtLink to="/">NeibrPay</NuxtLink> — communities under 150 units, with
+      <NuxtLink to="/">NeibrPay</NuxtLink> communities under 150 units, with
       volunteer treasurers, no full-time staff, and zero appetite for enterprise
       software complexity. We'll walk you through what HOA software actually
       does, the features that matter for self-managed boards, what fair pricing
