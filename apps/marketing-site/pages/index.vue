@@ -9,6 +9,7 @@
       <TestimonialsSection />
       <PricingSection />
       <FaqSection />
+      <RecentBlogsSection />
       <ContactFormSection />
     </main>
     <AppFooter />

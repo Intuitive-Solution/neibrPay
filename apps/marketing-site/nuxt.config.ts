@@ -18,7 +18,8 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'NeibrPay — HOA Dues Collection & Community Management Platform',
+      title:
+        'NeibrPay HOA Dues Collection & Community Management Platform for Self Managed Boards',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -29,18 +30,7 @@ export default defineNuxtConfig({
         },
       ],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-      script: [
-        {
-          src: 'https://www.googletagmanager.com/gtag/js?id=G-DB646XGZ88',
-          async: true,
-        },
-        {
-          innerHTML: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-DB646XGZ88');`,
-        },
-      ],
+      // Google Analytics is injected at runtime in `plugins/gtag.client.ts` so localhost / 127.0.0.1 are excluded.
     },
   },
   nitro: {
@@ -58,6 +48,18 @@ gtag('config', 'G-DB646XGZ88');`,
         '/privacy',
         '/terms',
         '/get-started',
+        '/blog',
+        '/blog/ultimate-guide-hoa-management-software-self-managed-boards-2026',
+        '/blog/florida-hoa-management-software-self-managed-boards-2026',
+        '/blog/california-hoa-management-software-self-managed-boards-2026',
+        '/blog/texas-hoa-management-software-self-managed-boards-2026',
+        '/blog/arizona-hoa-management-software-self-managed-boards-2026',
+        '/blog/colorado-hoa-management-software-self-managed-boards-2026',
+        '/blog/nevada-hoa-management-software-self-managed-boards-2026',
+        '/blog/georgia-hoa-management-software-self-managed-boards-2026',
+        '/blog/north-carolina-hoa-management-software-self-managed-boards-2026',
+        '/blog/washington-hoa-management-software-self-managed-boards-2026',
+        '/blog/illinois-hoa-management-software-self-managed-boards-2026',
         '/features/invoice-payment-management',
         '/features/vendor-expense-tracking',
         '/features/budgets-and-reports',

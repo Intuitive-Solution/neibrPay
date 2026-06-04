@@ -76,6 +76,11 @@
               >
             </li>
             <li>
+              <NuxtLink to="/blog" class="text-gray-600 hover:text-primary-600"
+                >Blog</NuxtLink
+              >
+            </li>
+            <li>
               <NuxtLink
                 to="/support"
                 class="text-gray-600 hover:text-primary-600"

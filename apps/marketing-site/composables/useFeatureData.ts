@@ -40,7 +40,7 @@ const features: Feature[] = [
     shortDescription:
       'Stop chasing late payments with automated reminders and online payment collection via Zelle, ACH, or card.',
     heroDescription:
-      'Automate your entire dues collection process. Create invoices, send automated reminders, and let residents pay online through Zelle, ACH, or card — powered by Stripe. No more chasing checks or tracking spreadsheets.',
+      'Automate your entire dues collection process. Create invoices, send automated reminders, and let residents pay online through Zelle, ACH, or card powered by Stripe. No more chasing checks or tracking spreadsheets.',
     benefits: [
       'Create and send professional invoices in minutes',
       'Automated payment reminders reduce late payments by up to 60%',
