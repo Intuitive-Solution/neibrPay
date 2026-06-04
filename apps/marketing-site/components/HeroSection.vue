@@ -14,7 +14,7 @@
           </h1>
 
           <p class="text-xl md:text-2xl text-text-secondary mb-10 max-w-xl">
-            For volunteer treasurers and board members running self-managed
+            For volunteer treasurers and board members running self managed
             communities under 50 units. Collect dues online, track every dollar,
             and ditch the spreadsheets &mdash; without paying enterprise prices.
           </p>
@@ -32,7 +32,7 @@
               class="btn-text text-sm sm:self-center"
               @click="trackCTA('free_trial', 'hero')"
             >
-              or start a 30-day free trial
+              or start a 30 day free trial
             </NuxtLink>
           </div>
 
@@ -52,7 +52,7 @@
           </div>
 
           <p class="text-sm text-gray-400">
-            Built for self-managed HOAs under 50 units. Migrate from
+            Built for self managed HOAs under 50 units. Migrate from
             spreadsheets or PayHOA in an afternoon.
           </p>
         </div>
