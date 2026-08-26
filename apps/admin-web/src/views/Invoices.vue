@@ -1226,6 +1226,13 @@ const isInvoiceOpen = (invoice: any): boolean => {
   return invoice.status !== 'paid' && invoice.status !== 'cancelled';
 };
 
+// API decimal fields arrive as strings; coerce before summing to avoid concatenation.
+const toAmount = (value: number | string | null | undefined): number => {
+  if (value === null || value === undefined || value === '') return 0;
+  const amount = typeof value === 'string' ? parseFloat(value) : Number(value);
+  return Number.isFinite(amount) ? amount : 0;
+};
+
 // Computed properties for summary cards
 const openInvoicesCount = computed(() => {
   if (!invoices.value) return 0;
@@ -1252,7 +1259,10 @@ const openInvoicesAmount = computed(() => {
       }
       return isInvoiceOpen(invoice) && !invoice.deleted_at;
     })
-    .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
+    .reduce(
+      (sum: number, invoice: any) => sum + toAmount(invoice.balance_due),
+      0
+    );
 });
 
 const overdueInvoicesCount = computed(() => {
@@ -1280,7 +1290,10 @@ const overdueInvoicesAmount = computed(() => {
       }
       return isInvoiceOverdue(invoice) && !invoice.deleted_at;
     })
-    .reduce((sum: number, invoice: any) => sum + (invoice.balance_due || 0), 0);
+    .reduce(
+      (sum: number, invoice: any) => sum + toAmount(invoice.balance_due),
+      0
+    );
 });
 
 const paidInvoicesCount = computed(() => {
@@ -1308,7 +1321,7 @@ const paidInvoicesAmount = computed(() => {
       }
       return invoice.status === 'paid';
     })
-    .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
+    .reduce((sum: number, invoice: any) => sum + toAmount(invoice.total), 0);
 });
 
 const allInvoicesCount = computed(() => {
@@ -1328,10 +1341,10 @@ const allInvoicesAmount = computed(() => {
       .filter(
         (invoice: any) => invoice.status !== 'draft' && !invoice.deleted_at
       )
-      .reduce((sum: number, invoice: any) => sum + (invoice.total || 0), 0);
+      .reduce((sum: number, invoice: any) => sum + toAmount(invoice.total), 0);
   }
   return invoices.value.reduce(
-    (sum: number, invoice: any) => sum + (invoice.total || 0),
+    (sum: number, invoice: any) => sum + toAmount(invoice.total),
     0
   );
 });
