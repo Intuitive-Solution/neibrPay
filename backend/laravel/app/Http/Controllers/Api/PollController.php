@@ -146,19 +146,29 @@ class PollController extends Controller
 
         $validated = $request->validated();
         $hasVotes = $poll->responses()->exists();
-        $isGoingLive = $poll->status === Poll::STATUS_DRAFT
-            && $validated['status'] === Poll::STATUS_OPEN;
+        $nextStatus = $validated['status'];
 
-        DB::transaction(function () use ($poll, $validated, $hasVotes) {
+        // An open poll can return to draft only before anyone has voted
+        if ($poll->status === Poll::STATUS_OPEN && $nextStatus === Poll::STATUS_DRAFT) {
+            if ($hasVotes) {
+                return response()->json([
+                    'message' => 'This poll cannot be moved back to draft because votes have already been cast.',
+                ], 422);
+            }
+        } elseif ($poll->status === Poll::STATUS_OPEN) {
+            $nextStatus = Poll::STATUS_OPEN;
+        }
+
+        $isGoingLive = $poll->status === Poll::STATUS_DRAFT
+            && $nextStatus === Poll::STATUS_OPEN;
+
+        DB::transaction(function () use ($poll, $validated, $hasVotes, $nextStatus) {
             $poll->update([
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
-                // A published poll cannot be pulled back into draft
-                'status' => $poll->status === Poll::STATUS_OPEN
-                    ? Poll::STATUS_OPEN
-                    : $validated['status'],
+                'status' => $nextStatus,
                 'opens_at' => $validated['opens_at']
-                    ?? ($validated['status'] === Poll::STATUS_OPEN ? ($poll->opens_at ?? now()) : null),
+                    ?? ($nextStatus === Poll::STATUS_OPEN ? ($poll->opens_at ?? now()) : $poll->opens_at),
                 'closes_at' => $validated['closes_at'] ?? null,
                 'results_visibility' => $validated['results_visibility'],
             ]);
@@ -207,6 +217,12 @@ class PollController extends Controller
 
         if ($poll->status !== Poll::STATUS_DRAFT) {
             return response()->json(['message' => 'Only a draft poll can be published'], 422);
+        }
+
+        if (!$poll->isReadyToPublish()) {
+            return response()->json([
+                'message' => 'This draft is not ready to publish. Add a question with at least two options.',
+            ], 422);
         }
 
         $poll->update([

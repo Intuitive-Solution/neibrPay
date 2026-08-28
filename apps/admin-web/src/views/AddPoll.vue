@@ -31,6 +31,7 @@
         </div>
         <div class="flex items-center gap-3">
           <button
+            v-if="!hasVotes"
             type="button"
             class="btn-outline btn-sm"
             :disabled="isSubmitting"
@@ -66,6 +67,13 @@
       class="p-4 bg-red-50 border border-red-200 rounded-lg"
     >
       <p class="text-sm text-red-800">{{ errors.general }}</p>
+    </div>
+
+    <div
+      v-if="successMessage"
+      class="p-4 bg-green-50 border border-green-200 rounded-lg"
+    >
+      <p class="text-sm text-green-800">{{ successMessage }}</p>
     </div>
 
     <!-- Title & description -->
@@ -543,6 +551,8 @@ const errors = ref({
   closes_at: '',
 });
 
+const successMessage = ref('');
+
 // Parallel to form.questions - index matches
 const questionErrors = ref<Array<{ prompt: string; options: string }>>([]);
 
@@ -642,7 +652,7 @@ function removeOption(question: QuestionForm, index: number) {
   question.options.splice(index, 1);
 }
 
-function validate(): boolean {
+function validate(status: PollStatus.DRAFT | PollStatus.OPEN): boolean {
   errors.value = {
     general: '',
     title: '',
@@ -658,6 +668,19 @@ function validate(): boolean {
 
   if (!form.value.title.trim()) {
     errors.value.title = 'The title is required.';
+  }
+
+  if (
+    form.value.opens_at &&
+    form.value.closes_at &&
+    form.value.closes_at <= form.value.opens_at
+  ) {
+    errors.value.closes_at = 'The close date must be after the open date.';
+  }
+
+  // Drafts can be incomplete — only the title is required to save the work
+  if (status === PollStatus.DRAFT) {
+    return !errors.value.title && !errors.value.closes_at;
   }
 
   if (form.value.questions.length === 0) {
@@ -680,14 +703,6 @@ function validate(): boolean {
 
   if (audience.value === 'specific' && selectedUnitIds.value.length === 0) {
     errors.value.recipients = 'Select at least one unit.';
-  }
-
-  if (
-    form.value.opens_at &&
-    form.value.closes_at &&
-    form.value.closes_at <= form.value.opens_at
-  ) {
-    errors.value.closes_at = 'The close date must be after the open date.';
   }
 
   const hasQuestionError = questionErrors.value.some(
@@ -725,22 +740,37 @@ function buildPayload(
 }
 
 function submit(status: PollStatus.DRAFT | PollStatus.OPEN) {
-  if (!validate()) return;
+  if (!validate(status)) return;
 
+  successMessage.value = '';
   const payload = buildPayload(status);
 
   const onError = (error: unknown) => {
-    const message =
-      (error as { response?: { data?: { message?: string } } })?.response?.data
-        ?.message ?? 'Something went wrong. Please try again.';
-    errors.value.general = message;
+    const apiError = error as {
+      message?: string;
+      errors?: Record<string, string[]>;
+    };
+    const firstFieldError = apiError.errors
+      ? Object.values(apiError.errors).flat()[0]
+      : undefined;
+    errors.value.general =
+      firstFieldError ||
+      apiError.message ||
+      'Something went wrong. Please try again.';
   };
 
   if (isEditMode.value && pollId.value) {
     updatePoll.mutate(
       { id: pollId.value, data: payload },
       {
-        onSuccess: () => router.push(`/polls/${pollId.value}`),
+        onSuccess: () => {
+          if (status === PollStatus.DRAFT) {
+            currentStatus.value = PollStatus.DRAFT;
+            successMessage.value = 'Draft saved.';
+            return;
+          }
+          router.push(`/polls/${pollId.value}`);
+        },
         onError,
       }
     );
@@ -748,7 +778,13 @@ function submit(status: PollStatus.DRAFT | PollStatus.OPEN) {
   }
 
   createPoll.mutate(payload, {
-    onSuccess: result => router.push(`/polls/${result.data.id}`),
+    onSuccess: result => {
+      if (status === PollStatus.DRAFT) {
+        router.push(`/polls/${result.data.id}/edit`);
+        return;
+      }
+      router.push(`/polls/${result.data.id}`);
+    },
     onError,
   });
 }

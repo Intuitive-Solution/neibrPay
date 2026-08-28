@@ -20,6 +20,8 @@ class PollRequest extends FormRequest
      */
     public function rules(): array
     {
+        $publishing = $this->input('status') === 'open';
+
         return [
             'title' => [
                 'required',
@@ -54,11 +56,12 @@ class PollRequest extends FormRequest
             'questions' => [
                 'required',
                 'array',
-                'min:1',
                 'max:20',
+                Rule::when($publishing, ['min:1']),
             ],
             'questions.*.prompt' => [
-                'required',
+                Rule::when($publishing, ['required']),
+                'nullable',
                 'string',
                 'max:255',
             ],
@@ -67,12 +70,13 @@ class PollRequest extends FormRequest
                 Rule::in(['single_choice', 'multi_select', 'yes_no']),
             ],
             'questions.*.options' => [
-                'required',
+                Rule::when($publishing, ['required', 'min:2']),
+                'nullable',
                 'array',
-                'min:2',
             ],
             'questions.*.options.*.label' => [
-                'required',
+                Rule::when($publishing, ['required']),
+                'nullable',
                 'string',
                 'max:255',
             ],

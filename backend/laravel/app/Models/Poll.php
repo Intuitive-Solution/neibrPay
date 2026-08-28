@@ -114,6 +114,41 @@ class Poll extends Model
     }
 
     /**
+     * Whether this poll has enough content to go live.
+     */
+    public function isReadyToPublish(): bool
+    {
+        $questions = $this->relationLoaded('questions')
+            ? $this->questions
+            : $this->questions()->with('options')->get();
+
+        if ($questions->isEmpty()) {
+            return false;
+        }
+
+        foreach ($questions as $question) {
+            if (!trim((string) $question->prompt)) {
+                return false;
+            }
+
+            $labels = $question->options
+                ->map(fn (PollOption $option) => trim($option->label))
+                ->filter()
+                ->values();
+
+            if ($labels->count() < 2 || $labels->count() !== $labels->unique()->count()) {
+                return false;
+            }
+        }
+
+        $recipients = $this->relationLoaded('recipients')
+            ? $this->recipients
+            : $this->recipients()->get();
+
+        return $recipients->isNotEmpty();
+    }
+
+    /**
      * Check whether the poll is currently accepting votes.
      */
     public function isAcceptingVotes(): bool

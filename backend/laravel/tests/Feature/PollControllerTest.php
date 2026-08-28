@@ -282,4 +282,65 @@ class PollControllerTest extends TestCase
         $this->assertArrayNotHasKey('poll_option_id', $participation);
         $this->assertArrayNotHasKey('responded_by', $participation);
     }
+
+    public function test_admin_can_save_an_incomplete_draft(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->postJson('/api/polls', $this->pollPayload([
+                'status' => 'draft',
+                'questions' => [
+                    [
+                        'prompt' => '',
+                        'type' => 'single_choice',
+                        'options' => [
+                            ['label' => ''],
+                            ['label' => ''],
+                        ],
+                    ],
+                ],
+            ]));
+
+        $response->assertCreated()
+            ->assertJsonPath('data.status', 'draft')
+            ->assertJsonPath('data.title', 'Summer amenities');
+    }
+
+    public function test_incomplete_draft_cannot_be_published(): void
+    {
+        $poll = $this->actingAs($this->admin)
+            ->postJson('/api/polls', $this->pollPayload([
+                'status' => 'draft',
+                'questions' => [
+                    [
+                        'prompt' => '',
+                        'type' => 'single_choice',
+                        'options' => [
+                            ['label' => ''],
+                            ['label' => ''],
+                        ],
+                    ],
+                ],
+            ]))
+            ->json('data');
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/polls/{$poll['id']}/publish")
+            ->assertStatus(422);
+    }
+
+    public function test_open_poll_without_votes_can_return_to_draft(): void
+    {
+        $poll = $this->actingAs($this->admin)
+            ->postJson('/api/polls', $this->pollPayload())
+            ->json('data');
+
+        $this->actingAs($this->admin)
+            ->putJson("/api/polls/{$poll['id']}", $this->pollPayload([
+                'status' => 'draft',
+                'title' => 'Pulled back',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('data.status', 'draft')
+            ->assertJsonPath('data.title', 'Pulled back');
+    }
 }
