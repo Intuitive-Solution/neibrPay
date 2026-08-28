@@ -3,6 +3,9 @@
     <!-- Announcements Carousel -->
     <AnnouncementsCarousel />
 
+    <!-- Open polls the user's unit can still vote on -->
+    <OpenPollsCard />
+
     <!-- Resident: My HOA Dues and Open Invoice Cards -->
     <div
       v-if="isResident"
@@ -742,6 +745,7 @@ import { useBudget } from '../composables/useBudget';
 import { useAuthStore } from '../stores/auth';
 import { useBankAccounts, type BankAccount } from '@neibrpay/api-client';
 import AnnouncementsCarousel from '../components/AnnouncementsCarousel.vue';
+import OpenPollsCard from '../components/OpenPollsCard.vue';
 import type {
   Unit,
   InvoiceUnit,

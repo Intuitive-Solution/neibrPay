@@ -379,6 +379,41 @@
             </router-link>
           </li>
 
+          <!-- Polls - admins manage, residents vote -->
+          <li>
+            <router-link
+              :to="isAdmin ? '/polls' : '/my-polls'"
+              :class="
+                getNavLinkClass([
+                  'Polls',
+                  'AddPoll',
+                  'EditPoll',
+                  'PollResults',
+                  'MyPolls',
+                ])
+              "
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Polls' : ''"
+            >
+              <svg
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span v-if="isExpanded || isMobileMenuOpen">Polls</span>
+            </router-link>
+          </li>
+
           <li>
             <router-link
               to="/settings"
@@ -910,6 +945,13 @@ const pageTitle = computed(() => {
       return 'HOA Documents';
     case 'Announcements':
       return 'Announcements';
+    case 'Polls':
+    case 'AddPoll':
+    case 'EditPoll':
+    case 'PollResults':
+      return 'Polls';
+    case 'MyPolls':
+      return 'Polls';
     case 'Settings':
       return 'Settings';
     case 'Transactions':
@@ -943,6 +985,10 @@ const pageDescription = computed(() => {
       return 'Manage community documents and control resident visibility';
     case 'Announcements':
       return 'Manage community announcements and communications';
+    case 'Polls':
+      return 'Ask the community a question and see how the units answer';
+    case 'MyPolls':
+      return 'Vote on open polls and see past results';
     case 'Settings':
       return 'Configure your community settings';
     case 'Transactions':

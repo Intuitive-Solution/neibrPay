@@ -24,6 +24,10 @@ import Documents from '../views/Documents.vue';
 import Settings from '../views/Settings.vue';
 import Announcements from '../views/Announcements.vue';
 import AddAnnouncement from '../views/AddAnnouncement.vue';
+import Polls from '../views/Polls.vue';
+import AddPoll from '../views/AddPoll.vue';
+import PollResults from '../views/PollResults.vue';
+import MyPolls from '../views/MyPolls.vue';
 import Transactions from '../views/Transactions.vue';
 import Budget from '../views/Budget.vue';
 import { setupAuthGuards } from './guards';
@@ -207,6 +211,36 @@ const router = createRouter({
       path: '/announcements/:id/edit',
       name: 'EditAnnouncement',
       component: AddAnnouncement,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/polls',
+      name: 'Polls',
+      component: Polls,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/polls/create',
+      name: 'AddPoll',
+      component: AddPoll,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/polls/:id/edit',
+      name: 'EditPoll',
+      component: AddPoll,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/polls/:id',
+      name: 'PollResults',
+      component: PollResults,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/my-polls',
+      name: 'MyPolls',
+      component: MyPolls,
       meta: { requiresAuth: true },
     },
     {

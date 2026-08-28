@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\StripeConnectController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\ReminderController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\PollController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\UnitsController;
 use App\Http\Controllers\Api\UnitDocumentController;
@@ -226,6 +227,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Announcement routes
     Route::get('announcements/for-user', [AnnouncementController::class, 'forUser']);
     Route::apiResource('announcements', AnnouncementController::class);
+
+    // Poll & voting routes
+    Route::get('polls/for-user', [PollController::class, 'forUser']);
+    Route::get('polls/{poll}/results', [PollController::class, 'results']);
+    Route::post('polls/{poll}/vote', [PollController::class, 'vote']);
+    Route::post('polls/{poll}/publish', [PollController::class, 'publish']);
+    Route::post('polls/{poll}/close', [PollController::class, 'close']);
+    Route::post('polls/{poll}/remind', [PollController::class, 'remind']);
+    Route::apiResource('polls', PollController::class);
 
     // Plaid bank integration routes
     Route::prefix('plaid')->group(function () {

@@ -33,6 +33,14 @@ class Kernel extends ConsoleKernel
             ->onSuccess(function () {
                 \Illuminate\Support\Facades\Log::info('Invoice fee adjustment sync job completed successfully');
             });
+
+        // Close polls whose close date has passed
+        $schedule->command('polls:close-expired')
+            ->hourly()
+            ->withoutOverlapping()
+            ->onFailure(function () {
+                \Illuminate\Support\Facades\Log::error('Poll auto-close job failed');
+            });
     }
 
     /**
