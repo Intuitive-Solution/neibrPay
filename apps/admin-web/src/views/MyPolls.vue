@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-8">
     <div v-if="isLoading" class="card-modern text-center py-12">
       <p class="text-gray-500">Loading polls...</p>
     </div>
@@ -48,38 +48,137 @@
     </div>
 
     <template v-else>
-      <!-- Open polls -->
-      <section v-if="openPolls.length > 0" class="space-y-4">
-        <div>
-          <h2 class="text-xl font-semibold text-gray-900">Open polls</h2>
-          <p class="text-sm text-gray-600 mt-1">
-            Your unit gets one vote on each
-          </p>
+      <!-- Filters + tip -->
+      <div
+        class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+      >
+        <div
+          class="inline-flex flex-wrap gap-2 p-1 bg-gray-100 rounded-xl w-fit"
+        >
+          <button
+            v-for="tab in tabs"
+            :key="tab.value"
+            type="button"
+            @click="selectTab(tab.value)"
+            :class="[
+              'inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm transition-colors',
+              activeTab === tab.value
+                ? 'bg-white shadow-sm font-semibold text-gray-900'
+                : 'font-medium text-gray-600 hover:text-gray-900',
+            ]"
+          >
+            {{ tab.label }}
+            <span
+              :class="[
+                'min-w-[1.25rem] h-5 px-1.5 rounded-full text-xs font-semibold inline-flex items-center justify-center',
+                activeTab === tab.value
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-200 text-gray-700',
+              ]"
+            >
+              {{ tab.count }}
+            </span>
+          </button>
         </div>
-        <PollVoteCard v-for="poll in openPolls" :key="poll.id" :poll="poll" />
+
+        <p
+          class="flex items-start gap-2 text-[13px] text-gray-500 max-w-sm lg:justify-end"
+        >
+          <svg
+            class="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <span
+            >Your unit has one vote — first owner to submit records it.</span
+          >
+        </p>
+      </div>
+
+      <!-- Needs your vote -->
+      <section
+        v-if="needsVotePolls.length > 0"
+        id="needs-vote"
+        class="space-y-4 scroll-mt-24"
+      >
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">Needs your vote</h2>
+        </div>
+
+        <PollVoteCard
+          v-for="poll in needsVotePolls"
+          :key="poll.id"
+          :poll="poll"
+          variant="needs-vote"
+          :expanded="expandedVoteId === poll.id"
+          @expand="expandVote(poll.id)"
+        />
       </section>
 
-      <!-- Past polls -->
-      <section id="past-polls" v-if="pastPolls.length > 0" class="space-y-4">
+      <!-- Voted · awaiting results -->
+      <section
+        v-if="votedAwaitingPolls.length > 0"
+        id="voted-polls"
+        class="space-y-4 scroll-mt-24"
+      >
         <div>
-          <h2 class="text-xl font-semibold text-gray-900">Past polls</h2>
+          <h2 class="text-xl font-semibold text-gray-900">
+            Voted · awaiting results
+          </h2>
+          <p class="text-sm text-gray-600 mt-1">Nothing more to do here.</p>
+        </div>
+
+        <PollVoteCard
+          v-for="poll in votedAwaitingPolls"
+          :key="poll.id"
+          :poll="poll"
+          variant="voted"
+        />
+      </section>
+
+      <!-- Closed polls -->
+      <section
+        v-if="closedPolls.length > 0"
+        id="past-polls"
+        class="space-y-4 scroll-mt-24"
+      >
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">Closed polls</h2>
           <p class="text-sm text-gray-600 mt-1">
             Results your board has shared with the community
           </p>
         </div>
-        <PollVoteCard v-for="poll in pastPolls" :key="poll.id" :poll="poll" />
+
+        <PollVoteCard
+          v-for="poll in closedPolls"
+          :key="poll.id"
+          :poll="poll"
+          variant="closed"
+          :expanded="expandedClosedId === poll.id"
+          @expand="toggleClosed(poll.id)"
+        />
       </section>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useUserPolls } from '../composables/usePolls';
 import PollVoteCard from '../components/PollVoteCard.vue';
 import { PollStatus } from '@neibrpay/models';
+
+type FilterTab = 'needs' | 'voted' | 'closed';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -89,43 +188,149 @@ const { data, isLoading, error } = useUserPolls();
 
 const polls = computed(() => data.value?.data ?? []);
 
-// A poll stays in the top section while it's open, whether or not we voted
-const openPolls = computed(() =>
-  polls.value.filter(poll => poll.status === PollStatus.OPEN)
+const needsVotePolls = computed(() =>
+  polls.value.filter(poll => poll.can_vote)
 );
 
-const pastPolls = computed(() =>
+const votedAwaitingPolls = computed(() =>
+  polls.value.filter(
+    poll => poll.status === PollStatus.OPEN && poll.has_voted && !poll.can_vote
+  )
+);
+
+const closedPolls = computed(() =>
   polls.value.filter(poll => poll.status === PollStatus.CLOSED)
 );
 
-function scrollTargetSelector(): string | null {
+const activeTab = ref<FilterTab>('needs');
+const expandedVoteId = ref<number | null>(null);
+const expandedClosedId = ref<number | null>(null);
+const didInit = ref(false);
+
+const tabs = computed(() => [
+  {
+    value: 'needs' as const,
+    label: 'Needs your vote',
+    count: needsVotePolls.value.length,
+    sectionId: 'needs-vote',
+  },
+  {
+    value: 'voted' as const,
+    label: 'Voted',
+    count: votedAwaitingPolls.value.length,
+    sectionId: 'voted-polls',
+  },
+  {
+    value: 'closed' as const,
+    label: 'Closed',
+    count: closedPolls.value.length,
+    sectionId: 'past-polls',
+  },
+]);
+
+function selectTab(tab: FilterTab) {
+  activeTab.value = tab;
+  const sectionId = tabs.value.find(item => item.value === tab)?.sectionId;
+  if (!sectionId) return;
+  nextTick(() => {
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  });
+}
+
+function expandVote(id: number) {
+  expandedVoteId.value = id;
+  activeTab.value = 'needs';
+}
+
+function toggleClosed(id: number) {
+  expandedClosedId.value = expandedClosedId.value === id ? null : id;
+  activeTab.value = 'closed';
+}
+
+function deepLinkPollId(): number | null {
   const pollQuery = route.query.poll;
-  const pollId = Array.isArray(pollQuery) ? pollQuery[0] : pollQuery;
-  if (pollId) {
-    return `#poll-${pollId}`;
+  const raw = Array.isArray(pollQuery) ? pollQuery[0] : pollQuery;
+  if (raw) {
+    const id = Number(raw);
+    return Number.isFinite(id) ? id : null;
   }
 
-  if (typeof window !== 'undefined' && window.location.hash) {
-    return window.location.hash;
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hash.startsWith('#poll-')
+  ) {
+    const id = Number(window.location.hash.replace('#poll-', ''));
+    return Number.isFinite(id) ? id : null;
   }
 
   return null;
 }
 
 watch(
-  [isLoading, polls, () => route.query.poll],
-  async ([loading]) => {
-    if (loading || typeof window === 'undefined') {
+  [isLoading, polls],
+  ([loading]) => {
+    if (loading || didInit.value) {
       return;
     }
 
-    const selector = scrollTargetSelector();
-    if (!selector) {
+    const linkedId = deepLinkPollId();
+    if (linkedId) {
+      const linked = polls.value.find(poll => poll.id === linkedId);
+      if (linked?.can_vote) {
+        activeTab.value = 'needs';
+        expandedVoteId.value = linkedId;
+      } else if (linked?.status === PollStatus.OPEN && linked.has_voted) {
+        activeTab.value = 'voted';
+      } else if (linked?.status === PollStatus.CLOSED) {
+        activeTab.value = 'closed';
+        expandedClosedId.value = linkedId;
+      }
+    } else {
+      if (needsVotePolls.value.length > 0) {
+        activeTab.value = 'needs';
+        expandedVoteId.value = needsVotePolls.value[0]?.id ?? null;
+      } else if (votedAwaitingPolls.value.length > 0) {
+        activeTab.value = 'voted';
+      } else {
+        activeTab.value = 'closed';
+        expandedClosedId.value = closedPolls.value[0]?.id ?? null;
+      }
+    }
+
+    didInit.value = true;
+  },
+  { immediate: true }
+);
+
+watch(needsVotePolls, list => {
+  if (list.length > 0 && expandedVoteId.value === null) {
+    expandedVoteId.value = list[0].id;
+  }
+  if (
+    expandedVoteId.value !== null &&
+    !list.some(poll => poll.id === expandedVoteId.value)
+  ) {
+    expandedVoteId.value = list[0]?.id ?? null;
+  }
+});
+
+watch(
+  [isLoading, polls, () => route.query.poll, didInit],
+  async ([loading, , , initialized]) => {
+    if (loading || !initialized || typeof window === 'undefined') {
+      return;
+    }
+
+    const linkedId = deepLinkPollId();
+    if (!linkedId) {
       return;
     }
 
     await nextTick();
-    document.querySelector(selector)?.scrollIntoView({
+    document.querySelector(`#poll-${linkedId}`)?.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
     });

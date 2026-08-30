@@ -24,7 +24,7 @@
         </h4>
         <span class="text-[13px] text-gray-500 whitespace-nowrap">
           {{ question.units_answered }}
-          {{ question.units_answered === 1 ? 'unit' : 'units' }}
+          {{ question.units_answered === 1 ? 'unit' : 'units' }} answered
         </span>
       </div>
 

@@ -951,7 +951,7 @@ const pageTitle = computed(() => {
     case 'PollResults':
       return 'Polls';
     case 'MyPolls':
-      return 'Polls';
+      return 'My Polls';
     case 'Settings':
       return 'Settings';
     case 'Transactions':
