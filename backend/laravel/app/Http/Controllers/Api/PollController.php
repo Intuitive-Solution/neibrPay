@@ -497,17 +497,19 @@ class PollController extends Controller
     private function writeQuestions(Poll $poll, array $questions): void
     {
         foreach (array_values($questions) as $questionIndex => $questionData) {
+            // ConvertEmptyStringsToNull turns blank draft fields into null;
+            // the columns are NOT NULL, so persist empty strings instead.
             $question = PollQuestion::create([
                 'poll_id' => $poll->id,
-                'prompt' => $questionData['prompt'],
+                'prompt' => $questionData['prompt'] ?? '',
                 'type' => $questionData['type'],
                 'sort_order' => $questionIndex,
             ]);
 
-            foreach (array_values($questionData['options']) as $optionIndex => $option) {
+            foreach (array_values($questionData['options'] ?? []) as $optionIndex => $option) {
                 PollOption::create([
                     'poll_question_id' => $question->id,
-                    'label' => $option['label'],
+                    'label' => $option['label'] ?? '',
                     'sort_order' => $optionIndex,
                 ]);
             }
@@ -726,14 +728,32 @@ class PollController extends Controller
         try {
             $recipientEmails = $this->collectRecipientEmails($poll, $limitToUnitIds);
 
-            $bccEmails = array_filter($recipientEmails, fn ($email) => $email !== $user->email);
+            if ($recipientEmails === []) {
+                Log::warning('N8N poll notification skipped: no audience emails', [
+                    'poll_id' => $poll->id,
+                    'event' => $event,
+                ]);
+                return;
+            }
+
+            $toEmail = $recipientEmails[0];
+            $bccEmails = array_values(array_filter(
+                $recipientEmails,
+                fn ($email) => $email !== $toEmail
+            ));
+
+            $frontendUrl = rtrim((string) config('app.frontend_url', 'http://localhost:3000'), '/');
+            $loginUrl = $frontendUrl.'/auth';
+            $pollUrl = $frontendUrl.'/my-polls';
 
             $payload = [
                 'type' => $event, // 'poll_published' | 'poll_closed' | 'poll_reminder'
                 'tenant_name' => $user->tenant->name ?? 'HOA',
-                'to' => $user->email,
-                'bcc' => array_values($bccEmails),
-                'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+                'to' => $toEmail,
+                'bcc' => $bccEmails,
+                'frontend_url' => $frontendUrl,
+                'login_url' => $loginUrl,
+                'poll_url' => $pollUrl,
                 'poll' => [
                     'id' => $poll->id,
                     'title' => $poll->title,

@@ -8,6 +8,12 @@
   <div v-else-if="isEditMode && (pollError || !existingPoll)" class="max-w-3xl">
     <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
       <p class="text-sm text-red-800">We couldn't load this poll.</p>
+      <router-link
+        to="/polls"
+        class="mt-3 inline-block text-sm font-medium text-red-800 hover:text-red-900"
+      >
+        Back to Polls
+      </router-link>
     </div>
   </div>
 
@@ -18,6 +24,25 @@
         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
+          <router-link
+            to="/polls"
+            class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 mb-2"
+          >
+            <svg
+              class="w-4 h-4 mr-1.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Polls
+          </router-link>
           <h1 class="text-xl font-semibold text-gray-900">
             {{ isEditMode ? 'Edit poll' : 'New poll' }}
           </h1>
@@ -40,12 +65,13 @@
             Save draft
           </button>
           <button
+            v-if="!isEditMode || currentStatus === PollStatus.DRAFT"
             type="button"
             class="btn-primary btn-sm"
             :disabled="isSubmitting"
-            @click="submit(PollStatus.OPEN)"
+            @click="requestPublish"
           >
-            {{ isSubmitting ? 'Saving...' : 'Publish' }}
+            {{ isSubmitting ? 'Publishing...' : 'Publish' }}
           </button>
         </div>
       </div>
@@ -449,18 +475,31 @@
         Cancel
       </button>
       <button
+        v-if="!hasVotes"
+        type="button"
+        class="btn-outline"
+        :disabled="isSubmitting"
+        @click="submit(PollStatus.DRAFT)"
+      >
+        Save draft
+      </button>
+      <button
+        v-if="isEditMode && currentStatus === PollStatus.OPEN"
         type="button"
         class="btn-primary"
         :disabled="isSubmitting"
-        @click="submit(isEditMode ? currentStatus : PollStatus.OPEN)"
+        @click="submit(PollStatus.OPEN)"
       >
-        {{
-          isSubmitting
-            ? 'Saving...'
-            : isEditMode
-              ? 'Save changes'
-              : 'Publish poll'
-        }}
+        {{ isSubmitting ? 'Saving...' : 'Save changes' }}
+      </button>
+      <button
+        v-else
+        type="button"
+        class="btn-primary"
+        :disabled="isSubmitting"
+        @click="requestPublish"
+      >
+        {{ isSubmitting ? 'Publishing...' : 'Publish poll' }}
       </button>
     </div>
 
@@ -469,6 +508,13 @@
       :model-value="selectedUnitIds"
       @update:model-value="selectedUnitIds = $event"
       @close="showUnitPicker = false"
+    />
+
+    <PollPublishConfirmModal
+      :is-open="showPublishConfirm"
+      :is-submitting="isSubmitting"
+      @cancel="showPublishConfirm = false"
+      @confirm="confirmPublish"
     />
   </div>
 </template>
@@ -479,6 +525,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { usePoll, useCreatePoll, useUpdatePoll } from '../composables/usePolls';
 import PollUnitPickerModal from '../components/PollUnitPickerModal.vue';
+import PollPublishConfirmModal from '../components/PollPublishConfirmModal.vue';
 import {
   PollQuestionType,
   PollRecipientType,
@@ -540,6 +587,7 @@ const form = ref({
 const audience = ref<'all_units' | 'specific'>('all_units');
 const selectedUnitIds = ref<number[]>([]);
 const showUnitPicker = ref(false);
+const showPublishConfirm = ref(false);
 const currentStatus = ref<PollStatus.DRAFT | PollStatus.OPEN>(PollStatus.DRAFT);
 const hasVotes = ref(false);
 
@@ -739,6 +787,39 @@ function buildPayload(
   };
 }
 
+function isRawServerError(message: string): boolean {
+  return /SQLSTATE|Integrity constraint|SQL:|Exception|Stack trace/i.test(
+    message
+  );
+}
+
+function friendlyApiError(error: unknown): string {
+  const apiError = error as {
+    message?: string;
+    errors?: Record<string, string[]>;
+  };
+  const firstFieldError = apiError.errors
+    ? Object.values(apiError.errors).flat()[0]
+    : undefined;
+  const raw = (firstFieldError || apiError.message || '').trim();
+
+  if (!raw || isRawServerError(raw)) {
+    return 'We could not save this poll. Check that every question has a prompt, then try again.';
+  }
+
+  return raw;
+}
+
+function requestPublish() {
+  if (!validate(PollStatus.OPEN)) return;
+  showPublishConfirm.value = true;
+}
+
+function confirmPublish() {
+  showPublishConfirm.value = false;
+  submit(PollStatus.OPEN);
+}
+
 function submit(status: PollStatus.DRAFT | PollStatus.OPEN) {
   if (!validate(status)) return;
 
@@ -746,17 +827,7 @@ function submit(status: PollStatus.DRAFT | PollStatus.OPEN) {
   const payload = buildPayload(status);
 
   const onError = (error: unknown) => {
-    const apiError = error as {
-      message?: string;
-      errors?: Record<string, string[]>;
-    };
-    const firstFieldError = apiError.errors
-      ? Object.values(apiError.errors).flat()[0]
-      : undefined;
-    errors.value.general =
-      firstFieldError ||
-      apiError.message ||
-      'Something went wrong. Please try again.';
+    errors.value.general = friendlyApiError(error);
   };
 
   if (isEditMode.value && pollId.value) {

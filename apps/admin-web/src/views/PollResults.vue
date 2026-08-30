@@ -43,7 +43,7 @@
               v-if="poll.status === 'draft'"
               class="btn-primary btn-sm"
               :disabled="publishPoll.isPending.value"
-              @click="publishPoll.mutate(poll.id)"
+              @click="showPublishConfirm = true"
             >
               Publish
             </button>
@@ -229,7 +229,7 @@
             type="button"
             class="btn-primary btn-sm w-full mt-4"
             :disabled="remind.isPending.value"
-            @click="sendReminder"
+            @click="showRemindConfirm = true"
           >
             {{
               remind.isPending.value
@@ -243,6 +243,21 @@
         </div>
       </div>
     </template>
+
+    <PollPublishConfirmModal
+      :is-open="showPublishConfirm"
+      :is-submitting="publishPoll.isPending.value"
+      @cancel="showPublishConfirm = false"
+      @confirm="confirmPublish"
+    />
+
+    <PollRemindConfirmModal
+      :is-open="showRemindConfirm"
+      :pending-count="pendingCount"
+      :is-submitting="remind.isPending.value"
+      @cancel="showRemindConfirm = false"
+      @confirm="confirmRemind"
+    />
   </div>
 </template>
 
@@ -256,6 +271,8 @@ import {
   usePublishPoll,
   useRemindPollNonVoters,
 } from '../composables/usePolls';
+import PollPublishConfirmModal from '../components/PollPublishConfirmModal.vue';
+import PollRemindConfirmModal from '../components/PollRemindConfirmModal.vue';
 import {
   formatAudienceSummary,
   formatQuestionSummary,
@@ -277,6 +294,8 @@ if (!authStore.isAdmin) {
 
 const pollId = computed(() => parseInt(route.params.id as string));
 const rosterFilter = ref<'all' | 'pending'>('all');
+const showPublishConfirm = ref(false);
+const showRemindConfirm = ref(false);
 const reminderMessage = ref('');
 
 const { data: poll, isLoading, error } = usePoll(pollId);
@@ -374,10 +393,19 @@ function rosterLabel(row: PollParticipant): string {
   return owners ? `${row.unit_title} · ${owners}` : row.unit_title;
 }
 
-function sendReminder() {
+function confirmPublish() {
+  showPublishConfirm.value = false;
+  publishPoll.mutate(pollId.value);
+}
+
+function confirmRemind() {
   remind.mutate(pollId.value, {
     onSuccess: result => {
+      showRemindConfirm.value = false;
       reminderMessage.value = result.message;
+    },
+    onError: () => {
+      showRemindConfirm.value = false;
     },
   });
 }
