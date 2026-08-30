@@ -420,6 +420,9 @@
               v-model="form.contact_phone"
               type="tel"
               required
+              inputmode="numeric"
+              autocomplete="tel"
+              maxlength="14"
               pattern="\(\d{3}\)\s\d{3}-\d{4}"
               class="input-field"
               :class="{
@@ -427,6 +430,7 @@
                   errors.contact_phone,
               }"
               placeholder="(123) 456-7890"
+              @input="handleContactPhoneInput"
             />
             <p v-if="errors.contact_phone" class="mt-2 text-sm text-red-600">
               {{ errors.contact_phone }}
@@ -516,6 +520,7 @@ import {
   VendorCategory,
   getVendorCategoryOptions,
   getUSStates,
+  formatPhoneNumber,
 } from '@neibrpay/models';
 
 const vendorAddressRef = ref<HTMLInputElement | null>(null);
@@ -575,7 +580,7 @@ const populateForm = (vendor: any) => {
   form.notes = vendor.notes || '';
   form.contact_name = vendor.contact_name;
   form.contact_email = vendor.contact_email;
-  form.contact_phone = vendor.contact_phone;
+  form.contact_phone = formatPhoneNumber(vendor.contact_phone || '');
 };
 
 // Watch for vendor data changes and populate form
@@ -794,6 +799,14 @@ const validateForm = (): boolean => {
   }
 
   return Object.keys(errors.value).length === 0;
+};
+
+const handleContactPhoneInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  form.contact_phone = formatPhoneNumber(target.value);
+  if (errors.value.contact_phone) {
+    delete errors.value.contact_phone;
+  }
 };
 
 // Handle form submission

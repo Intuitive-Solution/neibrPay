@@ -137,22 +137,22 @@
               v-model="form.phone"
               type="tel"
               required
+              inputmode="numeric"
+              autocomplete="tel"
               @input="formatPhone"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 text-sm"
               :class="{
                 'border-red-300 focus:ring-red-500 focus:border-red-500':
                   errors.phone,
               }"
-              placeholder="555-555-5555"
+              placeholder="(123) 456-7890"
               maxlength="14"
+              pattern="\(\d{3}\)\s\d{3}-\d{4}"
             />
             <p v-if="errors.phone" class="mt-2 text-sm text-red-600">
               {{ errors.phone }}
             </p>
-            <p class="mt-2 text-sm text-gray-600">
-              Please enter a valid US phone number (10 digits). Format:
-              XXX-XXX-XXXX
-            </p>
+            <p class="mt-2 text-sm text-gray-600">Format: (123) 456-7890</p>
           </div>
         </div>
 
@@ -1136,6 +1136,7 @@ import { residentsApi } from '@neibrpay/api-client';
 import {
   validateResidentForm,
   validateUpdateResidentForm,
+  formatPhoneNumber,
 } from '@neibrpay/models';
 import type {
   ResidentFormData,
@@ -1476,7 +1477,7 @@ onMounted(() => {
     form.value = {
       name: resident.value.name,
       email: resident.value.email,
-      phone: resident.value.phone,
+      phone: formatPhoneNumber(resident.value.phone || ''),
       role: resident.value.role || 'resident',
     };
   }
@@ -1493,7 +1494,7 @@ watch(resident, (newResident: any) => {
     form.value = {
       name: newResident.name,
       email: newResident.email,
-      phone: newResident.phone,
+      phone: formatPhoneNumber(newResident.phone || ''),
       role: newResident.role || 'resident',
     };
   }
@@ -1528,29 +1529,14 @@ const formatCurrency = (amount: number | string | null | undefined): string => {
   return numAmount.toFixed(2);
 };
 
-// Phone formatting - match signup form format (XXX-XXX-XXXX)
 const formatPhone = (event: Event) => {
   const target = event.target as HTMLInputElement;
-  const value = target.value;
-
-  // Remove all non-numeric characters
-  const phoneNumber = value.replace(/\D/g, '');
-
-  // Limit to 10 digits
-  const limitedPhoneNumber = phoneNumber.substring(0, 10);
-
-  // Format as XXX-XXX-XXXX
-  let formatted = '';
-  if (limitedPhoneNumber.length >= 6) {
-    formatted = `${limitedPhoneNumber.substring(0, 3)}-${limitedPhoneNumber.substring(3, 6)}-${limitedPhoneNumber.substring(6)}`;
-  } else if (limitedPhoneNumber.length >= 3) {
-    formatted = `${limitedPhoneNumber.substring(0, 3)}-${limitedPhoneNumber.substring(3)}`;
-  } else {
-    formatted = limitedPhoneNumber;
-  }
-
+  const formatted = formatPhoneNumber(target.value);
   form.value.phone = formatted;
   target.value = formatted;
+  if (errors.value.phone) {
+    delete errors.value.phone;
+  }
 };
 
 // Form submission
