@@ -12,14 +12,17 @@ use App\Models\PollRecipient;
 use App\Models\PollResponse;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\PollNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class PollController extends Controller
 {
+    public function __construct(
+        private PollNotificationService $pollNotifications
+    ) {}
+
     /**
      * Display a listing of polls (admin only).
      */
@@ -93,7 +96,7 @@ class PollController extends Controller
 
         // Only notify once the poll is actually live
         if ($poll->status === Poll::STATUS_OPEN) {
-            $this->sendN8nWebhook($poll, $user, 'poll_published');
+            $this->pollNotifications->send($poll, 'poll_published', $user);
         }
 
         return response()->json([
@@ -189,7 +192,7 @@ class PollController extends Controller
         $poll->refresh()->load(['creator', 'questions.options', 'recipients.unit']);
 
         if ($isGoingLive) {
-            $this->sendN8nWebhook($poll, $user, 'poll_published');
+            $this->pollNotifications->send($poll, 'poll_published', $user);
         }
 
         return response()->json([
@@ -230,7 +233,7 @@ class PollController extends Controller
             'opens_at' => $poll->opens_at ?? now(),
         ]);
 
-        $this->sendN8nWebhook($poll, $user, 'poll_published');
+        $this->pollNotifications->send($poll, 'poll_published', $user);
 
         return response()->json([
             'data' => $this->summarize($poll->fresh(['creator', 'questions.options', 'recipients.unit'])),
@@ -263,7 +266,7 @@ class PollController extends Controller
         $poll->load(['creator', 'questions.options', 'recipients.unit']);
 
         if ($poll->resultsVisibleToResidents()) {
-            $this->sendN8nWebhook($poll, $user, 'poll_closed');
+            $this->pollNotifications->send($poll, 'poll_closed', $user);
         }
 
         return response()->json([
@@ -295,7 +298,7 @@ class PollController extends Controller
         $votedUnitIds = $poll->responses()->pluck('unit_id');
         $pendingUnitIds = $targetUnitIds->diff($votedUnitIds)->values();
 
-        $this->sendN8nWebhook($poll, $user, 'poll_reminder', $pendingUnitIds->all());
+        $this->pollNotifications->send($poll, 'poll_reminder', $user, $pendingUnitIds->all());
 
         return response()->json([
             'message' => 'Reminder sent to '.$pendingUnitIds->count().' unit(s)',
@@ -711,108 +714,5 @@ class PollController extends Controller
             'target_unit_count' => $targetUnitIds->count(),
             'responded_unit_count' => $poll->responses()->count(),
         ];
-    }
-
-    /**
-     * Send webhook to n8n for notifications.
-     */
-    private function sendN8nWebhook(Poll $poll, User $user, string $event, ?array $limitToUnitIds = null): void
-    {
-        $webhookUrl = config('services.n8n.webhook_url');
-
-        if (!$webhookUrl) {
-            Log::warning('N8N webhook URL not configured. Skipping notification.');
-            return;
-        }
-
-        try {
-            $recipientEmails = $this->collectRecipientEmails($poll, $limitToUnitIds);
-
-            if ($recipientEmails === []) {
-                Log::warning('N8N poll notification skipped: no audience emails', [
-                    'poll_id' => $poll->id,
-                    'event' => $event,
-                ]);
-                return;
-            }
-
-            $toEmail = $recipientEmails[0];
-            $bccEmails = array_values(array_filter(
-                $recipientEmails,
-                fn ($email) => $email !== $toEmail
-            ));
-
-            $frontendUrl = rtrim((string) config('app.frontend_url', 'http://localhost:3000'), '/');
-            $loginUrl = $frontendUrl.'/auth';
-            // Query param (not hash) so auth redirect can preserve the full path.
-            $pollUrl = $frontendUrl.'/my-polls?poll='.$poll->id;
-
-            $payload = [
-                'type' => $event, // 'poll_published' | 'poll_closed' | 'poll_reminder'
-                'tenant_name' => $user->tenant->name ?? 'HOA',
-                'to' => $toEmail,
-                'bcc' => $bccEmails,
-                'frontend_url' => $frontendUrl,
-                'login_url' => $loginUrl,
-                'poll_url' => $pollUrl,
-                'poll' => [
-                    'id' => $poll->id,
-                    'title' => $poll->title,
-                    'description' => $poll->description,
-                    'status' => $poll->status,
-                    'closes_at' => $poll->closes_at?->toIso8601String(),
-                    'question_count' => $poll->questions->count(),
-                    'first_question' => $poll->questions->first()?->prompt,
-                    'target_unit_count' => $poll->targetUnitIds()->count(),
-                    'responded_unit_count' => $poll->responses()->count(),
-                ],
-                'tenant' => [
-                    'id' => $user->tenant_id,
-                    'name' => $user->tenant->name ?? null,
-                ],
-                'recipients' => $recipientEmails,
-            ];
-
-            Http::timeout(10)->post($webhookUrl, $payload);
-
-            Log::info('N8N webhook sent successfully for poll', [
-                'poll_id' => $poll->id,
-                'event' => $event,
-                'recipient_count' => count($recipientEmails),
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to send N8N webhook for poll', [
-                'poll_id' => $poll->id,
-                'event' => $event,
-                'error' => $e->getMessage(),
-            ]);
-            // Don't throw - webhook failure shouldn't block the poll action
-        }
-    }
-
-    /**
-     * Collect the owner emails of the units this poll targets.
-     */
-    private function collectRecipientEmails(Poll $poll, ?array $limitToUnitIds = null): array
-    {
-        $unitIds = $poll->targetUnitIds();
-
-        if ($limitToUnitIds !== null) {
-            $unitIds = $unitIds->intersect($limitToUnitIds);
-        }
-
-        if ($unitIds->isEmpty()) {
-            return [];
-        }
-
-        return Unit::forTenant($poll->tenant_id)
-            ->whereIn('id', $unitIds)
-            ->with(['owners' => fn ($query) => $query->where('is_active', true)])
-            ->get()
-            ->flatMap(fn (Unit $unit) => $unit->owners->pluck('email'))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
     }
 }
