@@ -9,7 +9,10 @@ import type {
 } from '@neibrpay/models';
 
 // Query hooks
-export function usePolls(filters?: Ref<PollFilters> | PollFilters) {
+export function usePolls(
+  filters?: Ref<PollFilters> | PollFilters,
+  options?: { enabled?: Ref<boolean> | ComputedRef<boolean> | boolean }
+) {
   const filtersRef = computed(() =>
     typeof filters === 'object' && filters !== null && !('value' in filters)
       ? filters
@@ -20,6 +23,9 @@ export function usePolls(filters?: Ref<PollFilters> | PollFilters) {
     queryKey: computed(() => pollKeys.list(filtersRef.value)),
     queryFn: () => pollsApi.list(filtersRef.value),
     staleTime: 60 * 1000, // 1 minute - tallies move while a poll is open
+    enabled: computed(() =>
+      options?.enabled === undefined ? true : !!unref(options.enabled)
+    ),
   });
 }
 

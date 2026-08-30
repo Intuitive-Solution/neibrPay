@@ -244,6 +244,10 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/mypolls',
+      redirect: '/my-polls',
+    },
+    {
       path: '/settings',
       name: 'Settings',
       component: Settings,

@@ -33,11 +33,18 @@
         </svg>
       </div>
       <h3 class="mt-4 text-xl font-semibold text-gray-900">
-        No polls for your unit
+        {{ isAdmin ? 'Nothing to vote on' : 'No polls for your unit' }}
       </h3>
       <p class="mt-3 max-w-md text-[15px] leading-relaxed text-gray-600">
-        When your board asks the community a question, it will show up here.
+        {{
+          isAdmin
+            ? 'Polls to vote on appear here when you own a unit that is included. Create and manage community polls from Polls. Unpublished drafts are not shown to residents.'
+            : 'When your board publishes a poll for your unit, it will show up here.'
+        }}
       </p>
+      <router-link v-if="isAdmin" to="/polls" class="btn-primary mt-6">
+        Go to Polls
+      </router-link>
     </div>
 
     <template v-else>
@@ -68,9 +75,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useAuthStore } from '../stores/auth';
 import { useUserPolls } from '../composables/usePolls';
 import PollVoteCard from '../components/PollVoteCard.vue';
 import { PollStatus } from '@neibrpay/models';
+
+const authStore = useAuthStore();
+const isAdmin = computed(() => authStore.isAdmin);
 
 const { data, isLoading, error } = useUserPolls();
 
