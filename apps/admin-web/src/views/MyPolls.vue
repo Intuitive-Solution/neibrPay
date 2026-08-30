@@ -60,7 +60,7 @@
       </section>
 
       <!-- Past polls -->
-      <section v-if="pastPolls.length > 0" class="space-y-4">
+      <section id="past-polls" v-if="pastPolls.length > 0" class="space-y-4">
         <div>
           <h2 class="text-xl font-semibold text-gray-900">Past polls</h2>
           <p class="text-sm text-gray-600 mt-1">
@@ -74,12 +74,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, nextTick, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useUserPolls } from '../composables/usePolls';
 import PollVoteCard from '../components/PollVoteCard.vue';
 import { PollStatus } from '@neibrpay/models';
 
+const route = useRoute();
 const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.isAdmin);
 
@@ -94,5 +96,40 @@ const openPolls = computed(() =>
 
 const pastPolls = computed(() =>
   polls.value.filter(poll => poll.status === PollStatus.CLOSED)
+);
+
+function scrollTargetSelector(): string | null {
+  const pollQuery = route.query.poll;
+  const pollId = Array.isArray(pollQuery) ? pollQuery[0] : pollQuery;
+  if (pollId) {
+    return `#poll-${pollId}`;
+  }
+
+  if (typeof window !== 'undefined' && window.location.hash) {
+    return window.location.hash;
+  }
+
+  return null;
+}
+
+watch(
+  [isLoading, polls, () => route.query.poll],
+  async ([loading]) => {
+    if (loading || typeof window === 'undefined') {
+      return;
+    }
+
+    const selector = scrollTargetSelector();
+    if (!selector) {
+      return;
+    }
+
+    await nextTick();
+    document.querySelector(selector)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  },
+  { immediate: true }
 );
 </script>

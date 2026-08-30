@@ -744,7 +744,8 @@ class PollController extends Controller
 
             $frontendUrl = rtrim((string) config('app.frontend_url', 'http://localhost:3000'), '/');
             $loginUrl = $frontendUrl.'/auth';
-            $pollUrl = $frontendUrl.'/my-polls';
+            // Query param (not hash) so auth redirect can preserve the full path.
+            $pollUrl = $frontendUrl.'/my-polls?poll='.$poll->id;
 
             $payload = [
                 'type' => $event, // 'poll_published' | 'poll_closed' | 'poll_reminder'
@@ -762,6 +763,8 @@ class PollController extends Controller
                     'closes_at' => $poll->closes_at?->toIso8601String(),
                     'question_count' => $poll->questions->count(),
                     'first_question' => $poll->questions->first()?->prompt,
+                    'target_unit_count' => $poll->targetUnitIds()->count(),
+                    'responded_unit_count' => $poll->responses()->count(),
                 ],
                 'tenant' => [
                     'id' => $user->tenant_id,

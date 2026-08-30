@@ -1,5 +1,6 @@
 <template>
   <div
+    :id="`poll-${poll.id}`"
     :class="[
       'bg-white rounded-xl shadow-sm overflow-hidden',
       poll.can_vote ? 'border border-primary/35' : 'border border-gray-100',

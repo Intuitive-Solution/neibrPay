@@ -253,7 +253,7 @@
                         v-if="poll.status === 'open'"
                         @click="
                           () => {
-                            closeNow(poll);
+                            requestClose(poll);
                             close();
                           }
                         "
@@ -296,6 +296,14 @@
       @cancel="pollToDelete = null"
     />
 
+    <PollCloseConfirmModal
+      :is-open="!!pollToClose"
+      :emails-results="emailsResultsOnClose"
+      :is-submitting="closePoll.isPending.value"
+      @cancel="pollToClose = null"
+      @confirm="confirmClose"
+    />
+
     <!-- Mobile Fixed Bottom Button -->
     <div
       class="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 safe-area-inset-bottom"
@@ -308,8 +316,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import {
   usePolls,
@@ -322,13 +330,16 @@ import {
   formatQuestionSummary,
   getPollStatusLabel,
   participationPercentage,
+  PollResultsVisibility,
   PollStatus,
   type Poll,
   type PollFilters,
 } from '@neibrpay/models';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import DropdownMenu from '../components/DropdownMenu.vue';
+import PollCloseConfirmModal from '../components/PollCloseConfirmModal.vue';
 
+const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
@@ -344,8 +355,28 @@ const statusTabs = [
   { value: PollStatus.CLOSED, label: 'Closed' },
 ];
 
-const statusFilter = ref<PollStatus | 'all'>('all');
+function statusFromQuery(): PollStatus | 'all' {
+  const status = route.query.status;
+  if (
+    status === PollStatus.OPEN ||
+    status === PollStatus.DRAFT ||
+    status === PollStatus.CLOSED
+  ) {
+    return status;
+  }
+  return 'all';
+}
+
+const statusFilter = ref<PollStatus | 'all'>(statusFromQuery());
+
+watch(
+  () => route.query.status,
+  () => {
+    statusFilter.value = statusFromQuery();
+  }
+);
 const pollToDelete = ref<Poll | null>(null);
+const pollToClose = ref<Poll | null>(null);
 
 const filters = computed<PollFilters>(() => ({
   status: statusFilter.value,
@@ -359,6 +390,11 @@ const deletePoll = useDeletePoll();
 const polls = computed(() => data.value?.data ?? []);
 const openCount = computed(() => data.value?.meta.open_count ?? 0);
 const unitCount = computed(() => data.value?.meta.unit_count ?? 0);
+
+const emailsResultsOnClose = computed(
+  () =>
+    pollToClose.value?.results_visibility !== PollResultsVisibility.ADMINS_ONLY
+);
 
 const openPolls = computed(() =>
   polls.value.filter(s => s.status === PollStatus.OPEN)
@@ -437,8 +473,19 @@ function publish(poll: Poll) {
   publishPoll.mutate(poll.id);
 }
 
-function closeNow(poll: Poll) {
-  closePoll.mutate(poll.id);
+function requestClose(poll: Poll) {
+  pollToClose.value = poll;
+}
+
+function confirmClose() {
+  const poll = pollToClose.value;
+  if (!poll) return;
+
+  closePoll.mutate(poll.id, {
+    onSettled: () => {
+      pollToClose.value = null;
+    },
+  });
 }
 
 function askDelete(poll: Poll) {

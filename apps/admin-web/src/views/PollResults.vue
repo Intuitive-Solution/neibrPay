@@ -51,7 +51,7 @@
               v-if="poll.status === 'open'"
               class="btn-outline btn-sm"
               :disabled="closePoll.isPending.value"
-              @click="closePoll.mutate(poll.id)"
+              @click="showCloseConfirm = true"
             >
               Close now
             </button>
@@ -258,6 +258,14 @@
       @cancel="showRemindConfirm = false"
       @confirm="confirmRemind"
     />
+
+    <PollCloseConfirmModal
+      :is-open="showCloseConfirm"
+      :emails-results="emailsResultsOnClose"
+      :is-submitting="closePoll.isPending.value"
+      @cancel="showCloseConfirm = false"
+      @confirm="confirmClose"
+    />
   </div>
 </template>
 
@@ -273,12 +281,14 @@ import {
 } from '../composables/usePolls';
 import PollPublishConfirmModal from '../components/PollPublishConfirmModal.vue';
 import PollRemindConfirmModal from '../components/PollRemindConfirmModal.vue';
+import PollCloseConfirmModal from '../components/PollCloseConfirmModal.vue';
 import {
   formatAudienceSummary,
   formatQuestionSummary,
   getPollStatusLabel,
   getQuestionTypeLabel,
   participationPercentage,
+  PollResultsVisibility,
   PollStatus,
   type PollParticipant,
   type PollQuestionResults,
@@ -296,6 +306,7 @@ const pollId = computed(() => parseInt(route.params.id as string));
 const rosterFilter = ref<'all' | 'pending'>('all');
 const showPublishConfirm = ref(false);
 const showRemindConfirm = ref(false);
+const showCloseConfirm = ref(false);
 const reminderMessage = ref('');
 
 const { data: poll, isLoading, error } = usePoll(pollId);
@@ -312,6 +323,10 @@ const participation = computed<PollParticipant[]>(
 
 const pendingCount = computed(
   () => participation.value.filter(row => !row.has_voted).length
+);
+
+const emailsResultsOnClose = computed(
+  () => poll.value?.results_visibility !== PollResultsVisibility.ADMINS_ONLY
 );
 
 const visibleParticipation = computed(() =>
@@ -406,6 +421,14 @@ function confirmRemind() {
     },
     onError: () => {
       showRemindConfirm.value = false;
+    },
+  });
+}
+
+function confirmClose() {
+  closePoll.mutate(pollId.value, {
+    onSettled: () => {
+      showCloseConfirm.value = false;
     },
   });
 }
