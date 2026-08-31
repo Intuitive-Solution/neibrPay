@@ -9,6 +9,12 @@
       class="p-4 bg-red-50 border border-red-200 rounded-lg"
     >
       <p class="text-sm text-red-800">We couldn't load this poll.</p>
+      <router-link
+        to="/polls"
+        class="mt-3 inline-block text-sm font-medium text-red-800 hover:text-red-900"
+      >
+        Back to Polls
+      </router-link>
     </div>
 
     <template v-else>
@@ -18,6 +24,25 @@
           class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
         >
           <div>
+            <router-link
+              to="/polls"
+              class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 mb-2"
+            >
+              <svg
+                class="w-4 h-4 mr-1.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to Polls
+            </router-link>
             <div class="flex items-center gap-3">
               <h1 class="text-xl font-semibold text-gray-900">
                 {{ poll.title }}

@@ -662,7 +662,18 @@ watch(
 );
 
 function toDateInput(value: string | null): string {
-  return value ? new Date(value).toISOString().slice(0, 10) : '';
+  if (!value) return '';
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/** Date-only inputs are local calendar days — open at local midnight, close at local end of day. */
+function dateInputToIso(dateStr: string, endOfDay = false): string {
+  const time = endOfDay ? '23:59:59' : '00:00:00';
+  return new Date(`${dateStr}T${time}`).toISOString();
 }
 
 function isYesNo(question: QuestionForm): boolean {
@@ -775,8 +786,12 @@ function buildPayload(
     title: form.value.title.trim(),
     description: form.value.description.trim() || null,
     status,
-    opens_at: form.value.opens_at || null,
-    closes_at: form.value.closes_at || null,
+    opens_at: form.value.opens_at
+      ? dateInputToIso(form.value.opens_at, false)
+      : null,
+    closes_at: form.value.closes_at
+      ? dateInputToIso(form.value.closes_at, true)
+      : null,
     results_visibility: form.value.results_visibility,
     questions: form.value.questions.map(question => ({
       prompt: question.prompt.trim(),

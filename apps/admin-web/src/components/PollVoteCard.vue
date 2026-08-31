@@ -3,7 +3,12 @@
     <!-- Needs vote: expanded ballot -->
     <div
       v-if="variant === 'needs-vote' && expanded"
-      class="bg-white rounded-xl border border-primary/30 shadow-sm overflow-hidden"
+      :class="[
+        'overflow-hidden',
+        embedded
+          ? 'rounded-lg border border-primary/30'
+          : 'bg-white rounded-xl border border-primary/30 shadow-sm',
+      ]"
     >
       <div
         class="flex items-center justify-between gap-4 px-5 py-3.5 bg-primary-50 border-b border-primary/15"
@@ -126,7 +131,11 @@
     <!-- Needs vote: collapsed row -->
     <div
       v-else-if="variant === 'needs-vote'"
-      class="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4"
+      :class="
+        embedded
+          ? 'px-1 py-3'
+          : 'bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4'
+      "
     >
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -158,7 +167,11 @@
     <!-- Voted · awaiting results -->
     <div
       v-else-if="variant === 'voted'"
-      class="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4"
+      :class="
+        embedded
+          ? 'px-1 py-3'
+          : 'bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4'
+      "
     >
       <div class="flex items-center gap-4">
         <div
@@ -195,7 +208,12 @@
     <!-- Closed poll -->
     <div
       v-else
-      class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+      :class="[
+        'overflow-hidden',
+        embedded
+          ? 'rounded-lg border border-gray-200'
+          : 'bg-white rounded-xl border border-gray-200 shadow-sm',
+      ]"
     >
       <button
         type="button"
@@ -260,10 +278,13 @@ const props = withDefaults(
     poll: ResidentPoll;
     variant?: 'needs-vote' | 'voted' | 'closed';
     expanded?: boolean;
+    /** Nest inside a parent card without an extra border/shadow shell. */
+    embedded?: boolean;
   }>(),
   {
     variant: 'needs-vote',
     expanded: false,
+    embedded: false,
   }
 );
 
