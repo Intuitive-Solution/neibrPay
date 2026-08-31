@@ -6,6 +6,7 @@ export * from './budget';
 export * from './charge';
 export * from './expense';
 export * from './resident';
+export * from './poll';
 export * from './unit';
 export * from './invoice';
 export * from './payment';

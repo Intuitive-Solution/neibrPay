@@ -379,6 +379,62 @@
             </router-link>
           </li>
 
+          <!-- Polls - admins manage community polls -->
+          <li v-if="isAdmin">
+            <router-link
+              to="/polls"
+              :class="
+                getNavLinkClass(['Polls', 'AddPoll', 'EditPoll', 'PollResults'])
+              "
+              :title="!(isExpanded || isMobileMenuOpen) ? 'Polls' : ''"
+            >
+              <svg
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span v-if="isExpanded || isMobileMenuOpen">Polls</span>
+            </router-link>
+          </li>
+
+          <!-- My Polls - vote / view results (admins who own a unit and residents) -->
+          <li>
+            <router-link
+              to="/my-polls"
+              :class="getNavLinkClass('MyPolls')"
+              :title="!(isExpanded || isMobileMenuOpen) ? 'My Polls' : ''"
+            >
+              <svg
+                :class="[
+                  'w-5 h-5',
+                  isExpanded || isMobileMenuOpen ? 'mr-3' : '',
+                ]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                />
+              </svg>
+              <span v-if="isExpanded || isMobileMenuOpen">My Polls</span>
+            </router-link>
+          </li>
+
           <li>
             <router-link
               to="/settings"
@@ -910,6 +966,13 @@ const pageTitle = computed(() => {
       return 'HOA Documents';
     case 'Announcements':
       return 'Announcements';
+    case 'Polls':
+    case 'AddPoll':
+    case 'EditPoll':
+    case 'PollResults':
+      return 'Polls';
+    case 'MyPolls':
+      return 'My Polls';
     case 'Settings':
       return 'Settings';
     case 'Transactions':
@@ -943,6 +1006,10 @@ const pageDescription = computed(() => {
       return 'Manage community documents and control resident visibility';
     case 'Announcements':
       return 'Manage community announcements and communications';
+    case 'Polls':
+      return 'Ask the community a question and see how the units answer';
+    case 'MyPolls':
+      return 'Vote on open polls and see past results';
     case 'Settings':
       return 'Configure your community settings';
     case 'Transactions':

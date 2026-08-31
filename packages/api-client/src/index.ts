@@ -9,6 +9,7 @@ export { chargesApi } from './charges';
 export { expensesApi } from './expenses';
 export { vendorsApi } from './vendors';
 export { announcementsApi } from './announcements';
+export { pollsApi } from './polls';
 export { documentsApi } from './documents';
 export { budgetApi } from './budget';
 export {
@@ -72,5 +73,5 @@ export {
   type SyncAccountResponse,
 } from './plaid';
 export * from './queryKeys';
-export { announcementKeys, plaidKeys, budgetKeys } from './queryKeys';
+export { announcementKeys, pollKeys, plaidKeys, budgetKeys } from './queryKeys';
 export { apiClient, fileUploadClient, setAuthTokenGetter } from './apiClient';

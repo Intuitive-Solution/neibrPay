@@ -105,6 +105,17 @@ export const announcementKeys = {
   forUser: () => [...announcementKeys.all, 'for-user'] as const,
 } as const;
 
+export const pollKeys = {
+  all: ['polls'] as const,
+  lists: () => [...pollKeys.all, 'list'] as const,
+  list: (filters: Record<string, any> = {}) =>
+    [...pollKeys.lists(), { filters }] as const,
+  details: () => [...pollKeys.all, 'detail'] as const,
+  detail: (id: number) => [...pollKeys.details(), id] as const,
+  forUser: () => [...pollKeys.all, 'for-user'] as const,
+  results: (id: number) => [...pollKeys.detail(id), 'results'] as const,
+} as const;
+
 export const plaidKeys = {
   all: ['plaid'] as const,
   linkToken: () => [...plaidKeys.all, 'link-token'] as const,
@@ -138,6 +149,7 @@ export const queryKeys = {
   documents: documentKeys,
   documentFolders: documentFolderKeys,
   announcements: announcementKeys,
+  polls: pollKeys,
   plaid: plaidKeys,
   budget: budgetKeys,
 } as const;
