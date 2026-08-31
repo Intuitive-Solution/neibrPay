@@ -272,6 +272,57 @@ class AuthController extends Controller
     }
 
     /**
+     * Collect a community registration request without creating an account.
+     */
+    public function registrationRequest(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'required|email|max:255',
+                'full_name' => 'required|string|max:255',
+                'phone_number' => 'required|string|max:20',
+                'community_name' => 'required|string|max:255',
+                'verification_token' => 'nullable|string',
+                'google_token' => 'nullable|string',
+            ]);
+
+            $email = strtolower(trim($validated['email']));
+
+            if (!empty($validated['verification_token'])) {
+                $tokenData = Cache::get("verification_token:{$validated['verification_token']}");
+                if (!$tokenData || $tokenData['email'] !== $email) {
+                    return response()->json(['error' => 'Invalid verification token'], 400);
+                }
+                Cache::forget("verification_token:{$validated['verification_token']}");
+            } elseif (!empty($validated['google_token'])) {
+                $googleData = Cache::get("google_signup:{$validated['google_token']}");
+                if (!$googleData || strtolower($googleData['email']) !== $email) {
+                    return response()->json(['error' => 'Invalid Google token'], 400);
+                }
+                Cache::forget("google_signup:{$validated['google_token']}");
+            } else {
+                return response()->json(['error' => 'Verification is required'], 400);
+            }
+
+            Log::info('Community registration request submitted', [
+                'email' => $email,
+                'full_name' => $validated['full_name'],
+                'phone_number' => $validated['phone_number'],
+                'community_name' => $validated['community_name'],
+            ]);
+
+            return response()->json([
+                'message' => 'Registration request received. An admin will get back to you.',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Registration request failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to submit registration request'], 500);
+        }
+    }
+
+    /**
      * Login existing user with verification code
      */
     public function login(Request $request): JsonResponse

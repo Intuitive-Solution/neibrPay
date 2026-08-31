@@ -68,6 +68,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/send-code', [AuthController::class, 'sendCode']);
     Route::post('/verify-code', [AuthController::class, 'verifyCode']);
     Route::post('/signup', [AuthController::class, 'signup']);
+    Route::post('/registration-request', [AuthController::class, 'registrationRequest']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/magic-link', [AuthController::class, 'magicLinkAuth']);
     

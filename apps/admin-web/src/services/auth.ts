@@ -165,6 +165,30 @@ class AuthService {
   }
 
   /**
+   * Submit a community registration request without creating an account
+   */
+  async submitRegistrationRequest(
+    data: SignupData,
+    tokens: { verificationToken?: string; googleToken?: string }
+  ): Promise<void> {
+    try {
+      await apiClient.post('/auth/registration-request', {
+        email: data.email,
+        full_name: data.fullName,
+        phone_number: data.phoneNumber,
+        community_name: data.communityName,
+        verification_token: tokens.verificationToken,
+        google_token: tokens.googleToken,
+      });
+    } catch (error: any) {
+      console.error('Registration request error:', error);
+      throw new Error(
+        error?.message || 'Failed to submit registration request'
+      );
+    }
+  }
+
+  /**
    * Login existing user with verification code
    */
   async login(email: string, verificationToken: string): Promise<AuthResponse> {
