@@ -17,6 +17,7 @@ class VerifyCsrfToken extends Middleware
         'api/auth/send-code',
         'api/auth/verify-code',
         'api/auth/signup',
+        'api/auth/registration-request',
         'api/auth/login',
         'api/auth/magic-link',
         'api/auth/google/signup',

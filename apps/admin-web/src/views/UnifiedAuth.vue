@@ -159,14 +159,79 @@
           </div>
         </div>
 
+        <!-- Account not found -->
+        <div v-if="step === 'not-registered'" class="space-y-6">
+          <div>
+            <h2 class="text-heading-2 text-text-primary mb-2">
+              Your community is not registered
+            </h2>
+            <p class="text-body text-text-secondary">
+              We couldn't find a NeibrPay account for
+              <strong>{{ displayEmail }}</strong
+              >. Please double-check your email and try again.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            @click="goBack"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+          >
+            Back to login
+          </button>
+
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-neutral-300" />
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-text-secondary">or</span>
+            </div>
+          </div>
+
+          <p class="text-sm text-text-secondary text-center">
+            Want to register your community? Submit a request and an admin will
+            get back to you.
+          </p>
+          <button
+            type="button"
+            @click="startRegistration"
+            class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+          >
+            Register your community
+          </button>
+        </div>
+
+        <!-- Request received -->
+        <div v-if="step === 'request-received'" class="space-y-6">
+          <div>
+            <h2 class="text-heading-2 text-text-primary mb-2">
+              Request received
+            </h2>
+            <p class="text-body text-text-secondary">
+              Thanks for your interest. An admin will get back to you shortly.
+              We won't create an account until your community is approved.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            @click="goBack"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200"
+          >
+            Back to login
+          </button>
+        </div>
+
         <!-- Step 3: New User Signup Form -->
         <div v-if="step === 'signup'" class="space-y-6">
           <div>
             <h2 class="text-heading-2 text-text-primary mb-2">
-              Complete your signup
+              Register your community
             </h2>
             <p class="text-body text-text-secondary">
-              Please provide the following information to create your account
+              Submit the details below. An admin will review your request and
+              get back to you — this will not create an account yet.
             </p>
           </div>
 
@@ -259,9 +324,16 @@
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Creating account...
+                Submitting request...
               </span>
-              <span v-else>Complete Signup</span>
+              <span v-else>Submit request</span>
+            </button>
+            <button
+              type="button"
+              @click="goBack"
+              class="w-full text-sm text-text-secondary hover:text-text-primary"
+            >
+              Back to login
             </button>
           </form>
         </div>
@@ -270,10 +342,11 @@
         <div v-if="step === 'google-signup'" class="space-y-6">
           <div>
             <h2 class="text-heading-2 text-text-primary mb-2">
-              Complete your signup
+              Register your community
             </h2>
             <p class="text-body text-text-secondary">
-              Please provide the following information to create your account
+              Submit the details below. An admin will review your request and
+              get back to you — this will not create an account yet.
             </p>
           </div>
 
@@ -357,9 +430,16 @@
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Creating account...
+                Submitting request...
               </span>
-              <span v-else>Complete Signup</span>
+              <span v-else>Submit request</span>
+            </button>
+            <button
+              type="button"
+              @click="goBack"
+              class="w-full text-sm text-text-secondary hover:text-text-primary"
+            >
+              Back to login
             </button>
           </form>
         </div>
@@ -559,7 +639,13 @@ const authStore = useAuthStore();
 const { trackOnboardingEvent } = usePostHog();
 
 // Step management
-type Step = 'email' | 'code' | 'signup' | 'google-signup';
+type Step =
+  | 'email'
+  | 'code'
+  | 'not-registered'
+  | 'signup'
+  | 'google-signup'
+  | 'request-received';
 const step = ref<Step>('email');
 
 // Form state
@@ -574,6 +660,10 @@ const googleData = reactive<{ email: string; name: string; avatar?: string }>({
   name: '',
 });
 const googleToken = ref<string | null>(null);
+
+const displayEmail = computed(
+  () => googleData.email || email.value.trim().toLowerCase()
+);
 
 // UI state
 const isLoading = ref(false);
@@ -679,12 +769,10 @@ const handleCodeSubmit = async (code: string) => {
       // Existing user - login
       await handleLogin();
     } else {
-      // New user - show signup form
-      step.value = 'signup';
-      // Track: Signup form shown
-      trackOnboardingEvent('signup_form_shown', {
+      step.value = 'not-registered';
+      trackOnboardingEvent('community_not_registered', {
         email: emailValue,
-        step: 'signup_form',
+        step: 'not_registered',
       });
     }
   } catch (error) {
@@ -752,30 +840,28 @@ const handleSignup = async () => {
       return;
     }
 
-    const result = await authService.signup(
+    await authService.submitRegistrationRequest(
       {
         email: email.value.trim().toLowerCase(),
         fullName: fullName.value.trim(),
         phoneNumber: phoneNumber.value,
         communityName: communityName.value.trim(),
       },
-      verificationToken.value
+      { verificationToken: verificationToken.value }
     );
 
-    authStore.setAuth(result);
-
-    // Track: Signup completed
-    trackOnboardingEvent('signup_completed', {
+    trackOnboardingEvent('registration_request_submitted', {
       email: email.value.trim().toLowerCase(),
       community_name: communityName.value.trim(),
-      step: 'signup_complete',
+      step: 'request_received',
     });
 
-    // Redirect to dashboard
-    router.push('/');
+    step.value = 'request-received';
   } catch (error) {
     errorMessage.value =
-      error instanceof Error ? error.message : 'Signup failed';
+      error instanceof Error
+        ? error.message
+        : 'Failed to submit registration request';
   } finally {
     isLoading.value = false;
   }
@@ -817,18 +903,29 @@ const handleGoogleSignup = async () => {
       return;
     }
 
-    const result = await authService.googleSignup(googleToken.value, {
-      phoneNumber: phoneNumber.value,
-      communityName: communityName.value.trim(),
+    await authService.submitRegistrationRequest(
+      {
+        email: googleData.email.trim().toLowerCase(),
+        fullName: googleData.name.trim(),
+        phoneNumber: phoneNumber.value,
+        communityName: communityName.value.trim(),
+      },
+      { googleToken: googleToken.value }
+    );
+
+    trackOnboardingEvent('registration_request_submitted', {
+      email: googleData.email.trim().toLowerCase(),
+      community_name: communityName.value.trim(),
+      method: 'google',
+      step: 'request_received',
     });
 
-    authStore.setAuth(result);
-
-    // Redirect to dashboard
-    router.push('/');
+    step.value = 'request-received';
   } catch (error) {
     errorMessage.value =
-      error instanceof Error ? error.message : 'Google signup failed';
+      error instanceof Error
+        ? error.message
+        : 'Failed to submit registration request';
   } finally {
     isLoading.value = false;
   }
@@ -874,10 +971,27 @@ const startCountdown = (seconds: number) => {
   }, 1000);
 };
 
+const startRegistration = () => {
+  errorMessage.value = '';
+  if (googleToken.value) {
+    step.value = 'google-signup';
+  } else {
+    step.value = 'signup';
+  }
+  trackOnboardingEvent('signup_form_shown', {
+    email: displayEmail.value,
+    step: 'signup_form',
+  });
+};
+
 // Go back
 const goBack = () => {
   step.value = 'email';
   errorMessage.value = '';
+  googleToken.value = null;
+  googleData.email = '';
+  googleData.name = '';
+  googleData.avatar = undefined;
   codeInputRef.value?.clear();
   if (countdownInterval) {
     clearInterval(countdownInterval);
@@ -945,12 +1059,11 @@ onMounted(async () => {
       isLoading.value = false;
     }
   } else if (googleTokenParam && exists === 'false') {
-    // New user - show signup form
     googleData.email = (route.query.email as string) || '';
     googleData.name = (route.query.name as string) || '';
     googleData.avatar = route.query.avatar as string;
     googleToken.value = googleTokenParam;
-    step.value = 'google-signup';
+    step.value = 'not-registered';
   }
 });
 </script>
